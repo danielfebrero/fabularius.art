@@ -73,10 +73,25 @@ Resources:
         RestrictPublicBuckets: true
       CorsConfiguration:
         CorsRules:
-          - AllowedHeaders: ["*"]
-            AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
-            AllowedOrigins: ["*"]
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - PUT
+              - POST
+              - DELETE
+            AllowedOrigins:
+              - http://localhost:3000
+              - !Sub "https://www.${DomainName}"
+              - !Sub "https://${DomainName}"
+            ExposeHeaders:
+              - ETag
             MaxAge: 3000
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+            AllowedOrigins:
+              - "*"
       VersioningConfiguration:
         Status: Enabled
       LifecycleConfiguration:

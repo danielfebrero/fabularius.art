@@ -59,6 +59,7 @@ export const handler = async (
       updatedAt: now,
       status: "pending", // Will be updated to 'uploaded' after successful upload
     };
+    console.log("Generated media URL:", S3Service.getPublicUrl(key));
 
     await DynamoDBService.createMedia(mediaEntity);
 

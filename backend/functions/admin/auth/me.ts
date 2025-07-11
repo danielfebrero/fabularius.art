@@ -16,12 +16,6 @@ export const handler = async (
     // Return admin info (without sensitive data)
     return ResponseUtil.success({
       admin: validation.admin,
-      session: {
-        sessionId: validation.session?.sessionId,
-        createdAt: validation.session?.createdAt,
-        expiresAt: validation.session?.expiresAt,
-        lastAccessedAt: validation.session?.lastAccessedAt,
-      },
     });
   } catch (error) {
     console.error("Get admin info error:", error);

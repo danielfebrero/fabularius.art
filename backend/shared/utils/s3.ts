@@ -1,5 +1,6 @@
 import {
   S3Client,
+  S3ClientConfig,
   PutObjectCommand,
   DeleteObjectCommand,
   GetObjectCommand,
@@ -8,8 +9,28 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from "uuid";
 import * as path from "path";
 
-const s3Client = new S3Client({});
-const BUCKET_NAME = process.env["S3_BUCKET"]!;
+const isLocal = process.env["NODE_ENV"] === "development";
+
+let s3Config: S3ClientConfig = {};
+
+if (isLocal) {
+  s3Config = {
+    endpoint: process.env["LOCAL_AWS_ENDPOINT"] || "",
+    region: process.env["AWS_REGION"] || "us-east-1",
+    credentials: {
+      accessKeyId: "test",
+      secretAccessKey: "test",
+    },
+    forcePathStyle: true, // Required for LocalStack
+  };
+}
+
+const s3Client = new S3Client(s3Config);
+
+const BUCKET_NAME = (
+  isLocal ? process.env["LOCAL_S3_BUCKET"] : process.env["S3_BUCKET"]
+)!;
+
 const CLOUDFRONT_DOMAIN = process.env["CLOUDFRONT_DOMAIN"]!;
 
 export class S3Service {
@@ -32,7 +53,16 @@ export class S3Service {
       },
     });
 
-    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn });
+    let uploadUrl = await getSignedUrl(s3Client, command, { expiresIn });
+
+    if (isLocal) {
+      uploadUrl = uploadUrl.replace(
+        `https://${BUCKET_NAME}.s3.${
+          process.env["AWS_REGION"] || "us-east-1"
+        }.amazonaws.com`,
+        `${process.env["LOCAL_AWS_ENDPOINT"]}/${BUCKET_NAME}`
+      );
+    }
 
     return { uploadUrl, key };
   }
@@ -46,7 +76,17 @@ export class S3Service {
       Key: key,
     });
 
-    return await getSignedUrl(s3Client, command, { expiresIn });
+    let downloadUrl = await getSignedUrl(s3Client, command, { expiresIn });
+
+    if (isLocal) {
+      downloadUrl = downloadUrl.replace(
+        `https://s3.${
+          process.env["AWS_REGION"] || "us-east-1"
+        }.amazonaws.com/${BUCKET_NAME}`,
+        `${process.env["LOCAL_AWS_ENDPOINT"]}/${BUCKET_NAME}`
+      );
+    }
+    return downloadUrl;
   }
 
   static async deleteObject(key: string): Promise<void> {
@@ -59,7 +99,16 @@ export class S3Service {
   }
 
   static getPublicUrl(key: string): string {
-    return `https://${CLOUDFRONT_DOMAIN}/${key}`;
+    if (isLocal) {
+      return `${process.env["LOCAL_AWS_ENDPOINT"]}/${BUCKET_NAME}/${key}`;
+    }
+
+    if (CLOUDFRONT_DOMAIN) {
+      return `https://${CLOUDFRONT_DOMAIN}/${key}`;
+    }
+
+    const region = process.env["AWS_REGION"] || "us-east-1";
+    return `https://${BUCKET_NAME}.s3.${region}.amazonaws.com/${key}`;
   }
 
   static getThumbnailKey(originalKey: string): string {
@@ -87,7 +136,14 @@ export class S3Service {
   static extractKeyFromUrl(url: string): string | null {
     try {
       const urlObj = new URL(url);
-      // Remove leading slash
+
+      if (isLocal) {
+        const pathParts = urlObj.pathname.split("/");
+        // path is /<bucket-name>/<key>, so we slice(2) to get the key
+        return pathParts.slice(2).join("/");
+      }
+
+      // For remote S3, remove leading slash
       return urlObj.pathname.substring(1);
     } catch {
       return null;

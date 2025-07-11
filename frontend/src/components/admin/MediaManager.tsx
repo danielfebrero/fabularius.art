@@ -126,26 +126,8 @@ export function MediaManager({
           accept="image/*,video/*"
           multiple
           disabled={loading}
+          uploadProgress={uploadProgress}
         />
-
-        {Object.keys(uploadProgress).length > 0 && (
-          <div className="mt-4 space-y-2">
-            <h4 className="text-sm font-medium text-gray-700">
-              Upload Progress
-            </h4>
-            {Object.entries(uploadProgress).map(([fileId, progress]) => (
-              <div key={fileId} className="flex items-center gap-3">
-                <div className="flex-1 bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-                <span className="text-sm text-gray-600">{progress}%</span>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Media Grid */}

@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import axios from "axios";
 import { Media } from "@/types";
 import API_URL from "@/lib/api";
 
@@ -45,34 +46,55 @@ export function useAdminMedia() {
     async (uploadData: UploadMediaData): Promise<Media> => {
       setError(null);
       const fileId = `${uploadData.file.name}-${Date.now()}`;
+      const { file, albumId } = uploadData;
 
       try {
         setUploadProgress((prev) => ({ ...prev, [fileId]: 0 }));
 
-        const formData = new FormData();
-        formData.append("file", uploadData.file);
-
-        const response = await fetch(
-          `${API_URL}/albums/${uploadData.albumId}/media`,
+        // Step 1: Get presigned URL from the backend
+        const presignedUrlResponse = await fetch(
+          `${API_URL}/albums/${albumId}/media`,
           {
             method: "POST",
             credentials: "include",
-            body: formData,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              filename: file.name,
+              mimeType: file.type,
+              size: file.size,
+            }),
           }
         );
 
-        setUploadProgress((prev) => ({ ...prev, [fileId]: 100 }));
-
-        if (!response.ok) {
-          throw new Error("Failed to upload media");
+        if (!presignedUrlResponse.ok) {
+          throw new Error("Failed to get presigned URL");
         }
 
-        const data = await response.json();
-        if (data.success) {
-          return data.data;
-        } else {
-          throw new Error(data.error || "Failed to upload media");
+        const presignedUrlData = await presignedUrlResponse.json();
+        if (!presignedUrlData.success) {
+          throw new Error(
+            presignedUrlData.error || "Failed to get presigned URL"
+          );
         }
+
+        const { uploadUrl } = presignedUrlData.data;
+
+        // Step 2: Upload file directly to S3 using Axios for progress tracking
+        await axios.put(uploadUrl, file, {
+          headers: { "Content-Type": file.type },
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = progressEvent.total
+              ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
+              : 0;
+            setUploadProgress((prev) => ({
+              ...prev,
+              [fileId]: percentCompleted,
+            }));
+          },
+        });
+
+        // Assuming the presigned URL response contains the final media object
+        return presignedUrlData.data;
       } catch (err) {
         setUploadProgress((prev) => {
           const newProgress = { ...prev };

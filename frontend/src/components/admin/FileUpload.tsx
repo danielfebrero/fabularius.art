@@ -8,8 +8,8 @@ interface FileUploadProps {
   accept?: string;
   multiple?: boolean;
   disabled?: boolean;
-  maxFiles?: number;
   maxFileSize?: number; // in bytes
+  uploadProgress?: Record<string, number>;
 }
 
 export function FileUpload({
@@ -17,8 +17,7 @@ export function FileUpload({
   accept = "*/*",
   multiple = false,
   disabled = false,
-  maxFiles = 10,
-  maxFileSize = 10 * 1024 * 1024, // 10MB default
+  uploadProgress = {},
 }: FileUploadProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -30,22 +29,7 @@ export function FileUpload({
     const validFiles: File[] = [];
     const newErrors: string[] = [];
 
-    if (files.length > maxFiles) {
-      newErrors.push(`Maximum ${maxFiles} files allowed`);
-      return { validFiles: [], errors: newErrors };
-    }
-
     files.forEach((file) => {
-      // Check file size
-      if (file.size > maxFileSize) {
-        newErrors.push(
-          `${file.name} is too large (max ${Math.round(
-            maxFileSize / 1024 / 1024
-          )}MB)`
-        );
-        return;
-      }
-
       // Check file type if accept is specified
       if (accept !== "*/*") {
         const acceptedTypes = accept.split(",").map((type) => type.trim());
@@ -86,7 +70,7 @@ export function FileUpload({
         onFilesSelected(validFiles);
       }
     },
-    [onFilesSelected, maxFiles, maxFileSize, accept]
+    [onFilesSelected, accept]
   );
 
   const handleDragOver = useCallback(
@@ -145,6 +129,8 @@ export function FileUpload({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
+  const isUploading = Object.keys(uploadProgress).length > 0;
+
   return (
     <div className="space-y-4">
       <div
@@ -199,8 +185,6 @@ export function FileUpload({
           </div>
 
           <div className="text-xs text-gray-400 space-y-1">
-            <p>Maximum {maxFiles} files</p>
-            <p>Maximum file size: {formatFileSize(maxFileSize)}</p>
             {accept !== "*/*" && <p>Accepted types: {accept}</p>}
           </div>
 
@@ -214,6 +198,23 @@ export function FileUpload({
           </Button>
         </div>
       </div>
+
+      {isUploading && (
+        <div className="mt-4 space-y-3">
+          <h4 className="text-sm font-medium text-gray-700">Upload Progress</h4>
+          {Object.entries(uploadProgress).map(([fileId, progress]) => (
+            <div key={fileId} className="flex items-center gap-3">
+              <div className="flex-1 bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <span className="text-sm text-gray-600">{progress}%</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {errors.length > 0 && (
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
