@@ -1,0 +1,208 @@
+version: "3.8"
+
+services:
+  # DynamoDB Local for backend testing
+  dynamodb-local:
+    image: amazon/dynamodb-local:latest
+    container_name: fabularius-test-dynamodb
+    ports:
+      - "8000:8000"
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory"]
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # LocalStack for AWS services simulation
+  localstack:
+    image: localstack/localstack:latest
+    container_name: fabularius-test-localstack
+    ports:
+      - "4566:4566"
+      - "4571:4571"
+    environment:
+      - SERVICES=s3,dynamodb,lambda,apigateway
+      - DEBUG=1
+      - DATA_DIR=/tmp/localstack/data
+      - LAMBDA_EXECUTOR=docker
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+    volumes:
+      - "/tmp/localstack:/tmp/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4566/_localstack/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # Redis for caching (if needed for future features)
+  redis-test:
+    image: redis:7-alpine
+    container_name: fabularius-test-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Test runner service for backend
+  backend-tests:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    container_name: fabularius-backend-tests
+    environment:
+      - NODE_ENV=test
+      - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=us-east-1
+      - REDIS_URL=redis://redis-test:6379
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./coverage/backend:/app/coverage
+    depends_on:
+      dynamodb-local:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    networks:
+      - test-network
+    command: npm run test:ci
+
+  # Test runner service for frontend
+  frontend-tests:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.test
+    container_name: fabularius-frontend-tests
+    environment:
+      - NODE_ENV=test
+      - CI=true
+      - NEXT_PUBLIC_API_URL=http://localstack:4566
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+      - ./coverage/frontend:/app/coverage
+    depends_on:
+      - backend-tests
+    networks:
+      - test-network
+    command: npm run test:all
+
+  # E2E test runner
+  e2e-tests:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.e2e
+    container_name: fabularius-e2e-tests
+    environment:
+      - NODE_ENV=test
+      - CI=true
+      - PLAYWRIGHT_BASE_URL=http://frontend-app:3000
+      - NEXT_PUBLIC_API_URL=http://localstack:4566
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - ./frontend/playwright-report:/app/playwright-report
+    depends_on:
+      - frontend-app
+      - backend-tests
+    networks:
+      - test-network
+    command: npm run test:e2e
+
+  # Frontend application for E2E testing
+  frontend-app:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: fabularius-frontend-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localstack:4566
+    depends_on:
+      localstack:
+        condition: service_healthy
+    networks:
+      - test-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Test database seeder
+  test-seeder:
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile.seeder
+    container_name: fabularius-test-seeder
+    environment:
+      - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
+      - AWS_ENDPOINT_URL=http://localstack:4566
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_REGION=us-east-1
+    volumes:
+      - ./scripts:/app
+      - ./backend/__tests__/fixtures:/app/fixtures
+    depends_on:
+      dynamodb-local:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    networks:
+      - test-network
+    command: node seed-test-data.js
+
+  # Test results aggregator
+  test-aggregator:
+    image: node:18-alpine
+    container_name: fabularius-test-aggregator
+    working_dir: /app
+    volumes:
+      - .:/app
+      - ./coverage:/app/coverage
+      - ./test-results:/app/test-results
+    depends_on:
+      - backend-tests
+      - frontend-tests
+      - e2e-tests
+    networks:
+      - test-network
+    command: node scripts/aggregate-test-results.js
+
+networks:
+  test-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  test-data:
+    driver: local
+  coverage-data:
+    driver: local

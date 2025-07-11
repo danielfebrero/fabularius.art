@@ -1,0 +1,90 @@
+{
+  "name": "fabularius-art",
+  "version": "1.0.0",
+  "description": "A minimalist gallery application for showcasing art and photography",
+  "private": true,
+  "scripts": {
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "build": "npm run build:backend && npm run build:frontend",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "dev:backend": "sam local start-api",
+    "dev:frontend": "cd frontend && npm run dev",
+    "deploy": "./scripts/deploy.sh",
+    "deploy:guided": "./scripts/deploy.sh --guided",
+    "sam:build": "sam build",
+    "sam:deploy": "sam deploy",
+    "sam:local": "sam local start-api",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend && npm run lint",
+    "lint:fix": "npm run lint:fix:backend && npm run lint:fix:frontend",
+    "lint:fix:backend": "cd backend && npm run lint:fix",
+    "lint:fix:frontend": "cd frontend && npm run lint:fix",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:all": "concurrently \"npm run test:backend:all\" \"npm run test:frontend:all\"",
+    "test:backend": "cd backend && npm run test",
+    "test:backend:unit": "cd backend && npm run test:unit",
+    "test:backend:integration": "cd backend && npm run test:integration",
+    "test:backend:coverage": "cd backend && npm run test:coverage",
+    "test:backend:all": "cd backend && npm run test:ci",
+    "test:frontend": "cd frontend && npm run test",
+    "test:frontend:unit": "cd frontend && npm run test",
+    "test:frontend:integration": "cd frontend && npm run test",
+    "test:frontend:e2e": "cd frontend && npm run test:e2e",
+    "test:frontend:coverage": "cd frontend && npm run test:coverage",
+    "test:frontend:all": "cd frontend && npm run test:all",
+    "test:watch": "concurrently \"npm run test:backend:watch\" \"npm run test:frontend:watch\"",
+    "test:backend:watch": "cd backend && npm run test:watch",
+    "test:frontend:watch": "cd frontend && npm run test:watch",
+    "test:coverage": "npm run test:backend:coverage && npm run test:frontend:coverage",
+    "test:coverage:combined": "jest --config jest.config.root.js --coverage",
+    "test:ci": "npm run test:backend:all && npm run test:frontend:all",
+    "test:summary": "node scripts/generate-test-summary.js",
+    "clean": "npm run clean:backend && npm run clean:frontend",
+    "clean:backend": "cd backend && npm run clean",
+    "clean:frontend": "cd frontend && rm -rf .next out",
+    "type-check": "npm run type-check:backend && npm run type-check:frontend",
+    "type-check:backend": "cd backend && npm run build",
+    "type-check:frontend": "cd frontend && npm run type-check"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "keywords": [
+    "gallery",
+    "art",
+    "photography",
+    "serverless",
+    "aws",
+    "nextjs",
+    "typescript",
+    "minimalist"
+  ],
+  "author": "Fabularius.art",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/fabularius-art.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/fabularius-art/issues"
+  },
+  "homepage": "https://fabularius.art",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "jest": "^29.7.0",
+    "lcov-result-merger": "^3.3.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.1.0",
+    "@types/jest": "^29.5.8",
+    "cross-env": "^7.0.3"
+  }
+}

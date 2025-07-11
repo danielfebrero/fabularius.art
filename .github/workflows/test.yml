@@ -1,0 +1,566 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: "18"
+  AWS_REGION: "us-east-1"
+
+jobs:
+  # Job 1: Setup and validation
+  setup:
+    name: Setup & Validation
+    runs-on: ubuntu-latest
+    outputs:
+      backend-changed: ${{ steps.changes.outputs.backend }}
+      frontend-changed: ${{ steps.changes.outputs.frontend }}
+      cache-key: ${{ steps.cache-key.outputs.key }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Generate cache key
+        id: cache-key
+        run: |
+          echo "key=node-modules-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}" >> $GITHUB_OUTPUT
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            backend/node_modules
+            frontend/node_modules
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install workspace dependencies
+        run: |
+          cd backend && npm ci
+          cd ../frontend && npm ci
+
+      - name: Detect changes
+        uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - 'template.yaml'
+              - 'samconfig.toml'
+            frontend:
+              - 'frontend/**'
+            root:
+              - 'package*.json'
+              - '.github/**'
+              - 'scripts/**'
+              - 'docker-compose*.yml'
+
+      - name: Validate project structure
+        run: |
+          echo "🔍 Validating project structure..."
+
+          # Check required files exist
+          required_files=(
+            "package.json"
+            "backend/package.json"
+            "frontend/package.json"
+            "template.yaml"
+            "TESTING.md"
+          )
+
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "❌ Required file missing: $file"
+              exit 1
+            fi
+          done
+
+          echo "✅ Project structure validation passed"
+
+  # Job 2: Backend tests
+  backend-tests:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.backend-changed == 'true' || github.event_name == 'workflow_dispatch'
+    strategy:
+      matrix:
+        test-type: [unit, integration]
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+        options: >-
+          --health-cmd "curl -f http://localhost:8000/ || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            backend/node_modules
+            frontend/node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd backend && npm ci
+
+      - name: Setup test environment
+        run: |
+          chmod +x scripts/test-setup.sh
+          ./scripts/test-setup.sh ci
+        env:
+          DYNAMODB_ENDPOINT: http://localhost:8000
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+
+      - name: Run backend linting
+        run: cd backend && npm run lint
+
+      - name: Run backend type checking
+        run: cd backend && npm run build
+
+      - name: Run backend ${{ matrix.test-type }} tests
+        run: |
+          cd backend
+          if [ "${{ matrix.test-type }}" = "unit" ]; then
+            npm run test:unit -- --coverage --coverageReporters=lcov
+          else
+            npm run test:integration -- --coverage --coverageReporters=lcov
+          fi
+        env:
+          DYNAMODB_ENDPOINT: http://localhost:8000
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: ${{ env.AWS_REGION }}
+
+      - name: Upload backend coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-coverage-${{ matrix.test-type }}
+          path: backend/coverage/lcov.info
+          retention-days: 1
+
+  # Job 3: Frontend tests
+  frontend-tests:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    if: needs.setup.outputs.frontend-changed == 'true' || github.event_name == 'workflow_dispatch'
+    strategy:
+      matrix:
+        test-type: [unit, e2e]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            backend/node_modules
+            frontend/node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd frontend && npm ci
+
+      - name: Install Playwright browsers
+        if: matrix.test-type == 'e2e'
+        run: cd frontend && npx playwright install --with-deps
+
+      - name: Setup test environment
+        run: |
+          chmod +x scripts/test-setup.sh
+          ./scripts/test-setup.sh ci
+
+      - name: Run frontend linting
+        run: cd frontend && npm run lint
+
+      - name: Run frontend type checking
+        run: cd frontend && npm run type-check
+
+      - name: Build frontend
+        run: cd frontend && npm run build
+
+      - name: Run frontend ${{ matrix.test-type }} tests
+        run: |
+          cd frontend
+          if [ "${{ matrix.test-type }}" = "unit" ]; then
+            npm run test -- --coverage --coverageReporters=lcov --watchAll=false
+          else
+            npm run test:e2e
+          fi
+        env:
+          CI: true
+
+      - name: Upload frontend coverage
+        if: matrix.test-type == 'unit'
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-coverage-unit
+          path: frontend/coverage/lcov.info
+          retention-days: 1
+
+      - name: Upload E2E test results
+        if: matrix.test-type == 'e2e' && always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 7
+
+  # Job 4: Integration tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [setup, backend-tests, frontend-tests]
+    if: always() && (needs.backend-tests.result == 'success' || needs.frontend-tests.result == 'success')
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local:latest
+        ports:
+          - 8000:8000
+      localstack:
+        image: localstack/localstack:latest
+        ports:
+          - 4566:4566
+        env:
+          SERVICES: s3,lambda
+          DEBUG: 1
+          DATA_DIR: /tmp/localstack/data
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Restore dependencies cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            backend/node_modules
+            frontend/node_modules
+          key: ${{ needs.setup.outputs.cache-key }}
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd backend && npm ci
+          cd ../frontend && npm ci
+
+      - name: Setup Docker test environment
+        run: |
+          chmod +x scripts/test-setup.sh
+          ./scripts/test-setup.sh docker
+
+      - name: Wait for services
+        run: |
+          echo "Waiting for DynamoDB..."
+          timeout 60 bash -c 'until curl -f http://localhost:8000/; do sleep 2; done'
+          echo "Waiting for LocalStack..."
+          timeout 60 bash -c 'until curl -f http://localhost:4566/health; do sleep 2; done'
+
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          DYNAMODB_ENDPOINT: http://localhost:8000
+          LOCALSTACK_ENDPOINT: http://localhost:4566
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_REGION: ${{ env.AWS_REGION }}
+
+  # Job 5: Security scanning
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd backend && npm ci
+          cd ../frontend && npm ci
+
+      - name: Run security audit
+        run: |
+          echo "Running security audit..."
+          npm audit --audit-level moderate || true
+          cd backend && npm audit --audit-level moderate || true
+          cd ../frontend && npm audit --audit-level moderate || true
+
+      - name: Run dependency check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: "fabularius-art"
+          path: "."
+          format: "ALL"
+
+      - name: Upload dependency check results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: dependency-check-report
+          path: reports/
+
+  # Job 6: Performance testing
+  performance-test:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests]
+    if: always() && github.event_name == 'push'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd frontend && npm ci
+
+      - name: Build frontend
+        run: cd frontend && npm run build
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          configPath: "./frontend/.lighthouserc.json"
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+  # Job 7: Aggregate results
+  aggregate-results:
+    name: Aggregate Test Results
+    runs-on: ubuntu-latest
+    needs: [backend-tests, frontend-tests, security-scan]
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate combined coverage report
+        run: npm run test:coverage:combined
+
+      - name: Upload combined coverage
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: combined
+          name: combined-coverage
+
+      - name: Generate test summary
+        run: npm run test:summary
+
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const path = './test-summary.md';
+            if (fs.existsSync(path)) {
+              const summary = fs.readFileSync(path, 'utf8');
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: summary
+              });
+            }
+
+  # Job 8: Quality gates
+  quality-gates:
+    name: Quality Gates
+    runs-on: ubuntu-latest
+    needs: [aggregate-results]
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Check coverage thresholds
+        run: |
+          echo "🔍 Checking coverage thresholds..."
+
+          # Check if combined coverage meets minimum threshold
+          if [ -f "coverage/lcov.info" ]; then
+            # Extract coverage percentage (simplified)
+            coverage=$(grep -o "LF:[0-9]*" coverage/lcov.info | awk -F: '{sum+=$2} END {print sum}')
+            lines_hit=$(grep -o "LH:[0-9]*" coverage/lcov.info | awk -F: '{sum+=$2} END {print sum}')
+            
+            if [ "$coverage" -gt 0 ]; then
+              percentage=$((lines_hit * 100 / coverage))
+              echo "Overall coverage: ${percentage}%"
+              
+              if [ "$percentage" -lt 85 ]; then
+                echo "❌ Coverage below threshold (85%): ${percentage}%"
+                exit 1
+              else
+                echo "✅ Coverage meets threshold: ${percentage}%"
+              fi
+            fi
+          fi
+
+      - name: Check test results
+        run: |
+          echo "🔍 Checking test results..."
+
+          # This would typically parse test result files
+          # For now, we'll check if the previous jobs succeeded
+          if [ "${{ needs.aggregate-results.result }}" != "success" ]; then
+            echo "❌ Test aggregation failed"
+            exit 1
+          fi
+
+          echo "✅ All quality gates passed"
+
+  # Job 9: Deploy to staging
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [quality-gates]
+    if: github.ref == 'refs/heads/develop' && success()
+    environment: staging
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to staging
+        run: |
+          chmod +x ./scripts/deploy.sh
+          ./scripts/deploy.sh --environment staging
+
+  # Job 10: Deploy to production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [quality-gates]
+    if: github.ref == 'refs/heads/main' && success()
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy to production
+        run: |
+          chmod +x ./scripts/deploy.sh
+          ./scripts/deploy.sh --environment production
+
+  # Job 11: Cleanup
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    needs: [aggregate-results]
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cleanup test environment
+        run: |
+          chmod +x ./scripts/test-cleanup.sh
+          ./scripts/test-cleanup.sh complete

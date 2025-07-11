@@ -1,0 +1,194 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Fabularius.art Pre-commit Hook
+# Runs linting, type checking, and tests before commits
+
+echo "🔍 Running pre-commit checks..."
+
+# Check if we're in the right directory
+if [ ! -f "package.json" ]; then
+    echo "❌ Error: Not in project root directory"
+    exit 1
+fi
+
+# Function to print colored output
+print_status() {
+    echo "🔵 $1"
+}
+
+print_success() {
+    echo "✅ $1"
+}
+
+print_error() {
+    echo "❌ $1"
+}
+
+print_warning() {
+    echo "⚠️ $1"
+}
+
+# Get list of staged files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+BACKEND_FILES=$(echo "$STAGED_FILES" | grep "^backend/" || true)
+FRONTEND_FILES=$(echo "$STAGED_FILES" | grep "^frontend/" || true)
+ROOT_FILES=$(echo "$STAGED_FILES" | grep -E "^(package\.json|\.github/|scripts/|docker-compose)" || true)
+
+# Exit early if no relevant files are staged
+if [ -z "$BACKEND_FILES" ] && [ -z "$FRONTEND_FILES" ] && [ -z "$ROOT_FILES" ]; then
+    print_success "No relevant files staged, skipping checks"
+    exit 0
+fi
+
+print_status "Staged files detected:"
+if [ -n "$BACKEND_FILES" ]; then
+    echo "  Backend: $(echo "$BACKEND_FILES" | wc -l) files"
+fi
+if [ -n "$FRONTEND_FILES" ]; then
+    echo "  Frontend: $(echo "$FRONTEND_FILES" | wc -l) files"
+fi
+if [ -n "$ROOT_FILES" ]; then
+    echo "  Root: $(echo "$ROOT_FILES" | wc -l) files"
+fi
+
+# Track overall success
+OVERALL_SUCCESS=true
+
+# Function to run command and track success
+run_check() {
+    local description="$1"
+    local command="$2"
+    
+    print_status "Running $description..."
+    
+    if eval "$command"; then
+        print_success "$description passed"
+        return 0
+    else
+        print_error "$description failed"
+        OVERALL_SUCCESS=false
+        return 1
+    fi
+}
+
+# 1. Lint staged files
+if [ -n "$BACKEND_FILES" ]; then
+    run_check "backend linting" "cd backend && npm run lint"
+fi
+
+if [ -n "$FRONTEND_FILES" ]; then
+    run_check "frontend linting" "cd frontend && npm run lint"
+fi
+
+# 2. Type checking
+if [ -n "$BACKEND_FILES" ]; then
+    run_check "backend type checking" "cd backend && npm run build"
+fi
+
+if [ -n "$FRONTEND_FILES" ]; then
+    run_check "frontend type checking" "cd frontend && npm run type-check"
+fi
+
+# 3. Run tests for changed components
+if [ -n "$BACKEND_FILES" ]; then
+    # Check if test files are among staged files
+    BACKEND_TEST_FILES=$(echo "$BACKEND_FILES" | grep "__tests__" || true)
+    BACKEND_SRC_FILES=$(echo "$BACKEND_FILES" | grep -v "__tests__" || true)
+    
+    if [ -n "$BACKEND_TEST_FILES" ] || [ -n "$BACKEND_SRC_FILES" ]; then
+        run_check "backend tests" "cd backend && npm run test -- --passWithNoTests"
+    fi
+fi
+
+if [ -n "$FRONTEND_FILES" ]; then
+    # Check if test files are among staged files
+    FRONTEND_TEST_FILES=$(echo "$FRONTEND_FILES" | grep "__tests__" || true)
+    FRONTEND_SRC_FILES=$(echo "$FRONTEND_FILES" | grep -v "__tests__" || true)
+    
+    if [ -n "$FRONTEND_TEST_FILES" ] || [ -n "$FRONTEND_SRC_FILES" ]; then
+        run_check "frontend unit tests" "cd frontend && npm run test -- --passWithNoTests --watchAll=false"
+    fi
+fi
+
+# 4. Security checks
+if [ -n "$BACKEND_FILES" ] || [ -n "$FRONTEND_FILES" ]; then
+    print_status "Running security audit..."
+    
+    # Check for high/critical vulnerabilities
+    if npm audit --audit-level high --production > /dev/null 2>&1; then
+        print_success "Security audit passed"
+    else
+        print_warning "Security vulnerabilities detected - please review with 'npm audit'"
+        # Don't fail the commit for security issues, just warn
+    fi
+fi
+
+# 5. Check for common issues
+print_status "Checking for common issues..."
+
+# Check for console.log statements in production code
+CONSOLE_LOGS=$(echo "$STAGED_FILES" | xargs grep -l "console\.log" 2>/dev/null | grep -v "__tests__" | grep -v "\.test\." | grep -v "\.spec\." || true)
+if [ -n "$CONSOLE_LOGS" ]; then
+    print_warning "console.log statements found in:"
+    echo "$CONSOLE_LOGS"
+    print_warning "Consider removing console.log statements before committing"
+fi
+
+# Check for TODO/FIXME comments
+TODO_COMMENTS=$(echo "$STAGED_FILES" | xargs grep -l -E "(TODO|FIXME|XXX)" 2>/dev/null || true)
+if [ -n "$TODO_COMMENTS" ]; then
+    print_warning "TODO/FIXME comments found in:"
+    echo "$TODO_COMMENTS"
+fi
+
+# Check for large files
+LARGE_FILES=$(echo "$STAGED_FILES" | xargs ls -la 2>/dev/null | awk '$5 > 1048576 {print $9, "(" $5 " bytes)"}' || true)
+if [ -n "$LARGE_FILES" ]; then
+    print_warning "Large files detected (>1MB):"
+    echo "$LARGE_FILES"
+    print_warning "Consider using Git LFS for large files"
+fi
+
+# 6. Format check (if prettier is configured)
+if [ -f ".prettierrc" ] || [ -f "prettier.config.js" ]; then
+    if command -v prettier >/dev/null 2>&1; then
+        print_status "Checking code formatting..."
+        
+        if echo "$STAGED_FILES" | xargs prettier --check 2>/dev/null; then
+            print_success "Code formatting is correct"
+        else
+            print_error "Code formatting issues detected"
+            print_status "Run 'npm run format' to fix formatting issues"
+            OVERALL_SUCCESS=false
+        fi
+    fi
+fi
+
+# 7. Check package.json changes
+PACKAGE_JSON_CHANGED=$(echo "$STAGED_FILES" | grep "package\.json" || true)
+if [ -n "$PACKAGE_JSON_CHANGED" ]; then
+    print_status "package.json changes detected, checking for lock file updates..."
+    
+    LOCK_FILE_CHANGED=$(echo "$STAGED_FILES" | grep "package-lock\.json" || true)
+    if [ -z "$LOCK_FILE_CHANGED" ]; then
+        print_warning "package.json changed but package-lock.json not updated"
+        print_warning "Run 'npm install' to update lock file"
+    fi
+fi
+
+# Final result
+echo ""
+if [ "$OVERALL_SUCCESS" = true ]; then
+    print_success "All pre-commit checks passed! 🎉"
+    print_status "Proceeding with commit..."
+    exit 0
+else
+    print_error "Some pre-commit checks failed! 💥"
+    print_status "Please fix the issues above before committing."
+    print_status ""
+    print_status "To skip these checks (not recommended), use:"
+    print_status "  git commit --no-verify"
+    print_status ""
+    exit 1
+fi
