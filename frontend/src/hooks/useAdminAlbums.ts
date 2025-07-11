@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { Album } from "@/types";
+import API_URL from "@/lib/api";
 
 interface CreateAlbumData {
   title: string;
@@ -23,7 +24,7 @@ export function useAdminAlbums() {
     setError(null);
 
     try {
-      const response = await fetch("/api/admin/albums", {
+      const response = await fetch(`${API_URL}/admin/albums`, {
         credentials: "include",
       });
 
@@ -48,7 +49,7 @@ export function useAdminAlbums() {
     async (albumData: CreateAlbumData): Promise<Album> => {
       setError(null);
 
-      const response = await fetch("/api/albums", {
+      const response = await fetch(`${API_URL}/albums`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -75,7 +76,7 @@ export function useAdminAlbums() {
     async (albumId: string, albumData: UpdateAlbumData): Promise<Album> => {
       setError(null);
 
-      const response = await fetch(`/api/admin/albums/${albumId}`, {
+      const response = await fetch(`${API_URL}/admin/albums/${albumId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -101,7 +102,7 @@ export function useAdminAlbums() {
   const deleteAlbum = useCallback(async (albumId: string): Promise<void> => {
     setError(null);
 
-    const response = await fetch(`/api/admin/albums/${albumId}`, {
+    const response = await fetch(`${API_URL}/admin/albums/${albumId}`, {
       method: "DELETE",
       credentials: "include",
     });
@@ -129,7 +130,7 @@ export function useAdminAlbums() {
   const getAlbum = useCallback(async (albumId: string): Promise<Album> => {
     setError(null);
 
-    const response = await fetch(`/api/albums/${albumId}`, {
+    const response = await fetch(`${API_URL}/albums/${albumId}`, {
       credentials: "include",
     });
 

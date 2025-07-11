@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { Media } from "@/types";
+import API_URL from "@/lib/api";
 
 interface UploadMediaData {
   file: File;
@@ -19,7 +20,7 @@ export function useAdminMedia() {
     setError(null);
 
     try {
-      const response = await fetch(`/api/albums/${albumId}/media`, {
+      const response = await fetch(`${API_URL}/albums/${albumId}/media`, {
         credentials: "include",
       });
 
@@ -52,7 +53,7 @@ export function useAdminMedia() {
         formData.append("file", uploadData.file);
 
         const response = await fetch(
-          `/api/albums/${uploadData.albumId}/media`,
+          `${API_URL}/albums/${uploadData.albumId}/media`,
           {
             method: "POST",
             credentials: "include",
@@ -115,7 +116,7 @@ export function useAdminMedia() {
       setError(null);
 
       const response = await fetch(
-        `/api/admin/albums/${albumId}/media/${mediaId}`,
+        `${API_URL}/admin/albums/${albumId}/media/${mediaId}`,
         {
           method: "DELETE",
           credentials: "include",

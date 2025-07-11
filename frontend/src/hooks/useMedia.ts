@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Media } from "../types/index";
+import API_URL from "@/lib/api";
 
 interface UseMediaOptions {
   albumId: string;
@@ -40,7 +41,6 @@ export function useMedia(options: UseMediaOptions): UseMediaReturn {
       }
 
       const params = new URLSearchParams({
-        albumId,
         limit: limit.toString(),
       });
 
@@ -48,9 +48,9 @@ export function useMedia(options: UseMediaOptions): UseMediaReturn {
         params.append("cursor", cursor);
       }
 
-      const apiUrl =
-        process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:3001/api";
-      const response = await fetch(`${apiUrl}/media?${params}`);
+      const response = await fetch(
+        `${API_URL}/albums/${albumId}/media?${params}`
+      );
 
       if (!response.ok) {
         if (response.status === 404) {

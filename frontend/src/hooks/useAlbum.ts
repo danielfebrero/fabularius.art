@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Album } from "../types/index";
+import API_URL from "@/lib/api";
 
 interface UseAlbumReturn {
   album: Album | null;
@@ -18,9 +19,7 @@ export function useAlbum(albumId: string): UseAlbumReturn {
       setLoading(true);
       setError(null);
 
-      const apiUrl =
-        process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:3001/api";
-      const response = await fetch(`${apiUrl}/albums/${albumId}`);
+      const response = await fetch(`${API_URL}/albums/${albumId}`);
 
       if (!response.ok) {
         if (response.status === 404) {
