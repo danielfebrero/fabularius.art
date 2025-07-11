@@ -12,10 +12,15 @@ export class ResponseUtil {
       statusCode,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin":
+          process.env["NODE_ENV"] === "development"
+            ? "http://localhost:3000"
+            : "*",
         "Access-Control-Allow-Headers":
           "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
         "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+        "Access-Control-Allow-Credentials":
+          process.env["NODE_ENV"] === "development" ? "true" : "false",
       },
       body: JSON.stringify(response),
     };
@@ -34,10 +39,15 @@ export class ResponseUtil {
       statusCode,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin":
+          process.env["NODE_ENV"] === "development"
+            ? "http://localhost:3000"
+            : "*",
         "Access-Control-Allow-Headers":
           "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
         "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+        "Access-Control-Allow-Credentials":
+          process.env["NODE_ENV"] === "development" ? "true" : "false",
       },
       body: JSON.stringify(response),
     };
@@ -75,10 +85,15 @@ export class ResponseUtil {
     return {
       statusCode: 204,
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin":
+          process.env["NODE_ENV"] === "development"
+            ? "http://localhost:3000"
+            : "*",
         "Access-Control-Allow-Headers":
           "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
         "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+        "Access-Control-Allow-Credentials":
+          process.env["NODE_ENV"] === "development" ? "true" : "false",
       },
       body: "",
     };

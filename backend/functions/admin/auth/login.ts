@@ -15,6 +15,35 @@ const SESSION_DURATION_HOURS = 24;
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  // DIAGNOSTIC LOGGING - START
+  console.log("=== ADMIN LOGIN DIAGNOSTIC ===");
+  console.log("HTTP Method:", event.httpMethod);
+  console.log("Headers:", JSON.stringify(event.headers, null, 2));
+  console.log("Origin:", event.headers["origin"] || event.headers["Origin"]);
+  console.log(
+    "Request Context:",
+    JSON.stringify(event.requestContext, null, 2)
+  );
+  console.log("Body present:", !!event.body);
+
+  // Handle OPTIONS preflight request
+  if (event.httpMethod === "OPTIONS") {
+    console.log("Handling OPTIONS preflight request");
+    return {
+      statusCode: 200,
+      headers: {
+        "Access-Control-Allow-Origin": "http://localhost:3000",
+        "Access-Control-Allow-Headers":
+          "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+        "Access-Control-Allow-Methods": "POST,OPTIONS",
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Max-Age": "86400",
+      },
+      body: "",
+    };
+  }
+  // DIAGNOSTIC LOGGING - END
+
   try {
     if (!event.body) {
       return ResponseUtil.badRequest("Request body is required");
@@ -100,14 +129,15 @@ export const handler = async (
 
     console.log(`Successful login for username: ${request.username}`);
 
+    console.log("Sending successful login response with CORS headers");
     return {
       statusCode: 200,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": "http://localhost:3000",
         "Access-Control-Allow-Headers":
           "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+        "Access-Control-Allow-Methods": "POST,OPTIONS",
         "Access-Control-Allow-Credentials": "true",
         "Set-Cookie": sessionCookie,
       },

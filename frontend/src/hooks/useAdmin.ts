@@ -23,6 +23,19 @@ export function useAdmin(): UseAdminReturn {
       setLoading(true);
       setError(null);
 
+      // DIAGNOSTIC LOGGING - START
+      console.log("=== FRONTEND LOGIN DIAGNOSTIC ===");
+      console.log("API URL:", `${apiUrl}/admin/login`);
+      console.log("Request credentials:", credentials);
+      console.log("Fetch options:", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      // DIAGNOSTIC LOGGING - END
+
       const response = await fetch(`${apiUrl}/admin/login`, {
         method: "POST",
         headers: {
@@ -32,16 +45,42 @@ export function useAdmin(): UseAdminReturn {
         body: JSON.stringify(credentials),
       });
 
+      // DIAGNOSTIC LOGGING - START
+      console.log("Response status:", response.status);
+      console.log(
+        "Response headers:",
+        Object.fromEntries(response.headers.entries())
+      );
+      console.log("Response ok:", response.ok);
+      // DIAGNOSTIC LOGGING - END
+
       const data = await response.json();
 
+      // DIAGNOSTIC LOGGING - START
+      console.log("Response data:", data);
+      console.log("Data structure:", JSON.stringify(data, null, 2));
+      // DIAGNOSTIC LOGGING - END
+
       if (response.ok && data.success) {
-        setUser(data.data.user);
+        // Backend returns { success: true, admin: {...}, sessionId: "..." }
+        setUser(data.admin);
         return true;
       } else {
         setError(data.error || "Login failed");
         return false;
       }
     } catch (err) {
+      // DIAGNOSTIC LOGGING - START
+      console.log("=== FRONTEND LOGIN ERROR ===");
+      console.log("Error type:", typeof err);
+      console.log("Error instance:", err instanceof Error);
+      console.log(
+        "Error message:",
+        err instanceof Error ? err.message : String(err)
+      );
+      console.log("Full error:", err);
+      // DIAGNOSTIC LOGGING - END
+
       const errorMessage = err instanceof Error ? err.message : "Login failed";
       setError(errorMessage);
       return false;
