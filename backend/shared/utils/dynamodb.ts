@@ -19,11 +19,11 @@ const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
 const clientConfig: any = {};
 
 if (isLocal) {
-  clientConfig.endpoint = "http://dynamodb-local:8000";
-  clientConfig.region = "local-env";
+  clientConfig.endpoint = "http://fabularius-local-aws:4566";
+  clientConfig.region = "us-east-1";
   clientConfig.credentials = {
-    accessKeyId: "fakeMyKeyId",
-    secretAccessKey: "fakeSecretAccessKey",
+    accessKeyId: "test",
+    secretAccessKey: "test",
   };
 }
 

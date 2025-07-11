@@ -53,16 +53,7 @@ export class S3Service {
       },
     });
 
-    let uploadUrl = await getSignedUrl(s3Client, command, { expiresIn });
-
-    if (isLocal) {
-      uploadUrl = uploadUrl.replace(
-        `https://${BUCKET_NAME}.s3.${
-          process.env["AWS_REGION"] || "us-east-1"
-        }.amazonaws.com`,
-        `${process.env["LOCAL_AWS_ENDPOINT"]}/${BUCKET_NAME}`
-      );
-    }
+    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn });
 
     return { uploadUrl, key };
   }
@@ -76,17 +67,7 @@ export class S3Service {
       Key: key,
     });
 
-    let downloadUrl = await getSignedUrl(s3Client, command, { expiresIn });
-
-    if (isLocal) {
-      downloadUrl = downloadUrl.replace(
-        `https://s3.${
-          process.env["AWS_REGION"] || "us-east-1"
-        }.amazonaws.com/${BUCKET_NAME}`,
-        `${process.env["LOCAL_AWS_ENDPOINT"]}/${BUCKET_NAME}`
-      );
-    }
-    return downloadUrl;
+    return await getSignedUrl(s3Client, command, { expiresIn });
   }
 
   static async deleteObject(key: string): Promise<void> {

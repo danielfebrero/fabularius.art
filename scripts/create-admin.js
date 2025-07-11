@@ -16,13 +16,13 @@ const bcrypt = require("bcrypt");
 
 const SALT_ROUNDS = 12;
 
-const clientConfig = {};
-
-clientConfig.endpoint = "http://localhost:8000";
-clientConfig.region = "local-env";
-clientConfig.credentials = {
-  accessKeyId: "fakeMyKeyId",
-  secretAccessKey: "fakeSecretAccessKey",
+const clientConfig = {
+  endpoint: "http://localhost:4566",
+  region: "us-east-1",
+  credentials: {
+    accessKeyId: "test",
+    secretAccessKey: "test",
+  },
 };
 
 // Initialize DynamoDB client
@@ -31,10 +31,7 @@ const docClient = DynamoDBDocumentClient.from(client);
 
 async function createAdminUser(username, password) {
   try {
-    const tableName = process.env.DYNAMODB_TABLE;
-    if (!tableName) {
-      throw new Error("DYNAMODB_TABLE environment variable is required");
-    }
+    const tableName = "local-fabularius-media";
 
     console.log(`Creating admin user: ${username}`);
 
