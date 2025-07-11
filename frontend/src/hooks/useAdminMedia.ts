@@ -81,7 +81,11 @@ export function useAdminMedia() {
 
         // Step 2: Upload file directly to S3 using Axios for progress tracking
         await axios.put(uploadUrl, file, {
-          headers: { "Content-Type": file.type },
+          headers: {
+            "Content-Type": file.type,
+            "x-amz-meta-original-filename": file.name,
+            "x-amz-meta-album-id": albumId,
+          },
           onUploadProgress: (progressEvent) => {
             const percentCompleted = progressEvent.total
               ? Math.round((progressEvent.loaded * 100) / progressEvent.total)

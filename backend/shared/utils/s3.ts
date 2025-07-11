@@ -9,13 +9,13 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from "uuid";
 import * as path from "path";
 
-const isLocal = process.env["NODE_ENV"] === "development";
+const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
 
 let s3Config: S3ClientConfig = {};
 
 if (isLocal) {
   s3Config = {
-    endpoint: process.env["LOCAL_AWS_ENDPOINT"] || "",
+    endpoint: "http://fabularius-local-aws:4566",
     region: process.env["AWS_REGION"] || "us-east-1",
     credentials: {
       accessKeyId: "test",
@@ -27,8 +27,27 @@ if (isLocal) {
 
 const s3Client = new S3Client(s3Config);
 
+// Middleware to remove unsupported headers for LocalStack
+if (isLocal) {
+  s3Client.middlewareStack.add(
+    (next) => async (args) => {
+      // Remove from headers
+      if (args.request && (args.request as any).headers) {
+        delete (args.request as any).headers["x-amz-sdk-checksum-algorithm"];
+      }
+      // Remove from query params (for presigned URLs)
+      if (args.request && (args.request as any).query) {
+        delete (args.request as any).query["x-amz-sdk-checksum-algorithm"];
+        delete (args.request as any).query["x-amz-checksum-crc32"];
+      }
+      return next(args);
+    },
+    { step: "build", name: "removeChecksumHeader" }
+  );
+}
+
 const BUCKET_NAME = (
-  isLocal ? process.env["LOCAL_S3_BUCKET"] : process.env["S3_BUCKET"]
+  isLocal ? "local-fabularius-media" : process.env["S3_BUCKET"]
 )!;
 
 const CLOUDFRONT_DOMAIN = process.env["CLOUDFRONT_DOMAIN"]!;
@@ -53,7 +72,30 @@ export class S3Service {
       },
     });
 
-    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn });
+    const rawUrl = await getSignedUrl(s3Client, command, {
+      expiresIn,
+      signableHeaders: new Set([
+        "host",
+        "x-amz-meta-original-filename",
+        "x-amz-meta-album-id",
+      ]),
+    });
+
+    // Remove unwanted query params (x-amz-sdk-checksum-algorithm, x-amz-checksum-crc32)
+    const url = isLocal
+      ? rawUrl
+          .replace(/([&?])x-amz-sdk-checksum-algorithm=[^&]*/g, "$1")
+          .replace(/([&?])x-amz-checksum-crc32=[^&]*/g, "$1")
+          .replace(/([&?])x-id=PutObject/g, "$1x-id=PutObject") // keep this if needed
+          .replace(/[&?]+$/, "") // remove trailing & or ?
+          .replace(/\?&/, "?")
+          .replace(/&&/, "&")
+      : rawUrl;
+
+    // For docker hostname to localhost fix:
+    const uploadUrl = isLocal
+      ? url.replace("fabularius-local-aws", "localhost")
+      : url;
 
     return { uploadUrl, key };
   }
@@ -81,7 +123,7 @@ export class S3Service {
 
   static getPublicUrl(key: string): string {
     if (isLocal) {
-      return `${process.env["LOCAL_AWS_ENDPOINT"]}/${BUCKET_NAME}/${key}`;
+      return `http://localhost:4566/${BUCKET_NAME}/${key}`;
     }
 
     if (CLOUDFRONT_DOMAIN) {

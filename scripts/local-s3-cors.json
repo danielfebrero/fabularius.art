@@ -3,14 +3,8 @@
     {
       "AllowedHeaders": ["*"],
       "AllowedMethods": ["GET", "PUT", "POST", "DELETE"],
-      "AllowedOrigins": ["http://localhost:3000"],
-      "ExposeHeaders": ["ETag"],
-      "MaxAgeSeconds": 3000
-    },
-    {
-      "AllowedHeaders": ["*"],
-      "AllowedMethods": ["GET"],
       "AllowedOrigins": ["*"],
+      "ExposeHeaders": ["ETag"],
       "MaxAgeSeconds": 3000
     }
   ]
