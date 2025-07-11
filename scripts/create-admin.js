@@ -16,8 +16,17 @@ const bcrypt = require("bcrypt");
 
 const SALT_ROUNDS = 12;
 
+const clientConfig = {};
+
+clientConfig.endpoint = "http://localhost:8000";
+clientConfig.region = "local-env";
+clientConfig.credentials = {
+  accessKeyId: "fakeMyKeyId",
+  secretAccessKey: "fakeSecretAccessKey",
+};
+
 // Initialize DynamoDB client
-const client = new DynamoDBClient({});
+const client = new DynamoDBClient(clientConfig);
 const docClient = DynamoDBDocumentClient.from(client);
 
 async function createAdminUser(username, password) {

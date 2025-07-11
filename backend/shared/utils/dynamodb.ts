@@ -14,10 +14,30 @@ import {
   AdminSessionEntity,
 } from "../types";
 
-const client = new DynamoDBClient({});
+const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
+
+const clientConfig: any = {};
+
+if (isLocal) {
+  clientConfig.endpoint = "http://dynamodb-local:8000";
+  clientConfig.region = "local-env";
+  clientConfig.credentials = {
+    accessKeyId: "fakeMyKeyId",
+    secretAccessKey: "fakeSecretAccessKey",
+  };
+}
+
+console.log(
+  "🔧 DynamoDB Client Config:",
+  JSON.stringify(clientConfig, null, 2)
+);
+console.log("🌍 AWS_SAM_LOCAL env var:", process.env["AWS_SAM_LOCAL"]);
+
+const client = new DynamoDBClient(clientConfig);
 const docClient = DynamoDBDocumentClient.from(client);
 
 const TABLE_NAME = process.env["DYNAMODB_TABLE"]!;
+console.log("📋 Table name from env:", TABLE_NAME);
 
 export class DynamoDBService {
   // Album operations
@@ -96,6 +116,10 @@ export class DynamoDBService {
     albums: AlbumEntity[];
     lastEvaluatedKey?: Record<string, any>;
   }> {
+    console.log("🔄 About to call DynamoDBService.listAlbums");
+    console.log("📋 Using table name:", TABLE_NAME);
+    console.log("🔍 Query parameters:", { limit, lastEvaluatedKey });
+
     const result = await docClient.send(
       new QueryCommand({
         TableName: TABLE_NAME,

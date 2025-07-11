@@ -170,7 +170,7 @@ Use the provided script to create the first admin user:
 export DYNAMODB_TABLE="dev-fabularius-media"
 
 # Create admin user
-node scripts/create-admin.js admin "MySecurePassword123!"
+node scripts/create-admin.js admin SuperPassword123
 ```
 
 ### 3. Environment Variables
