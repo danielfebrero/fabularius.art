@@ -9,8 +9,14 @@ const createJestConfig = nextJest({
 const customJestConfig = {
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
   testEnvironment: "jsdom",
-  testPathIgnorePatterns: ["<rootDir>/.next/", "<rootDir>/node_modules/"],
-  moduleNameMapping: {
+  testPathIgnorePatterns: [
+    "<rootDir>/.next/",
+    "<rootDir>/node_modules/",
+    "<rootDir>/__tests__/e2e/",
+    "<rootDir>/playwright-report/",
+    "<rootDir>/test-results/",
+  ],
+  moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^@/components/(.*)$": "<rootDir>/src/components/$1",
     "^@/lib/(.*)$": "<rootDir>/src/lib/$1",
@@ -35,9 +41,18 @@ const customJestConfig = {
     },
   },
   testMatch: [
-    "<rootDir>/__tests__/**/*.{js,jsx,ts,tsx}",
+    "<rootDir>/__tests__/**/*.{test,spec}.{js,jsx,ts,tsx}",
     "<rootDir>/src/**/__tests__/**/*.{js,jsx,ts,tsx}",
     "<rootDir>/src/**/*.{test,spec}.{js,jsx,ts,tsx}",
+  ],
+  testPathIgnorePatterns: [
+    "<rootDir>/.next/",
+    "<rootDir>/node_modules/",
+    "<rootDir>/__tests__/e2e/",
+    "<rootDir>/__tests__/fixtures/",
+    "<rootDir>/__tests__/mocks/",
+    "<rootDir>/playwright-report/",
+    "<rootDir>/test-results/",
   ],
   transform: {
     "^.+\\.(js|jsx|ts|tsx)$": ["babel-jest", { presets: ["next/babel"] }],

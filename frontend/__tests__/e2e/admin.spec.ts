@@ -10,7 +10,8 @@ test.describe("Admin Interface", () => {
 
     // Mock albums API
     await page.route("**/api/albums**", async (route) => {
-      const url = new URL(route.request().url());
+      // Monitor network requests
+      new URL(route.request().url());
       const method = route.request().method();
 
       if (method === "GET") {
@@ -84,18 +85,18 @@ test.describe("Admin Interface", () => {
     await page.getByTestId("create-album-button").click();
 
     await expect(page.getByTestId("create-album-modal")).toBeVisible();
-    await expect(page.getByLabelText("Title")).toBeVisible();
-    await expect(page.getByLabelText("Description")).toBeVisible();
-    await expect(page.getByLabelText("Public")).toBeVisible();
+    await expect(page.getByLabel("Title")).toBeVisible();
+    await expect(page.getByLabel("Description")).toBeVisible();
+    await expect(page.getByLabel("Public")).toBeVisible();
   });
 
   test("creates new album successfully", async ({ page }) => {
     await page.getByTestId("create-album-button").click();
 
     // Fill form
-    await page.getByLabelText("Title").fill("New Test Album");
-    await page.getByLabelText("Description").fill("Test description");
-    await page.getByLabelText("Public").check();
+    await page.getByLabel("Title").fill("New Test Album");
+    await page.getByLabel("Description").fill("Test description");
+    await page.getByLabel("Public").check();
 
     // Submit form
     await page.getByTestId("submit-album").click();
@@ -132,15 +133,13 @@ test.describe("Admin Interface", () => {
     await expect(page.getByTestId("edit-album-modal")).toBeVisible();
 
     // Form should be pre-filled
-    await expect(page.getByLabelText("Title")).toHaveValue(
-      "Nature Photography"
-    );
-    await expect(page.getByLabelText("Description")).toHaveValue(
+    await expect(page.getByLabel("Title")).toHaveValue("Nature Photography");
+    await expect(page.getByLabel("Description")).toHaveValue(
       "Beautiful landscapes"
     );
 
     // Make changes
-    await page.getByLabelText("Title").fill("Updated Nature Photography");
+    await page.getByLabel("Title").fill("Updated Nature Photography");
     await page.getByTestId("submit-album").click();
 
     await expect(page.getByText("Album updated successfully")).toBeVisible();
@@ -230,9 +229,9 @@ test.describe("Admin Interface", () => {
     await page.getByTestId("settings-tab").click();
 
     await expect(page.getByText("System Settings")).toBeVisible();
-    await expect(page.getByLabelText("Site Title")).toBeVisible();
-    await expect(page.getByLabelText("Max Upload Size")).toBeVisible();
-    await expect(page.getByLabelText("Allowed File Types")).toBeVisible();
+    await expect(page.getByLabel("Site Title")).toBeVisible();
+    await expect(page.getByLabel("Max Upload Size")).toBeVisible();
+    await expect(page.getByLabel("Allowed File Types")).toBeVisible();
   });
 
   test("shows user management interface", async ({ page }) => {

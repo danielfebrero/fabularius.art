@@ -1,6 +1,6 @@
-import { chromium, FullConfig } from "@playwright/test";
+import { FullConfig } from "@playwright/test";
 
-async function globalSetup(config: FullConfig) {
+async function globalSetup(_config: FullConfig) {
   // Start the development server if not already running
   // This is handled by the webServer config in playwright.config.ts
 

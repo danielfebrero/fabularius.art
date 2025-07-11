@@ -5,55 +5,45 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   variant?: "default" | "outlined";
   size?: "sm" | "md" | "lg";
-  onClick?: () => void;
+}
+
+interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+}
+
+interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
+}
+
+interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
+  children: React.ReactNode;
 }
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   (
-    {
-      children,
-      className,
-      variant = "default",
-      size = "md",
-      onClick,
-      ...props
-    },
+    { className, children, variant = "default", size = "md", ...props },
     ref
   ) => {
-    const isClickable = !!onClick;
+    const variantClasses = {
+      default: "border bg-card text-card-foreground shadow-sm",
+      outlined: "border-2 bg-transparent text-foreground",
+    };
 
-    const handleKeyDown = (event: React.KeyboardEvent) => {
-      if (isClickable && (event.key === "Enter" || event.key === " ")) {
-        event.preventDefault();
-        onClick();
-      }
+    const sizeClasses = {
+      sm: "p-3",
+      md: "p-4",
+      lg: "p-6",
     };
 
     return (
       <div
         ref={ref}
         className={cn(
-          "rounded-lg transition-colors",
-          {
-            // Variants
-            "bg-gray-900 border border-gray-800": variant === "default",
-            "bg-transparent border border-gray-700": variant === "outlined",
-
-            // Sizes
-            "p-3": size === "sm",
-            "p-6": size === "md",
-            "p-8": size === "lg",
-
-            // Clickable states
-            "cursor-pointer hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900":
-              isClickable,
-          },
+          "rounded-lg",
+          variantClasses[variant],
+          sizeClasses[size],
           className
         )}
-        onClick={onClick}
-        onKeyDown={handleKeyDown}
-        role={isClickable ? "button" : undefined}
-        tabIndex={isClickable ? 0 : undefined}
         {...props}
       >
         {children}
@@ -61,5 +51,39 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     );
   }
 );
-
 Card.displayName = "Card";
+
+export const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
+  ({ className, children, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn("flex flex-col space-y-1.5 p-6", className)}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+);
+CardHeader.displayName = "CardHeader";
+
+export const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(
+  ({ className, children, ...props }, ref) => (
+    <div ref={ref} className={cn("p-6 pt-0", className)} {...props}>
+      {children}
+    </div>
+  )
+);
+CardContent.displayName = "CardContent";
+
+export const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
+  ({ className, children, ...props }, ref) => (
+    <div
+      ref={ref}
+      className={cn("flex items-center p-6 pt-0", className)}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+);
+CardFooter.displayName = "CardFooter";

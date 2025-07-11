@@ -7,7 +7,12 @@ import {
   UpdateCommand,
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
-import { AlbumEntity, MediaEntity } from "../types";
+import {
+  AlbumEntity,
+  MediaEntity,
+  AdminUserEntity,
+  AdminSessionEntity,
+} from "../types";
 
 const client = new DynamoDBClient({});
 const docClient = DynamoDBDocumentClient.from(client);
@@ -226,5 +231,137 @@ export class DynamoDBService {
         },
       })
     );
+  }
+
+  // Admin operations
+  static async createAdminUser(admin: AdminUserEntity): Promise<void> {
+    await docClient.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: admin,
+        ConditionExpression: "attribute_not_exists(PK)",
+      })
+    );
+  }
+
+  static async getAdminByUsername(
+    username: string
+  ): Promise<AdminUserEntity | null> {
+    // Query using GSI1 to find admin by username
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :gsi1pk AND GSI1SK = :gsi1sk",
+        ExpressionAttributeValues: {
+          ":gsi1pk": "ADMIN_USERNAME",
+          ":gsi1sk": username,
+        },
+        Limit: 1,
+      })
+    );
+
+    return (result.Items?.[0] as AdminUserEntity) || null;
+  }
+
+  static async getAdminById(adminId: string): Promise<AdminUserEntity | null> {
+    const result = await docClient.send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `ADMIN#${adminId}`,
+          SK: "METADATA",
+        },
+      })
+    );
+
+    return (result.Item as AdminUserEntity) || null;
+  }
+
+  static async createSession(session: AdminSessionEntity): Promise<void> {
+    await docClient.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: session,
+      })
+    );
+  }
+
+  static async getSession(
+    sessionId: string
+  ): Promise<AdminSessionEntity | null> {
+    const result = await docClient.send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `SESSION#${sessionId}`,
+          SK: "METADATA",
+        },
+      })
+    );
+
+    return (result.Item as AdminSessionEntity) || null;
+  }
+
+  static async deleteSession(sessionId: string): Promise<void> {
+    await docClient.send(
+      new DeleteCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `SESSION#${sessionId}`,
+          SK: "METADATA",
+        },
+      })
+    );
+  }
+
+  static async updateSessionLastAccessed(sessionId: string): Promise<void> {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `SESSION#${sessionId}`,
+          SK: "METADATA",
+        },
+        UpdateExpression: "SET lastAccessedAt = :lastAccessedAt",
+        ExpressionAttributeValues: {
+          ":lastAccessedAt": new Date().toISOString(),
+        },
+      })
+    );
+  }
+
+  static async cleanupExpiredSessions(): Promise<void> {
+    const now = new Date().toISOString();
+
+    // Query for expired sessions using GSI1
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :gsi1pk AND GSI1SK < :now",
+        ExpressionAttributeValues: {
+          ":gsi1pk": "SESSION_EXPIRY",
+          ":now": now,
+        },
+      })
+    );
+
+    // Delete expired sessions
+    if (result.Items && result.Items.length > 0) {
+      const deletePromises = result.Items.map((item) =>
+        docClient.send(
+          new DeleteCommand({
+            TableName: TABLE_NAME,
+            Key: {
+              PK: item["PK"],
+              SK: item["SK"],
+            },
+          })
+        )
+      );
+
+      await Promise.all(deletePromises);
+    }
   }
 }

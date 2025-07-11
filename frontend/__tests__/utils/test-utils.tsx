@@ -11,6 +11,11 @@ const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   return <div className="dark">{children}</div>;
 };
 
+// Special wrapper for layout components that need to render HTML/body
+const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
+  return <>{children}</>;
+};
+
 const customRender = (
   ui: ReactElement,
   options?: Omit<RenderOptions, "wrapper">
@@ -18,11 +23,19 @@ const customRender = (
   return render(ui, { wrapper: AllTheProviders, ...options });
 };
 
+// Special render function for layout components
+const renderLayout = (
+  ui: ReactElement,
+  options?: Omit<RenderOptions, "wrapper">
+) => {
+  return render(ui, { wrapper: LayoutWrapper, ...options });
+};
+
 // Re-export everything
 export * from "@testing-library/react";
 
 // Override render method
-export { customRender as render };
+export { customRender as render, renderLayout };
 
 // Custom user event setup
 export const user = userEvent.setup();
@@ -199,7 +212,8 @@ export const simulateDragAndDrop = async (
   target: Element,
   dataTransfer?: DataTransfer
 ) => {
-  const dt = dataTransfer || new DataTransfer();
+  // DataTransfer is available for future use if needed
+  dataTransfer = dataTransfer || new DataTransfer();
 
   await user.pointer([
     { target: source, keys: "[MouseLeft>]" },

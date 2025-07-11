@@ -1,9 +1,41 @@
 import "@testing-library/jest-dom";
 import "whatwg-fetch";
 import { toHaveNoViolations } from "jest-axe";
+// import { server } from "./src/mocks/server";
+
+// Polyfills for Node.js environment
+const { TextEncoder, TextDecoder } = require("util");
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
+// Mock BroadcastChannel for MSW
+global.BroadcastChannel = class BroadcastChannel {
+  constructor(name) {
+    this.name = name;
+  }
+  postMessage() {}
+  close() {}
+  addEventListener() {}
+  removeEventListener() {}
+};
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations);
+
+// MSW server setup - temporarily disabled due to import issues
+// import { server } from "./__tests__/mocks/server";
+
+// beforeAll(() => {
+//   server.listen({ onUnhandledRequest: "warn" });
+// });
+
+// afterEach(() => {
+//   server.resetHandlers();
+// });
+
+// afterAll(() => {
+//   server.close();
+// });
 
 // Mock Next.js router
 jest.mock("next/router", () => ({

@@ -152,8 +152,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-fabularius-get-albums"
-      CodeUri: backend/functions/albums/
-      Handler: get.handler
+      CodeUri: backend/
+      Handler: dist/functions/albums/get.handler
       Events:
         Api:
           Type: Api
@@ -169,8 +169,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-fabularius-create-album"
-      CodeUri: backend/functions/albums/
-      Handler: create.handler
+      CodeUri: backend/
+      Handler: dist/functions/albums/create.handler
       Events:
         Api:
           Type: Api
@@ -186,8 +186,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-fabularius-get-album"
-      CodeUri: backend/functions/albums/
-      Handler: getById.handler
+      CodeUri: backend/
+      Handler: dist/functions/albums/getById.handler
       Events:
         Api:
           Type: Api
@@ -203,8 +203,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-fabularius-upload-media"
-      CodeUri: backend/functions/media/
-      Handler: upload.handler
+      CodeUri: backend/
+      Handler: dist/functions/media/upload.handler
       Events:
         Api:
           Type: Api
@@ -222,8 +222,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-fabularius-get-media"
-      CodeUri: backend/functions/media/
-      Handler: get.handler
+      CodeUri: backend/
+      Handler: dist/functions/media/get.handler
       Events:
         Api:
           Type: Api
@@ -233,6 +233,151 @@ Resources:
             Method: GET
       Policies:
         - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
+  # Admin Authentication Functions
+  AdminLoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-fabularius-admin-login"
+      CodeUri: backend/
+      Handler: dist/functions/admin/auth/login.handler
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /admin/login
+            Method: POST
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
+  AdminLogoutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-fabularius-admin-logout"
+      CodeUri: backend/
+      Handler: dist/functions/admin/auth/logout.handler
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /admin/logout
+            Method: POST
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
+  AdminMeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-fabularius-admin-me"
+      CodeUri: backend/
+      Handler: dist/functions/admin/auth/me.handler
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /admin/me
+            Method: GET
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
+  # Admin Album Management Functions
+  AdminUpdateAlbumFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-fabularius-admin-update-album"
+      CodeUri: backend/
+      Handler: dist/functions/admin/albums/update.handler
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /admin/albums/{albumId}
+            Method: PUT
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
+  AdminDeleteAlbumFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-fabularius-admin-delete-album"
+      CodeUri: backend/
+      Handler: dist/functions/admin/albums/delete.handler
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /admin/albums/{albumId}
+            Method: DELETE
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
+  AdminListAlbumsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-fabularius-admin-list-albums"
+      CodeUri: backend/
+      Handler: dist/functions/admin/albums/list.handler
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /admin/albums
+            Method: GET
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
+  AdminDeleteMediaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-fabularius-admin-delete-media"
+      CodeUri: backend/
+      Handler: dist/functions/admin/media/delete.handler
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /admin/albums/{albumId}/media/{mediaId}
+            Method: DELETE
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
 
 Outputs:

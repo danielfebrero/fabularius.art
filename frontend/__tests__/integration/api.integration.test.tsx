@@ -2,13 +2,13 @@ import React from "react";
 import { render, screen, waitFor, user } from "../utils/test-utils";
 import { server } from "../mocks/server";
 import { http, HttpResponse } from "msw";
-import { mockAlbums, resetMockData } from "../fixtures/data";
+import { resetMockData } from "../fixtures/data";
 
 // Mock API client component for testing
 const AlbumsList = () => {
   const [albums, setAlbums] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
+  const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const fetchAlbums = async () => {
@@ -150,7 +150,7 @@ describe("API Integration Tests", () => {
     it("handles API errors gracefully", async () => {
       // Override the handler to return an error
       server.use(
-        http.get("/api/albums", () => {
+        http.get("/api/albums", ({ request: _request }) => {
           return HttpResponse.json(
             { success: false, error: "Server error" },
             { status: 500 }
@@ -170,7 +170,7 @@ describe("API Integration Tests", () => {
     it("handles network errors", async () => {
       // Override the handler to simulate network error
       server.use(
-        http.get("/api/albums", () => {
+        http.get("*/api/albums", ({ request: _request }) => {
           return HttpResponse.error();
         })
       );
@@ -228,7 +228,7 @@ describe("API Integration Tests", () => {
     it("handles API errors during creation", async () => {
       // Override the handler to return an error
       server.use(
-        http.post("/api/albums", () => {
+        http.post("/api/albums", ({ request: _request }) => {
           return HttpResponse.json(
             { success: false, error: "Title already exists" },
             { status: 400 }
@@ -302,7 +302,13 @@ describe("API Integration Tests", () => {
     it("handles pagination correctly", async () => {
       const PaginatedAlbumsList = () => {
         const [albums, setAlbums] = React.useState([]);
-        const [pagination, setPagination] = React.useState(null);
+        const [pagination, setPagination] = React.useState<{
+          page: number;
+          limit: number;
+          total: number;
+          hasNext: boolean;
+          hasPrev: boolean;
+        } | null>(null);
         const [page, setPage] = React.useState(1);
         const [loading, setLoading] = React.useState(true);
 

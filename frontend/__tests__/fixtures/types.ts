@@ -1,47 +1,28 @@
-// Re-export types from backend for frontend tests
 export interface Album {
   id: string;
   title: string;
-  description?: string;
-  coverImageUrl?: string;
+  description: string;
+  isPublic: boolean;
+  mediaCount: number;
   createdAt: string;
   updatedAt: string;
-  mediaCount: number;
-  isPublic: boolean;
 }
 
 export interface Media {
   id: string;
   albumId: string;
   filename: string;
-  originalFilename: string;
+  originalName?: string;
+  originalFilename?: string;
   mimeType: string;
   size: number;
   width?: number;
   height?: number;
   url: string;
-  thumbnailUrl?: string;
+  thumbnailUrl: string;
   createdAt: string;
   updatedAt: string;
   metadata?: Record<string, any>;
-}
-
-export interface CreateAlbumRequest {
-  title: string;
-  description?: string;
-  isPublic?: boolean;
-}
-
-export interface UpdateAlbumRequest {
-  title?: string;
-  description?: string;
-  isPublic?: boolean;
-}
-
-export interface UploadMediaRequest {
-  filename: string;
-  mimeType: string;
-  size: number;
 }
 
 export interface ApiResponse<T = any> {
@@ -51,7 +32,7 @@ export interface ApiResponse<T = any> {
   message?: string;
 }
 
-export interface PaginatedResponse<T> extends ApiResponse<T[]> {
+export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
   pagination: {
     page: number;
     limit: number;
@@ -59,4 +40,12 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
     hasNext: boolean;
     hasPrev: boolean;
   };
+}
+
+export interface Pagination {
+  page: number;
+  limit: number;
+  total: number;
+  hasNext: boolean;
+  hasPrev: boolean;
 }

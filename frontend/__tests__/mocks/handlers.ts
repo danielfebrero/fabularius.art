@@ -45,7 +45,7 @@ export const handlers = [
   }),
 
   http.get(`${API_BASE_URL}/albums/:id`, ({ params }) => {
-    const album = mockAlbums.find((a) => a.id === params.id);
+    const album = mockAlbums.find((a) => a.id === params["id"]);
 
     if (!album) {
       const response: ApiResponse = {
@@ -88,7 +88,7 @@ export const handlers = [
   }),
 
   http.put(`${API_BASE_URL}/albums/:id`, async ({ params, request }) => {
-    const albumIndex = mockAlbums.findIndex((a) => a.id === params.id);
+    const albumIndex = mockAlbums.findIndex((a) => a.id === params["id"]);
 
     if (albumIndex === -1) {
       const response: ApiResponse = {
@@ -117,7 +117,7 @@ export const handlers = [
   }),
 
   http.delete(`${API_BASE_URL}/albums/:id`, ({ params }) => {
-    const albumIndex = mockAlbums.findIndex((a) => a.id === params.id);
+    const albumIndex = mockAlbums.findIndex((a) => a.id === params["id"]);
 
     if (albumIndex === -1) {
       const response: ApiResponse = {
@@ -143,7 +143,7 @@ export const handlers = [
     const page = parseInt(url.searchParams.get("page") || "1");
     const limit = parseInt(url.searchParams.get("limit") || "20");
 
-    const albumMedia = mockMedia.filter((m) => m.albumId === params.albumId);
+    const albumMedia = mockMedia.filter((m) => m.albumId === params["albumId"]);
 
     const startIndex = (page - 1) * limit;
     const endIndex = startIndex + limit;
@@ -171,8 +171,9 @@ export const handlers = [
 
       const newMedia: Media = {
         id: `media-${Date.now()}`,
-        albumId: params.albumId as string,
+        albumId: params["albumId"] as string,
         filename: body.filename,
+        originalName: body.originalFilename || body.filename,
         originalFilename: body.originalFilename || body.filename,
         mimeType: body.mimeType,
         size: body.size,
@@ -185,10 +186,10 @@ export const handlers = [
         metadata: body.metadata,
       };
 
-      mockMedia.push(newMedia);
+      mockMedia.push(newMedia as any);
 
       // Update album media count
-      const album = mockAlbums.find((a) => a.id === params.albumId);
+      const album = mockAlbums.find((a) => a.id === params["albumId"]);
       if (album) {
         album.mediaCount += 1;
         album.updatedAt = new Date().toISOString();
@@ -205,7 +206,7 @@ export const handlers = [
   ),
 
   http.delete(`${API_BASE_URL}/media/:id`, ({ params }) => {
-    const mediaIndex = mockMedia.findIndex((m) => m.id === params.id);
+    const mediaIndex = mockMedia.findIndex((m) => m.id === params["id"]);
 
     if (mediaIndex === -1) {
       const response: ApiResponse = {
@@ -219,7 +220,7 @@ export const handlers = [
     mockMedia.splice(mediaIndex, 1);
 
     // Update album media count
-    const album = mockAlbums.find((a) => a.id === media.albumId);
+    const album = mockAlbums.find((a) => a.id === media?.albumId);
     if (album) {
       album.mediaCount = Math.max(0, album.mediaCount - 1);
       album.updatedAt = new Date().toISOString();

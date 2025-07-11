@@ -97,3 +97,66 @@ export interface MediaEntity {
   updatedAt: string;
   metadata?: Record<string, any> | undefined;
 }
+
+// Admin Authentication Types
+export interface AdminUser {
+  adminId: string;
+  username: string;
+  createdAt: string;
+  isActive: boolean;
+}
+
+export interface AdminSession {
+  sessionId: string;
+  adminId: string;
+  adminUsername: string;
+  createdAt: string;
+  expiresAt: string;
+  lastAccessedAt: string;
+}
+
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  success: boolean;
+  admin: AdminUser;
+  sessionId: string;
+}
+
+export interface SessionValidationResult {
+  isValid: boolean;
+  admin?: AdminUser;
+  session?: AdminSession;
+}
+
+// Admin DynamoDB Entity Types
+export interface AdminUserEntity {
+  PK: string; // ADMIN#{adminId}
+  SK: string; // METADATA
+  GSI1PK: string; // ADMIN_USERNAME
+  GSI1SK: string; // {username}
+  EntityType: "AdminUser";
+  adminId: string;
+  username: string;
+  passwordHash: string;
+  salt: string;
+  createdAt: string;
+  isActive: boolean;
+}
+
+export interface AdminSessionEntity {
+  PK: string; // SESSION#{sessionId}
+  SK: string; // METADATA
+  GSI1PK: string; // SESSION_EXPIRY
+  GSI1SK: string; // {expiresAt}#{sessionId}
+  EntityType: "AdminSession";
+  sessionId: string;
+  adminId: string;
+  adminUsername: string;
+  createdAt: string;
+  expiresAt: string;
+  lastAccessedAt: string;
+}

@@ -158,7 +158,10 @@ describe("ErrorBoundary Component", () => {
 
   it("provides error details in development mode", () => {
     const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = "development";
+    Object.defineProperty(process.env, "NODE_ENV", {
+      value: "development",
+      writable: true,
+    });
 
     render(
       <ErrorBoundary>
@@ -169,12 +172,18 @@ describe("ErrorBoundary Component", () => {
     expect(screen.getByText("Error Details")).toBeInTheDocument();
     expect(screen.getByText(/componentStack/)).toBeInTheDocument();
 
-    process.env.NODE_ENV = originalEnv;
+    Object.defineProperty(process.env, "NODE_ENV", {
+      value: originalEnv,
+      writable: true,
+    });
   });
 
   it("hides error details in production mode", () => {
     const originalEnv = process.env.NODE_ENV;
-    process.env.NODE_ENV = "production";
+    Object.defineProperty(process.env, "NODE_ENV", {
+      value: "production",
+      writable: true,
+    });
 
     render(
       <ErrorBoundary>
@@ -184,7 +193,10 @@ describe("ErrorBoundary Component", () => {
 
     expect(screen.queryByText("Error Details")).not.toBeInTheDocument();
 
-    process.env.NODE_ENV = originalEnv;
+    Object.defineProperty(process.env, "NODE_ENV", {
+      value: originalEnv,
+      writable: true,
+    });
   });
 
   it("renders with proper accessibility attributes", () => {

@@ -1,9 +1,7 @@
-import React from "react";
 import { renderHook, waitFor } from "@testing-library/react";
 import { server } from "../mocks/server";
 import { http, HttpResponse } from "msw";
 import { useAlbums } from "../../src/hooks/useAlbums";
-import { mockAlbums } from "../fixtures/data";
 
 // Mock fetch globally
 global.fetch = jest.fn();
@@ -37,7 +35,7 @@ describe("useAlbums Hook", () => {
   it("handles API errors gracefully", async () => {
     // Mock API error
     server.use(
-      http.get("/api/albums", () => {
+      http.get("*/api/albums", ({ request: _request }) => {
         return HttpResponse.json(
           { success: false, error: "Server error" },
           { status: 500 }
@@ -58,7 +56,7 @@ describe("useAlbums Hook", () => {
   it("handles network errors", async () => {
     // Mock network error
     server.use(
-      http.get("/api/albums", () => {
+      http.get("*/api/albums", ({ request: _request }) => {
         return HttpResponse.error();
       })
     );

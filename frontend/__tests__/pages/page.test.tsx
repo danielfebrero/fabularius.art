@@ -58,16 +58,19 @@ describe("HomePage", () => {
 
   it("has proper heading hierarchy", () => {
     const mainHeading = screen.getByRole("heading", { level: 1 });
+    const sectionHeading = screen.getByRole("heading", { level: 2 });
     const featureHeadings = screen.getAllByRole("heading", { level: 3 });
 
     expect(mainHeading).toHaveTextContent("Welcome to Fabularius.art");
+    expect(sectionHeading).toHaveTextContent("Features");
     expect(featureHeadings).toHaveLength(3);
   });
 
   it("applies correct CSS classes for layout", () => {
     const { container } = render(<HomePage />);
-    const mainContainer = container.firstChild;
+    const mainContainer = container.querySelector(".space-y-8");
 
+    expect(mainContainer).toBeInTheDocument();
     expect(mainContainer).toHaveClass("space-y-8");
   });
 
@@ -171,8 +174,8 @@ describe("HomePage", () => {
   it("contains all expected text content", () => {
     // Check for key phrases that should be present
     expect(screen.getByText(/minimalist gallery/i)).toBeInTheDocument();
-    expect(screen.getByText(/create albums/i)).toBeInTheDocument();
-    expect(screen.getByText(/upload media/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/create albums/i)).toHaveLength(2); // appears in heading and description
+    expect(screen.getAllByText(/upload media/i)).toHaveLength(2); // appears in heading and description
     expect(screen.getByText(/share & showcase/i)).toBeInTheDocument();
     expect(screen.getByText(/get started/i)).toBeInTheDocument();
   });

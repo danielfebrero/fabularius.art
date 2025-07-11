@@ -1,102 +1,121 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { Album } from "../types";
+import { useState, useEffect } from "react";
+import { Album } from "../types/index";
 
 interface UseAlbumsOptions {
+  isPublic?: boolean;
   publicOnly?: boolean;
-  page?: number;
   limit?: number;
-}
-
-interface Pagination {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrev: boolean;
+  cursor?: string;
+  page?: number;
 }
 
 interface UseAlbumsReturn {
   albums: Album[];
   loading: boolean;
   error: string | null;
-  pagination: Pagination | null;
+  pagination: {
+    hasNext: boolean;
+    hasPrev: boolean;
+    cursor: string | null;
+    page?: number;
+  } | null;
+  refetch: () => void;
   refresh: () => void;
+  loadMore: () => void;
 }
 
 export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
-  const { publicOnly = false, page = 1, limit = 12 } = options;
-
+  const { isPublic, publicOnly, limit = 12, page } = options;
+  const effectiveIsPublic = isPublic !== undefined ? isPublic : publicOnly;
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [pagination, setPagination] = useState<{
+    hasNext: boolean;
+    hasPrev: boolean;
+    cursor: string | null;
+    page?: number;
+  } | null>(null);
 
-  // Use ref to track the latest request to handle race conditions
-  const latestRequestRef = useRef<number>(0);
-
-  const fetchAlbums = useCallback(async () => {
-    const requestId = ++latestRequestRef.current;
-
-    setLoading(true);
-    setError(null);
-
+  const fetchAlbums = async (cursor?: string, append = false) => {
     try {
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+        setError(null);
+      }
+
       const params = new URLSearchParams({
-        page: page.toString(),
         limit: limit.toString(),
-        ...(publicOnly && { publicOnly: "true" }),
       });
 
-      const response = await fetch(`/api/albums?${params}`);
+      if (effectiveIsPublic !== undefined) {
+        params.append("isPublic", effectiveIsPublic.toString());
+      }
+
+      if (page !== undefined) {
+        params.append("page", page.toString());
+      }
+
+      if (cursor) {
+        params.append("cursor", cursor);
+      }
+
+      const apiUrl =
+        process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:3001/api";
+      const response = await fetch(`${apiUrl}/albums?${params}`);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch albums: ${response.statusText}`);
+      }
+
       const data = await response.json();
 
-      // Only update state if this is still the latest request
-      if (requestId === latestRequestRef.current) {
-        if (data.success) {
-          setAlbums(data.data);
-          setPagination(data.pagination);
+      if (data.success) {
+        // Backend returns {success: true, data: {albums: Album[], pagination: {...}}}
+        const newAlbums = data.data.albums;
+        const newPagination = data.data.pagination;
+
+        if (append) {
+          setAlbums((prev) => [...prev, ...newAlbums]);
         } else {
-          setError(data.error || "Failed to fetch albums");
-          setAlbums([]);
-          setPagination(null);
+          setAlbums(newAlbums);
         }
+        setPagination(newPagination);
+      } else {
+        throw new Error(data.error || "Failed to fetch albums");
       }
     } catch (err) {
-      // Only update state if this is still the latest request
-      if (requestId === latestRequestRef.current) {
-        setError("Failed to fetch albums");
+      setError(err instanceof Error ? err.message : "An error occurred");
+      if (!append) {
         setAlbums([]);
         setPagination(null);
       }
     } finally {
-      // Only update loading state if this is still the latest request
-      if (requestId === latestRequestRef.current) {
-        setLoading(false);
-      }
+      setLoading(false);
+      setLoadingMore(false);
     }
-  }, [publicOnly, page, limit]);
+  };
 
-  const refresh = useCallback(() => {
-    fetchAlbums();
-  }, [fetchAlbums]);
+  const loadMore = () => {
+    if (pagination?.hasNext && pagination.cursor && !loadingMore) {
+      fetchAlbums(pagination.cursor, true);
+    }
+  };
 
   useEffect(() => {
     fetchAlbums();
-  }, [fetchAlbums]);
-
-  // Cleanup function to prevent state updates after unmount
-  useEffect(() => {
-    return () => {
-      latestRequestRef.current = -1;
-    };
-  }, []);
+  }, [effectiveIsPublic, limit, page]);
 
   return {
     albums,
-    loading,
+    loading: loading || loadingMore,
     error,
     pagination,
-    refresh,
+    refetch: () => fetchAlbums(),
+    refresh: () => fetchAlbums(),
+    loadMore,
   };
 }
