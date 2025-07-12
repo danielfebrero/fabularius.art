@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { FileUpload } from "@/components/admin/FileUpload";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useAdminMedia } from "@/hooks/useAdminMedia";
-import { formatDate, formatFileSize } from "@/lib/utils";
+import { formatDateShort, formatFileSize } from "@/lib/utils";
 
 interface MediaManagerProps {
   albumId: string;
@@ -275,7 +275,7 @@ export function MediaManager({
                     <div className="mt-2 text-xs text-muted-foreground space-y-1">
                       <div className="flex items-center justify-between">
                         <span>{formatFileSize(mediaItem.size)}</span>
-                        <span>{formatDate(mediaItem.createdAt)}</span>
+                        <span>{formatDateShort(mediaItem.createdAt)}</span>
                       </div>
                       {mediaItem.width && mediaItem.height && (
                         <div className="text-center">

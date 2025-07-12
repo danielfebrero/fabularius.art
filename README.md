@@ -16,6 +16,8 @@ A minimalist gallery application for showcasing art and photography collections.
 - 📸 **Media Upload**: High-quality image uploads with automatic optimization
 - 🌐 **CDN Delivery**: Fast global content delivery via CloudFront
 - 🔒 **Privacy Controls**: Public and private album settings
+- 👤 **Admin Panel**: Secure admin interface for content management
+- 🔐 **User Authentication**: Secure admin login with bcrypt password hashing
 - 📱 **Responsive Design**: Beautiful dark theme that works on all devices
 - ⚡ **Serverless**: Scalable and cost-effective serverless architecture
 
@@ -267,6 +269,20 @@ Quality gates:
 - `POST /albums/{albumId}/media` - Upload media to album
 - `DELETE /albums/{albumId}/media/{mediaId}` - Delete media
 
+### Admin Authentication
+
+- `POST /admin/login` - Admin login
+- `POST /admin/logout` - Admin logout
+- `GET /admin/me` - Get current admin user info
+
+### Admin Management
+
+- `GET /admin/albums` - List all albums (admin)
+- `PUT /admin/albums/{albumId}` - Update album (admin)
+- `DELETE /admin/albums/{albumId}` - Delete album (admin)
+- `DELETE /admin/albums/{albumId}/media/{mediaId}` - Delete media (admin)
+- `GET /admin/stats` - Get admin statistics
+
 ## Database Schema
 
 ### Single Table Design (DynamoDB)
@@ -284,6 +300,60 @@ Quality gates:
 - SK: `MEDIA#{mediaId}`
 - GSI1PK: `MEDIA#{albumId}`
 - GSI1SK: `{createdAt}#{mediaId}`
+
+**Admin Users**
+
+- PK: `ADMIN#{adminId}`
+- SK: `METADATA`
+- GSI1PK: `ADMIN_USERNAME`
+- GSI1SK: `{username}`
+
+## User Management
+
+### Creating Admin Users
+
+For production environments, use the dedicated script to create admin users:
+
+```bash
+# Install backend dependencies first
+cd backend && npm install && cd ..
+
+# Create admin user in production
+node scripts/create-admin-prod.js prod <username> <password>
+
+# Example
+node scripts/create-admin-prod.js prod admin MySecurePassword123!
+```
+
+### Password Requirements
+
+- Minimum 8 characters
+- At least one uppercase letter
+- At least one lowercase letter
+- At least one number
+- At least one special character
+
+### Environment-Specific Commands
+
+```bash
+# Development
+node scripts/create-admin-prod.js dev admin DevPassword123!
+
+# Staging
+node scripts/create-admin-prod.js staging admin StagingPassword123!
+
+# Local (using existing script)
+node scripts/create-admin.js admin LocalPassword123!
+```
+
+For detailed user management instructions, see [`docs/USER_MANAGEMENT.md`](docs/USER_MANAGEMENT.md).
+
+## Documentation
+
+- [`TESTING.md`](./TESTING.md) - Comprehensive testing guide
+- [`docs/USER_MANAGEMENT.md`](./docs/USER_MANAGEMENT.md) - User management and admin setup
+- [`docs/ADMIN_AUTH.md`](./docs/ADMIN_AUTH.md) - Admin authentication system
+- [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) - System architecture overview
 
 ## Contributing
 

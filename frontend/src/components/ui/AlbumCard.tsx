@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Album } from "../../types/index";
 import { Card, CardContent, CardHeader } from "./Card";
-import { cn } from "../../lib/utils";
+import { cn, formatDateShort } from "../../lib/utils";
 
 interface AlbumCardProps {
   album: Album;
@@ -63,20 +63,20 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({ album, className }) => {
                 {album.tags.slice(0, 3).map((tag, index) => (
                   <span
                     key={index}
-                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-admin-primary/10 to-admin-secondary/10 text-admin-primary border border-admin-primary/20"
                   >
                     {tag}
                   </span>
                 ))}
                 {album.tags.length > 3 && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground font-medium">
                     +{album.tags.length - 3} more
                   </span>
                 )}
               </div>
             )}
             <div className="flex items-center justify-between text-xs text-muted-foreground pt-2">
-              <span>{new Date(album.createdAt).toLocaleDateString()}</span>
+              <span>{formatDateShort(album.createdAt)}</span>
             </div>
           </div>
         </CardContent>

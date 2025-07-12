@@ -158,8 +158,11 @@ export function CoverImageSelector({
                     />
                   </div>
                   {isSelected && (
-                    <div className="absolute inset-0 bg-admin-primary bg-opacity-20 flex items-center justify-center">
-                      <div className="bg-admin-primary text-admin-primary-foreground rounded-full p-1">
+                    <div
+                      className="absolute inset-0 flex items-center justify-center"
+                      style={{ backgroundColor: "rgba(59, 130, 246, 0.2)" }}
+                    >
+                      <div className="bg-blue-500 text-white rounded-full p-1 shadow-lg">
                         <svg
                           className="w-4 h-4"
                           fill="currentColor"

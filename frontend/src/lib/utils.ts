@@ -29,6 +29,15 @@ export function formatDate(date: string | Date): string {
   return `${MONTH_NAMES[monthIndex]} ${day}, ${year}`;
 }
 
+export function formatDateShort(date: string | Date): string {
+  const d = new Date(date);
+  const day = d.getUTCDate().toString().padStart(2, "0");
+  const month = (d.getUTCMonth() + 1).toString().padStart(2, "0");
+  const year = d.getUTCFullYear();
+
+  return `${day}/${month}/${year}`;
+}
+
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return "0 Bytes";
 
