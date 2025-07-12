@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { AdminProvider } from "@/contexts/AdminContext";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -71,23 +72,9 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.variable} font-sans antialiased`}>
         <div className="min-h-screen bg-background">
-          <header className="border-b border-border">
-            <div className="container mx-auto px-4 py-4">
-              <nav className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <h1 className="text-2xl font-bold text-foreground">
-                    Fabularius.art
-                  </h1>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <button className="btn-secondary">Albums</button>
-                  <button className="btn-primary">Upload</button>
-                </div>
-              </nav>
-            </div>
-          </header>
-
-          <main className="container mx-auto px-4 py-8">{children}</main>
+          <AdminProvider>
+            <main className="container mx-auto px-4 py-8">{children}</main>
+          </AdminProvider>
 
           <footer className="border-t border-border mt-16">
             <div className="container mx-auto px-4 py-8">

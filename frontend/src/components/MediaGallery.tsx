@@ -1,32 +1,61 @@
-import React, { useState } from "react";
+"use client";
+
+import React, { useState, useEffect } from "react";
 import { Media } from "../types/index";
 import { MediaCard } from "./ui/MediaCard";
 import { Lightbox } from "./ui/Lightbox";
 import { Button } from "./ui/Button";
 import { cn } from "../lib/utils";
+import { getMediaForAlbum } from "../lib/data";
 
 interface MediaGalleryProps {
-  media: Media[];
-  loading?: boolean;
-  error?: string | null;
-  pagination?: {
+  albumId: string;
+  initialMedia: Media[];
+  initialPagination: {
     hasNext: boolean;
     cursor: string | null;
   } | null;
-  onLoadMore?: () => void;
   className?: string;
 }
 
 export const MediaGallery: React.FC<MediaGalleryProps> = ({
-  media,
-  loading = false,
-  error = null,
-  pagination = null,
-  onLoadMore,
+  albumId,
+  initialMedia,
+  initialPagination,
   className,
 }) => {
+  const [media, setMedia] = useState<Media[]>(initialMedia);
+  const [pagination, setPagination] = useState(initialPagination);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+
+  useEffect(() => {
+    setMedia(initialMedia);
+    setPagination(initialPagination);
+  }, [initialMedia, initialPagination]);
+
+  const handleLoadMore = async () => {
+    if (!pagination?.hasNext || loading) return;
+
+    setLoading(true);
+    setError(null);
+    const result = await getMediaForAlbum(
+      albumId,
+      pagination.cursor ? { cursor: pagination.cursor } : {}
+    );
+
+    const { data, error: apiError } = result;
+    if (data && data.media) {
+      setMedia((prevMedia) => [...prevMedia, ...data.media]);
+      setPagination(data.pagination);
+    } else {
+      setError(apiError || "Failed to load more media.");
+    }
+
+    setLoading(false);
+  };
 
   const handleMediaClick = (index: number) => {
     setCurrentMediaIndex(index);
@@ -49,60 +78,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
     }
   };
 
-  // Loading state
-  if (loading && media.length === 0) {
-    return (
-      <div className={cn("space-y-6", className)}>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {Array.from({ length: 12 }).map((_, index) => (
-            <div key={index} className="animate-pulse">
-              <div className="bg-muted rounded-lg overflow-hidden">
-                <div className="aspect-square bg-muted-foreground/20" />
-                <div className="p-3 space-y-2">
-                  <div className="h-3 bg-muted-foreground/20 rounded w-3/4" />
-                  <div className="h-2 bg-muted-foreground/20 rounded w-1/2" />
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className={cn("text-center py-12", className)}>
-        <div className="max-w-md mx-auto">
-          <svg
-            className="w-16 h-16 mx-auto text-muted-foreground mb-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={1.5}
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-            />
-          </svg>
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            Failed to load media
-          </h3>
-          <p className="text-muted-foreground mb-4">{error}</p>
-          <Button variant="outline" onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Empty state
-  if (media.length === 0) {
+  if (media.length === 0 && !loading) {
     return (
       <div className={cn("text-center py-12", className)}>
         <div className="max-w-md mx-auto">
@@ -124,7 +100,8 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
             No media found
           </h3>
           <p className="text-muted-foreground">
-            This album doesn&apos;t contain any media files yet.
+            {/* eslint-disable-next-line react/no-unescaped-entities */}
+            This album doesn't contain any media files yet.
           </p>
         </div>
       </div>
@@ -134,7 +111,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   return (
     <>
       <div className={cn("space-y-6", className)}>
-        {/* Media Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {media.map((mediaItem, index) => (
             <MediaCard
@@ -145,8 +121,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
           ))}
         </div>
 
-        {/* Loading more indicator */}
-        {loading && media.length > 0 && (
+        {loading && (
           <div className="flex justify-center py-4">
             <div className="flex items-center space-x-2 text-muted-foreground">
               <svg
@@ -174,16 +149,21 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
           </div>
         )}
 
-        {/* Load More Button */}
-        {pagination?.hasNext && !loading && onLoadMore && (
+        {error && <div className="text-center py-4 text-red-500">{error}</div>}
+
+        {pagination?.hasNext && !loading && (
           <div className="flex justify-center">
-            <Button variant="outline" onClick={onLoadMore} className="px-8">
-              Load More Media
+            <Button
+              variant="outline"
+              onClick={handleLoadMore}
+              className="px-8"
+              disabled={loading}
+            >
+              {loading ? "Loading..." : "Load More Media"}
             </Button>
           </div>
         )}
 
-        {/* Media Count Info */}
         {media.length > 0 && (
           <div className="text-center text-sm text-muted-foreground">
             Showing {media.length} media {media.length === 1 ? "file" : "files"}
@@ -191,7 +171,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
         )}
       </div>
 
-      {/* Lightbox */}
       <Lightbox
         media={media}
         currentIndex={currentMediaIndex}
