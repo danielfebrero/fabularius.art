@@ -284,26 +284,59 @@ Consider integrating error tracking services like Sentry with environment-specif
 
 ### Common Issues
 
-1. **Environment Configuration Errors**
+1. **CloudFormation Stack in ROLLBACK_COMPLETE State**
+
+   When you see the error: `Stack is in ROLLBACK_COMPLETE state and can not be updated`, you have two options:
+
+   **Option 1: Continue Rollback (Recommended first try)**
+
+   ```bash
+   ./scripts/continue-rollback.sh --env prod
+   ```
+
+   This attempts to continue the rollback and get the stack back to a stable state without data loss.
+
+   **Option 2: Delete and Recreate Stack**
+
+   ```bash
+   ./scripts/fix-rollback-stack.sh --env prod
+   ```
+
+   ⚠️ **WARNING**: This will delete all data in the stack (DynamoDB, S3, etc.)
+
+   **Manual Alternative**:
+
+   ```bash
+   # Continue rollback manually
+   aws cloudformation continue-update-rollback --stack-name fabularius-art-prod
+   aws cloudformation wait stack-rollback-complete --stack-name fabularius-art-prod
+
+   # Or delete and recreate manually
+   aws cloudformation delete-stack --stack-name fabularius-art-prod
+   aws cloudformation wait stack-delete-complete --stack-name fabularius-art-prod
+   ./scripts/deploy.sh --env prod
+   ```
+
+2. **Environment Configuration Errors**
 
    - Verify [`samconfig.toml`](samconfig.toml) contains all environment sections
    - Check environment variables match the target environment
    - Ensure stack names are unique per environment
 
-2. **Build Failures**
+3. **Build Failures**
 
    - Check environment variables are set correctly in Vercel
    - Ensure all dependencies are listed in [`package.json`](package.json)
    - Review build logs in Vercel Dashboard
    - Verify the correct environment file is being used
 
-3. **API Connection Issues**
+4. **API Connection Issues**
 
    - Verify `NEXT_PUBLIC_API_URL` matches the deployed backend environment
    - Check CORS configuration allows the frontend domain
    - Ensure API Gateway is accessible and deployed to correct environment
 
-4. **Image Loading Issues**
+5. **Image Loading Issues**
    - Verify `NEXT_PUBLIC_CDN_URL` points to the correct CloudFront distribution
    - Check CloudFront domain in [`frontend/next.config.js`](frontend/next.config.js)
    - Ensure images exist in the environment-specific S3 bucket

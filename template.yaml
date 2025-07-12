@@ -81,10 +81,11 @@ Resources:
               - DELETE
             AllowedOrigins:
               - http://localhost:3000
+              - !Sub "https://dev.${DomainName}"
+              - !Sub "https://staging.${DomainName}"
               - !Sub "https://www.${DomainName}"
               - !Sub "https://${DomainName}"
-            ExposeHeaders:
-              - ETag
+              - "https://*.vercel.app"
             MaxAge: 3000
           - AllowedHeaders:
               - "*"

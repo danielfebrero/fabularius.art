@@ -61,6 +61,58 @@ Examples:
 - Vercel CLI integration
 - Environment variable documentation
 
+### [`fix-rollback-stack.sh`](fix-rollback-stack.sh)
+
+Fixes CloudFormation stacks stuck in ROLLBACK_COMPLETE state by deleting and recreating them.
+
+**Usage:**
+
+```bash
+./scripts/fix-rollback-stack.sh [OPTIONS]
+
+Options:
+  -e, --env ENVIRONMENT    Target environment (dev, staging, prod) [default: prod]
+  -f, --force             Force delete without confirmation
+  -h, --help              Show help message
+
+Examples:
+  ./scripts/fix-rollback-stack.sh                    # Fix prod stack (with confirmation)
+  ./scripts/fix-rollback-stack.sh --env staging      # Fix staging stack
+  ./scripts/fix-rollback-stack.sh --force            # Force delete prod stack without confirmation
+```
+
+**Features:**
+
+- Checks if the stack is in ROLLBACK_COMPLETE state
+- Deletes the stack after confirmation (⚠️ **DATA LOSS**)
+- Redeploys the stack using the deploy script
+- **WARNING**: This will delete all data in DynamoDB tables and S3 buckets
+
+### [`continue-rollback.sh`](continue-rollback.sh)
+
+Attempts to continue update rollback for CloudFormation stacks in ROLLBACK_COMPLETE state without data loss.
+
+**Usage:**
+
+```bash
+./scripts/continue-rollback.sh [OPTIONS]
+
+Options:
+  -e, --env ENVIRONMENT    Target environment (dev, staging, prod) [default: prod]
+  -h, --help              Show help message
+
+Examples:
+  ./scripts/continue-rollback.sh                     # Continue rollback for prod stack
+  ./scripts/continue-rollback.sh --env staging       # Continue rollback for staging stack
+```
+
+**Features:**
+
+- Checks if the stack is in ROLLBACK_COMPLETE state
+- Continues the update rollback to get stack back to stable state
+- Redeploys the stack using the deploy script
+- **Recommended first approach** as it preserves data
+
 ## Environment Support
 
 Both scripts support three environments:
@@ -134,28 +186,48 @@ These scripts can be integrated into CI/CD pipelines:
 
 ### Common Issues
 
-1. **Permission Denied**
+1. **CloudFormation Stack in ROLLBACK_COMPLETE State**
+
+   When you see the error: `Stack is in ROLLBACK_COMPLETE state and can not be updated`:
+
+   **Option 1: Continue Rollback (Recommended first try)**
+
+   ```bash
+   ./scripts/continue-rollback.sh --env prod
+   ```
+
+   **Option 2: Delete and Recreate Stack**
+
+   ```bash
+   ./scripts/fix-rollback-stack.sh --env prod
+   ```
+
+   ⚠️ **WARNING**: This will delete all data in the stack
+
+2. **Permission Denied**
 
    ```bash
    chmod +x scripts/deploy.sh
    chmod +x scripts/deploy-frontend.sh
+   chmod +x scripts/fix-rollback-stack.sh
+   chmod +x scripts/continue-rollback.sh
    ```
 
-2. **AWS Configuration Issues**
+3. **AWS Configuration Issues**
 
    ```bash
    aws configure list
    aws sts get-caller-identity
    ```
 
-3. **SAM CLI Issues**
+4. **SAM CLI Issues**
 
    ```bash
    sam --version
    sam build --help
    ```
 
-4. **Node.js/npm Issues**
+5. **Node.js/npm Issues**
    ```bash
    node --version
    npm --version
