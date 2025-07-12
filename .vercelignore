@@ -1,18 +1,15 @@
-# Backend files - keep frontend accessible
-backend/__tests__/
-backend/functions/
-backend/shared/
-backend/.eslintrc.js
-backend/env.development.json
-backend/jest.config.js
-backend/package.json
-backend/tsconfig.json
+# Include only frontend directory and necessary root files
+# Exclude everything else
+
+# Backend files
+backend/
+
+# Root level files to exclude
 template.yaml
 samconfig.toml
-
-# Docker files
 docker-compose*.yml
 Dockerfile*
+jest.config.root.js
 
 # Scripts
 scripts/
@@ -20,14 +17,14 @@ scripts/
 # Documentation
 docs/
 *.md
-!frontend/README.md
+!README.md
 
-# Test files
-**/__tests__/
-**/*.test.*
-**/*.spec.*
-jest.config.*
-playwright.config.*
+# Test files (but keep frontend source)
+frontend/__tests__/
+frontend/**/*.test.*
+frontend/**/*.spec.*
+frontend/jest.config.js
+frontend/playwright.config.ts
 
 # Development files
 .env*
