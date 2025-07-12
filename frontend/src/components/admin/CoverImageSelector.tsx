@@ -44,7 +44,7 @@ export function CoverImageSelector({
   if (!isOpen) {
     return (
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-foreground mb-2">
           Cover Image
         </label>
         <div className="space-y-3">
@@ -53,10 +53,10 @@ export function CoverImageSelector({
               <img
                 src={selectedCoverUrl}
                 alt="Current cover"
-                className="w-32 h-32 object-cover rounded-lg border-2 border-blue-500"
+                className="w-32 h-32 object-cover rounded-lg border-2 border-admin-primary"
               />
               <div className="absolute -top-2 -right-2">
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-admin-primary/10 text-admin-primary">
                   Current Cover
                 </span>
               </div>
@@ -72,6 +72,7 @@ export function CoverImageSelector({
               variant="outline"
               onClick={() => setIsOpen(true)}
               disabled={disabled}
+              className="border-admin-primary/30 text-admin-primary hover:bg-admin-primary hover:text-admin-primary-foreground"
             >
               {selectedCoverUrl ? "Change Cover" : "Select Cover"}
             </Button>
@@ -81,7 +82,7 @@ export function CoverImageSelector({
                 variant="outline"
                 onClick={() => handleImageSelect("")}
                 disabled={disabled}
-                className="ml-2 text-red-600 border-red-300 hover:bg-red-50"
+                className="ml-2 text-destructive border-destructive/30 hover:bg-destructive hover:text-destructive-foreground"
               >
                 Remove Cover
               </Button>
@@ -94,12 +95,12 @@ export function CoverImageSelector({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-sm font-medium text-foreground mb-2">
         Cover Image
       </label>
-      <div className="bg-white border border-gray-300 rounded-lg p-4">
+      <div className="bg-card border border-border rounded-lg p-4">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-sm font-medium text-gray-900">
+          <h4 className="text-sm font-medium text-foreground">
             Select from album images ({imageMedia.length} available)
           </h4>
           <Button
@@ -114,22 +115,22 @@ export function CoverImageSelector({
 
         {loading && (
           <div className="text-center py-8">
-            <div className="text-gray-600">Loading images...</div>
+            <div className="text-muted-foreground">Loading images...</div>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-3 mb-4">
-            <p className="text-red-800 text-sm">{error}</p>
+          <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3 mb-4">
+            <p className="text-destructive text-sm">{error}</p>
           </div>
         )}
 
         {!loading && !error && imageMedia.length === 0 && (
           <div className="text-center py-8">
-            <div className="text-gray-500">
+            <div className="text-muted-foreground">
               No images available in this album
             </div>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-muted-foreground/70 mt-1">
               Upload some images first to select a cover
             </p>
           </div>
@@ -144,8 +145,8 @@ export function CoverImageSelector({
                   key={image.id}
                   className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
                     isSelected
-                      ? "border-blue-500 ring-2 ring-blue-200"
-                      : "border-gray-200 hover:border-gray-300"
+                      ? "border-admin-primary ring-2 ring-admin-primary/20"
+                      : "border-border hover:border-border/80"
                   }`}
                   onClick={() => handleImageSelect(image.url)}
                 >
@@ -157,8 +158,8 @@ export function CoverImageSelector({
                     />
                   </div>
                   {isSelected && (
-                    <div className="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
-                      <div className="bg-blue-500 text-white rounded-full p-1">
+                    <div className="absolute inset-0 bg-admin-primary bg-opacity-20 flex items-center justify-center">
+                      <div className="bg-admin-primary text-admin-primary-foreground rounded-full p-1">
                         <svg
                           className="w-4 h-4"
                           fill="currentColor"
@@ -183,7 +184,7 @@ export function CoverImageSelector({
         )}
 
         <div className="mt-4 flex justify-between items-center">
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             {selectedCoverUrl ? "Cover image selected" : "No cover selected"}
           </div>
           <div className="space-x-2">
@@ -193,12 +194,17 @@ export function CoverImageSelector({
                 variant="outline"
                 onClick={() => handleImageSelect("")}
                 size="sm"
-                className="text-red-600 border-red-300 hover:bg-red-50"
+                className="text-destructive border-destructive/30 hover:bg-destructive hover:text-destructive-foreground"
               >
                 Clear Selection
               </Button>
             )}
-            <Button type="button" onClick={() => setIsOpen(false)} size="sm">
+            <Button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              size="sm"
+              className="bg-admin-primary hover:bg-admin-primary/90 text-admin-primary-foreground"
+            >
               Done
             </Button>
           </div>

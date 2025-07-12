@@ -22,7 +22,7 @@ export default function CreateAlbumPage() {
 
     try {
       const album = await createAlbum(data);
-      router.push(`/admin/albums/${album.id}`);
+      router.push(`/admin/albums/${album.id}/media`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create album");
     } finally {

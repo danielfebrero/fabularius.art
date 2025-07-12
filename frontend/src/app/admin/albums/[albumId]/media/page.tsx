@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MediaManager } from "@/components/admin/MediaManager";
+import { CoverImageSelector } from "@/components/admin/CoverImageSelector";
 import { useAdminAlbums } from "@/hooks/useAdminAlbums";
 import { useAdminMedia } from "@/hooks/useAdminMedia";
 import { Album } from "@/types";
@@ -17,11 +18,12 @@ export default function MediaManagementPage({
   params,
 }: MediaManagementPageProps) {
   const router = useRouter();
-  const { getAlbum } = useAdminAlbums();
+  const { getAlbum, updateAlbum } = useAdminAlbums();
   const { media, fetchAlbumMedia } = useAdminMedia();
   const [album, setAlbum] = useState<Album | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [coverUpdateLoading, setCoverUpdateLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,6 +45,27 @@ export default function MediaManagementPage({
 
   const handleBack = () => {
     router.push("/admin/albums");
+  };
+
+  const handleCoverSelect = async (coverUrl: string | undefined) => {
+    if (!album) return;
+
+    setCoverUpdateLoading(true);
+    try {
+      const updateData: { coverImageUrl?: string } = {};
+      if (coverUrl) {
+        updateData.coverImageUrl = coverUrl;
+      }
+
+      const updatedAlbum = await updateAlbum(album.id, updateData);
+      setAlbum(updatedAlbum);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to update cover image"
+      );
+    } finally {
+      setCoverUpdateLoading(false);
+    }
   };
 
   if (loading) {
@@ -188,6 +211,41 @@ export default function MediaManagementPage({
             </span>
           </div>
         </div>
+      </div>
+
+      {/* Cover Image Selector */}
+      <div className="bg-card shadow-lg rounded-xl p-6 border border-border">
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="w-8 h-8 bg-gradient-to-br from-admin-accent to-admin-secondary rounded-lg flex items-center justify-center">
+            <svg
+              className="w-5 h-5 text-white"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-foreground">Album Cover</h3>
+        </div>
+        <p className="text-muted-foreground mb-6">
+          Select a cover image for this album from the uploaded media
+        </p>
+        <CoverImageSelector
+          albumId={params.albumId}
+          {...(album.coverImageUrl && { currentCoverUrl: album.coverImageUrl })}
+          onCoverSelect={handleCoverSelect}
+          disabled={coverUpdateLoading}
+        />
+        {coverUpdateLoading && (
+          <div className="mt-4 flex items-center text-admin-primary">
+            <div className="w-4 h-4 border-2 border-admin-primary border-t-transparent rounded-full animate-spin mr-2"></div>
+            <span className="text-sm">Updating cover image...</span>
+          </div>
+        )}
       </div>
 
       <MediaManager
