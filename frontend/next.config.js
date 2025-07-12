@@ -3,15 +3,16 @@ const nextConfig = {
   // Output configuration for Vercel
   output: "standalone",
 
-  // Image optimization
+  // Image optimization - DISABLED to avoid Vercel costs
   images: {
+    unoptimized: true,
     domains: [
       "localhost",
       // Add your CloudFront domain here when deployed
       process.env.NEXT_PUBLIC_CDN_URL?.replace("https://", "") ||
         "d1234567890.cloudfront.net",
     ],
-    formats: ["image/webp", "image/avif"],
+    // Removed formats since we're serving unoptimized PNG, MP4, and GIF from CDN
     remotePatterns: [
       {
         protocol: "https",
