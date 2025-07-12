@@ -89,7 +89,7 @@ export default function MediaManagementPage({
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Manage Media</h1>
         <p className="text-gray-600">
-          Upload and manage media for "{album.title}"
+          Upload and manage media for &quot;{album.title}&quot;
         </p>
         <div className="mt-2 flex items-center gap-4 text-sm text-gray-500">
           <span>Album ID: {album.id}</span>

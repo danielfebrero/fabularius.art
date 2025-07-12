@@ -50,7 +50,7 @@ export function useAlbum(albumId: string): UseAlbumReturn {
     if (albumId) {
       fetchAlbum();
     }
-  }, [albumId]);
+  }, [albumId, fetchAlbum]);
 
   return {
     album,

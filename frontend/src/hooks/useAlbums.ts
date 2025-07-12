@@ -107,7 +107,7 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
 
   useEffect(() => {
     fetchAlbums();
-  }, [effectiveIsPublic, limit, page]);
+  }, [effectiveIsPublic, limit, page, fetchAlbums]);
 
   return {
     albums,

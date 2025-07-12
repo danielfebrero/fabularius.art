@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/Button";
 
 interface FileUploadProps {
-  onFilesSelected: (files: File[]) => void;
+  onFilesSelected: (_files: File[]) => void;
   accept?: string;
   multiple?: boolean;
   disabled?: boolean;
@@ -70,7 +70,7 @@ export function FileUpload({
         onFilesSelected(validFiles);
       }
     },
-    [onFilesSelected, accept]
+    [onFilesSelected, accept, validateFiles]
   );
 
   const handleDragOver = useCallback(

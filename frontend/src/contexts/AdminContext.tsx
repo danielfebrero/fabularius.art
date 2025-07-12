@@ -26,7 +26,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     };
 
     initAuth();
-  }, []);
+  }, [checkAuth]);
 
   const login = async (credentials: LoginRequest): Promise<boolean> => {
     const success = await hookLogin(credentials);

@@ -77,7 +77,7 @@ export interface AdminContextType {
   user: AdminUser | null;
   loading: boolean;
   error: string | null;
-  login: (credentials: LoginRequest) => Promise<boolean>;
+  login: (_credentials: LoginRequest) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }

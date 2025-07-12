@@ -4,7 +4,7 @@ import { Button } from "./ui/Button";
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  onError?: (_error: Error, _errorInfo: ErrorInfo) => void;
   resetKeys?: string[];
 }
 

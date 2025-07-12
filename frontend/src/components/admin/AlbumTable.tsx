@@ -2,15 +2,16 @@
 
 import { Album } from "@/types";
 import { Button } from "@/components/ui/Button";
+import { formatDate } from "@/lib/utils";
 
 interface AlbumTableProps {
   albums: Album[];
   selectedAlbums: string[];
-  onSelectAlbum: (albumId: string, selected: boolean) => void;
-  onSelectAll: (selected: boolean) => void;
-  onEdit: (albumId: string) => void;
-  onDelete: (album: Album) => void;
-  onManageMedia: (albumId: string) => void;
+  onSelectAlbum: (_albumId: string, _selected: boolean) => void;
+  onSelectAll: (_selected: boolean) => void;
+  onEdit: (_albumId: string) => void;
+  onDelete: (_album: Album) => void;
+  onManageMedia: (_albumId: string) => void;
   loading?: boolean;
 }
 
@@ -28,14 +29,6 @@ export function AlbumTable({
     albums.length > 0 && selectedAlbums.length === albums.length;
   const someSelected =
     selectedAlbums.length > 0 && selectedAlbums.length < albums.length;
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   if (loading && albums.length === 0) {
     return (

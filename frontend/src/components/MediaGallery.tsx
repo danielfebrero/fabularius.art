@@ -163,12 +163,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
             </Button>
           </div>
         )}
-
-        {media.length > 0 && (
-          <div className="text-center text-sm text-muted-foreground">
-            Showing {media.length} media {media.length === 1 ? "file" : "files"}
-          </div>
-        )}
       </div>
 
       <Lightbox

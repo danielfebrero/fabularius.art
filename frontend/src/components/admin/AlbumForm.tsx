@@ -12,7 +12,7 @@ interface AlbumFormData {
 
 interface AlbumFormProps {
   initialData?: Partial<AlbumFormData>;
-  onSubmit: (data: AlbumFormData) => void;
+  onSubmit: (_data: AlbumFormData) => void;
   onCancel: () => void;
   loading?: boolean;
   submitText?: string;

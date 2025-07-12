@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { AdminUser, LoginRequest } from "../types/index";
 
 interface UseAdminReturn {
   user: AdminUser | null;
   loading: boolean;
   error: string | null;
-  login: (credentials: LoginRequest) => Promise<boolean>;
+  login: (_credentials: LoginRequest) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<AdminUser | null>;
 }
@@ -18,39 +18,43 @@ export function useAdmin(): UseAdminReturn {
   const apiUrl =
     process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:3001/api";
 
-  const login = async (credentials: LoginRequest): Promise<boolean> => {
-    try {
-      setLoading(true);
-      setError(null);
+  const login = useCallback(
+    async (credentials: LoginRequest): Promise<boolean> => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const response = await fetch(`${apiUrl}/admin/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Important for HTTP-only cookies
-        body: JSON.stringify(credentials),
-      });
+        const response = await fetch(`${apiUrl}/admin/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include", // Important for HTTP-only cookies
+          body: JSON.stringify(credentials),
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (response.ok && data.success) {
-        setUser(data.admin);
-        return true;
-      } else {
-        setError(data.error || "Login failed");
+        if (response.ok && data.success) {
+          setUser(data.admin);
+          return true;
+        } else {
+          setError(data.error || "Login failed");
+          return false;
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Login failed";
+        setError(errorMessage);
         return false;
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Login failed";
-      setError(errorMessage);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [apiUrl]
+  );
 
-  const logout = async (): Promise<void> => {
+  const logout = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
@@ -67,9 +71,9 @@ export function useAdmin(): UseAdminReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl]);
 
-  const checkAuth = async (): Promise<AdminUser | null> => {
+  const checkAuth = useCallback(async (): Promise<AdminUser | null> => {
     try {
       setLoading(true);
       setError(null);
@@ -98,7 +102,7 @@ export function useAdmin(): UseAdminReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiUrl]);
 
   return {
     user,

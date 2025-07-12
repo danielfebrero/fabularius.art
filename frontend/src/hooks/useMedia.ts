@@ -100,7 +100,7 @@ export function useMedia(options: UseMediaOptions): UseMediaReturn {
     if (albumId) {
       fetchMedia();
     }
-  }, [albumId, limit]);
+  }, [albumId, limit, fetchMedia]);
 
   return {
     media,
