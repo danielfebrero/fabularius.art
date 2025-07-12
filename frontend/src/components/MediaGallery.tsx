@@ -111,7 +111,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   return (
     <>
       <div className={cn("space-y-6", className)}>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {media.map((mediaItem, index) => (
             <MediaCard
               key={mediaItem.id}

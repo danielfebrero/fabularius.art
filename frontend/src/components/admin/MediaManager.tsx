@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { FileUpload } from "@/components/admin/FileUpload";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useAdminMedia } from "@/hooks/useAdminMedia";
+import { formatDate, formatFileSize } from "@/lib/utils";
 
 interface MediaManagerProps {
   albumId: string;
@@ -86,24 +87,6 @@ export function MediaManager({
     } catch (error) {
       console.error("Delete failed:", error);
     }
-  };
-
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   };
 
   const allSelected = media.length > 0 && selectedMedia.length === media.length;

@@ -1,4 +1,5 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Media } from "../../types/index";
 import { cn } from "../../lib/utils";
 
@@ -19,7 +20,20 @@ export const Lightbox: React.FC<LightboxProps> = ({
   onNext,
   onPrevious,
 }) => {
+  const [isMounted, setIsMounted] = useState(false);
+  const [showHeader, setShowHeader] = useState(false);
   const currentMedia = media[currentIndex];
+
+  const handleClose = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Only close if the backdrop itself is clicked
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Keyboard navigation
   const handleKeyDown = useCallback(
@@ -59,7 +73,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
     };
   }, [isOpen]);
 
-  if (!isOpen || !currentMedia) return null;
+  if (!isOpen || !currentMedia || !isMounted) return null;
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return "0 Bytes";
@@ -69,64 +83,41 @@ export const Lightbox: React.FC<LightboxProps> = ({
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString();
+  const handleDownload = () => {
+    if (!currentMedia) return;
+    // Open in new tab to trigger browser's download manager
+    window.open(currentMedia.url, "_blank");
   };
 
   const isImage = currentMedia.mimeType.startsWith("image/");
+  const isVideo = currentMedia.mimeType.startsWith("video/");
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center">
-      {/* Backdrop */}
+  return createPortal(
+    <div className="fixed inset-0 z-50 bg-black" onClick={handleClose}>
+      {/* Content wrapper: stop propagation to prevent closing when clicking on content */}
       <div
-        className="absolute inset-0 cursor-pointer"
-        onClick={onClose}
-        aria-label="Close lightbox"
-      />
-
-      {/* Content */}
-      <div className="relative max-w-7xl max-h-full w-full h-full flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 text-white">
-          <div className="flex items-center space-x-4">
-            <h2 className="text-lg font-semibold truncate">
-              {currentMedia.originalName || currentMedia.filename}
-            </h2>
-            <span className="text-sm text-gray-300">
-              {currentIndex + 1} of {media.length}
-            </span>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors"
-            aria-label="Close"
-          >
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-
+        className="relative w-full h-full"
+        // No longer need to stop propagation here since handleClose is more specific
+      >
         {/* Media Content */}
-        <div className="flex-1 flex items-center justify-center p-4 relative">
+        <div className="w-full h-full">
           {isImage ? (
             <img
               src={currentMedia.url}
               alt={currentMedia.originalName || currentMedia.filename}
-              className="max-w-full max-h-full object-contain"
+              className="w-full h-full object-contain"
             />
+          ) : isVideo ? (
+            <video
+              src={currentMedia.url}
+              controls
+              className="w-full h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Your browser does not support the video tag.
+            </video>
           ) : (
-            <div className="flex flex-col items-center justify-center text-white">
+            <div className="flex flex-col items-center justify-center text-white h-full">
               <svg
                 className="w-24 h-24 mb-4 text-gray-400"
                 fill="none"
@@ -150,82 +141,156 @@ export const Lightbox: React.FC<LightboxProps> = ({
                 href={currentMedia.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
+                download
+                onClick={(e) => e.stopPropagation()}
               >
                 Download File
               </a>
             </div>
           )}
-
-          {/* Navigation Arrows */}
-          {media.length > 1 && (
-            <>
-              <button
-                onClick={onPrevious}
-                className={cn(
-                  "absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors",
-                  currentIndex === 0 && "opacity-50 cursor-not-allowed"
-                )}
-                disabled={currentIndex === 0}
-                aria-label="Previous image"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </button>
-
-              <button
-                onClick={onNext}
-                className={cn(
-                  "absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors",
-                  currentIndex === media.length - 1 &&
-                    "opacity-50 cursor-not-allowed"
-                )}
-                disabled={currentIndex === media.length - 1}
-                aria-label="Next image"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
-            </>
-          )}
         </div>
 
-        {/* Footer with metadata */}
-        <div className="p-4 text-white border-t border-white/10">
-          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-300">
-            <span>Uploaded: {formatDate(currentMedia.createdAt)}</span>
-            <span>Size: {formatFileSize(currentMedia.size)}</span>
-            <span>Type: {currentMedia.mimeType}</span>
-            {isImage && currentMedia.width && currentMedia.height && (
-              <span>
-                Dimensions: {currentMedia.width} × {currentMedia.height}
+        {/* Header */}
+        <div
+          className={cn(
+            "absolute top-0 left-0 right-0 bg-gradient-to-b from-black/50 to-transparent transition-opacity duration-300 z-10",
+            showHeader
+              ? "opacity-100 pointer-events-auto"
+              : "opacity-0 pointer-events-none"
+          )}
+          onMouseEnter={() => setShowHeader(true)}
+          onMouseLeave={() => setShowHeader(false)}
+        >
+          <div className="flex items-center justify-between text-white p-4">
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-300">
+                {currentIndex + 1} of {media.length}
               </span>
-            )}
+            </div>
+            <div className="flex items-center">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDownload();
+                }}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors mr-2 cursor-pointer"
+                aria-label="Download"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClose();
+                }}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+                aria-label="Close"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
+
+        {/* Header hover zone - only active when header is hidden */}
+        <div
+          className={cn(
+            "absolute top-0 left-0 right-0 h-20",
+            showHeader ? "pointer-events-none" : "pointer-events-auto"
+          )}
+          onMouseEnter={() => setShowHeader(true)}
+        />
+
+        {/* Navigation Arrows */}
+        {media.length > 1 && (
+          <>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onPrevious();
+              }}
+              className={cn(
+                "absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors",
+                currentIndex === 0
+                  ? "opacity-50 cursor-not-allowed"
+                  : "cursor-pointer"
+              )}
+              disabled={currentIndex === 0}
+              aria-label="Previous image"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </button>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onNext();
+              }}
+              className={cn(
+                "absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors",
+                currentIndex === media.length - 1
+                  ? "opacity-50 cursor-not-allowed"
+                  : "cursor-pointer"
+              )}
+              disabled={currentIndex === media.length - 1}
+              aria-label="Next image"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </>
+        )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
