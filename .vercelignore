@@ -1,5 +1,12 @@
-# Backend files
-backend/
+# Backend files - keep frontend accessible
+backend/__tests__/
+backend/functions/
+backend/shared/
+backend/.eslintrc.js
+backend/env.development.json
+backend/jest.config.js
+backend/package.json
+backend/tsconfig.json
 template.yaml
 samconfig.toml
 
