@@ -40,6 +40,35 @@ export async function getAlbums(
   });
   return handleResponse<{ albums: Album[]; pagination: any }>(response);
 }
+// Fetch all public albums, handling pagination
+export async function fetchAllPublicAlbums(): Promise<Album[]> {
+  let allAlbums: Album[] = [];
+  let cursor: string | undefined = undefined;
+  let hasNextPage = true;
+
+  while (hasNextPage) {
+    const params: { isPublic: boolean; limit: number; cursor?: string } = {
+      isPublic: true,
+      limit: 100,
+    };
+    if (cursor) {
+      params.cursor = cursor;
+    }
+    const response = await getAlbums(params);
+
+    if (response.success && response.data) {
+      allAlbums = allAlbums.concat(response.data.albums);
+      cursor = response.data.pagination?.nextCursor;
+      hasNextPage = !!cursor;
+    } else {
+      // On error, stop fetching and return what we have so far
+      console.error("Failed to fetch a page of albums:", response.error);
+      hasNextPage = false;
+    }
+  }
+
+  return allAlbums;
+}
 
 // Fetch a single album by ID
 export async function getAlbumById(albumId: string) {

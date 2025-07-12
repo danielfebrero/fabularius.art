@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation";
-import { getAlbumById, getAlbums, getMediaForAlbum } from "../../../lib/data";
+import {
+  getAlbumById,
+  getMediaForAlbum,
+  fetchAllPublicAlbums,
+} from "../../../lib/data";
 import { MediaGallery } from "../../../components/MediaGallery";
 import { Card, CardContent, CardHeader } from "../../../components/ui/Card";
 import type { Metadata } from "next";
@@ -28,8 +32,7 @@ export async function generateMetadata({
 }
 
 export async function generateStaticParams() {
-  const { data } = await getAlbums({ isPublic: true, limit: 100 }); // Fetch all public albums
-  const albums = data?.albums || [];
+  const albums = await fetchAllPublicAlbums();
   return albums.map((album) => ({
     albumId: album.id,
   }));
