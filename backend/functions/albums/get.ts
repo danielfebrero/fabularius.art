@@ -8,6 +8,7 @@ export const handler = async (
 ): Promise<APIGatewayProxyResult> => {
   try {
     const limit = parseInt(event.queryStringParameters?.["limit"] || "20");
+    const isPublic = event.queryStringParameters?.["isPublic"];
     const lastEvaluatedKey = event.queryStringParameters?.["cursor"]
       ? JSON.parse(
           Buffer.from(
@@ -20,7 +21,16 @@ export const handler = async (
     const { albums, lastEvaluatedKey: nextKey } =
       await DynamoDBService.listAlbums(limit, lastEvaluatedKey);
 
-    const albumsResponse: Album[] = albums.map((album) => {
+    // Filter albums based on isPublic parameter
+    let filteredAlbums = albums;
+    if (isPublic !== undefined) {
+      const isPublicBool = isPublic === "true";
+      filteredAlbums = albums.filter(
+        (album) => album.isPublic === isPublicBool
+      );
+    }
+
+    const albumsResponse: Album[] = filteredAlbums.map((album) => {
       const response: Album = {
         id: album.id,
         title: album.title,

@@ -58,7 +58,7 @@ export async function fetchAllPublicAlbums(): Promise<Album[]> {
 
     if (response.success && response.data) {
       allAlbums = allAlbums.concat(response.data.albums);
-      cursor = response.data.pagination?.nextCursor;
+      cursor = response.data.pagination?.cursor;
       hasNextPage = !!cursor;
     } else {
       // On error, stop fetching and return what we have so far
