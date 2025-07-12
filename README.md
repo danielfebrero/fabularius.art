@@ -122,19 +122,51 @@ fabularius-art/
 
 ### Deployment
 
-1. **Deploy the backend infrastructure**
+The project supports multiple environments (dev, staging, prod) with automated deployment scripts.
+
+#### Quick Deployment
+
+1. **Deploy backend to development**
+
+   ```bash
+   ./scripts/deploy.sh --env dev
+   ```
+
+2. **Deploy backend to production**
+
+   ```bash
+   ./scripts/deploy.sh --env prod --guided
+   ```
+
+3. **Prepare frontend for deployment**
+   ```bash
+   ./scripts/deploy-frontend.sh --env prod --type production
+   vercel --prod
+   ```
+
+#### Environment Support
+
+- **Development**: `./scripts/deploy.sh --env dev`
+- **Staging**: `./scripts/deploy.sh --env staging`
+- **Production**: `./scripts/deploy.sh --env prod --guided`
+
+#### Manual Deployment
+
+1. **Backend (SAM)**
 
    ```bash
    sam build
-   sam deploy --guided
+   sam deploy --config-env prod  # or dev, staging
    ```
 
-2. **Build and deploy the frontend**
+2. **Frontend (Vercel)**
    ```bash
    cd frontend
    npm run build
-   # Deploy to your preferred hosting service (Vercel, Netlify, etc.)
+   vercel --prod
    ```
+
+For detailed deployment instructions, see [`DEPLOYMENT.md`](DEPLOYMENT.md).
 
 ## Testing
 
