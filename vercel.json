@@ -1,0 +1,12 @@
+{
+  "buildCommand": "cd frontend && npm run build",
+  "devCommand": "cd frontend && npm run dev",
+  "installCommand": "npm install && cd frontend && npm install",
+  "outputDirectory": "frontend/.next",
+  "framework": "nextjs",
+  "functions": {
+    "frontend/src/app/**": {
+      "maxDuration": 30
+    }
+  }
+}

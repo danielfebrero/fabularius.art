@@ -177,3 +177,11 @@ temp/
 *.njsproj
 *.sln
 *.sw?
+
+# Vercel
+.vercel
+.vercel.json
+*.vercel.app
+
+# Deployment
+.env.production
