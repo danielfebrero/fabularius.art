@@ -1,7 +1,7 @@
 export interface Album {
   id: string;
   title: string;
-  description?: string | undefined;
+  tags?: string[] | undefined;
   coverImageUrl?: string | undefined;
   createdAt: string;
   updatedAt: string;
@@ -27,14 +27,15 @@ export interface Media {
 
 export interface CreateAlbumRequest {
   title: string;
-  description?: string | undefined;
+  tags?: string[] | undefined;
   isPublic?: boolean | undefined;
 }
 
 export interface UpdateAlbumRequest {
   title?: string | undefined;
-  description?: string | undefined;
+  tags?: string[] | undefined;
   isPublic?: boolean | undefined;
+  coverImageUrl?: string | undefined;
 }
 
 export interface UploadMediaRequest {
@@ -69,7 +70,7 @@ export interface AlbumEntity {
   EntityType: "Album";
   id: string;
   title: string;
-  description?: string | undefined;
+  tags?: string[] | undefined;
   coverImageUrl?: string | undefined;
   createdAt: string;
   updatedAt: string;
@@ -159,4 +160,13 @@ export interface AdminSessionEntity {
   createdAt: string;
   expiresAt: string;
   lastAccessedAt: string;
+}
+
+// Admin Statistics Types
+export interface AdminStats {
+  totalAlbums: number;
+  totalMedia: number;
+  publicAlbums: number;
+  storageUsed: string;
+  storageUsedBytes: number;
 }

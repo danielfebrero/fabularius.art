@@ -35,7 +35,7 @@ describe("HomePage", () => {
   it("displays feature descriptions", () => {
     expect(
       screen.getByText(
-        /organize your artwork into beautiful albums with custom titles and descriptions/i
+        /organize your artwork into beautiful albums with custom titles and tags/i
       )
     ).toBeInTheDocument();
 

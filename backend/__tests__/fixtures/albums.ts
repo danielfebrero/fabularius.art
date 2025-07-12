@@ -5,7 +5,7 @@ export const mockTimestamp = "2023-01-01T00:00:00.000Z";
 
 export const mockCreateAlbumRequest: CreateAlbumRequest = {
   title: "Test Album",
-  description: "A test album for unit testing",
+  tags: ["test", "unit-testing", "photography"],
   isPublic: true,
 };
 
@@ -17,7 +17,7 @@ export const mockAlbumEntity: AlbumEntity = {
   EntityType: "Album",
   id: mockAlbumId,
   title: "Test Album",
-  description: "A test album for unit testing",
+  tags: ["test", "unit-testing", "photography"],
   coverImageUrl: "https://test.cloudfront.net/albums/test-album-123/cover.jpg",
   createdAt: mockTimestamp,
   updatedAt: mockTimestamp,
@@ -28,7 +28,7 @@ export const mockAlbumEntity: AlbumEntity = {
 export const mockAlbum: Album = {
   id: mockAlbumId,
   title: "Test Album",
-  description: "A test album for unit testing",
+  tags: ["test", "unit-testing", "photography"],
   coverImageUrl: "https://test.cloudfront.net/albums/test-album-123/cover.jpg",
   createdAt: mockTimestamp,
   updatedAt: mockTimestamp,
@@ -67,7 +67,7 @@ export const mockAlbumsList: AlbumEntity[] = [
     PK: "ALBUM#album-2",
     GSI1SK: "2023-01-02T00:00:00.000Z#album-2",
     title: "Second Album",
-    description: "Another test album",
+    tags: ["test", "second"],
     mediaCount: 3,
   },
   {
@@ -78,7 +78,7 @@ export const mockAlbumsList: AlbumEntity[] = [
     title: "Third Album",
     mediaCount: 0,
     isPublic: false,
-    description: undefined,
+    tags: undefined,
     coverImageUrl: undefined,
   },
 ];

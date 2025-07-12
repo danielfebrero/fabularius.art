@@ -63,7 +63,7 @@ describe("Albums Integration Tests", () => {
         EntityType: "Album",
         id: "integration-test-album-id",
         title: mockCreateAlbumRequest.title,
-        description: mockCreateAlbumRequest.description,
+        tags: mockCreateAlbumRequest.tags,
         createdAt: testTimestamp,
         updatedAt: testTimestamp,
         mediaCount: 0,
@@ -79,7 +79,7 @@ describe("Albums Integration Tests", () => {
         EntityType: "Album" as const,
         id: "integration-test-album-id",
         title: mockCreateAlbumRequest.title,
-        description: mockCreateAlbumRequest.description,
+        tags: mockCreateAlbumRequest.tags,
         createdAt: testTimestamp,
         updatedAt: testTimestamp,
         mediaCount: 0,
@@ -102,7 +102,7 @@ describe("Albums Integration Tests", () => {
 
       const firstAlbumRequest = {
         title: "First Album",
-        description: "First test album",
+        tags: ["first", "test"],
         isPublic: true,
       };
 
@@ -116,7 +116,7 @@ describe("Albums Integration Tests", () => {
 
       const secondAlbumRequest = {
         title: "Second Album",
-        description: "Second test album",
+        tags: ["second", "test"],
         isPublic: false,
       };
 
@@ -136,7 +136,7 @@ describe("Albums Integration Tests", () => {
           EntityType: "Album" as const,
           id: "integration-test-album-id",
           title: firstAlbumRequest.title,
-          description: firstAlbumRequest.description,
+          tags: firstAlbumRequest.tags,
           createdAt: testTimestamp,
           updatedAt: testTimestamp,
           mediaCount: 0,
@@ -150,7 +150,7 @@ describe("Albums Integration Tests", () => {
           EntityType: "Album" as const,
           id: "second-album-id",
           title: secondAlbumRequest.title,
-          description: secondAlbumRequest.description,
+          tags: secondAlbumRequest.tags,
           createdAt: testTimestamp,
           updatedAt: testTimestamp,
           mediaCount: 0,
@@ -214,7 +214,7 @@ describe("Albums Integration Tests", () => {
 
       const albumData = {
         title: "Consistency Test Album",
-        description: "Testing data consistency between operations",
+        tags: ["consistency", "test"],
         isPublic: true,
       };
 
@@ -232,7 +232,7 @@ describe("Albums Integration Tests", () => {
         EntityType: "Album" as const,
         id: createdAlbum.id,
         title: albumData.title,
-        description: albumData.description,
+        tags: albumData.tags,
         createdAt: testTimestamp,
         updatedAt: testTimestamp,
         mediaCount: 0,
@@ -249,7 +249,7 @@ describe("Albums Integration Tests", () => {
       // Verify all fields match
       expect(retrievedAlbum.id).toBe(createdAlbum.id);
       expect(retrievedAlbum.title).toBe(createdAlbum.title);
-      expect(retrievedAlbum.description).toBe(createdAlbum.description);
+      expect(retrievedAlbum.tags).toEqual(createdAlbum.tags);
       expect(retrievedAlbum.isPublic).toBe(createdAlbum.isPublic);
       expect(retrievedAlbum.mediaCount).toBe(createdAlbum.mediaCount);
       expect(retrievedAlbum.createdAt).toBe(createdAlbum.createdAt);
@@ -268,7 +268,7 @@ describe("Albums Integration Tests", () => {
       const createResult = await createAlbumHandler(createEvent);
 
       const createdAlbum = expectCreatedResponse(createResult);
-      expect(createdAlbum.description).toBeUndefined();
+      expect(createdAlbum.tags).toBeUndefined();
       expect(createdAlbum.isPublic).toBe(false); // Default value
 
       // Simulate retrieving the same album
@@ -280,7 +280,7 @@ describe("Albums Integration Tests", () => {
         EntityType: "Album" as const,
         id: createdAlbum.id,
         title: minimalAlbumData.title,
-        description: undefined,
+        tags: undefined,
         createdAt: testTimestamp,
         updatedAt: testTimestamp,
         mediaCount: 0,
@@ -293,7 +293,7 @@ describe("Albums Integration Tests", () => {
       const getResult = await getAlbumByIdHandler(getEvent);
 
       const retrievedAlbum = expectSuccessResponse(getResult);
-      expect(retrievedAlbum.description).toBeUndefined();
+      expect(retrievedAlbum.tags).toBeUndefined();
       expect(retrievedAlbum.isPublic).toBe(false);
     });
   });
@@ -308,7 +308,7 @@ describe("Albums Integration Tests", () => {
         EntityType: "Album" as const,
         id: `album-${i}`,
         title: `Album ${i}`,
-        description: `Description ${i}`,
+        tags: [`tag-${i}`, "test"],
         createdAt: testTimestamp,
         updatedAt: testTimestamp,
         mediaCount: 0,

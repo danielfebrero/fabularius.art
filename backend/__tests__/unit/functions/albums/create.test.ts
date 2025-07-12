@@ -44,7 +44,7 @@ describe("Albums Create Handler", () => {
       expect(data).toEqual({
         id: "mock-uuid-123",
         title: "Test Album",
-        description: "A test album for unit testing",
+        tags: ["test", "unit-testing", "photography"],
         createdAt: mockTimestamp,
         updatedAt: mockTimestamp,
         mediaCount: 0,
@@ -59,7 +59,7 @@ describe("Albums Create Handler", () => {
         EntityType: "Album",
         id: "mock-uuid-123",
         title: "Test Album",
-        description: "A test album for unit testing",
+        tags: ["test", "unit-testing", "photography"],
         createdAt: mockTimestamp,
         updatedAt: mockTimestamp,
         mediaCount: 0,
@@ -86,12 +86,12 @@ describe("Albums Create Handler", () => {
         mediaCount: 0,
         isPublic: false,
       });
-      expect(data.description).toBeUndefined();
+      expect(data.tags).toBeUndefined();
 
       expect(mockCreateAlbum).toHaveBeenCalledWith(
         expect.objectContaining({
           title: "Minimal Album",
-          description: undefined,
+          tags: undefined,
           isPublic: false,
         })
       );
@@ -102,7 +102,7 @@ describe("Albums Create Handler", () => {
 
       const requestWithoutIsPublic = {
         title: "Test Album",
-        description: "Test description",
+        tags: ["test"],
       };
 
       const event = createCreateAlbumEvent(requestWithoutIsPublic);
@@ -118,12 +118,12 @@ describe("Albums Create Handler", () => {
       );
     });
 
-    it("should trim whitespace from title and description", async () => {
+    it("should trim whitespace from title and handle tags properly", async () => {
       mockCreateAlbum.mockResolvedValue();
 
       const requestWithWhitespace = {
         title: "  Test Album  ",
-        description: "  Test description  ",
+        tags: ["  test  ", "  album  "],
         isPublic: true,
       };
 
@@ -132,34 +132,34 @@ describe("Albums Create Handler", () => {
 
       const data = expectCreatedResponse(result);
       expect(data.title).toBe("Test Album");
-      expect(data.description).toBe("Test description");
+      expect(data.tags).toEqual(["test", "album"]);
 
       expect(mockCreateAlbum).toHaveBeenCalledWith(
         expect.objectContaining({
           title: "Test Album",
-          description: "Test description",
+          tags: ["test", "album"],
         })
       );
     });
 
-    it("should handle empty description", async () => {
+    it("should handle empty tags array", async () => {
       mockCreateAlbum.mockResolvedValue();
 
-      const requestWithEmptyDescription = {
+      const requestWithEmptyTags = {
         title: "Test Album",
-        description: "",
+        tags: [],
         isPublic: true,
       };
 
-      const event = createCreateAlbumEvent(requestWithEmptyDescription);
+      const event = createCreateAlbumEvent(requestWithEmptyTags);
       const result = await handler(event);
 
       const data = expectCreatedResponse(result);
-      expect(data.description).toBe("");
+      expect(data.tags).toEqual([]);
 
       expect(mockCreateAlbum).toHaveBeenCalledWith(
         expect.objectContaining({
-          description: "",
+          tags: [],
         })
       );
     });
@@ -178,7 +178,7 @@ describe("Albums Create Handler", () => {
 
     it("should return 400 when title is missing", async () => {
       const requestWithoutTitle = {
-        description: "Test description",
+        tags: ["test"],
         isPublic: true,
       };
 
@@ -192,7 +192,7 @@ describe("Albums Create Handler", () => {
     it("should return 400 when title is empty string", async () => {
       const requestWithEmptyTitle = {
         title: "",
-        description: "Test description",
+        tags: ["test"],
       };
 
       const event = createCreateAlbumEvent(requestWithEmptyTitle);
@@ -205,7 +205,7 @@ describe("Albums Create Handler", () => {
     it("should return 400 when title is only whitespace", async () => {
       const requestWithWhitespaceTitle = {
         title: "   ",
-        description: "Test description",
+        tags: ["test"],
       };
 
       const event = createCreateAlbumEvent(requestWithWhitespaceTitle);
@@ -282,7 +282,7 @@ describe("Albums Create Handler", () => {
       expect(data).toHaveProperty("isPublic");
 
       // Check optional fields are included when present
-      expect(data).toHaveProperty("description");
+      expect(data).toHaveProperty("tags");
     });
 
     it("should not include DynamoDB-specific fields", async () => {
@@ -316,8 +316,8 @@ describe("Albums Create Handler", () => {
       expect(typeof data.mediaCount).toBe("number");
       expect(typeof data.isPublic).toBe("boolean");
 
-      if (data.description !== undefined) {
-        expect(typeof data.description).toBe("string");
+      if (data.tags !== undefined) {
+        expect(Array.isArray(data.tags)).toBe(true);
       }
     });
 
@@ -364,7 +364,7 @@ describe("Albums Create Handler", () => {
 
       const specialRequest = {
         title: "Album with émojis 🎨 & symbols!",
-        description: 'Description with <html> & "quotes" and 中文',
+        tags: ['tag with <html> & "quotes"', "中文", "émojis 🎨"],
         isPublic: true,
       };
 
@@ -373,7 +373,7 @@ describe("Albums Create Handler", () => {
 
       const data = expectCreatedResponse(result);
       expect(data.title).toBe(specialRequest.title);
-      expect(data.description).toBe(specialRequest.description);
+      expect(data.tags).toEqual(specialRequest.tags);
     });
   });
 });

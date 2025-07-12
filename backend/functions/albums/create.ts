@@ -29,7 +29,7 @@ export const handler = async (
       EntityType: "Album",
       id: albumId,
       title: request.title.trim(),
-      description: request.description?.trim(),
+      tags: request.tags,
       createdAt: now,
       updatedAt: now,
       mediaCount: 0,
@@ -47,8 +47,8 @@ export const handler = async (
       isPublic: albumEntity.isPublic,
     };
 
-    if (albumEntity.description !== undefined) {
-      album.description = albumEntity.description;
+    if (albumEntity.tags !== undefined) {
+      album.tags = albumEntity.tags;
     }
 
     if (albumEntity.coverImageUrl !== undefined) {

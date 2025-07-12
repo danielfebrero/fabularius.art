@@ -1,7 +1,7 @@
 export interface Album {
   id: string;
   title: string;
-  description?: string;
+  tags?: string[];
   coverImageUrl?: string;
   isPublic: boolean;
   mediaCount: number;
@@ -80,4 +80,12 @@ export interface AdminContextType {
   login: (_credentials: LoginRequest) => Promise<boolean>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
+}
+
+export interface AdminStats {
+  totalAlbums: number;
+  totalMedia: number;
+  publicAlbums: number;
+  storageUsed: string;
+  storageUsedBytes: number;
 }

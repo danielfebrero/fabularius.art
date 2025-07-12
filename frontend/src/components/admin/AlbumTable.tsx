@@ -32,9 +32,10 @@ export function AlbumTable({
 
   if (loading && albums.length === 0) {
     return (
-      <div className="bg-white shadow rounded-lg">
-        <div className="p-8 text-center">
-          <div className="text-gray-500">Loading albums...</div>
+      <div className="bg-card shadow-lg rounded-xl border border-border">
+        <div className="p-12 text-center">
+          <div className="w-12 h-12 border-4 border-admin-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="text-muted-foreground">Loading albums...</div>
         </div>
       </div>
     );
@@ -42,10 +43,21 @@ export function AlbumTable({
 
   if (albums.length === 0) {
     return (
-      <div className="bg-white shadow rounded-lg">
-        <div className="p-8 text-center">
-          <div className="text-gray-500">No albums found</div>
-          <p className="text-sm text-gray-400 mt-2">
+      <div className="bg-card shadow-lg rounded-xl border border-border">
+        <div className="p-12 text-center">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg
+              className="w-8 h-8 text-muted-foreground"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-foreground mb-2">
+            No albums found
+          </h3>
+          <p className="text-muted-foreground">
             Create your first album to get started
           </p>
         </div>
@@ -54,12 +66,12 @@ export function AlbumTable({
   }
 
   return (
-    <div className="bg-white shadow rounded-lg overflow-hidden">
+    <div className="bg-card shadow-lg rounded-xl overflow-hidden border border-border">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full divide-y divide-border">
+          <thead className="bg-muted/30">
             <tr>
-              <th className="px-6 py-3 text-left">
+              <th className="px-6 py-4 text-left">
                 <input
                   type="checkbox"
                   checked={allSelected}
@@ -67,55 +79,70 @@ export function AlbumTable({
                     if (input) input.indeterminate = someSelected;
                   }}
                   onChange={(e) => onSelectAll(e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-admin-primary focus:ring-admin-primary border-border rounded"
                 />
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-foreground uppercase tracking-wider">
                 Album
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-foreground uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-foreground uppercase tracking-wider">
                 Media Count
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-foreground uppercase tracking-wider">
                 Created
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-xs font-semibold text-foreground uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-card divide-y divide-border">
             {albums.map((album) => (
-              <tr key={album.id} className="hover:bg-gray-50">
+              <tr
+                key={album.id}
+                className="hover:bg-muted/20 transition-colors"
+              >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <input
                     type="checkbox"
                     checked={selectedAlbums.includes(album.id)}
                     onChange={(e) => onSelectAlbum(album.id, e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    className="h-4 w-4 text-admin-primary focus:ring-admin-primary border-border rounded"
                   />
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
                     {album.coverImageUrl && (
-                      <div className="flex-shrink-0 h-10 w-10">
+                      <div className="flex-shrink-0 h-12 w-12">
                         <img
-                          className="h-10 w-10 rounded object-cover"
+                          className="h-12 w-12 rounded-lg object-cover border border-border"
                           src={album.coverImageUrl}
                           alt={album.title}
                         />
                       </div>
                     )}
                     <div className={album.coverImageUrl ? "ml-4" : ""}>
-                      <div className="text-sm font-medium text-gray-900">
+                      <div className="text-sm font-semibold text-foreground">
                         {album.title}
                       </div>
-                      {album.description && (
-                        <div className="text-sm text-gray-500 truncate max-w-xs">
-                          {album.description}
+                      {album.tags && album.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2 max-w-xs">
+                          {album.tags.slice(0, 2).map((tag, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-admin-primary/10 to-admin-secondary/10 text-admin-primary border border-admin-primary/20"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                          {album.tags.length > 2 && (
+                            <span className="text-xs text-muted-foreground font-medium">
+                              +{album.tags.length - 2} more
+                            </span>
+                          )}
                         </div>
                       )}
                     </div>
@@ -123,19 +150,26 @@ export function AlbumTable({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
-                    className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                    className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
                       album.isPublic
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
+                        ? "bg-admin-success/10 text-admin-success border border-admin-success/20"
+                        : "bg-muted text-muted-foreground border border-border"
                     }`}
                   >
                     {album.isPublic ? "Public" : "Private"}
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {album.mediaCount}
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="flex items-center">
+                    <span className="text-sm font-medium text-foreground">
+                      {album.mediaCount}
+                    </span>
+                    <span className="text-xs text-muted-foreground ml-1">
+                      items
+                    </span>
+                  </div>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                   {formatDate(album.createdAt)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -144,6 +178,7 @@ export function AlbumTable({
                       variant="outline"
                       size="sm"
                       onClick={() => onEdit(album.id)}
+                      className="border-admin-primary/30 text-admin-primary hover:bg-admin-primary hover:text-admin-primary-foreground"
                     >
                       Edit
                     </Button>
@@ -151,6 +186,7 @@ export function AlbumTable({
                       variant="outline"
                       size="sm"
                       onClick={() => onManageMedia(album.id)}
+                      className="border-admin-secondary/30 text-admin-secondary hover:bg-admin-secondary hover:text-admin-secondary-foreground"
                     >
                       Media
                     </Button>
@@ -158,7 +194,7 @@ export function AlbumTable({
                       variant="outline"
                       size="sm"
                       onClick={() => onDelete(album)}
-                      className="text-red-600 border-red-300 hover:bg-red-50"
+                      className="text-destructive border-destructive/30 hover:bg-destructive hover:text-destructive-foreground"
                     >
                       Delete
                     </Button>

@@ -26,6 +26,10 @@ const mockGetAlbum = DynamoDBService.getAlbum as jest.MockedFunction<
 const mockCreateMedia = DynamoDBService.createMedia as jest.MockedFunction<
   typeof DynamoDBService.createMedia
 >;
+const mockIncrementAlbumMediaCount =
+  DynamoDBService.incrementAlbumMediaCount as jest.MockedFunction<
+    typeof DynamoDBService.incrementAlbumMediaCount
+  >;
 const mockGeneratePresignedUploadUrl =
   S3Service.generatePresignedUploadUrl as jest.MockedFunction<
     typeof S3Service.generatePresignedUploadUrl
@@ -38,6 +42,7 @@ describe("Media Upload Handler", () => {
   beforeEach(() => {
     mockGetAlbum.mockClear();
     mockCreateMedia.mockClear();
+    mockIncrementAlbumMediaCount.mockClear();
     mockGeneratePresignedUploadUrl.mockClear();
     mockGetPublicUrl.mockClear();
 
@@ -66,6 +71,7 @@ describe("Media Upload Handler", () => {
         key: mockS3Key,
       });
       mockCreateMedia.mockResolvedValue();
+      mockIncrementAlbumMediaCount.mockResolvedValue();
 
       const event = createUploadMediaEvent(mockAlbumId, mockUploadMediaRequest);
       const result = await handler(event);
@@ -101,6 +107,7 @@ describe("Media Upload Handler", () => {
         updatedAt: mockTimestamp,
         status: "pending",
       });
+      expect(mockIncrementAlbumMediaCount).toHaveBeenCalledWith(mockAlbumId);
     });
 
     it("should handle request without size", async () => {
@@ -110,6 +117,7 @@ describe("Media Upload Handler", () => {
         key: mockS3Key,
       });
       mockCreateMedia.mockResolvedValue();
+      mockIncrementAlbumMediaCount.mockResolvedValue();
 
       const requestWithoutSize = {
         filename: "test-image.jpg",
@@ -136,6 +144,7 @@ describe("Media Upload Handler", () => {
         key: "albums/test-album-123/media/mock-media-uuid-456.png",
       });
       mockCreateMedia.mockResolvedValue();
+      mockIncrementAlbumMediaCount.mockResolvedValue();
 
       const pngRequest = {
         filename: "test-image.png",
@@ -274,6 +283,7 @@ describe("Media Upload Handler", () => {
       expect(mockGetAlbum).toHaveBeenCalledWith("non-existent-album");
       expect(mockGeneratePresignedUploadUrl).not.toHaveBeenCalled();
       expect(mockCreateMedia).not.toHaveBeenCalled();
+      expect(mockIncrementAlbumMediaCount).not.toHaveBeenCalled();
     });
   });
 
@@ -342,6 +352,7 @@ describe("Media Upload Handler", () => {
         key: mockS3Key,
       });
       mockCreateMedia.mockResolvedValue();
+      mockIncrementAlbumMediaCount.mockResolvedValue();
 
       const event = createUploadMediaEvent(mockAlbumId, mockUploadMediaRequest);
       const result = await handler(event);
@@ -366,6 +377,7 @@ describe("Media Upload Handler", () => {
         key: mockS3Key,
       });
       mockCreateMedia.mockResolvedValue();
+      mockIncrementAlbumMediaCount.mockResolvedValue();
 
       const event = createUploadMediaEvent(mockAlbumId, mockUploadMediaRequest);
       const result = await handler(event);
@@ -383,6 +395,7 @@ describe("Media Upload Handler", () => {
         key: mockS3Key,
       });
       mockCreateMedia.mockResolvedValue();
+      mockIncrementAlbumMediaCount.mockResolvedValue();
 
       const longFilename = "a".repeat(1000) + ".jpg";
       const requestWithLongFilename = {
@@ -414,6 +427,7 @@ describe("Media Upload Handler", () => {
         key: mockS3Key,
       });
       mockCreateMedia.mockResolvedValue();
+      mockIncrementAlbumMediaCount.mockResolvedValue();
 
       const specialFilename = "file with spaces & symbols (1).jpg";
       const requestWithSpecialFilename = {
@@ -445,6 +459,7 @@ describe("Media Upload Handler", () => {
         key: mockS3Key,
       });
       mockCreateMedia.mockResolvedValue();
+      mockIncrementAlbumMediaCount.mockResolvedValue();
 
       const largeFileRequest = {
         filename: "large-file.jpg",

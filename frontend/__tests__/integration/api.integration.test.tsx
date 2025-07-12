@@ -39,7 +39,13 @@ const AlbumsList = () => {
       {albums.map((album: any) => (
         <div key={album.id} data-testid={`album-${album.id}`}>
           <h3>{album.title}</h3>
-          <p>{album.description}</p>
+          <div>
+            {album.tags?.map((tag: string) => (
+              <span key={tag} className="tag">
+                {tag}
+              </span>
+            ))}
+          </div>
           <span data-testid={`media-count-${album.id}`}>
             {album.mediaCount} items
           </span>
@@ -51,7 +57,7 @@ const AlbumsList = () => {
 
 const CreateAlbumForm = () => {
   const [title, setTitle] = React.useState("");
-  const [description, setDescription] = React.useState("");
+  const [tags, setTags] = React.useState<string[]>([]);
   const [isPublic, setIsPublic] = React.useState(true);
   const [loading, setLoading] = React.useState(false);
   const [message, setMessage] = React.useState("");
@@ -65,7 +71,7 @@ const CreateAlbumForm = () => {
       const response = await fetch("/api/albums", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, isPublic }),
+        body: JSON.stringify({ title, tags, isPublic }),
       });
 
       const data = await response.json();
@@ -73,7 +79,7 @@ const CreateAlbumForm = () => {
       if (data.success) {
         setMessage("Album created successfully!");
         setTitle("");
-        setDescription("");
+        setTags([]);
       } else {
         setMessage(data.error || "Failed to create album");
       }
@@ -93,11 +99,11 @@ const CreateAlbumForm = () => {
         placeholder="Album title"
         required
       />
-      <textarea
-        data-testid="description-input"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder="Album description"
+      <input
+        data-testid="tags-input"
+        value={tags.join(", ")}
+        onChange={(e) => setTags(e.target.value.split(", ").filter(Boolean))}
+        placeholder="Album tags (comma separated)"
       />
       <label>
         <input
@@ -189,10 +195,7 @@ describe("API Integration Tests", () => {
 
       // Fill out the form
       await user.type(screen.getByTestId("title-input"), "Test Album");
-      await user.type(
-        screen.getByTestId("description-input"),
-        "Test Description"
-      );
+      await user.type(screen.getByTestId("tags-input"), "test, album");
 
       // Submit the form
       await user.click(screen.getByTestId("submit-button"));
@@ -211,7 +214,7 @@ describe("API Integration Tests", () => {
 
       // Form should be reset
       expect(screen.getByTestId("title-input")).toHaveValue("");
-      expect(screen.getByTestId("description-input")).toHaveValue("");
+      expect(screen.getByTestId("tags-input")).toHaveValue("");
     });
 
     it("handles form validation errors", async () => {

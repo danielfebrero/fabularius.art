@@ -63,6 +63,9 @@ export const handler = async (
 
     await DynamoDBService.createMedia(mediaEntity);
 
+    // Increment album media count
+    await DynamoDBService.incrementAlbumMediaCount(albumId);
+
     const response = {
       mediaId,
       uploadUrl,

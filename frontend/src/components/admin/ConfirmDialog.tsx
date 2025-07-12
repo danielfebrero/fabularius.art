@@ -50,23 +50,27 @@ export function ConfirmDialog({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className="fixed inset-0 bg-black bg-opacity-25 transition-opacity"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
           onClick={onClose}
         />
-        <div className="relative w-full max-w-md transform overflow-hidden rounded-lg bg-white p-6 shadow-xl transition-all">
+        <div className="relative w-full max-w-md transform overflow-hidden rounded-xl bg-card border border-border p-6 shadow-2xl transition-all">
           <div className="flex items-center gap-4">
             <div
-              className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-                confirmVariant === "danger" ? "bg-red-100" : "bg-blue-100"
+              className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${
+                confirmVariant === "danger"
+                  ? "bg-destructive/10 border border-destructive/20"
+                  : "bg-admin-primary/10 border border-admin-primary/20"
               }`}
             >
               <svg
                 className={`w-6 h-6 ${
-                  confirmVariant === "danger" ? "text-red-600" : "text-blue-600"
+                  confirmVariant === "danger"
+                    ? "text-destructive"
+                    : "text-admin-primary"
                 }`}
                 fill="none"
                 viewBox="0 0 24 24"
-                strokeWidth={1.5}
+                strokeWidth={2}
                 stroke="currentColor"
               >
                 <path
@@ -77,18 +81,23 @@ export function ConfirmDialog({
               </svg>
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">
+              <h3 className="text-xl font-semibold leading-6 text-foreground">
                 {title}
               </h3>
             </div>
           </div>
 
           <div className="mt-4">
-            <p className="text-sm text-gray-500">{message}</p>
+            <p className="text-muted-foreground leading-relaxed">{message}</p>
           </div>
 
-          <div className="mt-6 flex gap-3 justify-end">
-            <Button variant="outline" onClick={onClose} disabled={loading}>
+          <div className="mt-8 flex gap-3 justify-end">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              disabled={loading}
+              className="px-6"
+            >
               {cancelText}
             </Button>
             <Button
@@ -96,11 +105,36 @@ export function ConfirmDialog({
               disabled={loading}
               className={
                 confirmVariant === "danger"
-                  ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
-                  : "bg-blue-600 hover:bg-blue-700 focus:ring-blue-500"
+                  ? "bg-destructive hover:bg-destructive/90 text-destructive-foreground px-6 shadow-lg"
+                  : "bg-gradient-to-r from-admin-primary to-admin-secondary hover:from-admin-primary/90 hover:to-admin-secondary/90 text-admin-primary-foreground px-6 shadow-lg"
               }
             >
-              {loading ? "Processing..." : confirmText}
+              {loading ? (
+                <div className="flex items-center">
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Processing...
+                </div>
+              ) : (
+                confirmText
+              )}
             </Button>
           </div>
         </div>

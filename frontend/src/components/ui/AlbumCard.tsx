@@ -58,10 +58,22 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({ album, className }) => {
             <h3 className="font-semibold text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">
               {album.title}
             </h3>
-            {album.description && (
-              <p className="text-sm text-muted-foreground line-clamp-3">
-                {album.description}
-              </p>
+            {album.tags && album.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {album.tags.slice(0, 3).map((tag, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                  >
+                    {tag}
+                  </span>
+                ))}
+                {album.tags.length > 3 && (
+                  <span className="text-xs text-muted-foreground">
+                    +{album.tags.length - 3} more
+                  </span>
+                )}
+              </div>
             )}
             <div className="flex items-center justify-between text-xs text-muted-foreground pt-2">
               <span>{new Date(album.createdAt).toLocaleDateString()}</span>

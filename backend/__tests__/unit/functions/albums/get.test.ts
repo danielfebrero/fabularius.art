@@ -37,7 +37,7 @@ describe("Albums Get Handler", () => {
       expect(data.albums[0]).toEqual({
         id: mockAlbumsList[0]!.id,
         title: mockAlbumsList[0]!.title,
-        description: mockAlbumsList[0]!.description,
+        tags: mockAlbumsList[0]!.tags,
         coverImageUrl: mockAlbumsList[0]!.coverImageUrl,
         createdAt: mockAlbumsList[0]!.createdAt,
         updatedAt: mockAlbumsList[0]!.updatedAt,
@@ -98,7 +98,7 @@ describe("Albums Get Handler", () => {
       const minimalAlbums = [
         {
           ...mockAlbumsList[2]!,
-          description: undefined,
+          tags: undefined,
           coverImageUrl: undefined,
         },
       ];
@@ -112,7 +112,7 @@ describe("Albums Get Handler", () => {
 
       const data = expectSuccessResponse(result);
       expect(data.albums).toHaveLength(1);
-      expect(data.albums[0].description).toBeUndefined();
+      expect(data.albums[0].tags).toBeUndefined();
       expect(data.albums[0].coverImageUrl).toBeUndefined();
       expect(data.albums[0].title).toBe(minimalAlbums[0]!.title);
     });
@@ -256,7 +256,7 @@ describe("Albums Get Handler", () => {
       expect(album).toHaveProperty("isPublic");
 
       // Optional fields should be present if they exist in the entity
-      expect(album).toHaveProperty("description");
+      expect(album).toHaveProperty("tags");
       expect(album).toHaveProperty("coverImageUrl");
     });
   });

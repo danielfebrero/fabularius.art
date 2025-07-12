@@ -28,8 +28,8 @@ export const handler = async (
       isPublic: albumEntity.isPublic,
     };
 
-    if (albumEntity.description !== undefined) {
-      album.description = albumEntity.description;
+    if (albumEntity.tags !== undefined) {
+      album.tags = albumEntity.tags;
     }
 
     if (albumEntity.coverImageUrl !== undefined) {

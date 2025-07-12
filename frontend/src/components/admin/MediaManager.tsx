@@ -96,14 +96,44 @@ export function MediaManager({
   return (
     <div className="space-y-6">
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-800">{error}</p>
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+          <div className="flex items-center">
+            <svg
+              className="w-5 h-5 text-destructive mr-2"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <p className="text-destructive font-medium">{error}</p>
+          </div>
         </div>
       )}
 
       {/* Upload Section */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Upload Media</h3>
+      <div className="bg-card shadow-lg rounded-xl p-6 border border-border">
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="w-8 h-8 bg-gradient-to-br from-admin-accent to-admin-primary rounded-lg flex items-center justify-center">
+            <svg
+              className="w-5 h-5 text-white"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-foreground">
+            Upload Media
+          </h3>
+        </div>
         <FileUpload
           onFilesSelected={handleFileUpload}
           accept="image/*,video/*"
@@ -114,18 +144,49 @@ export function MediaManager({
       </div>
 
       {/* Media Grid */}
-      <div className="bg-white shadow rounded-lg">
-        <div className="p-6 border-b border-gray-200">
+      <div className="bg-card shadow-lg rounded-xl border border-border">
+        <div className="p-6 border-b border-border">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-gray-900">
-              Media ({media.length})
-            </h3>
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-admin-primary to-admin-secondary rounded-lg flex items-center justify-center">
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-foreground">
+                Media Library ({media.length})
+              </h3>
+            </div>
             {selectedMedia.length > 0 && (
               <Button
                 variant="outline"
                 onClick={handleBulkDeleteClick}
-                className="text-red-600 border-red-300 hover:bg-red-50"
+                className="text-destructive border-destructive/30 hover:bg-destructive hover:text-destructive-foreground"
               >
+                <svg
+                  className="w-4 h-4 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"
+                    clipRule="evenodd"
+                  />
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414L7.586 12l-1.293 1.293a1 1 0 101.414 1.414L9 13.414l2.293 2.293a1 1 0 001.414-1.414L11.414 12l1.293-1.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
                 Delete Selected ({selectedMedia.length})
               </Button>
             )}
@@ -140,9 +201,9 @@ export function MediaManager({
                   if (input) input.indeterminate = someSelected;
                 }}
                 onChange={(e) => handleSelectAll(e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-admin-primary focus:ring-admin-primary border-border rounded"
               />
-              <label className="ml-2 text-sm text-gray-600">
+              <label className="ml-2 text-sm text-muted-foreground">
                 Select all media
               </label>
             </div>
@@ -150,9 +211,24 @@ export function MediaManager({
         </div>
 
         {media.length === 0 ? (
-          <div className="p-8 text-center">
-            <div className="text-gray-500">No media uploaded yet</div>
-            <p className="text-sm text-gray-400 mt-2">
+          <div className="p-12 text-center">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-8 h-8 text-muted-foreground"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-foreground mb-2">
+              No media uploaded yet
+            </h3>
+            <p className="text-muted-foreground">
               Upload your first media files to get started
             </p>
           </div>
@@ -162,16 +238,16 @@ export function MediaManager({
               {media.map((mediaItem) => (
                 <div
                   key={mediaItem.id}
-                  className="relative group bg-gray-50 rounded-lg overflow-hidden"
+                  className="relative group bg-muted/20 rounded-xl overflow-hidden border border-border hover:shadow-lg transition-all duration-200"
                 >
-                  <div className="absolute top-2 left-2 z-10">
+                  <div className="absolute top-3 left-3 z-10">
                     <input
                       type="checkbox"
                       checked={selectedMedia.includes(mediaItem.id)}
                       onChange={(e) =>
                         handleSelectMedia(mediaItem.id, e.target.checked)
                       }
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      className="h-4 w-4 text-admin-primary focus:ring-admin-primary border-border rounded"
                     />
                   </div>
 
@@ -192,26 +268,28 @@ export function MediaManager({
                     )}
                   </div>
 
-                  <div className="p-3">
-                    <h4 className="text-sm font-medium text-gray-900 truncate">
+                  <div className="p-4 bg-card">
+                    <h4 className="text-sm font-semibold text-foreground truncate">
                       {mediaItem.originalFilename || mediaItem.filename}
                     </h4>
-                    <div className="mt-1 text-xs text-gray-500 space-y-1">
-                      <div>{formatFileSize(mediaItem.size)}</div>
-                      <div>{formatDate(mediaItem.createdAt)}</div>
+                    <div className="mt-2 text-xs text-muted-foreground space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span>{formatFileSize(mediaItem.size)}</span>
+                        <span>{formatDate(mediaItem.createdAt)}</span>
+                      </div>
                       {mediaItem.width && mediaItem.height && (
-                        <div>
+                        <div className="text-center">
                           {mediaItem.width} × {mediaItem.height}
                         </div>
                       )}
                     </div>
 
-                    <div className="mt-3 flex gap-2">
+                    <div className="mt-4 flex gap-2">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => window.open(mediaItem.url, "_blank")}
-                        className="flex-1"
+                        className="flex-1 border-admin-primary/30 text-admin-primary hover:bg-admin-primary hover:text-admin-primary-foreground"
                       >
                         View
                       </Button>
@@ -219,7 +297,7 @@ export function MediaManager({
                         size="sm"
                         variant="outline"
                         onClick={() => handleDeleteClick(mediaItem)}
-                        className="text-red-600 border-red-300 hover:bg-red-50"
+                        className="text-destructive border-destructive/30 hover:bg-destructive hover:text-destructive-foreground"
                       >
                         Delete
                       </Button>

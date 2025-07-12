@@ -10,8 +10,9 @@ interface CreateAlbumData {
 
 interface UpdateAlbumData {
   title?: string;
-  description?: string;
+  tags?: string[];
   isPublic?: boolean;
+  coverImageUrl?: string;
 }
 
 export function useAdminAlbums() {

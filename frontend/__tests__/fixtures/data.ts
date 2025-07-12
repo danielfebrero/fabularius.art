@@ -2,7 +2,7 @@ export const mockAlbums = [
   {
     id: "album-1",
     title: "Nature Photography",
-    description: "Beautiful landscapes and wildlife",
+    tags: ["nature", "landscapes", "wildlife", "outdoor"],
     isPublic: true,
     mediaCount: 15,
     createdAt: "2024-01-01T00:00:00Z",
@@ -11,7 +11,7 @@ export const mockAlbums = [
   {
     id: "album-2",
     title: "Urban Exploration",
-    description: "City streets and architecture",
+    tags: ["urban", "city", "architecture", "street"],
     isPublic: true,
     mediaCount: 8,
     createdAt: "2024-01-02T00:00:00Z",
@@ -20,7 +20,7 @@ export const mockAlbums = [
   {
     id: "album-3",
     title: "Private Collection",
-    description: "Personal photos",
+    tags: ["personal", "private"],
     isPublic: false,
     mediaCount: 5,
     createdAt: "2024-01-03T00:00:00Z",
@@ -29,7 +29,7 @@ export const mockAlbums = [
   {
     id: "album-4",
     title: "Travel Adventures",
-    description: "Photos from around the world",
+    tags: ["travel", "adventure", "world", "vacation"],
     isPublic: true,
     mediaCount: 22,
     createdAt: "2024-01-04T00:00:00Z",
@@ -46,7 +46,7 @@ export const resetMockData = () => {
     {
       id: "album-1",
       title: "Nature Photography",
-      description: "Beautiful landscapes and wildlife",
+      tags: ["nature", "landscapes", "wildlife", "outdoor"],
       isPublic: true,
       mediaCount: 15,
       createdAt: "2024-01-01T00:00:00Z",
@@ -55,7 +55,7 @@ export const resetMockData = () => {
     {
       id: "album-2",
       title: "Urban Exploration",
-      description: "City streets and architecture",
+      tags: ["urban", "city", "architecture", "street"],
       isPublic: true,
       mediaCount: 8,
       createdAt: "2024-01-02T00:00:00Z",
@@ -64,7 +64,7 @@ export const resetMockData = () => {
     {
       id: "album-3",
       title: "Private Collection",
-      description: "Personal photos",
+      tags: ["personal", "private"],
       isPublic: false,
       mediaCount: 5,
       createdAt: "2024-01-03T00:00:00Z",
@@ -73,7 +73,7 @@ export const resetMockData = () => {
     {
       id: "album-4",
       title: "Travel Adventures",
-      description: "Photos from around the world",
+      tags: ["travel", "adventure", "world", "vacation"],
       isPublic: true,
       mediaCount: 22,
       createdAt: "2024-01-04T00:00:00Z",

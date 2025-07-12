@@ -45,12 +45,16 @@ export const handler = async (
       updates.title = request.title.trim();
     }
 
-    if (request.description !== undefined) {
-      updates.description = request.description?.trim();
+    if (request.tags !== undefined) {
+      updates.tags = request.tags;
     }
 
     if (request.isPublic !== undefined) {
       updates.isPublic = request.isPublic;
+    }
+
+    if (request.coverImageUrl !== undefined) {
+      updates.coverImageUrl = request.coverImageUrl;
     }
 
     // Update album
@@ -65,7 +69,7 @@ export const handler = async (
     const response = {
       id: updatedAlbum.id,
       title: updatedAlbum.title,
-      description: updatedAlbum.description,
+      tags: updatedAlbum.tags,
       coverImageUrl: updatedAlbum.coverImageUrl,
       createdAt: updatedAlbum.createdAt,
       updatedAt: updatedAlbum.updatedAt,

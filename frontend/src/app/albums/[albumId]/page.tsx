@@ -5,7 +5,6 @@ import {
   fetchAllPublicAlbums,
 } from "../../../lib/data";
 import { MediaGallery } from "../../../components/MediaGallery";
-import { Card, CardContent, CardHeader } from "../../../components/ui/Card";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -26,7 +25,7 @@ export async function generateMetadata({
 
   return {
     title: `${album.title} - Fabularius.art`,
-    description: album.description || null,
+    description: album.tags?.join(", ") || null,
   };
 }
 
@@ -51,10 +50,6 @@ export default async function AlbumDetailPage({
   const album = albumResult.data;
   const media = mediaResult.data?.media || [];
 
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
   return (
     <div className="space-y-6">
       <nav className="flex items-center space-x-2 text-sm text-muted-foreground">
@@ -68,6 +63,19 @@ export default async function AlbumDetailPage({
       </nav>
 
       <div className="space-y-4">
+        {album.tags && album.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {album.tags.map((tag, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
         <MediaGallery
           albumId={albumId}
           initialMedia={media}

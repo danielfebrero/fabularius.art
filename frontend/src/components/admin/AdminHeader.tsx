@@ -11,17 +11,45 @@ export function AdminHeader() {
   };
 
   return (
-    <header className="border-b border-border bg-background">
+    <header className="border-b border-border bg-card shadow-sm">
       <div className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-semibold text-foreground">Admin Panel</h1>
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-admin-primary to-admin-secondary rounded-lg flex items-center justify-center">
+              <svg
+                className="w-5 h-5 text-white"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-foreground">
+                Admin Dashboard
+              </h1>
+              <p className="text-xs text-muted-foreground">
+                Gallery Management System
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center space-x-4">
           {user && (
-            <span className="text-sm text-muted-foreground">
-              Welcome, {user.username}
-            </span>
+            <div className="flex items-center space-x-3">
+              <div className="text-right">
+                <p className="text-sm font-medium text-foreground">
+                  {user.username}
+                </p>
+                <p className="text-xs text-muted-foreground">Administrator</p>
+              </div>
+              <div className="w-8 h-8 bg-gradient-to-br from-admin-accent to-admin-primary rounded-full flex items-center justify-center">
+                <span className="text-xs font-bold text-white">
+                  {user.username.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            </div>
           )}
           <Button
             variant="outline"
@@ -29,6 +57,7 @@ export function AdminHeader() {
             onClick={handleLogout}
             loading={loading}
             disabled={loading}
+            className="border-admin-primary/20 text-admin-primary hover:bg-admin-primary hover:text-admin-primary-foreground"
           >
             Logout
           </Button>

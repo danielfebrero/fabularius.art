@@ -13,7 +13,7 @@ export default function AdminLayout({
 }) {
   return (
     <AdminProvider>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-muted/30">
         <AdminLayoutContent>{children}</AdminLayoutContent>
       </div>
     </AdminProvider>

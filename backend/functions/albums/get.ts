@@ -30,8 +30,8 @@ export const handler = async (
         isPublic: album.isPublic,
       };
 
-      if (album.description !== undefined) {
-        response.description = album.description;
+      if (album.tags !== undefined) {
+        response.tags = album.tags;
       }
 
       if (album.coverImageUrl !== undefined) {
