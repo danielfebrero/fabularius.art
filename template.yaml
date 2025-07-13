@@ -200,6 +200,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /albums
             Method: POST
+            Auth:
+              Authorizer: AdminAuthorizer
         OptionsCreateAlbum:
           Type: Api
           Properties:
@@ -244,12 +246,18 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /albums/{albumId}/media
             Method: POST
+            Auth:
+              Authorizer: AdminAuthorizer
         OptionsUploadMedia:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /albums/{albumId}/media
             Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+            Auth:
+              Authorizer: NONE
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
@@ -446,7 +454,7 @@ Resources:
             Method: DELETE
             Auth:
               Authorizer: AdminAuthorizer
-        OptionsDeleteMedia:
+        OptionsAdminDeleteMedia:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway

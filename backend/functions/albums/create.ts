@@ -7,6 +7,10 @@ import { CreateAlbumRequest, AlbumEntity, Album } from "../../shared/types";
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  if (event.httpMethod === "OPTIONS") {
+    return ResponseUtil.noContent(event);
+  }
+
   try {
     if (!event.body) {
       return ResponseUtil.badRequest(event, "Request body is required");
