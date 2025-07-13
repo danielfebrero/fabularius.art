@@ -77,7 +77,7 @@ export function useAdminMedia() {
           );
         }
 
-        const { uploadUrl } = presignedUrlData.data;
+        const { uploadUrl, mediaId, key } = presignedUrlData.data;
 
         // Step 2: Upload file directly to S3 using Axios for progress tracking
         await axios.put(uploadUrl, file, {
@@ -97,8 +97,24 @@ export function useAdminMedia() {
           },
         });
 
-        // Assuming the presigned URL response contains the final media object
-        return presignedUrlData.data;
+        // Step 3: Create the media object to return and add to state
+        const newMedia: Media = {
+          id: mediaId,
+          albumId,
+          filename: key,
+          originalFilename: file.name,
+          mimeType: file.type,
+          size: file.size,
+          url: `http://localhost:4566/local-fabularius-media/${key}`, // Use the same URL structure as backend
+          thumbnailUrl: `http://localhost:4566/local-fabularius-media/${key}`, // For now, use same as main URL
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        // Step 4: Add the new media to the local state immediately
+        setMedia((prevMedia) => [newMedia, ...prevMedia]);
+
+        return newMedia;
       } catch (err) {
         setUploadProgress((prev) => {
           const newProgress = { ...prev };

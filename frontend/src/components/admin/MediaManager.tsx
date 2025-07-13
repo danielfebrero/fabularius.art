@@ -42,7 +42,10 @@ export function MediaManager({
   const handleFileUpload = async (files: File[]) => {
     try {
       await uploadMultipleMedia(files, albumId);
-      onMediaChange();
+      // Wait a moment for the upload to complete, then refresh
+      setTimeout(() => {
+        onMediaChange();
+      }, 1000);
     } catch (err) {
       console.error("Upload failed:", err);
     }
