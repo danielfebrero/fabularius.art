@@ -19,9 +19,6 @@
       }
     ],
     "baseUrl": "./src",
-    "paths": {
-      "@/*": ["./*"]
-    },
     "forceConsistentCasingInFileNames": true
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
