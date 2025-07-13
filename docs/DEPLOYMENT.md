@@ -1,6 +1,6 @@
 # Deployment Guide
 
-This guide explains how to deploy the Fabularius Art application to multiple environments (dev, staging, prod).
+This guide explains how to deploy the pornspot Art application to multiple environments (dev, staging, prod).
 
 ## Overview
 
@@ -56,9 +56,9 @@ sam deploy --config-env prod    # Production
 
 Each environment has its own configuration in [`samconfig.toml`](samconfig.toml):
 
-- **dev**: `fabularius-art-dev` stack
-- **staging**: `fabularius-art-staging` stack
-- **prod**: `fabularius-art-prod` stack
+- **dev**: `pornspot-art-dev` stack
+- **staging**: `pornspot-art-staging` stack
+- **prod**: `pornspot-art-prod` stack
 
 ## Frontend Deployment
 
@@ -106,27 +106,27 @@ Create separate Vercel projects for each environment or use environment-specific
 ##### Production Environment Variables
 
 ```bash
-NEXT_PUBLIC_API_URL=https://api.fabularius.art
+NEXT_PUBLIC_API_URL=https://api.pornspot.ai
 NEXT_PUBLIC_CDN_URL=https://your-prod-cloudfront.cloudfront.net
-NEXT_PUBLIC_SITE_URL=https://fabularius.art
+NEXT_PUBLIC_SITE_URL=https://pornspot.ai
 NODE_ENV=production
 ```
 
 ##### Staging Environment Variables
 
 ```bash
-NEXT_PUBLIC_API_URL=https://staging-api.fabularius.art
+NEXT_PUBLIC_API_URL=https://staging-api.pornspot.ai
 NEXT_PUBLIC_CDN_URL=https://staging-cloudfront.cloudfront.net
-NEXT_PUBLIC_SITE_URL=https://staging.fabularius.art
+NEXT_PUBLIC_SITE_URL=https://staging.pornspot.ai
 NODE_ENV=production
 ```
 
 ##### Development Environment Variables
 
 ```bash
-NEXT_PUBLIC_API_URL=https://dev-api.fabularius.art
+NEXT_PUBLIC_API_URL=https://dev-api.pornspot.ai
 NEXT_PUBLIC_CDN_URL=https://dev-cloudfront.cloudfront.net
-NEXT_PUBLIC_SITE_URL=https://dev.fabularius.art
+NEXT_PUBLIC_SITE_URL=https://dev.pornspot.ai
 NODE_ENV=development
 ```
 
@@ -134,9 +134,9 @@ NODE_ENV=development
 
 1. In Vercel Dashboard → Settings → Domains
 2. Add your custom domain(s):
-   - Production: `fabularius.art`
-   - Staging: `staging.fabularius.art`
-   - Development: `dev.fabularius.art`
+   - Production: `pornspot.ai`
+   - Staging: `staging.pornspot.ai`
+   - Development: `dev.pornspot.ai`
 3. Configure DNS records as instructed by Vercel
 
 #### 5. Deploy
@@ -216,9 +216,9 @@ Ensure your backend API allows requests from all environment domains:
 ```javascript
 // In your backend CORS configuration
 const allowedOrigins = [
-  "https://fabularius.art", // Production
-  "https://staging.fabularius.art", // Staging
-  "https://dev.fabularius.art", // Development
+  "https://pornspot.ai", // Production
+  "https://staging.pornspot.ai", // Staging
+  "https://dev.pornspot.ai", // Development
   "https://your-vercel-previews.vercel.app", // Vercel previews
 ];
 ```
@@ -243,24 +243,24 @@ images: {
 ### Development Environment
 
 - **Purpose**: Feature development and initial testing
-- **Stack**: `fabularius-art-dev`
-- **Domain**: `dev.fabularius.art`
+- **Stack**: `pornspot-art-dev`
+- **Domain**: `dev.pornspot.ai`
 - **Data**: Test data, can be reset frequently
 - **Monitoring**: Basic logging
 
 ### Staging Environment
 
 - **Purpose**: Pre-production testing and validation
-- **Stack**: `fabularius-art-staging`
-- **Domain**: `staging.fabularius.art`
+- **Stack**: `pornspot-art-staging`
+- **Domain**: `staging.pornspot.ai`
 - **Data**: Production-like test data
 - **Monitoring**: Enhanced logging and monitoring
 
 ### Production Environment
 
 - **Purpose**: Live application for end users
-- **Stack**: `fabularius-art-prod`
-- **Domain**: `fabularius.art`
+- **Stack**: `pornspot-art-prod`
+- **Domain**: `pornspot.ai`
 - **Data**: Live user data
 - **Monitoring**: Full monitoring, alerting, and backup strategies
 
@@ -308,12 +308,12 @@ Consider integrating error tracking services like Sentry with environment-specif
 
    ```bash
    # Continue rollback manually
-   aws cloudformation continue-update-rollback --stack-name fabularius-art-prod
-   aws cloudformation wait stack-rollback-complete --stack-name fabularius-art-prod
+   aws cloudformation continue-update-rollback --stack-name pornspot-art-prod
+   aws cloudformation wait stack-rollback-complete --stack-name pornspot-art-prod
 
    # Or delete and recreate manually
-   aws cloudformation delete-stack --stack-name fabularius-art-prod
-   aws cloudformation wait stack-delete-complete --stack-name fabularius-art-prod
+   aws cloudformation delete-stack --stack-name pornspot-art-prod
+   aws cloudformation wait stack-delete-complete --stack-name pornspot-art-prod
    ./scripts/deploy.sh --env prod
    ```
 

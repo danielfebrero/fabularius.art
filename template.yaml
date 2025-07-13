@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: Fabularius.art - Minimalist Gallery
+Description: pornspot.ai - Minimalist Gallery
 
 Parameters:
   Environment:
@@ -11,7 +11,7 @@ Parameters:
 
   DomainName:
     Type: String
-    Default: fabularius.art
+    Default: pornspot.ai
     Description: Domain name for the application
 
 Globals:
@@ -31,7 +31,7 @@ Resources:
   MediaTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "${Environment}-fabularius-media"
+      TableName: !Sub "${Environment}-pornspot-media"
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: PK
@@ -65,7 +65,7 @@ Resources:
   MediaBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "${Environment}-fabularius-media-${AWS::AccountId}"
+      BucketName: !Sub "${Environment}-pornspot-media-${AWS::AccountId}"
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -107,7 +107,7 @@ Resources:
     Type: AWS::CloudFront::OriginAccessControl
     Properties:
       OriginAccessControlConfig:
-        Name: !Sub "${Environment}-fabularius-oac"
+        Name: !Sub "${Environment}-pornspot-oac"
         OriginAccessControlOriginType: s3
         SigningBehavior: always
         SigningProtocol: sigv4
@@ -154,7 +154,7 @@ Resources:
   ApiGateway:
     Type: AWS::Serverless::Api
     Properties:
-      Name: !Sub "${Environment}-fabularius-api"
+      Name: !Sub "${Environment}-pornspot-api"
       StageName: !Ref Environment
       Auth:
         DefaultAuthorizer: AWS_IAM
@@ -171,7 +171,7 @@ Resources:
   GetAlbumsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-fabularius-get-albums"
+      FunctionName: !Sub "${Environment}-pornspot-get-albums"
       CodeUri: backend/
       Handler: dist/functions/albums/get.handler
       Events:
@@ -190,7 +190,7 @@ Resources:
   CreateAlbumFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-fabularius-create-album"
+      FunctionName: !Sub "${Environment}-pornspot-create-album"
       CodeUri: backend/
       Handler: dist/functions/albums/create.handler
       Events:
@@ -217,7 +217,7 @@ Resources:
   GetAlbumFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-fabularius-get-album"
+      FunctionName: !Sub "${Environment}-pornspot-get-album"
       CodeUri: backend/
       Handler: dist/functions/albums/getById.handler
       Events:
@@ -236,7 +236,7 @@ Resources:
   UploadMediaFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-fabularius-upload-media"
+      FunctionName: !Sub "${Environment}-pornspot-upload-media"
       CodeUri: backend/
       Handler: dist/functions/media/upload.handler
       Events:
@@ -267,7 +267,7 @@ Resources:
   GetMediaFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-fabularius-get-media"
+      FunctionName: !Sub "${Environment}-pornspot-get-media"
       CodeUri: backend/
       Handler: dist/functions/media/get.handler
       Events:
@@ -287,7 +287,7 @@ Resources:
   AdminLoginFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-fabularius-admin-login"
+      FunctionName: !Sub "${Environment}-pornspot-admin-login"
       CodeUri: backend/
       Handler: dist/functions/admin/auth/login.handler
       Events:
@@ -316,7 +316,7 @@ Resources:
   AdminLogoutFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-fabularius-admin-logout"
+      FunctionName: !Sub "${Environment}-pornspot-admin-logout"
       CodeUri: backend/
       Handler: dist/functions/admin/auth/logout.handler
       Events:
@@ -345,7 +345,7 @@ Resources:
   AdminMeFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-fabularius-admin-me"
+      FunctionName: !Sub "${Environment}-pornspot-admin-me"
       CodeUri: backend/
       Handler: dist/functions/admin/auth/me.handler
       Events:
@@ -365,7 +365,7 @@ Resources:
   AdminUpdateAlbumFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-fabularius-admin-update-album"
+      FunctionName: !Sub "${Environment}-pornspot-admin-update-album"
       CodeUri: backend/
       Handler: dist/functions/admin/albums/update.handler
       Events:
@@ -394,7 +394,7 @@ Resources:
   AdminDeleteAlbumFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-fabularius-admin-delete-album"
+      FunctionName: !Sub "${Environment}-pornspot-admin-delete-album"
       CodeUri: backend/
       Handler: dist/functions/admin/albums/delete.handler
       Events:
@@ -415,7 +415,7 @@ Resources:
   AdminListAlbumsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-fabularius-admin-list-albums"
+      FunctionName: !Sub "${Environment}-pornspot-admin-list-albums"
       CodeUri: backend/
       Handler: dist/functions/admin/albums/list.handler
       Events:
@@ -442,7 +442,7 @@ Resources:
   AdminDeleteMediaFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-fabularius-admin-delete-media"
+      FunctionName: !Sub "${Environment}-pornspot-admin-delete-media"
       CodeUri: backend/
       Handler: dist/functions/admin/media/delete.handler
       Events:
@@ -471,7 +471,7 @@ Resources:
   AdminStatsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-fabularius-admin-stats"
+      FunctionName: !Sub "${Environment}-pornspot-admin-stats"
       CodeUri: backend/
       Handler: dist/functions/admin/stats.handler
       Events:
@@ -500,7 +500,7 @@ Resources:
   AdminAuthorizerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-fabularius-admin-authorizer"
+      FunctionName: !Sub "${Environment}-pornspot-admin-authorizer"
       CodeUri: backend/
       Handler: dist/functions/admin/auth/authorizer.handler
       Policies:
@@ -514,22 +514,22 @@ Outputs:
     Description: API Gateway endpoint URL
     Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
     Export:
-      Name: !Sub "${Environment}-fabularius-api-url"
+      Name: !Sub "${Environment}-pornspot-api-url"
 
   CloudFrontUrl:
     Description: CloudFront distribution URL
     Value: !Sub "https://${CloudFrontDistribution.DomainName}"
     Export:
-      Name: !Sub "${Environment}-fabularius-cloudfront-url"
+      Name: !Sub "${Environment}-pornspot-cloudfront-url"
 
   MediaBucketName:
     Description: S3 bucket name for media storage
     Value: !Ref MediaBucket
     Export:
-      Name: !Sub "${Environment}-fabularius-media-bucket"
+      Name: !Sub "${Environment}-pornspot-media-bucket"
 
   DynamoDBTableName:
     Description: DynamoDB table name
     Value: !Ref MediaTable
     Export:
-      Name: !Sub "${Environment}-fabularius-dynamodb-table"
+      Name: !Sub "${Environment}-pornspot-dynamodb-table"

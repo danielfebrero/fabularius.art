@@ -17,7 +17,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "fabularius.art",
+        hostname: "pornspot.ai",
       },
     ],
   },

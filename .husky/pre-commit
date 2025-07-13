@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Fabularius.art Pre-commit Hook
+# pornspot.ai Pre-commit Hook
 # Runs linting, type checking, and tests before commits
 
 echo "🔍 Running pre-commit checks..."

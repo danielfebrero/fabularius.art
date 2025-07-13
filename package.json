@@ -1,5 +1,5 @@
 {
-  "name": "fabularius-art",
+  "name": "pornspot-art",
   "version": "1.0.0",
   "description": "A minimalist gallery application for showcasing art and photography",
   "private": true,
@@ -10,8 +10,8 @@
     "build": "npm run build:backend && npm run build:frontend",
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
-    "dev:backend": "npm run build:backend && sam build && sam local start-api --port 3001 --docker-network fabularius-art_local-network --env-vars backend/env.development.json",
-    "dev:backend:log": "npm run build:backend && sam build && sam local start-api --port 3001 --docker-network fabularius-art_local-network --env-vars backend/env.development.json > backend.log 2>&1",
+    "dev:backend": "npm run build:backend && sam build && sam local start-api --port 3001 --docker-network pornspot-art_local-network --env-vars backend/env.development.json",
+    "dev:backend:log": "npm run build:backend && sam build && sam local start-api --port 3001 --docker-network pornspot-art_local-network --env-vars backend/env.development.json > backend.log 2>&1",
     "dev:frontend": "cd frontend && npm run dev",
     "local:start": "docker-compose -f docker-compose.local.yml up -d",
     "local:stop": "docker-compose -f docker-compose.local.yml down",
@@ -24,7 +24,7 @@
     "deploy:guided": "./scripts/deploy.sh --guided",
     "sam:build": "sam build",
     "sam:deploy": "sam deploy",
-    "sam:local": "sam build && sam local start-api --port 3001 --docker-network fabularius-art_local-network --env-vars backend/env.development.json",
+    "sam:local": "sam build && sam local start-api --port 3001 --docker-network pornspot-art_local-network --env-vars backend/env.development.json",
     "lint": "npm run lint:backend && npm run lint:frontend",
     "lint:backend": "cd backend && npm run lint",
     "lint:frontend": "cd frontend && npm run lint",
@@ -72,16 +72,16 @@
     "typescript",
     "minimalist"
   ],
-  "author": "Fabularius.art",
+  "author": "pornspot.ai",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-username/fabularius-art.git"
+    "url": "https://github.com/your-username/pornspot-art.git"
   },
   "bugs": {
-    "url": "https://github.com/your-username/fabularius-art/issues"
+    "url": "https://github.com/your-username/pornspot-art/issues"
   },
-  "homepage": "https://fabularius.art",
+  "homepage": "https://pornspot.ai",
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=8.0.0"

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Fabularius.art Deployment Script
+# pornspot.ai Deployment Script
 # Supports multiple environments: dev, staging, prod
 set -e
 
@@ -192,7 +192,7 @@ main() {
     # Parse command line arguments
     parse_arguments "$@"
     
-    print_status "🚀 Starting Fabularius.art deployment to $ENVIRONMENT environment..."
+    print_status "🚀 Starting pornspot.ai deployment to $ENVIRONMENT environment..."
     
     # Run deployment steps
     validate_environment
@@ -207,7 +207,7 @@ main() {
     
     # Get API Gateway URL from SAM outputs (environment-specific stack name)
     print_status "Getting API Gateway URL..."
-    STACK_NAME="fabularius-art-$ENVIRONMENT"
+    STACK_NAME="pornspot-art-$ENVIRONMENT"
     API_URL=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query 'Stacks[0].Outputs[?OutputKey==`ApiGatewayUrl`].OutputValue' --output text 2>/dev/null || echo "Not found")
     
     if [ "$API_URL" != "Not found" ]; then

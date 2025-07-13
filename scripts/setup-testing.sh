@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Fabularius.art Testing Infrastructure Setup Script
+# pornspot.ai Testing Infrastructure Setup Script
 # This script initializes the complete testing environment
 
 set -e
@@ -32,7 +32,7 @@ print_warning() {
 print_header() {
     echo -e "${BLUE}"
     echo "=================================================="
-    echo "  Fabularius.art Testing Infrastructure Setup"
+    echo "  pornspot.ai Testing Infrastructure Setup"
     echo "=================================================="
     echo -e "${NC}"
 }
@@ -147,7 +147,7 @@ AWS_ACCESS_KEY_ID=test
 AWS_SECRET_ACCESS_KEY=test
 
 # Test Database Configuration
-TEST_DB_NAME=fabularius-test
+TEST_DB_NAME=pornspot-test
 TEST_TABLE_PREFIX=test-
 
 # Frontend Test Configuration

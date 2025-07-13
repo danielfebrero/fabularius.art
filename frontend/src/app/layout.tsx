@@ -6,33 +6,33 @@ import { AdminProvider } from "@/contexts/AdminContext";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "Fabularius.art - Minimalist Gallery",
+  title: "pornspot.ai - Minimalist Gallery",
   description:
     "A beautiful, minimalist gallery for showcasing art and photography",
   keywords: ["gallery", "art", "photography", "minimalist", "portfolio"],
-  authors: [{ name: "Fabularius.art" }],
-  creator: "Fabularius.art",
-  publisher: "Fabularius.art",
+  authors: [{ name: "pornspot.ai" }],
+  creator: "pornspot.ai",
+  publisher: "pornspot.ai",
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
   metadataBase: new URL(
-    process.env["NEXT_PUBLIC_SITE_URL"] || "https://fabularius.art"
+    process.env["NEXT_PUBLIC_SITE_URL"] || "https://pornspot.ai"
   ),
   openGraph: {
-    title: "Fabularius.art - Minimalist Gallery",
+    title: "pornspot.ai - Minimalist Gallery",
     description:
       "A beautiful, minimalist gallery for showcasing art and photography",
-    url: "https://fabularius.art",
-    siteName: "Fabularius.art",
+    url: "https://pornspot.ai",
+    siteName: "pornspot.ai",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Fabularius.art Gallery",
+        alt: "pornspot.ai Gallery",
       },
     ],
     locale: "en_US",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Fabularius.art - Minimalist Gallery",
+    title: "pornspot.ai - Minimalist Gallery",
     description:
       "A beautiful, minimalist gallery for showcasing art and photography",
     images: ["/og-image.jpg"],
@@ -103,7 +103,7 @@ export default function RootLayout({
             <div className="container mx-auto px-4 py-8">
               <div className="text-center">
                 <p className="text-muted-foreground">
-                  &copy; 2024 Fabularius.art. All rights reserved.
+                  &copy; 2024 pornspot.ai. All rights reserved.
                 </p>
               </div>
             </div>

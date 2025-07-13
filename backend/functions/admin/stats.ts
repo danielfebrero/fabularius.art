@@ -10,7 +10,7 @@ const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
 // DynamoDB client setup
 const clientConfig: any = {};
 if (isLocal) {
-  clientConfig.endpoint = "http://fabularius-local-aws:4566";
+  clientConfig.endpoint = "http://pornspot-local-aws:4566";
   clientConfig.region = "us-east-1";
   clientConfig.credentials = {
     accessKeyId: "test",
@@ -25,7 +25,7 @@ const docClient = DynamoDBDocumentClient.from(client);
 let s3Config: any = {};
 if (isLocal) {
   s3Config = {
-    endpoint: "http://fabularius-local-aws:4566",
+    endpoint: "http://pornspot-local-aws:4566",
     region: process.env["AWS_REGION"] || "us-east-1",
     credentials: {
       accessKeyId: "test",
@@ -39,7 +39,7 @@ const s3Client = new S3Client(s3Config);
 
 const TABLE_NAME = process.env["DYNAMODB_TABLE"]!;
 const BUCKET_NAME = isLocal
-  ? "local-fabularius-media"
+  ? "local-pornspot-media"
   : process.env["S3_BUCKET"]!;
 
 export const handler = async (

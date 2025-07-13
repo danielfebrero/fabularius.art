@@ -2,8 +2,7 @@ import { MetadataRoute } from "next";
 import { fetchAllPublicAlbums } from "@/lib/data";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl =
-    process.env["NEXT_PUBLIC_SITE_URL"] || "https://fabularius.art";
+  const baseUrl = process.env["NEXT_PUBLIC_SITE_URL"] || "https://pornspot.ai";
 
   // Static routes that should be included in the sitemap
   const staticRoutes: MetadataRoute.Sitemap = [

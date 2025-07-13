@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Test Environment Cleanup Script for Fabularius.art
+# Test Environment Cleanup Script for pornspot.ai
 # This script cleans up the testing environment and artifacts
 
 set -e
@@ -47,7 +47,7 @@ show_usage() {
     cat << EOF
 Usage: $0 [OPTIONS]
 
-Clean up test environment and artifacts for Fabularius.art project
+Clean up test environment and artifacts for pornspot.ai project
 
 OPTIONS:
     -l, --level LEVEL       Cleanup level (minimal, standard, deep, complete) [default: standard]
@@ -288,7 +288,7 @@ clean_docker() {
         
         # Remove test images
         if confirm_action "Remove Docker test images?"; then
-            docker images | grep fabularius | awk '{print $3}' | xargs -r docker rmi 2>/dev/null || true
+            docker images | grep pornspot | awk '{print $3}' | xargs -r docker rmi 2>/dev/null || true
         fi
         
         # Clean Docker system (optional)

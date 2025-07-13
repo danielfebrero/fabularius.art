@@ -6,7 +6,7 @@ set -e
 # --- Configuration ---
 AWS_REGION="us-east-1"
 AWS_ENDPOINT_URL="http://localhost:4566"
-BUCKET_NAME="local-fabularius-media"
+BUCKET_NAME="local-pornspot-media"
 CORS_CONFIG_FILE="scripts/local-s3-cors.json"
 
 # --- Helper Functions ---

@@ -96,7 +96,7 @@ main() {
     # Parse command line arguments
     parse_arguments "$@"
     
-    print_status "🚀 Preparing Fabularius Art frontend for Vercel deployment..."
+    print_status "🚀 Preparing pornspot Art frontend for Vercel deployment..."
     print_info "Environment: $ENVIRONMENT"
     print_info "Deployment type: $DEPLOY_TYPE"
 
@@ -168,19 +168,19 @@ main() {
     print_info "Environment variables to configure in Vercel dashboard:"
     case $ENVIRONMENT in
         prod)
-            echo "   - NEXT_PUBLIC_API_URL=https://api.fabularius.art"
+            echo "   - NEXT_PUBLIC_API_URL=https://api.pornspot.ai"
             echo "   - NEXT_PUBLIC_CDN_URL=https://your-prod-cloudfront.cloudfront.net"
-            echo "   - NEXT_PUBLIC_SITE_URL=https://fabularius.art"
+            echo "   - NEXT_PUBLIC_SITE_URL=https://pornspot.ai"
             ;;
         staging)
-            echo "   - NEXT_PUBLIC_API_URL=https://staging-api.fabularius.art"
+            echo "   - NEXT_PUBLIC_API_URL=https://staging-api.pornspot.ai"
             echo "   - NEXT_PUBLIC_CDN_URL=https://your-staging-cloudfront.cloudfront.net"
-            echo "   - NEXT_PUBLIC_SITE_URL=https://staging.fabularius.art"
+            echo "   - NEXT_PUBLIC_SITE_URL=https://staging.pornspot.ai"
             ;;
         dev)
-            echo "   - NEXT_PUBLIC_API_URL=https://dev-api.fabularius.art"
+            echo "   - NEXT_PUBLIC_API_URL=https://dev-api.pornspot.ai"
             echo "   - NEXT_PUBLIC_CDN_URL=https://your-dev-cloudfront.cloudfront.net"
-            echo "   - NEXT_PUBLIC_SITE_URL=https://dev.fabularius.art"
+            echo "   - NEXT_PUBLIC_SITE_URL=https://dev.pornspot.ai"
             ;;
     esac
     echo ""

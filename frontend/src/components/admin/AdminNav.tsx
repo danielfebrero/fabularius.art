@@ -59,7 +59,7 @@ export function AdminNav() {
       <div className="p-6">
         <div className="mb-8">
           <h2 className="text-lg font-bold text-admin-sidebar-foreground">
-            Fabularius Admin
+            pornspot Admin
           </h2>
           <p className="text-sm text-admin-sidebar-foreground/70">
             Art Gallery Management

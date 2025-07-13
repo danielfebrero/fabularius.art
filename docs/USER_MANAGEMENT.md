@@ -1,6 +1,6 @@
 # User Management Guide
 
-This guide explains how to create and manage admin users in the Fabularius.art application across different environments.
+This guide explains how to create and manage admin users in the pornspot.ai application across different environments.
 
 ## Overview
 
@@ -95,8 +95,8 @@ The user/role executing the script needs the following DynamoDB permissions:
       "Effect": "Allow",
       "Action": ["dynamodb:PutItem", "dynamodb:Query"],
       "Resource": [
-        "arn:aws:dynamodb:*:*:table/*-fabularius-media",
-        "arn:aws:dynamodb:*:*:table/*-fabularius-media/index/GSI1"
+        "arn:aws:dynamodb:*:*:table/*-pornspot-media",
+        "arn:aws:dynamodb:*:*:table/*-pornspot-media/index/GSI1"
       ]
     }
   ]
@@ -122,15 +122,15 @@ The user/role executing the script needs the following DynamoDB permissions:
 
 3. **Verify Access:**
    ```bash
-   aws dynamodb describe-table --table-name prod-fabularius-media
+   aws dynamodb describe-table --table-name prod-pornspot-media
    ```
 
 ### Table Names by Environment
 
-- **Local:** `local-fabularius-media`
-- **Development:** `dev-fabularius-media`
-- **Staging:** `staging-fabularius-media`
-- **Production:** `prod-fabularius-media`
+- **Local:** `local-pornspot-media`
+- **Development:** `dev-pornspot-media`
+- **Staging:** `staging-pornspot-media`
+- **Production:** `prod-pornspot-media`
 
 ## Security Best Practices
 
@@ -156,7 +156,7 @@ The user/role executing the script needs the following DynamoDB permissions:
 #### 1. Table Not Found
 
 ```
-❌ DynamoDB table 'prod-fabularius-media' not found.
+❌ DynamoDB table 'prod-pornspot-media' not found.
 ```
 
 **Solution:** Ensure the infrastructure is deployed for the target environment.
@@ -196,14 +196,14 @@ export AWS_PROFILE=your-profile
 #### Check if table exists:
 
 ```bash
-aws dynamodb describe-table --table-name prod-fabularius-media
+aws dynamodb describe-table --table-name prod-pornspot-media
 ```
 
 #### List existing admin users (requires additional permissions):
 
 ```bash
 aws dynamodb query \
-  --table-name prod-fabularius-media \
+  --table-name prod-pornspot-media \
   --index-name GSI1 \
   --key-condition-expression "GSI1PK = :pk" \
   --expression-attribute-values '{":pk":{"S":"ADMIN_USERNAME"}}'

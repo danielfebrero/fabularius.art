@@ -19,7 +19,7 @@ const clientConfig = {
   },
 };
 
-const DYNAMODB_TABLE_NAME = "local-fabularius-media";
+const DYNAMODB_TABLE_NAME = "local-pornspot-media";
 
 const tableParams = {
   TableName: DYNAMODB_TABLE_NAME,

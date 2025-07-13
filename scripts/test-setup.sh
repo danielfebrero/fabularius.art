@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Test Environment Setup Script for Fabularius.art
+# Test Environment Setup Script for pornspot.ai
 # This script sets up the testing environment for both backend and frontend
 
 set -e
@@ -48,7 +48,7 @@ show_usage() {
     cat << EOF
 Usage: $0 [OPTIONS] [COMPONENT]
 
-Setup test environment for Fabularius.art project
+Setup test environment for pornspot.ai project
 
 COMPONENT:
     all         Setup both backend and frontend (default)
@@ -207,7 +207,7 @@ DYNAMODB_ENDPOINT=http://localhost:8000
 DYNAMODB_TABLE_PREFIX=test_
 
 # S3 Configuration
-S3_BUCKET_NAME=test-fabularius-art
+S3_BUCKET_NAME=test-pornspot-art
 S3_ENDPOINT=http://localhost:4566
 
 # API Configuration

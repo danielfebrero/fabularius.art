@@ -8,7 +8,7 @@ describe("HomePage", () => {
 
   it("renders the main heading", () => {
     expect(
-      screen.getByRole("heading", { name: /welcome to fabularius\.art/i })
+      screen.getByRole("heading", { name: /welcome to pornspot\.art/i })
     ).toBeInTheDocument();
   });
 
@@ -61,7 +61,7 @@ describe("HomePage", () => {
     const sectionHeading = screen.getByRole("heading", { level: 2 });
     const featureHeadings = screen.getAllByRole("heading", { level: 3 });
 
-    expect(mainHeading).toHaveTextContent("Welcome to Fabularius.art");
+    expect(mainHeading).toHaveTextContent("Welcome to pornspot.ai");
     expect(sectionHeading).toHaveTextContent("Features");
     expect(featureHeadings).toHaveLength(3);
   });
@@ -182,7 +182,7 @@ describe("HomePage", () => {
 
   it("has proper contrast for text elements", () => {
     const mainHeading = screen.getByRole("heading", {
-      name: /welcome to fabularius\.art/i,
+      name: /welcome to pornspot\.art/i,
     });
     const subtitle = screen.getByText(
       /a minimalist gallery for showcasing your art and photography collections/i

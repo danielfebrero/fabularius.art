@@ -1,6 +1,6 @@
 # Backend Testing Suite
 
-This directory contains comprehensive tests for the fabularius.art backend API, covering unit tests, integration tests, and end-to-end workflows.
+This directory contains comprehensive tests for the pornspot.ai backend API, covering unit tests, integration tests, and end-to-end workflows.
 
 ## Test Structure
 

@@ -1,4 +1,4 @@
-# Fabularius.art
+# pornspot.ai
 
 A minimalist gallery application for showcasing art and photography collections. Built with modern serverless architecture using AWS services and Next.js.
 
@@ -24,7 +24,7 @@ A minimalist gallery application for showcasing art and photography collections.
 ## Project Structure
 
 ```
-fabularius-art/
+pornspot-art/
 ├── frontend/                 # Next.js frontend application
 │   ├── src/
 │   │   ├── app/             # Next.js 14 app directory
@@ -82,7 +82,7 @@ fabularius-art/
 
    ```bash
    git clone <repository-url>
-   cd fabularius-art
+   cd pornspot-art
    ```
 
 2. **Install backend dependencies**

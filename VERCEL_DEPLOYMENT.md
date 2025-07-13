@@ -9,7 +9,7 @@ The following environment variables must be configured in your Vercel project se
 ```
 NEXT_PUBLIC_API_URL=https://pxw4lhemwi.execute-api.us-east-1.amazonaws.com/prod
 NEXT_PUBLIC_CDN_URL=https://dpoieeap5d01g.cloudfront.net
-NEXT_PUBLIC_SITE_URL=https://fabularius.art
+NEXT_PUBLIC_SITE_URL=https://pornspot.ai
 NODE_ENV=production
 ```
 

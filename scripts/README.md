@@ -1,6 +1,6 @@
 # Deployment Scripts
 
-This directory contains scripts for deploying the Fabularius Art application to different environments.
+This directory contains scripts for deploying the pornspot Art application to different environments.
 
 ## Scripts Overview
 
@@ -120,22 +120,22 @@ Both scripts support three environments:
 ### Development (`dev`)
 
 - **Purpose**: Feature development and initial testing
-- **Backend Stack**: `fabularius-art-dev`
-- **Frontend Domain**: `dev.fabularius.art`
+- **Backend Stack**: `pornspot-art-dev`
+- **Frontend Domain**: `dev.pornspot.ai`
 - **Safety Level**: Low (quick iterations)
 
 ### Staging (`staging`)
 
 - **Purpose**: Pre-production testing and validation
-- **Backend Stack**: `fabularius-art-staging`
-- **Frontend Domain**: `staging.fabularius.art`
+- **Backend Stack**: `pornspot-art-staging`
+- **Frontend Domain**: `staging.pornspot.ai`
 - **Safety Level**: Medium (comprehensive testing)
 
 ### Production (`prod`)
 
 - **Purpose**: Live application for end users
-- **Backend Stack**: `fabularius-art-prod`
-- **Frontend Domain**: `fabularius.art`
+- **Backend Stack**: `pornspot-art-prod`
+- **Frontend Domain**: `pornspot.ai`
 - **Safety Level**: High (confirmation prompts, guided deployment)
 
 ## Prerequisites

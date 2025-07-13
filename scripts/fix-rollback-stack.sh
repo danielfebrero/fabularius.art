@@ -74,7 +74,7 @@ parse_arguments() {
     done
     
     # Set stack name based on environment
-    STACK_NAME="fabularius-art-$ENVIRONMENT"
+    STACK_NAME="pornspot-art-$ENVIRONMENT"
     
     # Validate environment
     if [[ ! "$ENVIRONMENT" =~ ^(dev|staging|prod)$ ]]; then

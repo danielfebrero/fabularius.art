@@ -7,7 +7,7 @@ test.describe("Homepage", () => {
 
   test("should display the main heading and description", async ({ page }) => {
     await expect(
-      page.getByRole("heading", { name: /welcome to fabularius\.art/i })
+      page.getByRole("heading", { name: /welcome to pornspot\.art/i })
     ).toBeVisible();
     await expect(
       page.getByText(
@@ -52,7 +52,7 @@ test.describe("Homepage", () => {
 
     // Check that content is still visible on mobile
     await expect(
-      page.getByRole("heading", { name: /welcome to fabularius\.art/i })
+      page.getByRole("heading", { name: /welcome to pornspot\.art/i })
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: /get started/i })
@@ -67,7 +67,7 @@ test.describe("Homepage", () => {
     await page.setViewportSize({ width: 768, height: 1024 });
 
     await expect(
-      page.getByRole("heading", { name: /welcome to fabularius\.art/i })
+      page.getByRole("heading", { name: /welcome to pornspot\.art/i })
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: /get started/i })
@@ -78,7 +78,7 @@ test.describe("Homepage", () => {
     await page.setViewportSize({ width: 1440, height: 900 });
 
     await expect(
-      page.getByRole("heading", { name: /welcome to fabularius\.art/i })
+      page.getByRole("heading", { name: /welcome to pornspot\.art/i })
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: /get started/i })
@@ -98,7 +98,7 @@ test.describe("Homepage", () => {
   test("should have proper heading hierarchy", async ({ page }) => {
     // Main heading should be h1
     const mainHeading = page.getByRole("heading", { level: 1 });
-    await expect(mainHeading).toHaveText(/welcome to fabularius\.art/i);
+    await expect(mainHeading).toHaveText(/welcome to pornspot\.art/i);
 
     // Feature headings should be h3
     const featureHeadings = page.getByRole("heading", { level: 3 });
@@ -146,7 +146,7 @@ test.describe("Homepage", () => {
   });
 
   test("should have proper meta tags", async ({ page }) => {
-    await expect(page).toHaveTitle(/fabularius\.art - minimalist gallery/i);
+    await expect(page).toHaveTitle(/pornspot\.art - minimalist gallery/i);
 
     // Check meta description
     const metaDescription = page.locator('meta[name="description"]');
@@ -166,7 +166,7 @@ test.describe("Homepage", () => {
 
   test("should display footer content", async ({ page }) => {
     await expect(
-      page.getByText(/© 2024 fabularius\.art\. all rights reserved\./i)
+      page.getByText(/© 2024 pornspot\.art\. all rights reserved\./i)
     ).toBeVisible();
   });
 
@@ -180,7 +180,7 @@ test.describe("Homepage", () => {
 
     // Content should still load
     await expect(
-      page.getByRole("heading", { name: /welcome to fabularius\.art/i })
+      page.getByRole("heading", { name: /welcome to pornspot\.art/i })
     ).toBeVisible({ timeout: 10000 });
   });
 
@@ -196,7 +196,7 @@ test.describe("Homepage", () => {
 
     // Basic content should still be visible
     await expect(
-      page.getByRole("heading", { name: /welcome to fabularius\.art/i })
+      page.getByRole("heading", { name: /welcome to pornspot\.art/i })
     ).toBeVisible();
     await expect(page.getByText(/minimalist gallery/i)).toBeVisible();
   });
@@ -204,7 +204,7 @@ test.describe("Homepage", () => {
   test("should have proper contrast ratios", async ({ page }) => {
     // This is a basic check - in a real scenario you'd use axe-playwright
     const mainHeading = page.getByRole("heading", {
-      name: /welcome to fabularius\.art/i,
+      name: /welcome to pornspot\.art/i,
     });
 
     // Check that text is visible (basic contrast check)
@@ -221,19 +221,19 @@ test.describe("Homepage", () => {
     // Start with desktop size
     await page.setViewportSize({ width: 1440, height: 900 });
     await expect(
-      page.getByRole("heading", { name: /welcome to fabularius\.art/i })
+      page.getByRole("heading", { name: /welcome to pornspot\.art/i })
     ).toBeVisible();
 
     // Resize to mobile
     await page.setViewportSize({ width: 375, height: 667 });
     await expect(
-      page.getByRole("heading", { name: /welcome to fabularius\.art/i })
+      page.getByRole("heading", { name: /welcome to pornspot\.art/i })
     ).toBeVisible();
 
     // Resize back to desktop
     await page.setViewportSize({ width: 1440, height: 900 });
     await expect(
-      page.getByRole("heading", { name: /welcome to fabularius\.art/i })
+      page.getByRole("heading", { name: /welcome to pornspot\.art/i })
     ).toBeVisible();
   });
 });

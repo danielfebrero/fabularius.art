@@ -37,7 +37,7 @@ const getClientConfig = (environment) => {
 };
 
 const getTableName = (environment) => {
-  return `${environment}-fabularius-media`;
+  return `${environment}-pornspot-media`;
 };
 
 async function createAdminUser(environment, username, password) {

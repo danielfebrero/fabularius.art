@@ -1,6 +1,6 @@
-# Testing Guide for Fabularius.art
+# Testing Guide for pornspot.ai
 
-This comprehensive guide covers the complete testing infrastructure for the Fabularius.art project, including setup, execution, and best practices for both backend and frontend testing.
+This comprehensive guide covers the complete testing infrastructure for the pornspot.ai project, including setup, execution, and best practices for both backend and frontend testing.
 
 ## Table of Contents
 
@@ -19,7 +19,7 @@ This comprehensive guide covers the complete testing infrastructure for the Fabu
 
 ## Overview
 
-The Fabularius.art project implements a comprehensive testing strategy that includes:
+The pornspot.ai project implements a comprehensive testing strategy that includes:
 
 - **Backend Testing**: Unit and integration tests for AWS Lambda functions using Jest
 - **Frontend Testing**: Component, integration, and accessibility tests using Jest + React Testing Library
@@ -71,7 +71,7 @@ The Fabularius.art project implements a comprehensive testing strategy that incl
 
    ```bash
    git clone <repository-url>
-   cd fabularius-art
+   cd pornspot-art
    npm run install:all
    ```
 
@@ -372,7 +372,7 @@ test.describe("Homepage", () => {
 
   test("displays main heading and navigation", async ({ page }) => {
     await expect(
-      page.getByRole("heading", { name: /fabularius.art/i })
+      page.getByRole("heading", { name: /pornspot.ai/i })
     ).toBeVisible();
     await expect(page.getByRole("button", { name: /albums/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /upload/i })).toBeVisible();

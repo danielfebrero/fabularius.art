@@ -3,10 +3,10 @@ import { ApiResponse } from "../types";
 
 const allowedOrigins = [
   "http://localhost:3000",
-  "https://fabularius.art",
-  "https://www.fabularius.art",
-  /^https:\/\/fabularius-art-frontend-.*-fabularius\.vercel\.app$/, // Vercel Preview
-  "https://fabularius-art-frontend.vercel.app", // Vercel Production
+  "https://pornspot.ai",
+  "https://www.pornspot.ai",
+  /^https:\/\/pornspot-ai-frontend-.*-pornspot\.vercel\.app$/, // Vercel Preview
+  "https://pornspot-art-frontend.vercel.app", // Vercel Production
 ];
 
 const getCorsHeaders = (

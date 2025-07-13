@@ -1,6 +1,6 @@
 # Admin Authentication System
 
-This document describes the admin authentication system implemented for the Fabularius.art gallery admin panel.
+This document describes the admin authentication system implemented for the pornspot.ai gallery admin panel.
 
 ## Overview
 
@@ -167,7 +167,7 @@ Use the provided script to create the first admin user:
 
 ```bash
 # Set the DynamoDB table name environment variable
-export DYNAMODB_TABLE="dev-fabularius-media"
+export DYNAMODB_TABLE="dev-pornspot-media"
 
 # Create admin user
 node scripts/create-admin.js admin SuperPassword123

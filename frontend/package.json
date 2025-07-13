@@ -1,7 +1,7 @@
 {
-  "name": "fabularius-art-frontend",
+  "name": "pornspot-art-frontend",
   "version": "1.0.0",
-  "description": "Frontend for Fabularius.art gallery",
+  "description": "Frontend for pornspot.ai gallery",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -66,6 +66,6 @@
     "gallery",
     "art"
   ],
-  "author": "Fabularius.art",
+  "author": "pornspot.ai",
   "license": "MIT"
 }

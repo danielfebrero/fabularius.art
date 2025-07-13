@@ -1,7 +1,7 @@
 {
-  "name": "fabularius-art-backend",
+  "name": "pornspot-art-backend",
   "version": "1.0.0",
-  "description": "Backend Lambda functions for Fabularius.art gallery",
+  "description": "Backend Lambda functions for pornspot.ai gallery",
   "main": "index.js",
   "scripts": {
     "build": "tsc",
@@ -51,6 +51,6 @@
     "gallery",
     "typescript"
   ],
-  "author": "Fabularius.art",
+  "author": "pornspot.ai",
   "license": "MIT"
 }

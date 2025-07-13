@@ -1,8 +1,8 @@
-# Fabularius.art Architecture
+# pornspot.ai Architecture
 
 ## Overview
 
-Fabularius.art is built using a modern serverless architecture that provides scalability, cost-effectiveness, and high performance. The application follows a clean separation between frontend and backend, with a focus on minimalist design and user experience.
+pornspot.ai is built using a modern serverless architecture that provides scalability, cost-effectiveness, and high performance. The application follows a clean separation between frontend and backend, with a focus on minimalist design and user experience.
 
 ## Architecture Diagram
 
@@ -67,7 +67,7 @@ Fabularius.art is built using a modern serverless architecture that provides sca
 
 #### Table Structure
 
-**Primary Table**: `fabularius-media`
+**Primary Table**: `pornspot-media`
 
 | Entity Type | PK                | SK                | GSI1PK            | GSI1SK                  |
 | ----------- | ----------------- | ----------------- | ----------------- | ----------------------- |

@@ -24,7 +24,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${album.title} - Fabularius.art`,
+    title: `${album.title} - pornspot.ai`,
     description: album.tags?.join(", ") || null,
   };
 }

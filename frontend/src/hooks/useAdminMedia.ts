@@ -105,8 +105,8 @@ export function useAdminMedia() {
           originalFilename: file.name,
           mimeType: file.type,
           size: file.size,
-          url: `http://localhost:4566/local-fabularius-media/${key}`, // Use the same URL structure as backend
-          thumbnailUrl: `http://localhost:4566/local-fabularius-media/${key}`, // For now, use same as main URL
+          url: `http://localhost:4566/local-pornspot-media/${key}`, // Use the same URL structure as backend
+          thumbnailUrl: `http://localhost:4566/local-pornspot-media/${key}`, // For now, use same as main URL
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };

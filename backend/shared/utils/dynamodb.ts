@@ -19,7 +19,7 @@ const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
 const clientConfig: any = {};
 
 if (isLocal) {
-  clientConfig.endpoint = "http://fabularius-local-aws:4566";
+  clientConfig.endpoint = "http://pornspot-local-aws:4566";
   clientConfig.region = "us-east-1";
   clientConfig.credentials = {
     accessKeyId: "test",

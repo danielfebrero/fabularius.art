@@ -4,7 +4,7 @@ services:
   # DynamoDB Local for backend testing
   dynamodb-local:
     image: amazon/dynamodb-local:latest
-    container_name: fabularius-test-dynamodb
+    container_name: pornspot-test-dynamodb
     ports:
       - "8000:8000"
     command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory"]
@@ -20,7 +20,7 @@ services:
   # LocalStack for AWS services simulation
   localstack:
     image: localstack/localstack:latest
-    container_name: fabularius-test-localstack
+    container_name: pornspot-test-localstack
     ports:
       - "4566:4566"
       - "4571:4571"
@@ -48,7 +48,7 @@ services:
   # Redis for caching (if needed for future features)
   redis-test:
     image: redis:7-alpine
-    container_name: fabularius-test-redis
+    container_name: pornspot-test-redis
     ports:
       - "6379:6379"
     command: redis-server --appendonly yes
@@ -65,7 +65,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile.test
-    container_name: fabularius-backend-tests
+    container_name: pornspot-backend-tests
     environment:
       - NODE_ENV=test
       - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
@@ -92,7 +92,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.test
-    container_name: fabularius-frontend-tests
+    container_name: pornspot-frontend-tests
     environment:
       - NODE_ENV=test
       - CI=true
@@ -113,7 +113,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile.e2e
-    container_name: fabularius-e2e-tests
+    container_name: pornspot-e2e-tests
     environment:
       - NODE_ENV=test
       - CI=true
@@ -135,7 +135,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: fabularius-frontend-app
+    container_name: pornspot-frontend-app
     ports:
       - "3000:3000"
     environment:
@@ -158,7 +158,7 @@ services:
     build:
       context: ./scripts
       dockerfile: Dockerfile.seeder
-    container_name: fabularius-test-seeder
+    container_name: pornspot-test-seeder
     environment:
       - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
       - AWS_ENDPOINT_URL=http://localstack:4566
@@ -180,7 +180,7 @@ services:
   # Test results aggregator
   test-aggregator:
     image: node:18-alpine
-    container_name: fabularius-test-aggregator
+    container_name: pornspot-test-aggregator
     working_dir: /app
     volumes:
       - .:/app

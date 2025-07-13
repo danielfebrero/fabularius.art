@@ -15,7 +15,7 @@ let s3Config: S3ClientConfig = {};
 
 if (isLocal) {
   s3Config = {
-    endpoint: "http://fabularius-local-aws:4566",
+    endpoint: "http://pornspot-local-aws:4566",
     region: process.env["AWS_REGION"] || "us-east-1",
     credentials: {
       accessKeyId: "test",
@@ -47,7 +47,7 @@ if (isLocal) {
 }
 
 const BUCKET_NAME = (
-  isLocal ? "local-fabularius-media" : process.env["S3_BUCKET"]
+  isLocal ? "local-pornspot-media" : process.env["S3_BUCKET"]
 )!;
 
 const CLOUDFRONT_DOMAIN = process.env["CLOUDFRONT_DOMAIN"]!;
@@ -94,7 +94,7 @@ export class S3Service {
 
     // For docker hostname to localhost fix:
     const uploadUrl = isLocal
-      ? url.replace("fabularius-local-aws", "localhost")
+      ? url.replace("pornspot-local-aws", "localhost")
       : url;
 
     return { uploadUrl, key };

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Fabularius.art Testing Infrastructure Validation Script
+# pornspot.ai Testing Infrastructure Validation Script
 # This script validates that the complete testing environment is properly configured
 
 set -e

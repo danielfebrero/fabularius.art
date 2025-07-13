@@ -1,6 +1,6 @@
 # Frontend Testing Infrastructure
 
-This document provides a comprehensive overview of the testing infrastructure created for the fabularius.art Next.js application.
+This document provides a comprehensive overview of the testing infrastructure created for the pornspot.ai Next.js application.
 
 ## Overview
 
@@ -368,4 +368,4 @@ The test suite is designed to run in CI environments:
 3. Use Playwright's `--debug` mode for E2E debugging
 4. Check browser console in E2E tests for errors
 
-This testing infrastructure provides comprehensive coverage of the fabularius.art frontend application, ensuring reliability, accessibility, and maintainability.
+This testing infrastructure provides comprehensive coverage of the pornspot.ai frontend application, ensuring reliability, accessibility, and maintainability.

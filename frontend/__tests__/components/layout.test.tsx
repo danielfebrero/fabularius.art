@@ -9,7 +9,7 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
           <nav className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <h1 className="text-2xl font-bold text-foreground">
-                Fabularius.art
+                pornspot.ai
               </h1>
             </div>
             <div className="flex items-center space-x-4">
@@ -25,7 +25,7 @@ const LayoutContent = ({ children }: { children: React.ReactNode }) => {
       <footer className="border-t border-border mt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-muted-foreground">
-            <p>&copy; 2024 Fabularius.art. All rights reserved.</p>
+            <p>&copy; 2024 pornspot.ai. All rights reserved.</p>
           </div>
         </div>
       </footer>
@@ -53,7 +53,7 @@ describe("RootLayout", () => {
     renderLayout();
 
     expect(
-      screen.getByRole("heading", { name: /fabularius\.art/i })
+      screen.getByRole("heading", { name: /pornspot\.art/i })
     ).toBeInTheDocument();
   });
 
@@ -68,7 +68,7 @@ describe("RootLayout", () => {
     renderLayout();
 
     expect(
-      screen.getByText(/© 2024 fabularius\.art\. all rights reserved\./i)
+      screen.getByText(/© 2024 pornspot\.art\. all rights reserved\./i)
     ).toBeInTheDocument();
   });
 
@@ -84,7 +84,7 @@ describe("RootLayout", () => {
 
     // Check for proper heading hierarchy
     const mainHeading = screen.getByRole("heading", { level: 1 });
-    expect(mainHeading).toHaveTextContent("Fabularius.art");
+    expect(mainHeading).toHaveTextContent("pornspot.ai");
   });
 
   it("navigation buttons have correct styling classes", () => {
@@ -186,7 +186,7 @@ describe("RootLayout", () => {
   it("has correct text color classes", () => {
     const { container } = renderLayout();
 
-    const title = screen.getByRole("heading", { name: /fabularius\.art/i });
+    const title = screen.getByRole("heading", { name: /pornspot\.art/i });
     const footer = container.querySelector("footer p");
 
     expect(title).toHaveClass("text-foreground");

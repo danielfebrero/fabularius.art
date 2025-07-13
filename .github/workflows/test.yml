@@ -352,7 +352,7 @@ jobs:
       - name: Run dependency check
         uses: dependency-check/Dependency-Check_Action@main
         with:
-          project: "fabularius-art"
+          project: "pornspot-art"
           path: "."
           format: "ALL"
 
