@@ -1,8 +1,39 @@
-import { APIGatewayProxyResult } from "aws-lambda";
+import { APIGatewayProxyResult, APIGatewayProxyEvent } from "aws-lambda";
 import { ApiResponse } from "../types";
 
+const ALLOWED_ORIGINS = [
+  "http://localhost:3000",
+  "https://fabularius-art-frontend.vercel.app",
+  "https://fabularius.art",
+  "https://www.fabularius.art",
+];
+
+const getCorsHeaders = (event: APIGatewayProxyEvent) => {
+  const origin = event.headers["origin"] || event.headers["Origin"];
+  const headers: { [key: string]: string | boolean } = {
+    "Access-Control-Allow-Headers":
+      "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Credentials": true,
+  };
+
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  } else if (process.env["NODE_ENV"] === "development") {
+    headers["Access-Control-Allow-Origin"] = "http://localhost:3000";
+  } else {
+    headers["Access-Control-Allow-Origin"] = "https://fabularius.art";
+  }
+
+  return headers;
+};
+
 export class ResponseUtil {
-  static success<T>(data: T, statusCode: number = 200): APIGatewayProxyResult {
+  static success<T>(
+    event: APIGatewayProxyEvent,
+    data: T,
+    statusCode: number = 200
+  ): APIGatewayProxyResult {
     const response: ApiResponse<T> = {
       success: true,
       data,
@@ -12,21 +43,14 @@ export class ResponseUtil {
       statusCode,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin":
-          process.env["NODE_ENV"] === "development"
-            ? "http://localhost:3000"
-            : "*",
-        "Access-Control-Allow-Headers":
-          "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-        "Access-Control-Allow-Credentials":
-          process.env["NODE_ENV"] === "development" ? "true" : "false",
+        ...getCorsHeaders(event),
       },
       body: JSON.stringify(response),
     };
   }
 
   static error(
+    event: APIGatewayProxyEvent,
     message: string,
     statusCode: number = 400
   ): APIGatewayProxyResult {
@@ -39,62 +63,58 @@ export class ResponseUtil {
       statusCode,
       headers: {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin":
-          process.env["NODE_ENV"] === "development"
-            ? "http://localhost:3000"
-            : "*",
-        "Access-Control-Allow-Headers":
-          "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-        "Access-Control-Allow-Credentials":
-          process.env["NODE_ENV"] === "development" ? "true" : "false",
+        ...getCorsHeaders(event),
       },
       body: JSON.stringify(response),
     };
   }
 
   static notFound(
+    event: APIGatewayProxyEvent,
     message: string = "Resource not found"
   ): APIGatewayProxyResult {
-    return this.error(message, 404);
+    return this.error(event, message, 404);
   }
 
-  static badRequest(message: string = "Bad request"): APIGatewayProxyResult {
-    return this.error(message, 400);
+  static badRequest(
+    event: APIGatewayProxyEvent,
+    message: string = "Bad request"
+  ): APIGatewayProxyResult {
+    return this.error(event, message, 400);
   }
 
-  static unauthorized(message: string = "Unauthorized"): APIGatewayProxyResult {
-    return this.error(message, 401);
+  static unauthorized(
+    event: APIGatewayProxyEvent,
+    message: string = "Unauthorized"
+  ): APIGatewayProxyResult {
+    return this.error(event, message, 401);
   }
 
-  static forbidden(message: string = "Forbidden"): APIGatewayProxyResult {
-    return this.error(message, 403);
+  static forbidden(
+    event: APIGatewayProxyEvent,
+    message: string = "Forbidden"
+  ): APIGatewayProxyResult {
+    return this.error(event, message, 403);
   }
 
   static internalError(
+    event: APIGatewayProxyEvent,
     message: string = "Internal server error"
   ): APIGatewayProxyResult {
-    return this.error(message, 500);
+    return this.error(event, message, 500);
   }
 
-  static created<T>(data: T): APIGatewayProxyResult {
-    return this.success(data, 201);
+  static created<T>(
+    event: APIGatewayProxyEvent,
+    data: T
+  ): APIGatewayProxyResult {
+    return this.success(event, data, 201);
   }
 
-  static noContent(): APIGatewayProxyResult {
+  static noContent(event: APIGatewayProxyEvent): APIGatewayProxyResult {
     return {
       statusCode: 204,
-      headers: {
-        "Access-Control-Allow-Origin":
-          process.env["NODE_ENV"] === "development"
-            ? "http://localhost:3000"
-            : "*",
-        "Access-Control-Allow-Headers":
-          "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-        "Access-Control-Allow-Credentials":
-          process.env["NODE_ENV"] === "development" ? "true" : "false",
-      },
+      headers: getCorsHeaders(event),
       body: "",
     };
   }
