@@ -6,6 +6,10 @@ import { AuthMiddleware } from "./middleware";
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  if (event.httpMethod === "OPTIONS") {
+    return ResponseUtil.noContent(event);
+  }
+
   try {
     // Validate current session
     const validation = await AuthMiddleware.validateSession(event);

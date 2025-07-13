@@ -11,7 +11,13 @@ interface UseAdminReturn {
 }
 
 export function useAdmin(): UseAdminReturn {
-  const [user, setUser] = useState<AdminUser | null>(null);
+  const [user, setUser] = useState<AdminUser | null>(() => {
+    if (typeof window !== "undefined") {
+      const storedUser = sessionStorage.getItem("adminUser");
+      return storedUser ? JSON.parse(storedUser) : null;
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -35,19 +41,16 @@ export function useAdmin(): UseAdminReturn {
 
         const data = await response.json();
 
-        console.log("Login response:", {
-          status: response.status,
-          ok: response.ok,
-          headers: Object.fromEntries(response.headers.entries()),
-          data,
-        });
-
         if (response.ok && data.success) {
-          console.log("Login successful, setting user:", data.data.admin);
           setUser(data.data.admin);
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem(
+              "adminUser",
+              JSON.stringify(data.data.admin)
+            );
+          }
           return true;
         } else {
-          console.log("Login failed:", data.error || "Login failed");
           setError(data.error || "Login failed");
           return false;
         }
@@ -74,6 +77,9 @@ export function useAdmin(): UseAdminReturn {
       });
 
       setUser(null);
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("adminUser");
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Logout failed";
       setError(errorMessage);
@@ -110,12 +116,18 @@ export function useAdmin(): UseAdminReturn {
 
       console.log("CheckAuth failed, clearing user");
       setUser(null);
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("adminUser");
+      }
       return null;
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Auth check failed";
       setError(errorMessage);
       setUser(null);
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("adminUser");
+      }
       return null;
     } finally {
       setLoading(false);

@@ -8,11 +8,15 @@ export class AuthMiddleware {
   ): Promise<SessionValidationResult> {
     try {
       // Extract session ID from cookies
-      const sessionId = this.extractSessionFromCookies(
-        event.headers["Cookie"] || ""
-      );
+      const cookieHeader =
+        event.headers["Cookie"] || event.headers["cookie"] || "";
+      console.log("Cookie header received:", cookieHeader);
+
+      const sessionId = this.extractSessionFromCookies(cookieHeader);
+      console.log("Extracted session ID:", sessionId);
 
       if (!sessionId) {
+        console.log("No session ID found in cookies");
         return { isValid: false };
       }
 

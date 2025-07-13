@@ -46,6 +46,10 @@ const BUCKET_NAME = isLocal
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  if (event.httpMethod === "OPTIONS") {
+    return ResponseUtil.noContent(event);
+  }
+
   try {
     // Validate admin session
     const validation = await AuthMiddleware.validateSession(event);

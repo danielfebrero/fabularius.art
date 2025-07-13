@@ -11,6 +11,9 @@ const AllowedOrigins = [
 
 const getCorsHeaders = (event: APIGatewayProxyEvent) => {
   const origin = event.headers["origin"] || event.headers["Origin"];
+  console.log("CORS Debug - Origin:", origin);
+  console.log("CORS Debug - All Headers:", JSON.stringify(event.headers));
+
   const headers: { [key: string]: string | boolean } = {
     "Access-Control-Allow-Headers":
       "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent",
@@ -18,6 +21,7 @@ const getCorsHeaders = (event: APIGatewayProxyEvent) => {
     "Access-Control-Allow-Credentials": true,
   };
 
+  let originMatched = false;
   if (origin) {
     for (const allowedOrigin of AllowedOrigins) {
       if (
@@ -25,11 +29,24 @@ const getCorsHeaders = (event: APIGatewayProxyEvent) => {
         (allowedOrigin instanceof RegExp && allowedOrigin.test(origin))
       ) {
         headers["Access-Control-Allow-Origin"] = origin;
+        originMatched = true;
+        console.log("CORS Debug - Origin matched:", allowedOrigin);
         break;
       }
     }
   }
 
+  // If no origin matched, but we're in production, allow Vercel deployment
+  if (!originMatched && origin) {
+    if (origin.includes("vercel.app") || origin.includes("fabularius")) {
+      headers["Access-Control-Allow-Origin"] = origin;
+      console.log("CORS Debug - Fallback origin allowed:", origin);
+    } else {
+      console.log("CORS Debug - Origin not allowed:", origin);
+    }
+  }
+
+  console.log("CORS Debug - Final headers:", headers);
   return headers;
 };
 
