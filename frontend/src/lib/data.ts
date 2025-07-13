@@ -1,7 +1,5 @@
 import { Album, Media } from "@/types";
-
-const API_URL =
-  process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:3001/api";
+import API_URL from "./api";
 
 // Helper function to handle API responses
 async function handleResponse<T>(
@@ -12,13 +10,12 @@ async function handleResponse<T>(
     if (data.success) {
       return { success: true, data: data.data };
     } else {
-      return { success: false, error: data.error || "API returned an error" };
+      throw new Error(data.error || "API returned an error");
     }
   } else {
-    return {
-      success: false,
-      error: data.error || `Request failed with status ${response.status}`,
-    };
+    throw new Error(
+      data.error || `Request failed with status ${response.status}`
+    );
   }
 }
 
