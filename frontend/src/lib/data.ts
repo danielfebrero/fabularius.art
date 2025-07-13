@@ -54,6 +54,7 @@ export async function fetchAllPublicAlbums(): Promise<Album[]> {
     if (cursor) {
       params.cursor = cursor;
     }
+
     const response = await getAlbums(params);
 
     if (response.success && response.data) {

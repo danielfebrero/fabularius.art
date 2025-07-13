@@ -41,6 +41,24 @@ warm_containers = "EAGER"
 [default.local_start_lambda.parameters]
 warm_containers = "EAGER"
 
+[dev]
+[dev.global]
+[dev.global.parameters]
+stack_name = "fabularius-art-dev"
+s3_bucket = "fabularius-sam-deployments"
+s3_prefix = "fabularius-art"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=dev"
+
+[dev.deploy]
+[dev.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+fail_on_empty_changeset = false
+stack_name = "fabularius-art-dev"
+
 [staging]
 [staging.global]
 [staging.global.parameters]
