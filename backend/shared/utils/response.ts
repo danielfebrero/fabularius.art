@@ -6,7 +6,7 @@ const allowedOrigins = [
   "https://pornspot.ai",
   "https://www.pornspot.ai",
   /^https:\/\/pornspot-ai-frontend-.*-pornspot\.vercel\.app$/, // Vercel Preview
-  "https://pornspot-art-frontend.vercel.app", // Vercel Production
+  "https://pornspot-ai-frontend.vercel.app", // Vercel Production
 ];
 
 const getCorsHeaders = (

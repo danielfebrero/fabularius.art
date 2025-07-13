@@ -1,5 +1,5 @@
 {
-  "name": "pornspot-art-backend",
+  "name": "pornspot-ai-backend",
   "version": "1.0.0",
   "description": "Backend Lambda functions for pornspot.ai gallery",
   "main": "index.js",

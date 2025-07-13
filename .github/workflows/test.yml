@@ -352,7 +352,7 @@ jobs:
       - name: Run dependency check
         uses: dependency-check/Dependency-Check_Action@main
         with:
-          project: "pornspot-art"
+          project: "pornspot-ai"
           path: "."
           format: "ALL"
 

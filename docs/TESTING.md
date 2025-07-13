@@ -71,7 +71,7 @@ The pornspot.ai project implements a comprehensive testing strategy that include
 
    ```bash
    git clone <repository-url>
-   cd pornspot-art
+   cd pornspot-ai
    npm run install:all
    ```
 

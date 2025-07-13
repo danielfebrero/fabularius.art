@@ -24,7 +24,7 @@ A minimalist gallery application for showcasing art and photography collections.
 ## Project Structure
 
 ```
-pornspot-art/
+pornspot-ai/
 ├── frontend/                 # Next.js frontend application
 │   ├── src/
 │   │   ├── app/             # Next.js 14 app directory
@@ -82,7 +82,7 @@ pornspot-art/
 
    ```bash
    git clone <repository-url>
-   cd pornspot-art
+   cd pornspot-ai
    ```
 
 2. **Install backend dependencies**

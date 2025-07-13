@@ -120,21 +120,21 @@ Both scripts support three environments:
 ### Development (`dev`)
 
 - **Purpose**: Feature development and initial testing
-- **Backend Stack**: `pornspot-art-dev`
+- **Backend Stack**: `pornspot-ai-dev`
 - **Frontend Domain**: `dev.pornspot.ai`
 - **Safety Level**: Low (quick iterations)
 
 ### Staging (`staging`)
 
 - **Purpose**: Pre-production testing and validation
-- **Backend Stack**: `pornspot-art-staging`
+- **Backend Stack**: `pornspot-ai-staging`
 - **Frontend Domain**: `staging.pornspot.ai`
 - **Safety Level**: Medium (comprehensive testing)
 
 ### Production (`prod`)
 
 - **Purpose**: Live application for end users
-- **Backend Stack**: `pornspot-art-prod`
+- **Backend Stack**: `pornspot-ai-prod`
 - **Frontend Domain**: `pornspot.ai`
 - **Safety Level**: High (confirmation prompts, guided deployment)
 

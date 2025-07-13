@@ -74,7 +74,7 @@ parse_arguments() {
     done
     
     # Set stack name based on environment
-    STACK_NAME="pornspot-art-$ENVIRONMENT"
+    STACK_NAME="pornspot-ai-$ENVIRONMENT"
     
     # Validate environment
     if [[ ! "$ENVIRONMENT" =~ ^(dev|staging|prod)$ ]]; then

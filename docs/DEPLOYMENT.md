@@ -56,9 +56,9 @@ sam deploy --config-env prod    # Production
 
 Each environment has its own configuration in [`samconfig.toml`](samconfig.toml):
 
-- **dev**: `pornspot-art-dev` stack
-- **staging**: `pornspot-art-staging` stack
-- **prod**: `pornspot-art-prod` stack
+- **dev**: `pornspot-ai-dev` stack
+- **staging**: `pornspot-ai-staging` stack
+- **prod**: `pornspot-ai-prod` stack
 
 ## Frontend Deployment
 
@@ -243,7 +243,7 @@ images: {
 ### Development Environment
 
 - **Purpose**: Feature development and initial testing
-- **Stack**: `pornspot-art-dev`
+- **Stack**: `pornspot-ai-dev`
 - **Domain**: `dev.pornspot.ai`
 - **Data**: Test data, can be reset frequently
 - **Monitoring**: Basic logging
@@ -251,7 +251,7 @@ images: {
 ### Staging Environment
 
 - **Purpose**: Pre-production testing and validation
-- **Stack**: `pornspot-art-staging`
+- **Stack**: `pornspot-ai-staging`
 - **Domain**: `staging.pornspot.ai`
 - **Data**: Production-like test data
 - **Monitoring**: Enhanced logging and monitoring
@@ -259,7 +259,7 @@ images: {
 ### Production Environment
 
 - **Purpose**: Live application for end users
-- **Stack**: `pornspot-art-prod`
+- **Stack**: `pornspot-ai-prod`
 - **Domain**: `pornspot.ai`
 - **Data**: Live user data
 - **Monitoring**: Full monitoring, alerting, and backup strategies
@@ -308,12 +308,12 @@ Consider integrating error tracking services like Sentry with environment-specif
 
    ```bash
    # Continue rollback manually
-   aws cloudformation continue-update-rollback --stack-name pornspot-art-prod
-   aws cloudformation wait stack-rollback-complete --stack-name pornspot-art-prod
+   aws cloudformation continue-update-rollback --stack-name pornspot-ai-prod
+   aws cloudformation wait stack-rollback-complete --stack-name pornspot-ai-prod
 
    # Or delete and recreate manually
-   aws cloudformation delete-stack --stack-name pornspot-art-prod
-   aws cloudformation wait stack-delete-complete --stack-name pornspot-art-prod
+   aws cloudformation delete-stack --stack-name pornspot-ai-prod
+   aws cloudformation wait stack-delete-complete --stack-name pornspot-ai-prod
    ./scripts/deploy.sh --env prod
    ```
 

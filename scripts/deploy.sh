@@ -207,7 +207,7 @@ main() {
     
     # Get API Gateway URL from SAM outputs (environment-specific stack name)
     print_status "Getting API Gateway URL..."
-    STACK_NAME="pornspot-art-$ENVIRONMENT"
+    STACK_NAME="pornspot-ai-$ENVIRONMENT"
     API_URL=$(aws cloudformation describe-stacks --stack-name "$STACK_NAME" --query 'Stacks[0].Outputs[?OutputKey==`ApiGatewayUrl`].OutputValue' --output text 2>/dev/null || echo "Not found")
     
     if [ "$API_URL" != "Not found" ]; then
