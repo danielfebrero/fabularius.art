@@ -178,6 +178,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /albums
             Method: GET
+            Auth:
+              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -212,6 +214,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /albums/{albumId}
             Method: GET
+            Auth:
+              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -248,6 +252,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /albums/{albumId}/media
             Method: GET
+            Auth:
+              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable

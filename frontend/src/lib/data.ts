@@ -44,23 +44,27 @@ export async function fetchAllPublicAlbums(): Promise<Album[]> {
   let hasNextPage = true;
 
   while (hasNextPage) {
-    const params: { isPublic: boolean; limit: number; cursor?: string } = {
-      isPublic: true,
-      limit: 100,
-    };
-    if (cursor) {
-      params.cursor = cursor;
-    }
+    try {
+      const params: { isPublic: boolean; limit: number; cursor?: string } = {
+        isPublic: true,
+        limit: 100,
+      };
+      if (cursor) {
+        params.cursor = cursor;
+      }
 
-    const response = await getAlbums(params);
+      const response = await getAlbums(params);
 
-    if (response.success && response.data) {
-      allAlbums = allAlbums.concat(response.data.albums);
-      cursor = response.data.pagination?.cursor;
-      hasNextPage = !!cursor;
-    } else {
+      if (response.data) {
+        allAlbums = allAlbums.concat(response.data.albums);
+        cursor = response.data.pagination?.cursor;
+        hasNextPage = !!cursor;
+      } else {
+        hasNextPage = false;
+      }
+    } catch (error) {
+      console.error("Failed to fetch a page of albums:", error);
       // On error, stop fetching and return what we have so far
-      console.error("Failed to fetch a page of albums:", response.error);
       hasNextPage = false;
     }
   }
