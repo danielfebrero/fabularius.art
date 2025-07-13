@@ -35,10 +35,19 @@ export function useAdmin(): UseAdminReturn {
 
         const data = await response.json();
 
+        console.log("Login response:", {
+          status: response.status,
+          ok: response.ok,
+          headers: Object.fromEntries(response.headers.entries()),
+          data,
+        });
+
         if (response.ok && data.success) {
-          setUser(data.admin);
+          console.log("Login successful, setting user:", data.data.admin);
+          setUser(data.data.admin);
           return true;
         } else {
+          console.log("Login failed:", data.error || "Login failed");
           setError(data.error || "Login failed");
           return false;
         }
@@ -83,14 +92,23 @@ export function useAdmin(): UseAdminReturn {
         credentials: "include",
       });
 
+      console.log("CheckAuth response:", {
+        status: response.status,
+        ok: response.ok,
+        headers: Object.fromEntries(response.headers.entries()),
+      });
+
       if (response.ok) {
         const data = await response.json();
+        console.log("CheckAuth data:", data);
         if (data.success && data.data.admin) {
+          console.log("CheckAuth successful, setting user:", data.data.admin);
           setUser(data.data.admin);
           return data.data.admin;
         }
       }
 
+      console.log("CheckAuth failed, clearing user");
       setUser(null);
       return null;
     } catch (err) {

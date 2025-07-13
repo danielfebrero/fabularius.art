@@ -85,10 +85,10 @@ export class AuthMiddleware {
 
   static createSessionCookie(sessionId: string, expiresAt: string): string {
     const expires = new Date(expiresAt);
-    return `admin_session=${sessionId}; HttpOnly; Secure; SameSite=Strict; Path=/admin; Expires=${expires.toUTCString()}`;
+    return `admin_session=${sessionId}; HttpOnly; Secure; SameSite=None; Path=/; Expires=${expires.toUTCString()}`;
   }
 
   static createClearSessionCookie(): string {
-    return "admin_session=; HttpOnly; Secure; SameSite=Strict; Path=/admin; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    return "admin_session=; HttpOnly; Secure; SameSite=None; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
   }
 }

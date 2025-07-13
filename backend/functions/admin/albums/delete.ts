@@ -10,18 +10,18 @@ export const handler = async (
     // Validate admin session
     const validation = await AuthMiddleware.validateSession(event);
     if (!validation.isValid) {
-      return ResponseUtil.unauthorized("Invalid or expired session");
+      return ResponseUtil.unauthorized(event, "Invalid or expired session");
     }
 
     const albumId = event.pathParameters?.["albumId"];
     if (!albumId) {
-      return ResponseUtil.badRequest("Album ID is required");
+      return ResponseUtil.badRequest(event, "Album ID is required");
     }
 
     // Check if album exists
     const existingAlbum = await DynamoDBService.getAlbum(albumId);
     if (!existingAlbum) {
-      return ResponseUtil.notFound("Album not found");
+      return ResponseUtil.notFound(event, "Album not found");
     }
 
     // Get all media in the album to delete them first
@@ -38,13 +38,13 @@ export const handler = async (
     // Delete the album
     await DynamoDBService.deleteAlbum(albumId);
 
-    return ResponseUtil.success({
+    return ResponseUtil.success(event, {
       message: "Album and all associated media deleted successfully",
       deletedAlbumId: albumId,
       deletedMediaCount: media.length,
     });
   } catch (error) {
     console.error("Error deleting album:", error);
-    return ResponseUtil.internalError("Failed to delete album");
+    return ResponseUtil.internalError(event, "Failed to delete album");
   }
 };

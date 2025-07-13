@@ -9,13 +9,13 @@ export const handler = async (
 ): Promise<APIGatewayProxyResult> => {
   try {
     if (!event.body) {
-      return ResponseUtil.badRequest("Request body is required");
+      return ResponseUtil.badRequest(event, "Request body is required");
     }
 
     const request: CreateAlbumRequest = JSON.parse(event.body);
 
     if (!request.title || request.title.trim().length === 0) {
-      return ResponseUtil.badRequest("Album title is required");
+      return ResponseUtil.badRequest(event, "Album title is required");
     }
 
     const albumId = uuidv4();
@@ -55,9 +55,9 @@ export const handler = async (
       album.coverImageUrl = albumEntity.coverImageUrl;
     }
 
-    return ResponseUtil.created(album);
+    return ResponseUtil.created(event, album);
   } catch (error) {
     console.error("Error creating album:", error);
-    return ResponseUtil.internalError("Failed to create album");
+    return ResponseUtil.internalError(event, "Failed to create album");
   }
 };

@@ -50,7 +50,7 @@ export const handler = async (
     // Validate admin session
     const validation = await AuthMiddleware.validateSession(event);
     if (!validation.isValid) {
-      return ResponseUtil.unauthorized("Invalid or expired session");
+      return ResponseUtil.unauthorized(event, "Invalid or expired session");
     }
 
     // Get total albums count
@@ -155,9 +155,9 @@ export const handler = async (
       storageUsedBytes: storageUsed,
     };
 
-    return ResponseUtil.success(stats);
+    return ResponseUtil.success(event, stats);
   } catch (error) {
     console.error("Error fetching admin stats:", error);
-    return ResponseUtil.internalError("Failed to fetch statistics");
+    return ResponseUtil.internalError(event, "Failed to fetch statistics");
   }
 };

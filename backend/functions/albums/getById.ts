@@ -10,13 +10,13 @@ export const handler = async (
     const albumId = event.pathParameters?.["albumId"];
 
     if (!albumId) {
-      return ResponseUtil.badRequest("Album ID is required");
+      return ResponseUtil.badRequest(event, "Album ID is required");
     }
 
     const albumEntity = await DynamoDBService.getAlbum(albumId);
 
     if (!albumEntity) {
-      return ResponseUtil.notFound("Album not found");
+      return ResponseUtil.notFound(event, "Album not found");
     }
 
     const album: Album = {
@@ -36,9 +36,9 @@ export const handler = async (
       album.coverImageUrl = albumEntity.coverImageUrl;
     }
 
-    return ResponseUtil.success(album);
+    return ResponseUtil.success(event, album);
   } catch (error) {
     console.error("Error fetching album:", error);
-    return ResponseUtil.internalError("Failed to fetch album");
+    return ResponseUtil.internalError(event, "Failed to fetch album");
   }
 };

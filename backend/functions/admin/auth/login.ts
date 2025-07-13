@@ -3,11 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import * as bcrypt from "bcrypt";
 import { DynamoDBService } from "../../../shared/utils/dynamodb";
 import { ResponseUtil } from "../../../shared/utils/response";
-import {
-  LoginRequest,
-  LoginResponse,
-  AdminSessionEntity,
-} from "../../../shared/types";
+import { LoginRequest, AdminSessionEntity } from "../../../shared/types";
 import { AuthMiddleware } from "./middleware";
 
 const SESSION_DURATION_HOURS = 24;
@@ -77,8 +73,7 @@ export const handler = async (
 
     await DynamoDBService.createSession(sessionEntity);
 
-    const response: LoginResponse = {
-      success: true,
+    const responseData = {
       admin: {
         adminId: adminEntity.adminId,
         username: adminEntity.username,
@@ -93,7 +88,7 @@ export const handler = async (
       expiresAt.toISOString()
     );
 
-    const successResponse = ResponseUtil.success(event, response);
+    const successResponse = ResponseUtil.success(event, responseData);
     successResponse.headers = {
       ...successResponse.headers,
       "Set-Cookie": sessionCookie,

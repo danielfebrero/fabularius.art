@@ -11,7 +11,7 @@ export const handler = async (
     // Validate admin session
     const validation = await AuthMiddleware.validateSession(event);
     if (!validation.isValid) {
-      return ResponseUtil.unauthorized("Invalid or expired session");
+      return ResponseUtil.unauthorized(event, "Invalid or expired session");
     }
 
     const limit = parseInt(event.queryStringParameters?.["limit"] || "20");
@@ -60,9 +60,9 @@ export const handler = async (
       total: albumsResponse.length,
     };
 
-    return ResponseUtil.success(response);
+    return ResponseUtil.success(event, response);
   } catch (error) {
     console.error("Error fetching admin albums:", error);
-    return ResponseUtil.internalError("Failed to fetch albums");
+    return ResponseUtil.internalError(event, "Failed to fetch albums");
   }
 };

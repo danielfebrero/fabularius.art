@@ -10,15 +10,15 @@ export const handler = async (
     const validation = await AuthMiddleware.validateSession(event);
 
     if (!validation.isValid || !validation.admin) {
-      return ResponseUtil.unauthorized("No valid session found");
+      return ResponseUtil.unauthorized(event, "No valid session found");
     }
 
     // Return admin info (without sensitive data)
-    return ResponseUtil.success({
+    return ResponseUtil.success(event, {
       admin: validation.admin,
     });
   } catch (error) {
     console.error("Get admin info error:", error);
-    return ResponseUtil.internalError("Failed to get admin info");
+    return ResponseUtil.internalError(event, "Failed to get admin info");
   }
 };

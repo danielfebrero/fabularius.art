@@ -10,13 +10,13 @@ export const handler = async (
     const albumId = event.pathParameters?.["albumId"];
 
     if (!albumId) {
-      return ResponseUtil.badRequest("Album ID is required");
+      return ResponseUtil.badRequest(event, "Album ID is required");
     }
 
     // Verify album exists
     const album = await DynamoDBService.getAlbum(albumId);
     if (!album) {
-      return ResponseUtil.notFound("Album not found");
+      return ResponseUtil.notFound(event, "Album not found");
     }
 
     const limit = parseInt(event.queryStringParameters?.["limit"] || "50");
@@ -74,9 +74,9 @@ export const handler = async (
       },
     };
 
-    return ResponseUtil.success(response);
+    return ResponseUtil.success(event, response);
   } catch (error) {
     console.error("Error fetching media:", error);
-    return ResponseUtil.internalError("Failed to fetch media");
+    return ResponseUtil.internalError(event, "Failed to fetch media");
   }
 };

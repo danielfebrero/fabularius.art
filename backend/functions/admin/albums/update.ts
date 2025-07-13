@@ -11,29 +11,29 @@ export const handler = async (
     // Validate admin session
     const validation = await AuthMiddleware.validateSession(event);
     if (!validation.isValid) {
-      return ResponseUtil.unauthorized("Invalid or expired session");
+      return ResponseUtil.unauthorized(event, "Invalid or expired session");
     }
 
     const albumId = event.pathParameters?.["albumId"];
     if (!albumId) {
-      return ResponseUtil.badRequest("Album ID is required");
+      return ResponseUtil.badRequest(event, "Album ID is required");
     }
 
     if (!event.body) {
-      return ResponseUtil.badRequest("Request body is required");
+      return ResponseUtil.badRequest(event, "Request body is required");
     }
 
     const request: UpdateAlbumRequest = JSON.parse(event.body);
 
     // Validate request
     if (request.title !== undefined && request.title.trim().length === 0) {
-      return ResponseUtil.badRequest("Album title cannot be empty");
+      return ResponseUtil.badRequest(event, "Album title cannot be empty");
     }
 
     // Check if album exists
     const existingAlbum = await DynamoDBService.getAlbum(albumId);
     if (!existingAlbum) {
-      return ResponseUtil.notFound("Album not found");
+      return ResponseUtil.notFound(event, "Album not found");
     }
 
     // Prepare updates
@@ -63,7 +63,10 @@ export const handler = async (
     // Get updated album
     const updatedAlbum = await DynamoDBService.getAlbum(albumId);
     if (!updatedAlbum) {
-      return ResponseUtil.internalError("Failed to retrieve updated album");
+      return ResponseUtil.internalError(
+        event,
+        "Failed to retrieve updated album"
+      );
     }
 
     const response = {
@@ -77,9 +80,9 @@ export const handler = async (
       isPublic: updatedAlbum.isPublic,
     };
 
-    return ResponseUtil.success(response);
+    return ResponseUtil.success(event, response);
   } catch (error) {
     console.error("Error updating album:", error);
-    return ResponseUtil.internalError("Failed to update album");
+    return ResponseUtil.internalError(event, "Failed to update album");
   }
 };

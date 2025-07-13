@@ -11,7 +11,7 @@ export const handler = async (
     const validation = await AuthMiddleware.validateSession(event);
 
     if (!validation.isValid || !validation.session) {
-      return ResponseUtil.unauthorized("No valid session found");
+      return ResponseUtil.unauthorized(event, "No valid session found");
     }
 
     // Delete the session from database
@@ -22,24 +22,18 @@ export const handler = async (
 
     console.log(`Admin logout: ${validation.admin?.username}`);
 
-    return {
-      statusCode: 200,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers":
-          "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
-        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-        "Access-Control-Allow-Credentials": "true",
-        "Set-Cookie": clearCookie,
-      },
-      body: JSON.stringify({
-        success: true,
-        message: "Logged out successfully",
-      }),
+    const successResponse = ResponseUtil.success(event, {
+      message: "Logged out successfully",
+    });
+
+    successResponse.headers = {
+      ...successResponse.headers,
+      "Set-Cookie": clearCookie,
     };
+
+    return successResponse;
   } catch (error) {
     console.error("Logout error:", error);
-    return ResponseUtil.internalError("Logout failed");
+    return ResponseUtil.internalError(event, "Logout failed");
   }
 };

@@ -1,28 +1,33 @@
 import { APIGatewayProxyResult, APIGatewayProxyEvent } from "aws-lambda";
 import { ApiResponse } from "../types";
 
-const ALLOWED_ORIGINS = [
+const AllowedOrigins = [
   "http://localhost:3000",
-  "https://fabularius-art-frontend.vercel.app",
   "https://fabularius.art",
   "https://www.fabularius.art",
+  /^https:\/\/fabularius-art-frontend-.*-fabularius\.vercel\.app$/, // Vercel Preview
+  "https://fabularius-art-frontend.vercel.app", // Vercel Production
 ];
 
 const getCorsHeaders = (event: APIGatewayProxyEvent) => {
   const origin = event.headers["origin"] || event.headers["Origin"];
   const headers: { [key: string]: string | boolean } = {
     "Access-Control-Allow-Headers":
-      "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+      "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent",
     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
     "Access-Control-Allow-Credentials": true,
   };
 
-  if (origin && ALLOWED_ORIGINS.includes(origin)) {
-    headers["Access-Control-Allow-Origin"] = origin;
-  } else if (process.env["NODE_ENV"] === "development") {
-    headers["Access-Control-Allow-Origin"] = "http://localhost:3000";
-  } else {
-    headers["Access-Control-Allow-Origin"] = "https://fabularius.art";
+  if (origin) {
+    for (const allowedOrigin of AllowedOrigins) {
+      if (
+        (typeof allowedOrigin === "string" && allowedOrigin === origin) ||
+        (allowedOrigin instanceof RegExp && allowedOrigin.test(origin))
+      ) {
+        headers["Access-Control-Allow-Origin"] = origin;
+        break;
+      }
+    }
   }
 
   return headers;

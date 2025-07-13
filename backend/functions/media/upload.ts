@@ -12,23 +12,26 @@ export const handler = async (
     const albumId = event.pathParameters?.["albumId"];
 
     if (!albumId) {
-      return ResponseUtil.badRequest("Album ID is required");
+      return ResponseUtil.badRequest(event, "Album ID is required");
     }
 
     if (!event.body) {
-      return ResponseUtil.badRequest("Request body is required");
+      return ResponseUtil.badRequest(event, "Request body is required");
     }
 
     const request: UploadMediaRequest = JSON.parse(event.body);
 
     if (!request.filename || !request.mimeType) {
-      return ResponseUtil.badRequest("Filename and mimeType are required");
+      return ResponseUtil.badRequest(
+        event,
+        "Filename and mimeType are required"
+      );
     }
 
     // Verify album exists
     const album = await DynamoDBService.getAlbum(albumId);
     if (!album) {
-      return ResponseUtil.notFound("Album not found");
+      return ResponseUtil.notFound(event, "Album not found");
     }
 
     // Generate presigned upload URL
@@ -73,9 +76,9 @@ export const handler = async (
       expiresIn: 3600, // 1 hour
     };
 
-    return ResponseUtil.success(response);
+    return ResponseUtil.success(event, response);
   } catch (error) {
     console.error("Error creating media upload:", error);
-    return ResponseUtil.internalError("Failed to create media upload");
+    return ResponseUtil.internalError(event, "Failed to create media upload");
   }
 };

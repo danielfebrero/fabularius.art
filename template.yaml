@@ -156,11 +156,6 @@ Resources:
     Properties:
       Name: !Sub "${Environment}-fabularius-api"
       StageName: !Ref Environment
-      Cors:
-        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
-        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-        AllowOrigin: "'http://localhost:3000,https://fabularius.art,https://fabularius-art-frontend.vercel.app'"
-        AllowCredentials: true
       Auth:
         DefaultAuthorizer: AWS_IAM
 
@@ -191,12 +186,18 @@ Resources:
       CodeUri: backend/
       Handler: dist/functions/albums/create.handler
       Events:
-        Api:
+        PostCreateAlbum:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /albums
             Method: POST
+        OptionsCreateAlbum:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /albums
+            Method: OPTIONS
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
@@ -227,12 +228,18 @@ Resources:
       CodeUri: backend/
       Handler: dist/functions/media/upload.handler
       Events:
-        Api:
+        PostUploadMedia:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /albums/{albumId}/media
             Method: POST
+        OptionsUploadMedia:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /albums/{albumId}/media
+            Method: OPTIONS
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
@@ -266,12 +273,20 @@ Resources:
       CodeUri: backend/
       Handler: dist/functions/admin/auth/login.handler
       Events:
-        Api:
+        PostLogin:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /admin/login
             Method: POST
+            Auth:
+              Authorizer: NONE
+        OptionsLogin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /admin/login
+            Method: OPTIONS
             Auth:
               Authorizer: NONE
       Policies:
@@ -287,12 +302,20 @@ Resources:
       CodeUri: backend/
       Handler: dist/functions/admin/auth/logout.handler
       Events:
-        Api:
+        PostLogout:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /admin/logout
             Method: POST
+            Auth:
+              Authorizer: NONE
+        OptionsLogout:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /admin/logout
+            Method: OPTIONS
             Auth:
               Authorizer: NONE
       Policies:
@@ -328,12 +351,20 @@ Resources:
       CodeUri: backend/
       Handler: dist/functions/admin/albums/update.handler
       Events:
-        Api:
+        PutUpdateAlbum:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /admin/albums/{albumId}
             Method: PUT
+            Auth:
+              Authorizer: NONE
+        OptionsUpdateAlbum:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /admin/albums/{albumId}
+            Method: OPTIONS
             Auth:
               Authorizer: NONE
       Policies:
@@ -349,7 +380,7 @@ Resources:
       CodeUri: backend/
       Handler: dist/functions/admin/albums/delete.handler
       Events:
-        Api:
+        DeleteAlbum:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
@@ -389,12 +420,20 @@ Resources:
       CodeUri: backend/
       Handler: dist/functions/admin/media/delete.handler
       Events:
-        Api:
+        DeleteMedia:
           Type: Api
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /admin/albums/{albumId}/media/{mediaId}
             Method: DELETE
+            Auth:
+              Authorizer: NONE
+        OptionsDeleteMedia:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /admin/albums/{albumId}/media/{mediaId}
+            Method: OPTIONS
             Auth:
               Authorizer: NONE
       Policies:

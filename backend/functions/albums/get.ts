@@ -61,9 +61,9 @@ export const handler = async (
       },
     };
 
-    return ResponseUtil.success(response);
+    return ResponseUtil.success(event, response);
   } catch (error) {
     console.error("Error fetching albums:", error);
-    return ResponseUtil.internalError("Failed to fetch albums");
+    return ResponseUtil.internalError(event, "Failed to fetch albums");
   }
 };
