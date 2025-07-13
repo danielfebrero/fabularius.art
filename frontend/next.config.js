@@ -7,7 +7,7 @@ const nextConfig = {
       "localhost",
       // Add your CloudFront domain here when deployed
       process.env.NEXT_PUBLIC_CDN_URL?.replace("https://", "") ||
-        "d1234567890.cloudfront.net",
+        "dpoieeap5d01g.cloudfront.net",
     ],
     // Removed formats since we're serving unoptimized PNG, MP4, and GIF from CDN
     remotePatterns: [
@@ -74,6 +74,7 @@ const nextConfig = {
   // Performance optimizations
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    outputFileTracingRoot: __dirname,
   },
 
   // Compression
