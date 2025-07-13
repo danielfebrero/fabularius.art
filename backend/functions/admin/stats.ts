@@ -1,6 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "../../shared/utils/response";
-import { AuthMiddleware } from "./auth/middleware";
 import { QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
@@ -51,12 +50,6 @@ export const handler = async (
   }
 
   try {
-    // Validate admin session
-    const validation = await AuthMiddleware.validateSession(event);
-    if (!validation.isValid) {
-      return ResponseUtil.unauthorized(event, "Invalid or expired session");
-    }
-
     // Get total albums count
     const albumsResult = await docClient.send(
       new QueryCommand({

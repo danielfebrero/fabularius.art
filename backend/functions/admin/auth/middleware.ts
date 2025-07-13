@@ -72,9 +72,7 @@ export class AuthMiddleware {
     }
   }
 
-  private static extractSessionFromCookies(
-    cookieHeader: string
-  ): string | null {
+  static extractSessionFromCookies(cookieHeader: string): string | null {
     if (!cookieHeader) return null;
 
     const cookies = cookieHeader.split(";").map((cookie) => cookie.trim());
@@ -89,10 +87,40 @@ export class AuthMiddleware {
 
   static createSessionCookie(sessionId: string, expiresAt: string): string {
     const expires = new Date(expiresAt);
-    return `admin_session=${sessionId}; HttpOnly; Secure; SameSite=None; Path=/; Expires=${expires.toUTCString()}`;
+    const isOffline = process.env["IS_OFFLINE"] === "true";
+
+    const cookieParts = [
+      `admin_session=${sessionId}`,
+      "HttpOnly",
+      "Path=/",
+      `Expires=${expires.toUTCString()}`,
+    ];
+
+    if (isOffline) {
+      cookieParts.push("SameSite=Lax");
+    } else {
+      cookieParts.push("Secure", "SameSite=None");
+    }
+
+    return cookieParts.join("; ");
   }
 
   static createClearSessionCookie(): string {
-    return "admin_session=; HttpOnly; Secure; SameSite=None; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    const isOffline = process.env["IS_OFFLINE"] === "true";
+
+    const cookieParts = [
+      "admin_session=",
+      "HttpOnly",
+      "Path=/",
+      "Expires=Thu, 01 Jan 1970 00:00:00 GMT",
+    ];
+
+    if (isOffline) {
+      cookieParts.push("SameSite=Lax");
+    } else {
+      cookieParts.push("Secure", "SameSite=None");
+    }
+
+    return cookieParts.join("; ");
   }
 }

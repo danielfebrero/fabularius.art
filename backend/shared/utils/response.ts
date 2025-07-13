@@ -1,7 +1,7 @@
 import { APIGatewayProxyResult, APIGatewayProxyEvent } from "aws-lambda";
 import { ApiResponse } from "../types";
 
-const AllowedOrigins = [
+const allowedOrigins = [
   "http://localhost:3000",
   "https://fabularius.art",
   "https://www.fabularius.art",
@@ -9,45 +9,35 @@ const AllowedOrigins = [
   "https://fabularius-art-frontend.vercel.app", // Vercel Production
 ];
 
-const getCorsHeaders = (event: APIGatewayProxyEvent) => {
+const getCorsHeaders = (
+  event: APIGatewayProxyEvent
+): { [key: string]: string | boolean } => {
   const origin = event.headers["origin"] || event.headers["Origin"];
-  console.log("CORS Debug - Origin:", origin);
-  console.log("CORS Debug - All Headers:", JSON.stringify(event.headers));
 
-  const headers: { [key: string]: string | boolean } = {
+  const baseHeaders = {
     "Access-Control-Allow-Headers":
       "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent",
     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
     "Access-Control-Allow-Credentials": true,
   };
 
-  let originMatched = false;
   if (origin) {
-    for (const allowedOrigin of AllowedOrigins) {
-      if (
-        (typeof allowedOrigin === "string" && allowedOrigin === origin) ||
-        (allowedOrigin instanceof RegExp && allowedOrigin.test(origin))
-      ) {
-        headers["Access-Control-Allow-Origin"] = origin;
-        originMatched = true;
-        console.log("CORS Debug - Origin matched:", allowedOrigin);
-        break;
+    const isAllowed = allowedOrigins.some((allowed) => {
+      if (typeof allowed === "string") {
+        return allowed === origin;
       }
+      return allowed.test(origin);
+    });
+
+    if (isAllowed) {
+      return {
+        ...baseHeaders,
+        "Access-Control-Allow-Origin": origin,
+      };
     }
   }
 
-  // If no origin matched, but we're in production, allow Vercel deployment
-  if (!originMatched && origin) {
-    if (origin.includes("vercel.app") || origin.includes("fabularius")) {
-      headers["Access-Control-Allow-Origin"] = origin;
-      console.log("CORS Debug - Fallback origin allowed:", origin);
-    } else {
-      console.log("CORS Debug - Origin not allowed:", origin);
-    }
-  }
-
-  console.log("CORS Debug - Final headers:", headers);
-  return headers;
+  return baseHeaders;
 };
 
 export class ResponseUtil {

@@ -69,6 +69,7 @@ export const handler = async (
       createdAt: now.toISOString(),
       expiresAt: expiresAt.toISOString(),
       lastAccessedAt: now.toISOString(),
+      ttl: Math.floor(expiresAt.getTime() / 1000), // Unix timestamp for TTL
     };
 
     await DynamoDBService.createSession(sessionEntity);

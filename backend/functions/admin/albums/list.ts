@@ -2,7 +2,6 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "../../../shared/utils/dynamodb";
 import { ResponseUtil } from "../../../shared/utils/response";
 import { Album } from "../../../shared/types";
-import { AuthMiddleware } from "../auth/middleware";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -12,12 +11,6 @@ export const handler = async (
   }
 
   try {
-    // Validate admin session
-    const validation = await AuthMiddleware.validateSession(event);
-    if (!validation.isValid) {
-      return ResponseUtil.unauthorized(event, "Invalid or expired session");
-    }
-
     const limit = parseInt(event.queryStringParameters?.["limit"] || "20");
     const lastEvaluatedKey = event.queryStringParameters?.["cursor"]
       ? JSON.parse(

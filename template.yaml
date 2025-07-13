@@ -158,6 +158,14 @@ Resources:
       StageName: !Ref Environment
       Auth:
         DefaultAuthorizer: AWS_IAM
+        Authorizers:
+          AdminAuthorizer:
+            FunctionArn: !GetAtt AdminAuthorizerFunction.Arn
+            FunctionPayloadType: REQUEST
+            Identity:
+              Headers:
+                - Cookie
+            ReauthorizeEvery: 0
 
   # Lambda Functions
   GetAlbumsFunction:
@@ -198,6 +206,8 @@ Resources:
             RestApiId: !Ref ApiGateway
             Path: /albums
             Method: OPTIONS
+            Auth:
+              Authorizer: NONE
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
@@ -338,7 +348,7 @@ Resources:
             Path: /admin/me
             Method: GET
             Auth:
-              Authorizer: NONE
+              Authorizer: AdminAuthorizer
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -358,7 +368,7 @@ Resources:
             Path: /admin/albums/{albumId}
             Method: PUT
             Auth:
-              Authorizer: NONE
+              Authorizer: AdminAuthorizer
         OptionsUpdateAlbum:
           Type: Api
           Properties:
@@ -387,7 +397,7 @@ Resources:
             Path: /admin/albums/{albumId}
             Method: DELETE
             Auth:
-              Authorizer: NONE
+              Authorizer: AdminAuthorizer
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -408,7 +418,7 @@ Resources:
             Path: /admin/albums
             Method: GET
             Auth:
-              Authorizer: NONE
+              Authorizer: AdminAuthorizer
         OptionsAlbums:
           Type: Api
           Properties:
@@ -435,7 +445,7 @@ Resources:
             Path: /admin/albums/{albumId}/media/{mediaId}
             Method: DELETE
             Auth:
-              Authorizer: NONE
+              Authorizer: AdminAuthorizer
         OptionsDeleteMedia:
           Type: Api
           Properties:
@@ -464,7 +474,7 @@ Resources:
             Path: /admin/stats
             Method: GET
             Auth:
-              Authorizer: NONE
+              Authorizer: AdminAuthorizer
         OptionsStats:
           Type: Api
           Properties:
@@ -478,6 +488,18 @@ Resources:
             TableName: !Ref MediaTable
         - S3ReadPolicy:
             BucketName: !Ref MediaBucket
+
+  AdminAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-fabularius-admin-authorizer"
+      CodeUri: backend/
+      Handler: dist/functions/admin/auth/authorizer.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
 
 Outputs:
   ApiGatewayUrl:

@@ -160,6 +160,7 @@ export interface AdminSessionEntity {
   createdAt: string;
   expiresAt: string;
   lastAccessedAt: string;
+  ttl: number; // For DynamoDB TTL
 }
 
 // Admin Statistics Types
