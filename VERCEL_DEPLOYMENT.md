@@ -26,7 +26,7 @@ The project is configured with:
 
 1. **TypeScript Configuration**: Simplified strict TypeScript settings that were causing build failures on Vercel
 2. **Next.js Version**: Fixed version consistency between package.json and actual runtime
-3. **Vercel Configuration**: Added explicit Node.js runtime specification
+3. **Vercel Configuration**: Removed invalid functions runtime specification that was causing "Function Runtimes must have a valid version" error
 4. **Build Cache**: Cleared local build cache to resolve import path issues
 
 ## Deployment Steps
