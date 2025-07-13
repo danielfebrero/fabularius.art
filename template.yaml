@@ -159,7 +159,7 @@ Resources:
       Cors:
         AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
-        AllowOrigin: "'http://localhost:3000'"
+        AllowOrigin: "'http://localhost:3000,https://fabularius.art,https://fabularius-art-frontend.vercel.app'"
         AllowCredentials: true
       Auth:
         DefaultAuthorizer: AWS_IAM
