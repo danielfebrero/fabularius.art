@@ -114,8 +114,7 @@ export class S3Service {
 
     if (CLOUDFRONT_DOMAIN) {
       // Remove any existing protocol prefix to avoid duplication
-      const domain = CLOUDFRONT_DOMAIN.replace(/^https?:\/\//, "");
-      return `https://${domain}/${key}`;
+      return `${CLOUDFRONT_DOMAIN}/${key}`;
     }
 
     const region = process.env["AWS_REGION"] || "us-east-1";

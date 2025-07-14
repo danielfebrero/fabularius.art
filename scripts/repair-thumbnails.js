@@ -41,8 +41,7 @@ const THUMBNAIL_CONFIGS = {
 function getPublicUrl(key) {
   if (CLOUDFRONT_DOMAIN) {
     // Remove any existing protocol prefix to avoid duplication
-    const domain = CLOUDFRONT_DOMAIN.replace(/^https?:\/\//, "");
-    return `https://${domain}/${key}`;
+    return `${CLOUDFRONT_DOMAIN}/${key}`;
   }
   return `https://${S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${key}`;
 }
@@ -104,6 +103,9 @@ async function generateThumbnails(originalKey, imageBuffer) {
       });
 
       thumbnailUrls[configName] = getPublicUrl(thumbnailKey);
+      console.log(
+        `Generated ${configName} thumbnail: ${thumbnailUrls[configName]}`
+      );
     } catch (error) {
       console.error(
         `Failed to generate ${configName} thumbnail for ${originalKey}:`,
