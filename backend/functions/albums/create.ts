@@ -59,6 +59,14 @@ export const handler = async (
       album.coverImageUrl = albumEntity.coverImageUrl;
     }
 
+    try {
+      const revalidateUrl = `${process.env["FRONTEND_URL"]}/api/revalidate?secret=${process.env["REVALIDATE_SECRET"]}&tag=albums`;
+      await fetch(revalidateUrl, { method: "POST" });
+    } catch (revalidateError) {
+      console.error("Error triggering revalidation:", revalidateError);
+      // Do not block the response for revalidation failure
+    }
+
     return ResponseUtil.created(event, album);
   } catch (error) {
     console.error("Error creating album:", error);
