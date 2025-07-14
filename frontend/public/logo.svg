@@ -1,0 +1,16 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  
+  <rect width="1024" height="1024" fill="none"></rect>
+  
+  <path d="M308.384 670.368 Q421.504 602.496 489.376 489.376 Q602.496 421.504 715.616 353.632" stroke="#8B4513" stroke-width="96" stroke-linecap="round" fill="none"></path>
+  <path d="M353.632 715.616 Q421.504 602.496 534.624 534.624 Q602.496 421.504 670.368 308.384" stroke="#A0522D" stroke-width="64" stroke-linecap="round" fill="none"></path>
+  
+  <polygon points="828.736,195.264 692.992,240.512 828.736,285.76 738.24,195.264 783.488,331.008" fill="#FFD700" stroke="#FFA500" stroke-width="32"></polygon>
+  <circle cx="783.488" cy="240.512" r="64" fill="#FFFFFF" opacity="0.8"></circle>
+  
+  <line x1="783.488" y1="240.512" x2="783.488" y2="48.512" stroke="#FFD700" stroke-width="32" stroke-linecap="round" opacity="0.7"></line>
+  <line x1="783.488" y1="240.512" x2="975.488" y2="240.512" stroke="#FFD700" stroke-width="32" stroke-linecap="round" opacity="0.7"></line>
+  <line x1="783.488" y1="240.512" x2="911.488" y2="112.512" stroke="#FFD700" stroke-width="32" stroke-linecap="round" opacity="0.7"></line>
+  
+  <circle cx="783.488" cy="240.512" r="128" fill="none" stroke="#FFD700" stroke-width="32" opacity="0.5"></circle>
+</svg>
