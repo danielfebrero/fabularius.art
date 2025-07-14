@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { useAdminMedia } from "@/hooks/useAdminMedia";
+import { Media } from "@/types";
 import ResponsivePicture from "@/components/ui/ResponsivePicture";
 
 interface CoverImageSelectorProps {
@@ -34,7 +35,9 @@ export function CoverImageSelector({
     setSelectedCoverUrl(currentCoverUrl);
   }, [currentCoverUrl]);
 
-  const handleImageSelect = (imageUrl: string) => {
+  const handleImageSelect = (image: Media | { url: string }) => {
+    // Use the original full-size URL for cover selection (backend expects this)
+    const imageUrl = image.url;
     const newCoverUrl = selectedCoverUrl === imageUrl ? undefined : imageUrl;
     setSelectedCoverUrl(newCoverUrl);
     onCoverSelect(newCoverUrl);
@@ -52,7 +55,14 @@ export function CoverImageSelector({
           {selectedCoverUrl ? (
             <div className="relative inline-block">
               <img
-                src={selectedCoverUrl}
+                src={
+                  media.find((m) => m.url === selectedCoverUrl)?.thumbnailUrls
+                    ?.medium ||
+                  media.find((m) => m.url === selectedCoverUrl)?.thumbnailUrls
+                    ?.small ||
+                  media.find((m) => m.url === selectedCoverUrl)?.thumbnailUrl ||
+                  selectedCoverUrl
+                }
                 alt="Current cover"
                 className="w-32 h-32 object-cover rounded-lg border-2 border-admin-primary"
               />
@@ -81,7 +91,7 @@ export function CoverImageSelector({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => handleImageSelect("")}
+                onClick={() => handleImageSelect({ url: "" })}
                 disabled={disabled}
                 className="ml-2 text-destructive border-destructive/30 hover:bg-destructive hover:text-destructive-foreground"
               >
@@ -149,12 +159,18 @@ export function CoverImageSelector({
                       ? "border-admin-primary ring-2 ring-admin-primary/20"
                       : "border-border hover:border-border/80"
                   }`}
-                  onClick={() => handleImageSelect(image.url)}
+                  onClick={() => handleImageSelect(image)}
                 >
                   <div className="aspect-square">
                     <ResponsivePicture
                       thumbnailUrls={image.thumbnailUrls}
-                      fallbackUrl={image.thumbnailUrl || image.url}
+                      fallbackUrl={
+                        image.thumbnailUrls?.cover ||
+                        image.thumbnailUrls?.medium ||
+                        image.thumbnailUrls?.small ||
+                        image.thumbnailUrl ||
+                        image.url
+                      }
                       alt={image.originalFilename || image.filename}
                       className="w-full h-full object-cover"
                       context="cover-selector"
@@ -199,7 +215,7 @@ export function CoverImageSelector({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => handleImageSelect("")}
+                onClick={() => handleImageSelect({ url: "" })}
                 size="sm"
                 className="text-destructive border-destructive/30 hover:bg-destructive hover:text-destructive-foreground"
               >

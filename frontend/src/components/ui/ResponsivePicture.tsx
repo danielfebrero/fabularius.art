@@ -140,10 +140,11 @@ function getDefaultImageSrc(
       return thumbnailUrls.cover || fallbackUrl;
 
     case "admin":
-      // Admin mobile uses large for better readability
+      // Admin prioritizes smaller thumbnails for performance
       return (
-        thumbnailUrls.large ||
+        thumbnailUrls.small ||
         thumbnailUrls.medium ||
+        thumbnailUrls.large ||
         thumbnailUrls.xlarge ||
         fallbackUrl
       );

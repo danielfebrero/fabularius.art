@@ -259,7 +259,13 @@ export function MediaManager({
                     {mediaItem.mimeType.startsWith("image/") ? (
                       <ResponsivePicture
                         thumbnailUrls={mediaItem.thumbnailUrls}
-                        fallbackUrl={mediaItem.thumbnailUrl || mediaItem.url}
+                        fallbackUrl={
+                          mediaItem.thumbnailUrls?.small ||
+                          mediaItem.thumbnailUrls?.medium ||
+                          mediaItem.thumbnailUrls?.large ||
+                          mediaItem.thumbnailUrl ||
+                          mediaItem.url
+                        }
                         alt={mediaItem.originalFilename || mediaItem.filename}
                         className="w-full h-full object-cover"
                         context="admin"
