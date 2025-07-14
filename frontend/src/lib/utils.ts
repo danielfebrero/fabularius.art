@@ -183,6 +183,22 @@ export function selectThumbnailSize(
 
 /**
  * Get thumbnail URL with intelligent size selection and fallback chain
+ *
+ * @deprecated Use ResponsivePicture component instead for better mobile optimization.
+ * The ResponsivePicture component provides mobile-first responsive images with
+ * HTML picture elements, eliminating SSR/hydration issues.
+ *
+ * @example
+ * // Old way (deprecated)
+ * <img src={getThumbnailUrl(media, context)} alt="..." />
+ *
+ * // New way (recommended)
+ * <ResponsivePicture
+ *   thumbnailUrls={media.thumbnailUrls}
+ *   fallbackUrl={media.url}
+ *   context={context}
+ *   alt="..."
+ * />
  */
 export function getThumbnailUrl(
   media: {
@@ -194,6 +210,12 @@ export function getThumbnailUrl(
   screenSize?: "sm" | "md" | "lg" | "xl" | "2xl",
   columns?: number
 ): string {
+  // Log deprecation warning in development
+  if (process.env.NODE_ENV === "development") {
+    console.warn(
+      "getThumbnailUrl() is deprecated. Use ResponsivePicture component instead for better mobile optimization and SSR compatibility."
+    );
+  }
   const selectedSize = selectThumbnailSize(context, screenSize, columns);
 
   // Try to get the selected size first

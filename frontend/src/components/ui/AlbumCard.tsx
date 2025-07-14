@@ -1,12 +1,8 @@
 import Link from "next/link";
 import { Album } from "../../types/index";
 import { Card, CardContent, CardHeader } from "./Card";
-import {
-  cn,
-  formatDateShort,
-  getThumbnailUrl,
-  ThumbnailContext,
-} from "../../lib/utils";
+import { cn, formatDateShort, ThumbnailContext } from "../../lib/utils";
+import ResponsivePicture from "./ResponsivePicture";
 
 interface AlbumCardProps {
   album: Album;
@@ -32,18 +28,14 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
         <CardHeader className="p-0">
           <div className="aspect-square relative overflow-hidden rounded-t-lg bg-muted">
             {album.coverImageUrl ? (
-              <img
-                src={getThumbnailUrl(
-                  {
-                    url: album.coverImageUrl!,
-                    thumbnailUrls: album.thumbnailUrls,
-                  },
-                  context,
-                  undefined,
-                  columns
-                )}
+              <ResponsivePicture
+                thumbnailUrls={album.thumbnailUrls}
+                fallbackUrl={album.coverImageUrl}
                 alt={album.title}
                 className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                context={context}
+                columns={columns}
+                loading="lazy"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/10">

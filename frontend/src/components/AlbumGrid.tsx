@@ -3,13 +3,19 @@
 import { Album } from "../types/index";
 import { AlbumCard } from "./ui/AlbumCard";
 import { cn } from "../lib/utils";
+import { ThumbnailContext } from "../types/index";
 
 interface AlbumGridProps {
   albums: Album[];
   className?: string;
+  context?: ThumbnailContext;
 }
 
-export const AlbumGrid: React.FC<AlbumGridProps> = ({ albums, className }) => {
+export const AlbumGrid: React.FC<AlbumGridProps> = ({
+  albums,
+  className,
+  context = "homepage",
+}) => {
   if (albums.length === 0) {
     return (
       <div className={cn("text-center py-12", className)}>
@@ -39,11 +45,31 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({ albums, className }) => {
     );
   }
 
+  // Determine column count based on grid classes for responsive picture optimization
+  const getColumnCount = (): number => {
+    // Default grid: grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4
+    // This helps ResponsivePicture make optimal size decisions
+    if (typeof window !== "undefined") {
+      const width = window.innerWidth;
+      if (width >= 1280) return 4; // xl:grid-cols-4
+      if (width >= 1024) return 3; // lg:grid-cols-3
+      if (width >= 640) return 2; // sm:grid-cols-2
+      return 1; // grid-cols-1
+    }
+    // SSR fallback - assume medium layout
+    return 3;
+  };
+
   return (
     <div className={cn("space-y-6", className)}>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {albums.map((album) => (
-          <AlbumCard key={album.id} album={album} />
+          <AlbumCard
+            key={album.id}
+            album={album}
+            context={context}
+            columns={getColumnCount()}
+          />
         ))}
       </div>
     </div>

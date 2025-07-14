@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { useAdminMedia } from "@/hooks/useAdminMedia";
-import { getThumbnailUrl } from "@/lib/utils";
+import ResponsivePicture from "@/components/ui/ResponsivePicture";
 
 interface CoverImageSelectorProps {
   albumId: string;
@@ -152,10 +152,13 @@ export function CoverImageSelector({
                   onClick={() => handleImageSelect(image.url)}
                 >
                   <div className="aspect-square">
-                    <img
-                      src={getThumbnailUrl(image, "cover-selector")}
+                    <ResponsivePicture
+                      thumbnailUrls={image.thumbnailUrls}
+                      fallbackUrl={image.thumbnailUrl || image.url}
                       alt={image.originalFilename || image.filename}
                       className="w-full h-full object-cover"
+                      context="cover-selector"
+                      loading="lazy"
                     />
                   </div>
                   {isSelected && (

@@ -113,16 +113,19 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
       <div className={cn("space-y-6", className)}>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {media.map((mediaItem, index) => {
-            // Calculate columns based on current grid layout
-            const screenSize = getScreenSize();
-            const columns =
-              screenSize === "sm"
-                ? 2
-                : screenSize === "md"
-                ? 3
-                : screenSize === "lg"
-                ? 4
-                : 4;
+            // SSR-safe column calculation for ResponsivePicture optimization
+            // grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4
+            const getColumns = (): number => {
+              if (typeof window !== "undefined") {
+                const width = window.innerWidth;
+                if (width >= 1024) return 4; // lg:grid-cols-4
+                if (width >= 768) return 3; // md:grid-cols-3
+                if (width >= 640) return 2; // sm:grid-cols-2
+                return 1; // grid-cols-1
+              }
+              // SSR fallback - assume album page medium layout
+              return 3;
+            };
 
             return (
               <MediaCard
@@ -130,7 +133,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
                 media={mediaItem}
                 onClick={() => handleMediaClick(index)}
                 context="albums"
-                columns={columns}
+                columns={getColumns()}
               />
             );
           })}

@@ -1,7 +1,8 @@
 import React from "react";
 import { Media } from "../../types/index";
-import { cn, getThumbnailUrl, ThumbnailContext } from "../../lib/utils";
+import { cn, ThumbnailContext } from "../../lib/utils";
 import { PlayCircle } from "lucide-react";
+import ResponsivePicture from "./ResponsivePicture";
 
 interface MediaCardProps {
   media: Media;
@@ -38,10 +39,13 @@ export const MediaCard: React.FC<MediaCardProps> = ({
           playsInline
         />
       ) : (
-        <img
-          src={getThumbnailUrl(media, context, undefined, columns)}
+        <ResponsivePicture
+          thumbnailUrls={media.thumbnailUrls}
+          fallbackUrl={media.thumbnailUrl || media.url}
           alt={media.originalFilename || media.filename}
           className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+          context={context}
+          columns={columns}
           loading="lazy"
         />
       )}

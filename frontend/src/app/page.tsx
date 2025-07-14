@@ -52,7 +52,7 @@ export default async function HomePage() {
           </p>
         </div>
       ) : (
-        <AlbumGrid albums={albums} />
+        <AlbumGrid albums={albums} context="homepage" />
       )}
     </>
   );

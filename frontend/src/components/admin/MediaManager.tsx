@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { FileUpload } from "@/components/admin/FileUpload";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useAdminMedia } from "@/hooks/useAdminMedia";
-import { formatDateShort, formatFileSize, getThumbnailUrl } from "@/lib/utils";
+import { formatDateShort, formatFileSize } from "@/lib/utils";
+import ResponsivePicture from "@/components/ui/ResponsivePicture";
 
 interface MediaManagerProps {
   albumId: string;
@@ -256,10 +257,13 @@ export function MediaManager({
 
                   <div className="aspect-square">
                     {mediaItem.mimeType.startsWith("image/") ? (
-                      <img
-                        src={getThumbnailUrl(mediaItem, "admin")}
+                      <ResponsivePicture
+                        thumbnailUrls={mediaItem.thumbnailUrls}
+                        fallbackUrl={mediaItem.thumbnailUrl || mediaItem.url}
                         alt={mediaItem.originalFilename || mediaItem.filename}
                         className="w-full h-full object-cover"
+                        context="admin"
+                        loading="lazy"
                       />
                     ) : (
                       <video
