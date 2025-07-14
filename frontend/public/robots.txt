@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://pornspot.ai/sitemap.xml
+
+# Disallow admin pages from search engines
+Disallow: /admin/

@@ -6,13 +6,23 @@ import { AdminProvider } from "@/contexts/AdminContext";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "pornspot.ai - Minimalist Gallery",
+  title: "PornSpot.ai - AI Generated Porn Images & Videos",
   description:
-    "A beautiful, minimalist gallery for showcasing art and photography",
-  keywords: ["gallery", "art", "photography", "minimalist", "portfolio"],
-  authors: [{ name: "pornspot.ai" }],
-  creator: "pornspot.ai",
-  publisher: "pornspot.ai",
+    "Discover and create AI-generated porn content. Generate custom images and videos with prompts, LoRA selections, and more. Plans: Free (5 images/day, 1 video/week), Classic ($15/month: unlimited images, 7 videos/week), Plus ($25/month: unlimited everything).",
+  keywords: [
+    "AI porn",
+    "generated porn",
+    "AI adult content",
+    "porn images",
+    "porn videos",
+    "AI generator",
+    "adult AI",
+    "custom porn",
+    "LoRA porn",
+  ],
+  authors: [{ name: "PornSpot.ai" }],
+  creator: "PornSpot.ai",
+  publisher: "PornSpot.ai",
   formatDetection: {
     email: false,
     address: false,
@@ -22,17 +32,17 @@ export const metadata: Metadata = {
     process.env["NEXT_PUBLIC_SITE_URL"] || "https://pornspot.ai"
   ),
   openGraph: {
-    title: "pornspot.ai - Minimalist Gallery",
+    title: "PornSpot.ai - AI Generated Porn Images & Videos",
     description:
-      "A beautiful, minimalist gallery for showcasing art and photography",
+      "Discover and create AI-generated porn content. Generate custom images and videos with prompts, LoRA selections, and more. Plans: Free (5 images/day, 1 video/week), Classic ($15/month: unlimited images, 7 videos/week), Plus ($25/month: unlimited everything).",
     url: "https://pornspot.ai",
-    siteName: "pornspot.ai",
+    siteName: "PornSpot.ai",
     images: [
       {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "pornspot.ai Gallery",
+        url: "/website.png",
+        width: 1024,
+        height: 1024,
+        alt: "PornSpot.ai - AI Generated Porn",
       },
     ],
     locale: "en_US",
@@ -40,10 +50,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "pornspot.ai - Minimalist Gallery",
+    title: "PornSpot.ai - AI Generated Porn Images & Videos",
     description:
-      "A beautiful, minimalist gallery for showcasing art and photography",
-    images: ["/og-image.jpg"],
+      "Discover and create AI-generated porn content. Generate custom images and videos with prompts, LoRA selections, and more. Plans: Free (5 images/day, 1 video/week), Classic ($15/month: unlimited images, 7 videos/week), Plus ($25/month: unlimited everything).",
+    images: ["/website.png"],
   },
   robots: {
     index: true,
@@ -73,23 +83,9 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/favicon.ico" />
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/apple-touch-icon.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="32x32"
-          href="/favicon-32x32.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="16x16"
-          href="/favicon-16x16.png"
-        />
+        <link rel="apple-touch-icon" sizes="180x180" href="/180.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/16.png" />
         <meta name="theme-color" content="#000000" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
@@ -103,7 +99,7 @@ export default function RootLayout({
             <div className="container mx-auto px-4 py-8">
               <div className="text-center">
                 <p className="text-muted-foreground">
-                  &copy; 2024 pornspot.ai. All rights reserved.
+                  &copy; 2024 PornSpot.ai. All rights reserved.
                 </p>
               </div>
             </div>

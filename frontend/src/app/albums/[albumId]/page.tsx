@@ -23,9 +23,33 @@ export async function generateMetadata({
     };
   }
 
+  const albumDescription =
+    album.tags?.join(", ") ||
+    `Explore this AI-generated porn album: ${album.title}`;
+
   return {
-    title: `${album.title} - pornspot.ai`,
-    description: album.tags?.join(", ") || null,
+    title: `${album.title} - AI Generated Porn Album on PornSpot.ai`,
+    description: `${albumDescription}. Create your own custom adult content with PornSpot.ai.`,
+    keywords: [
+      "AI porn album",
+      "generated adult content",
+      "porn images",
+      "porn videos",
+      ...(album.tags || []),
+    ],
+    openGraph: {
+      title: `${album.title} - AI Generated Porn Album on PornSpot.ai`,
+      description: `${albumDescription}. Create your own custom adult content with PornSpot.ai.`,
+      url: `https://pornspot.ai/albums/${params.albumId}`,
+      type: "article",
+      images: [album.coverImageUrl || "/website.png"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${album.title} - AI Generated Porn Album on PornSpot.ai`,
+      description: `${albumDescription}. Create your own custom adult content with PornSpot.ai.`,
+      images: [album.coverImageUrl || "/website.png"],
+    },
   };
 }
 
