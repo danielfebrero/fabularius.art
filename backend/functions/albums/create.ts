@@ -59,9 +59,39 @@ export const handler = async (
       album.coverImageUrl = albumEntity.coverImageUrl;
     }
 
+    // Trigger revalidation
     try {
-      const revalidateUrl = `${process.env["FRONTEND_URL"]}/api/revalidate?secret=${process.env["REVALIDATE_SECRET"]}&tag=albums`;
-      await fetch(revalidateUrl, { method: "POST" });
+      const frontendUrl = process.env["FRONTEND_URL"];
+      const revalidateSecret = process.env["REVALIDATE_SECRET"];
+
+      if (!frontendUrl || !revalidateSecret) {
+        console.error("Missing revalidation environment variables:", {
+          frontendUrl: !!frontendUrl,
+          revalidateSecret: !!revalidateSecret,
+        });
+      } else {
+        const revalidateUrl = `${frontendUrl}/api/revalidate?secret=${revalidateSecret}&tag=albums`;
+        console.log(
+          "Triggering revalidation for URL:",
+          revalidateUrl.replace(revalidateSecret, "***")
+        );
+
+        const revalidateResponse = await fetch(revalidateUrl, {
+          method: "POST",
+        });
+
+        if (!revalidateResponse.ok) {
+          const errorText = await revalidateResponse.text();
+          console.error("Revalidation failed:", {
+            status: revalidateResponse.status,
+            statusText: revalidateResponse.statusText,
+            body: errorText,
+          });
+        } else {
+          const result = await revalidateResponse.json();
+          console.log("Revalidation successful:", result);
+        }
+      }
     } catch (revalidateError) {
       console.error("Error triggering revalidation:", revalidateError);
       // Do not block the response for revalidation failure

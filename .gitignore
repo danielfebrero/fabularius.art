@@ -187,3 +187,6 @@ temp/
 .env.production
 .env.staging
 .env.development
+
+# backend local environment file
+backend/env.development.json

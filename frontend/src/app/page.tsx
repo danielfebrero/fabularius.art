@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { getAlbums } from "@/lib/data";
 import { AlbumGrid } from "../components/AlbumGrid";
+import { Album } from "@/types";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -11,10 +12,22 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const { data, error } = await getAlbums({ isPublic: true, limit: 12 });
+  let albums: Album[] = [];
+  let error: string | null = null;
 
-  if (error) {
-    return <p className="text-center text-red-500">Error: {error}</p>;
+  try {
+    const result = await getAlbums({ isPublic: true, limit: 12 });
+
+    if (result.error) {
+      console.error("Error fetching albums:", result.error);
+      error = result.error;
+    } else {
+      albums = result.data?.albums || [];
+      console.log(`Successfully fetched ${albums.length} albums`);
+    }
+  } catch (fetchError) {
+    console.error("Exception while fetching albums:", fetchError);
+    error = String(fetchError);
   }
 
   return (
@@ -26,7 +39,21 @@ export default async function HomePage() {
           more.
         </p>
       </section>
-      <AlbumGrid albums={data?.albums || []} />
+
+      {error ? (
+        <div className="text-center py-8">
+          <p className="text-red-500 mb-4">Error loading albums: {error}</p>
+          <p className="text-gray-500">Please try refreshing the page.</p>
+        </div>
+      ) : albums.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-gray-500">
+            No albums found. Create your first album to get started!
+          </p>
+        </div>
+      ) : (
+        <AlbumGrid albums={albums} />
+      )}
     </>
   );
 }

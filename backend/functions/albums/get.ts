@@ -18,8 +18,11 @@ export const handler = async (
         )
       : undefined;
 
+    // If filtering by isPublic, we need to fetch more albums to account for filtering
+    const fetchLimit = isPublic !== undefined ? Math.max(limit * 3, 50) : limit;
+
     const { albums, lastEvaluatedKey: nextKey } =
-      await DynamoDBService.listAlbums(limit, lastEvaluatedKey);
+      await DynamoDBService.listAlbums(fetchLimit, lastEvaluatedKey);
 
     // Filter albums based on isPublic parameter
     let filteredAlbums = albums;
@@ -28,7 +31,14 @@ export const handler = async (
       filteredAlbums = albums.filter(
         (album) => album.isPublic === isPublicBool
       );
+
+      // Trim to requested limit after filtering
+      filteredAlbums = filteredAlbums.slice(0, limit);
     }
+
+    console.log(
+      `Fetched ${albums.length} albums, filtered to ${filteredAlbums.length} albums (isPublic: ${isPublic})`
+    );
 
     const albumsResponse: Album[] = filteredAlbums.map((album) => {
       const response: Album = {
