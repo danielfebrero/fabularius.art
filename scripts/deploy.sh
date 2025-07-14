@@ -154,6 +154,12 @@ install_backend_deps() {
 deploy_backend() {
     print_status "Building and deploying backend infrastructure to $ENVIRONMENT environment..."
     
+    # Install Sharp for Lambda and build TypeScript
+    print_status "Preparing Sharp module for Lambda environment..."
+    cd backend
+    npm run build:lambda
+    cd ..
+    
     # Build the SAM application
     sam build
     
@@ -201,6 +207,13 @@ main() {
     deploy_backend
     install_frontend_deps
     build_frontend
+    
+    # Restore Sharp for local development
+    print_status "Restoring Sharp for local development..."
+    cd backend
+    npm run install-sharp-dev
+    cd ..
+    print_status "Sharp restored for local development ✓"
     
     print_status "🎉 Deployment completed successfully!"
     print_warning "Don't forget to deploy your frontend to your hosting service (Vercel, Netlify, etc.)"

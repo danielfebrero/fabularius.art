@@ -1,5 +1,30 @@
-import sharp from "sharp";
 import { S3Service } from "./s3";
+
+// Dynamically import Sharp to handle platform-specific binaries
+let sharp: typeof import("sharp");
+
+const loadSharp = async () => {
+  if (!sharp) {
+    try {
+      sharp = (await import("sharp")).default;
+      console.log("Sharp module loaded successfully");
+    } catch (error) {
+      console.error("Failed to load Sharp module:", error);
+      console.error("Error details:", {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        platform: process.platform,
+        arch: process.arch,
+        nodeVersion: process.version,
+        awsExecutionEnv: process.env["AWS_EXECUTION_ENV"],
+      });
+      throw new Error(
+        "Sharp module not available. Please ensure Sharp is installed with the correct platform binaries for Lambda (linux-x64)."
+      );
+    }
+  }
+  return sharp;
+};
 
 export interface ThumbnailConfig {
   width: number;
@@ -41,8 +66,11 @@ export class ThumbnailService {
 
     for (const config of configs) {
       try {
+        // Load Sharp dynamically
+        const sharpInstance = await loadSharp();
+
         // Generate thumbnail buffer
-        const thumbnailBuffer = await sharp(imageBuffer)
+        const thumbnailBuffer = await sharpInstance(imageBuffer)
           .resize(config.width, config.height, {
             fit: "cover",
             position: "center",
@@ -117,8 +145,11 @@ export class ThumbnailService {
 
     for (const [sizeName, config] of configs) {
       try {
+        // Load Sharp dynamically
+        const sharpInstance = await loadSharp();
+
         // Generate thumbnail buffer
-        const thumbnailBuffer = await sharp(coverImageBuffer)
+        const thumbnailBuffer = await sharpInstance(coverImageBuffer)
           .resize(config.width, config.height, {
             fit: "cover",
             position: "center",

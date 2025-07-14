@@ -377,6 +377,8 @@ Resources:
       FunctionName: !Sub "${Environment}-pornspot-admin-update-album"
       CodeUri: backend/
       Handler: dist/functions/admin/albums/update.handler
+      MemorySize: 1024
+      Timeout: 60
       Events:
         PutUpdateAlbum:
           Type: Api
@@ -399,6 +401,10 @@ Resources:
             TableName: !Ref MediaTable
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
+        - S3ReadPolicy:
+            BucketName: !Ref MediaBucket
+        - S3WritePolicy:
+            BucketName: !Ref MediaBucket
 
   AdminDeleteAlbumFunction:
     Type: AWS::Serverless::Function
