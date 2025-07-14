@@ -86,6 +86,8 @@ Resources:
               - !Sub "https://www.${DomainName}"
               - !Sub "https://${DomainName}"
               - "https://*.vercel.app"
+              - "https://*.pornspot.ai"
+              - "https://pornspot-ai-frontend.vercel.app"
             MaxAge: 3000
           - AllowedHeaders:
               - "*"
@@ -256,9 +258,9 @@ Resources:
             Method: OPTIONS
             Auth:
               Authorizer: NONE
-            Auth:
-              Authorizer: NONE
       Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
         - S3WritePolicy:
@@ -467,6 +469,22 @@ Resources:
             TableName: !Ref MediaTable
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
+        - S3WritePolicy:
+            BucketName: !Ref MediaBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+                - dynamodb:UpdateItem
+              Resource: !GetAtt MediaTable.Arn
+            - Effect: Allow
+              Action:
+                - s3:DeleteObject
+              Resource: !Sub "arn:aws:s3:::${MediaBucket}/*"
+            - Effect: Allow
+              Action:
+                - s3:DeleteObject
+              Resource: !Sub "arn:aws:s3:::${MediaBucket}/*"
 
   AdminStatsFunction:
     Type: AWS::Serverless::Function

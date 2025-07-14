@@ -83,8 +83,6 @@ export function useAdminMedia() {
         await axios.put(uploadUrl, file, {
           headers: {
             "Content-Type": file.type,
-            "x-amz-meta-original-filename": file.name,
-            "x-amz-meta-album-id": albumId,
           },
           onUploadProgress: (progressEvent) => {
             const percentCompleted = progressEvent.total

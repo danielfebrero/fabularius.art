@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "../../../shared/utils/dynamodb";
 import { ResponseUtil } from "../../../shared/utils/response";
+import { S3Service } from "../../../shared/utils/s3";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -34,6 +35,10 @@ export const handler = async (
     }
 
     // Delete the media
+    // Delete S3 object
+    await S3Service.deleteObject(existingMedia.filename);
+
+    // Delete the media record from DynamoDB
     await DynamoDBService.deleteMedia(albumId, mediaId);
 
     // Decrement album media count

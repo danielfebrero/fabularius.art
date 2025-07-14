@@ -8,6 +8,7 @@ import {
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { v4 as uuidv4 } from "uuid";
 import * as path from "path";
+import { HttpRequest } from "@aws-sdk/types";
 
 const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
 
@@ -26,25 +27,6 @@ if (isLocal) {
 }
 
 const s3Client = new S3Client(s3Config);
-
-// Middleware to remove unsupported headers for LocalStack
-if (isLocal) {
-  s3Client.middlewareStack.add(
-    (next) => async (args) => {
-      // Remove from headers
-      if (args.request && (args.request as any).headers) {
-        delete (args.request as any).headers["x-amz-sdk-checksum-algorithm"];
-      }
-      // Remove from query params (for presigned URLs)
-      if (args.request && (args.request as any).query) {
-        delete (args.request as any).query["x-amz-sdk-checksum-algorithm"];
-        delete (args.request as any).query["x-amz-checksum-crc32"];
-      }
-      return next(args);
-    },
-    { step: "build", name: "removeChecksumHeader" }
-  );
-}
 
 const BUCKET_NAME = (
   isLocal ? "local-pornspot-media" : process.env["S3_BUCKET"]
@@ -72,30 +54,34 @@ export class S3Service {
       },
     });
 
+    // This command-level middleware is the key to solving the 403 error.
+    // It intercepts the request just before it's signed and removes the
+    // SDK-added checksum header, which is incompatible with browser uploads.
+    command.middlewareStack.add(
+      (next) => async (args) => {
+        const request = args.request as HttpRequest;
+        delete request.headers["x-amz-sdk-checksum-algorithm"];
+        return next(args);
+      },
+      {
+        step: "build",
+        name: "removeChecksumAlgorithmHeader",
+      }
+    );
+
     const rawUrl = await getSignedUrl(s3Client, command, {
       expiresIn,
       signableHeaders: new Set([
         "host",
+        "content-type",
         "x-amz-meta-original-filename",
         "x-amz-meta-album-id",
       ]),
     });
 
-    // Remove unwanted query params (x-amz-sdk-checksum-algorithm, x-amz-checksum-crc32)
-    const url = isLocal
-      ? rawUrl
-          .replace(/([&?])x-amz-sdk-checksum-algorithm=[^&]*/g, "$1")
-          .replace(/([&?])x-amz-checksum-crc32=[^&]*/g, "$1")
-          .replace(/([&?])x-id=PutObject/g, "$1x-id=PutObject") // keep this if needed
-          .replace(/[&?]+$/, "") // remove trailing & or ?
-          .replace(/\?&/, "?")
-          .replace(/&&/, "&")
-      : rawUrl;
-
-    // For docker hostname to localhost fix:
     const uploadUrl = isLocal
-      ? url.replace("pornspot-local-aws", "localhost")
-      : url;
+      ? rawUrl.replace("pornspot-local-aws", "localhost")
+      : rawUrl;
 
     return { uploadUrl, key };
   }
@@ -162,11 +148,9 @@ export class S3Service {
 
       if (isLocal) {
         const pathParts = urlObj.pathname.split("/");
-        // path is /<bucket-name>/<key>, so we slice(2) to get the key
         return pathParts.slice(2).join("/");
       }
 
-      // For remote S3, remove leading slash
       return urlObj.pathname.substring(1);
     } catch {
       return null;
