@@ -5,15 +5,15 @@ const {
 } = require("@aws-sdk/client-dynamodb");
 
 const client = new DynamoDBClient({
-  region: "local-env",
-  endpoint: "http://localhost:8000",
+  region: "us-east-1",
+  endpoint: "http://localhost:4566",
   credentials: {
-    accessKeyId: "fakeMyKeyId",
-    secretAccessKey: "fakeSecretAccessKey",
+    accessKeyId: "test",
+    secretAccessKey: "test",
   },
 });
 
-const tableName = "MediaTable";
+const tableName = "local-pornspot-media";
 
 const tableSchema = {
   TableName: tableName,
