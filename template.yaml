@@ -24,7 +24,7 @@ Globals:
         ENVIRONMENT: !Ref Environment
         DYNAMODB_TABLE: !Ref MediaTable
         S3_BUCKET: !Ref MediaBucket
-        CLOUDFRONT_DOMAIN: !GetAtt CloudFrontDistribution.DomainName
+        CLOUDFRONT_DOMAIN: !Sub "https://${CloudFrontDistribution.DomainName}"
 
 Resources:
   # DynamoDB Table - Single table design
