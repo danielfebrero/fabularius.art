@@ -28,9 +28,11 @@ const s3Client = new S3Client({ region: AWS_REGION });
 
 // Thumbnail configurations
 const THUMBNAIL_CONFIGS = {
-  small: { width: 300, height: 300, quality: 80, suffix: "_thumb_small" },
-  medium: { width: 600, height: 600, quality: 85, suffix: "_thumb_medium" },
-  large: { width: 1200, height: 1200, quality: 90, suffix: "_thumb_large" },
+  cover: { width: 128, height: 128, quality: 75, suffix: "_thumb_cover" },
+  small: { width: 240, height: 240, quality: 80, suffix: "_thumb_small" },
+  medium: { width: 300, height: 300, quality: 85, suffix: "_thumb_medium" },
+  large: { width: 365, height: 365, quality: 85, suffix: "_thumb_large" },
+  xlarge: { width: 600, height: 600, quality: 90, suffix: "_thumb_xlarge" },
 };
 
 /**
@@ -185,7 +187,7 @@ async function updateMediaThumbnails(albumId, mediaId, thumbnailUrls) {
         "#status": "status",
       },
       ExpressionAttributeValues: {
-        ":thumbnailUrl": thumbnailUrls.small, // Default to small thumbnail
+        ":thumbnailUrl": thumbnailUrls.small, // Default to small thumbnail (240px)
         ":thumbnailUrls": thumbnailUrls,
         ":status": "uploaded",
         ":updatedAt": new Date().toISOString(),

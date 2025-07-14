@@ -244,14 +244,20 @@ Run any script with the `--help` flag to see detailed usage information:
 
 ## Related Documentation
 
-- [Main Deployment Guide](../DEPLOYMENT.md) - Comprehensive deployment documentation
+- [Main Deployment Guide](../docs/DEPLOYMENT.md) - Comprehensive deployment documentation
 - [SAM Configuration](../samconfig.toml) - Environment-specific SAM settings
 - [Vercel Configuration](../vercel.json) - Frontend deployment settings
 - [AWS SAM Template](../template.yaml) - Infrastructure as Code definition
 
+---
+
+## Thumbnail System Scripts
+
 ### [`repair-thumbnails.js`](repair-thumbnails.js)
 
-Batch script to generate missing thumbnails for existing media files in the database.
+**🎯 NEW: 5-Size Thumbnail Generation System**
+
+Batch script to generate missing thumbnails for existing media files using the new intelligent 5-size thumbnail system.
 
 **Usage:**
 
@@ -270,45 +276,340 @@ Examples:
   npm run repair:thumbnails --batch-size 3     # Process 3 items concurrently
 ```
 
-**Features:**
+**✨ New 5-Size System Features:**
 
-- Generates all three thumbnail sizes (small: 300x300, medium: 600x600, large: 1200x1200)
-- Downloads original images from S3, creates thumbnails, and uploads them back
-- Updates DynamoDB records with thumbnail URLs and processing status
-- Concurrent processing with configurable batch size
-- Comprehensive error handling and logging
-- Dry-run mode for safe testing
-- Progress reporting and performance metrics
+- **Cover** (128×128px, 75% quality) - Album covers, small previews
+- **Small** (240×240px, 80% quality) - Dense grids, admin interfaces
+- **Medium** (300×300px, 85% quality) - General purpose, homepage
+- **Large** (365×365px, 85% quality) - High quality grids
+- **X-Large** (600×600px, 90% quality) - Mobile/small screens
+
+**How It Works:**
+
+1. Scans DynamoDB for media items without complete thumbnail sets
+2. Downloads original images from S3
+3. **Generates all 5 thumbnail sizes** using Sharp image processing
+4. Uploads thumbnails to organized S3 folder structure
+5. Updates DynamoDB with complete `thumbnailUrls` object
+6. Maintains backward compatibility with legacy `thumbnailUrl` field
+
+**Output Example:**
+
+```bash
+🚀 Thumbnail Repair Script - 5-Size System
+📅 2024-01-15T10:30:00.000Z
+📊 Found 45 media items needing thumbnail repair
+
+Processing batch 1/2 (25 items)...
+✅ album123/media456.jpg → Generated 5 sizes (cover, small, medium, large, xlarge)
+✅ album123/media789.jpg → Generated 5 sizes (cover, small, medium, large, xlarge)
+⚠️  album123/video012.mp4 → Skipped (video file)
+
+📊 Repair Results:
+   Items processed: 45
+   Thumbnails generated: 43 (5 sizes each = 215 total files)
+   Skipped: 2 (video files)
+   Errors: 0
+
+💾 Storage Impact:
+   Original images: ~450MB
+   Generated thumbnails: ~85MB
+   Space efficiency: 81% savings vs original
+```
 
 **Prerequisites:**
 
 - AWS CLI configured with appropriate permissions
-- Access to the S3 bucket containing original images
+- Access to S3 bucket containing original images
 - DynamoDB read/write permissions for media table
-- Node.js environment with required dependencies
-
-**How It Works:**
-
-1. Scans DynamoDB for media items without thumbnail URLs or with "pending" status
-2. Downloads original images from S3
-3. Generates three thumbnail sizes using Sharp image processing
-4. Uploads thumbnails to S3 in organized folder structure
-5. Updates DynamoDB records with thumbnail URLs and "uploaded" status
-6. Provides detailed logging and error reporting
-
-**Monitoring:**
-
-```bash
-# Monitor the script output for:
-- Number of items processed
-- Success/failure rates
-- Processing time per item
-- Any errors or warnings
-```
+- Node.js environment with Sharp dependencies
 
 **Production Considerations:**
 
-- Start with a small limit (--limit 10) to test in production
+- Start with small limits (`--limit 10`) to test in production
 - Monitor AWS costs during large batch operations
-- Use appropriate batch-size based on available memory and network
+- Use appropriate `--batch-size` based on Lambda memory and network
 - Consider running during off-peak hours for large datasets
+- Each item generates 5 thumbnail files, so plan storage accordingly
+
+**Migration from 3-Size System:**
+
+If migrating from the previous 3-size system, run cleanup scripts first:
+
+```bash
+# 1. Clean up old thumbnails
+npm run cleanup:thumbnails:all
+
+# 2. Generate new 5-size thumbnails
+npm run repair:thumbnails
+```
+
+---
+
+## Cleanup Scripts
+
+**🧹 Thumbnail Migration & Cleanup Tools**
+
+Scripts for migrating from old 3-size to new 5-size thumbnail system by cleaning up existing thumbnail data.
+
+### Overview
+
+The cleanup scripts remove legacy thumbnail data to prepare for the new 5-size system:
+
+**Legacy Patterns Removed:**
+
+- Files in `/thumbnails/` directories with old suffixes
+- Database fields: old `thumbnailUrl` references
+- Files with `_thumb_small`, `_thumb_medium`, `_thumb_large` suffixes
+
+**New System Preparation:**
+
+- Clean slate for 5 new sizes: cover (128px), small (240px), medium (300px), large (365px), xlarge (600px)
+- Intelligent responsive selection system
+- Backward compatibility maintained
+
+### Scripts
+
+#### 1. S3 Cleanup ([`cleanup-thumbnails-s3.js`](cleanup-thumbnails-s3.js))
+
+Removes all legacy thumbnail files from S3 bucket.
+
+**Usage:**
+
+```bash
+# Dry run (preview what would be deleted)
+npm run cleanup:thumbnails:s3 -- --dry-run
+
+# Actual cleanup
+S3_BUCKET=your-bucket npm run cleanup:thumbnails:s3
+
+# Help
+node scripts/cleanup-thumbnails-s3.js --help
+```
+
+**What it does:**
+
+- Lists all objects with `/thumbnails/` prefix
+- Identifies and deletes legacy thumbnail patterns
+- Provides detailed progress logging and batch deletion
+- Supports safe dry-run mode for testing
+
+#### 2. DynamoDB Cleanup ([`cleanup-thumbnails-db.js`](cleanup-thumbnails-db.js))
+
+Removes legacy thumbnail references from database.
+
+**Usage:**
+
+```bash
+# Dry run (preview what would be updated)
+npm run cleanup:thumbnails:db -- --dry-run
+
+# Actual cleanup
+DYNAMODB_TABLE=your-table npm run cleanup:thumbnails:db
+
+# Help
+node scripts/cleanup-thumbnails-db.js --help
+```
+
+**What it does:**
+
+- Scans all Media entities in DynamoDB
+- Removes legacy `thumbnailUrl` and `thumbnailUrls` fields
+- Resets status to "uploaded" for reprocessing
+- Updates `updatedAt` timestamp
+
+#### 3. Complete Cleanup ([`cleanup-thumbnails-all.js`](cleanup-thumbnails-all.js))
+
+Orchestrates both S3 and DynamoDB cleanup in sequence.
+
+**Usage:**
+
+```bash
+# Complete dry run
+npm run cleanup:thumbnails:all -- --dry-run
+
+# Complete cleanup
+S3_BUCKET=your-bucket DYNAMODB_TABLE=your-table npm run cleanup:thumbnails:all
+
+# Selective cleanup
+npm run cleanup:thumbnails:all -- --skip-db    # Only S3
+npm run cleanup:thumbnails:all -- --skip-s3    # Only DynamoDB
+```
+
+### Environment Variables
+
+| Variable         | Required             | Description                           |
+| ---------------- | -------------------- | ------------------------------------- |
+| `S3_BUCKET`      | Yes (for S3 cleanup) | S3 bucket name containing media files |
+| `DYNAMODB_TABLE` | Yes (for DB cleanup) | DynamoDB table name                   |
+| `AWS_REGION`     | No                   | AWS region (default: us-east-1)       |
+
+### Safety Features
+
+#### Dry Run Mode
+
+All scripts support `--dry-run` to preview changes without execution:
+
+```bash
+npm run cleanup:thumbnails:all -- --dry-run
+```
+
+#### Confirmation Prompts
+
+Scripts require explicit confirmation for destructive operations:
+
+```
+⚠️  WARNING: This will permanently delete thumbnail data!
+   - Legacy S3 thumbnail files will be deleted
+   - Legacy DynamoDB thumbnail references will be removed
+   This action cannot be undone.
+
+Are you sure you want to proceed? (y/N):
+```
+
+#### Progress Logging
+
+Detailed progress information:
+
+- Object/entity counts and processing status
+- Batch operation progress
+- Success/error summaries with detailed reporting
+- Performance metrics and timing
+
+### Migration Workflow
+
+**Complete Migration Process:**
+
+```bash
+# 1. Assessment (dry-run)
+npm run cleanup:thumbnails:all -- --dry-run
+
+# 2. Backup verification (ensure you have backups)
+echo "Verify backups are in place before proceeding"
+
+# 3. Execute cleanup
+npm run cleanup:thumbnails:all
+
+# 4. Generate new 5-size thumbnails
+npm run repair:thumbnails
+
+# 5. Verify new system
+npm run repair:thumbnails -- --dry-run --limit 10
+```
+
+### Example Output
+
+**S3 Cleanup:**
+
+```bash
+🚀 S3 Thumbnail Cleanup Script
+📅 2024-01-15T10:30:00.000Z
+🪣 S3 Bucket: my-production-bucket
+🌍 AWS Region: us-east-1
+
+🔍 Scanning for legacy thumbnails...
+📊 Found 347 legacy thumbnail objects:
+   - /thumbnails/ directories: 215 objects
+   - _thumb_small suffix: 44 objects
+   - _thumb_medium suffix: 44 objects
+   - _thumb_large suffix: 44 objects
+   Total size: 67.3 MB
+
+🗑️  Deleting in batches...
+   ✅ Batch 1/4: 100 objects deleted
+   ✅ Batch 2/4: 100 objects deleted
+   ✅ Batch 3/4: 100 objects deleted
+   ✅ Batch 4/4: 47 objects deleted
+
+✅ S3 cleanup completed! Ready for 5-size system.
+```
+
+**Database Cleanup:**
+
+```bash
+🚀 DynamoDB Thumbnail Cleanup Script
+📅 2024-01-15T10:35:00.000Z
+📋 DynamoDB Table: production-media-table
+
+🔍 Scanning for legacy thumbnail references...
+📊 Found 123 media entities with legacy data:
+   - With thumbnailUrl field: 89
+   - With old thumbnailUrls: 54
+   - Status needs reset: 123
+
+🔄 Cleaning database records...
+   ✅ Batch 1/5: 25 entities updated
+   ✅ Batch 2/5: 25 entities updated
+   ✅ Batch 3/5: 25 entities updated
+   ✅ Batch 4/5: 25 entities updated
+   ✅ Batch 5/5: 23 entities updated
+
+✅ Database cleanup completed! Ready for repair script.
+```
+
+### Error Recovery
+
+**If S3 cleanup fails:**
+
+```bash
+# Skip S3 and clean database only
+npm run cleanup:thumbnails:all -- --skip-s3
+```
+
+**If database cleanup fails:**
+
+```bash
+# Skip database and retry S3 only
+npm run cleanup:thumbnails:all -- --skip-db
+```
+
+**Complete failure recovery:**
+
+1. Check AWS credentials and permissions
+2. Verify environment variables are set correctly
+3. Check network connectivity and service availability
+4. Run individual scripts with `--dry-run` to diagnose issues
+5. Check CloudWatch logs for detailed error information
+
+### Next Steps After Cleanup
+
+1. ✅ All legacy thumbnail files removed from S3
+2. ✅ All legacy thumbnail references removed from database
+3. ✅ Media entities reset to "uploaded" status
+4. 🚀 **Ready to run repair script for 5-size system**
+
+```bash
+# Generate new 5-size thumbnails
+npm run repair:thumbnails
+
+# Verify intelligent selection working
+# Frontend will automatically use new system
+```
+
+---
+
+## Production Deployment Checklist
+
+### Pre-Deployment
+
+- [ ] **Backup Verification**: Ensure database and S3 backups are current
+- [ ] **Cleanup Testing**: Run all cleanup scripts with `--dry-run` in staging
+- [ ] **Migration Planning**: Schedule maintenance window for migration
+- [ ] **Monitoring Setup**: Prepare CloudWatch alarms for thumbnail generation
+
+### Deployment
+
+- [ ] **Deploy Backend**: Update Lambda functions with 5-size generation
+- [ ] **Run Cleanup**: Execute cleanup scripts to remove legacy thumbnails
+- [ ] **Run Repair**: Generate new 5-size thumbnails for existing media
+- [ ] **Deploy Frontend**: Update with intelligent selection logic
+- [ ] **Verify Operation**: Test thumbnail generation and selection
+
+### Post-Deployment
+
+- [ ] **Performance Monitoring**: Verify improved loading speeds
+- [ ] **Cost Analysis**: Monitor S3 storage and bandwidth costs
+- [ ] **User Experience**: Validate responsive thumbnail selection
+- [ ] **Error Monitoring**: Check for any thumbnail generation failures
+
+For comprehensive migration procedures, see [`docs/THUMBNAIL_MIGRATION.md`](../docs/THUMBNAIL_MIGRATION.md).

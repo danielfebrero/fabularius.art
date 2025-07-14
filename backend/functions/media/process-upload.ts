@@ -109,7 +109,7 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
         // Update the media record with thumbnail URLs
         await DynamoDBService.updateMedia(albumId, mediaItem.id!, {
           thumbnailUrl:
-            thumbnailUrls["small"] || Object.values(thumbnailUrls)[0], // Default to small or first available
+            thumbnailUrls["small"] || Object.values(thumbnailUrls)[0], // Default to small (240px) or first available
           thumbnailUrls,
           status: "uploaded",
           updatedAt: new Date().toISOString(),

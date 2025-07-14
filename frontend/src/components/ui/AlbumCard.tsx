@@ -1,14 +1,26 @@
 import Link from "next/link";
 import { Album } from "../../types/index";
 import { Card, CardContent, CardHeader } from "./Card";
-import { cn, formatDateShort } from "../../lib/utils";
+import {
+  cn,
+  formatDateShort,
+  getThumbnailUrl,
+  ThumbnailContext,
+} from "../../lib/utils";
 
 interface AlbumCardProps {
   album: Album;
   className?: string;
+  context?: ThumbnailContext;
+  columns?: number;
 }
 
-export const AlbumCard: React.FC<AlbumCardProps> = ({ album, className }) => {
+export const AlbumCard: React.FC<AlbumCardProps> = ({
+  album,
+  className,
+  context = "homepage",
+  columns,
+}) => {
   return (
     <Link href={`/albums/${album.id}`} className="group block">
       <Card

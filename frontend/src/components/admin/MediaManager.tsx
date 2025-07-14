@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { FileUpload } from "@/components/admin/FileUpload";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useAdminMedia } from "@/hooks/useAdminMedia";
-import { formatDateShort, formatFileSize } from "@/lib/utils";
+import { formatDateShort, formatFileSize, getThumbnailUrl } from "@/lib/utils";
 
 interface MediaManagerProps {
   albumId: string;
@@ -257,11 +257,7 @@ export function MediaManager({
                   <div className="aspect-square">
                     {mediaItem.mimeType.startsWith("image/") ? (
                       <img
-                        src={
-                          mediaItem.thumbnailUrls?.small ||
-                          mediaItem.thumbnailUrl ||
-                          mediaItem.url
-                        }
+                        src={getThumbnailUrl(mediaItem, "admin")}
                         alt={mediaItem.originalFilename || mediaItem.filename}
                         className="w-full h-full object-cover"
                       />

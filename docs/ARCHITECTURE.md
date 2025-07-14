@@ -76,8 +76,8 @@ pornspot.ai is built using a modern serverless architecture that provides scalab
 
 ### Storage (S3 + CloudFront)
 
-- **S3 Bucket**: Stores original images and thumbnails
-- **CloudFront**: Global CDN for fast content delivery
+- **S3 Bucket**: Stores original images and 5-size thumbnail system
+- **CloudFront**: Global CDN for fast content delivery with intelligent caching
 - **Organization**:
   ```
   albums/
@@ -86,8 +86,11 @@ pornspot.ai is built using a modern serverless architecture that provides scalab
   │   │   ├── {mediaId}.jpg
   │   │   └── {mediaId}.png
   │   └── thumbnails/
-  │       ├── {mediaId}_thumb.jpg
-  │       └── {mediaId}_thumb.png
+  │       ├── {filename}_thumb_cover.jpg    # 128×128px (75% quality)
+  │       ├── {filename}_thumb_small.jpg    # 240×240px (80% quality)
+  │       ├── {filename}_thumb_medium.jpg   # 300×300px (85% quality)
+  │       ├── {filename}_thumb_large.jpg    # 365×365px (85% quality)
+  │       └── {filename}_thumb_xlarge.jpg   # 600×600px (90% quality)
   ```
 
 ### API Gateway

@@ -5,6 +5,7 @@ import { useAdminMedia } from "../../../hooks/useAdminMedia";
 import { useAdminAlbums } from "../../../hooks/useAdminAlbums";
 import { ConfirmDialog } from "../../../components/admin/ConfirmDialog";
 import { Media, Album } from "../../../types";
+import { getThumbnailUrl } from "../../../lib/utils";
 
 export default function AdminMediaPage() {
   const { albums, loading: albumsLoading, fetchAlbums } = useAdminAlbums();
@@ -255,11 +256,7 @@ export default function AdminMediaPage() {
               >
                 <div className="aspect-square relative">
                   <img
-                    src={
-                      media.thumbnailUrls?.small ||
-                      media.thumbnailUrl ||
-                      media.url
-                    }
+                    src={getThumbnailUrl(media, "admin")}
                     alt={media.filename}
                     className="w-full h-full object-cover"
                   />

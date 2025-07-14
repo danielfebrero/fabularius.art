@@ -1,5 +1,9 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { ThumbnailSize, ThumbnailContext, ThumbnailUrls } from "../types/index";
+
+// Re-export types for convenience
+export type { ThumbnailSize, ThumbnailContext };
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -76,4 +80,164 @@ export function throttle<T extends (..._args: any[]) => any>(
       setTimeout(() => (inThrottle = false), limit);
     }
   };
+}
+
+// Responsive breakpoints (matching Tailwind defaults)
+export const BREAKPOINTS = {
+  sm: 640,
+  md: 768,
+  lg: 1024,
+  xl: 1280,
+  "2xl": 1536,
+} as const;
+
+/**
+ * Get current screen size category based on window width
+ */
+export function getScreenSize(): "sm" | "md" | "lg" | "xl" | "2xl" {
+  if (typeof window === "undefined") return "lg"; // SSR fallback
+
+  const width = window.innerWidth;
+
+  if (width < BREAKPOINTS.sm) return "sm";
+  if (width < BREAKPOINTS.md) return "md";
+  if (width < BREAKPOINTS.lg) return "lg";
+  if (width < BREAKPOINTS.xl) return "xl";
+  return "2xl";
+}
+
+/**
+ * Select optimal thumbnail size based on context and screen size
+ */
+export function selectThumbnailSize(
+  context: ThumbnailContext,
+  screenSize?: "sm" | "md" | "lg" | "xl" | "2xl",
+  columns?: number
+): ThumbnailSize {
+  const size = screenSize || getScreenSize();
+
+  // Cover selector always uses cover size
+  if (context === "cover-selector") {
+    return "cover";
+  }
+
+  // Homepage logic
+  if (context === "homepage") {
+    switch (size) {
+      case "sm":
+      case "md":
+        return "xlarge"; // 600px for small/medium screens
+      case "lg":
+        return "large"; // 365px for large screens
+      case "xl":
+      case "2xl":
+      default:
+        return "medium"; // 300px for very large screens
+    }
+  }
+
+  // Albums logic
+  if (context === "albums") {
+    switch (size) {
+      case "sm":
+      case "md":
+        return "xlarge"; // 600px for small/medium screens
+      case "lg":
+        return "medium"; // 300px for large screens
+      case "xl":
+        return columns && columns >= 6 ? "small" : "medium"; // 240px or 300px based on columns
+      case "2xl":
+      default:
+        return "large"; // 365px for very large screens
+    }
+  }
+
+  // Admin context - use medium as default for good balance
+  if (context === "admin") {
+    switch (size) {
+      case "sm":
+        return "large"; // 365px for small admin screens
+      case "md":
+        return "medium"; // 300px for medium admin screens
+      case "lg":
+      case "xl":
+      case "2xl":
+      default:
+        return "small"; // 240px for large admin screens (more content fits)
+    }
+  }
+
+  // Default fallback - responsive based on screen size
+  switch (size) {
+    case "sm":
+      return "large";
+    case "md":
+      return "medium";
+    case "lg":
+    case "xl":
+    case "2xl":
+    default:
+      return "small";
+  }
+}
+
+/**
+ * Get thumbnail URL with intelligent size selection and fallback chain
+ */
+export function getThumbnailUrl(
+  media: {
+    thumbnailUrls?: ThumbnailUrls;
+    thumbnailUrl?: string;
+    url: string;
+  },
+  context: ThumbnailContext = "default",
+  screenSize?: "sm" | "md" | "lg" | "xl" | "2xl",
+  columns?: number
+): string {
+  const selectedSize = selectThumbnailSize(context, screenSize, columns);
+
+  // Try to get the selected size first
+  if (media.thumbnailUrls?.[selectedSize]) {
+    return media.thumbnailUrls[selectedSize];
+  }
+
+  // Fallback chain: try other sizes in order of preference
+  const fallbackOrder: ThumbnailSize[] = [
+    "medium",
+    "small",
+    "large",
+    "xlarge",
+    "cover",
+  ];
+
+  for (const size of fallbackOrder) {
+    if (media.thumbnailUrls?.[size]) {
+      return media.thumbnailUrls[size];
+    }
+  }
+
+  // Final fallbacks
+  return media.thumbnailUrl || media.url;
+}
+
+/**
+ * Get the appropriate thumbnail size name for a given context
+ * Useful for debugging or displaying size information
+ */
+export function getThumbnailSizeName(
+  context: ThumbnailContext,
+  screenSize?: "sm" | "md" | "lg" | "xl" | "2xl",
+  columns?: number
+): string {
+  const size = selectThumbnailSize(context, screenSize, columns);
+
+  const sizeNames = {
+    cover: "Cover (128px)",
+    small: "Small (240px)",
+    medium: "Medium (300px)",
+    large: "Large (365px)",
+    xlarge: "X-Large (600px)",
+  };
+
+  return sizeNames[size];
 }

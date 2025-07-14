@@ -5,7 +5,7 @@ import { Media } from "../types/index";
 import { MediaCard } from "./ui/MediaCard";
 import { Lightbox } from "./ui/Lightbox";
 import { Button } from "./ui/Button";
-import { cn } from "../lib/utils";
+import { cn, getScreenSize } from "../lib/utils";
 import { getMediaForAlbum } from "../lib/data";
 
 interface MediaGalleryProps {
@@ -112,13 +112,28 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
     <>
       <div className={cn("space-y-6", className)}>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {media.map((mediaItem, index) => (
-            <MediaCard
-              key={mediaItem.id}
-              media={mediaItem}
-              onClick={() => handleMediaClick(index)}
-            />
-          ))}
+          {media.map((mediaItem, index) => {
+            // Calculate columns based on current grid layout
+            const screenSize = getScreenSize();
+            const columns =
+              screenSize === "sm"
+                ? 2
+                : screenSize === "md"
+                ? 3
+                : screenSize === "lg"
+                ? 4
+                : 4;
+
+            return (
+              <MediaCard
+                key={mediaItem.id}
+                media={mediaItem}
+                onClick={() => handleMediaClick(index)}
+                context="albums"
+                columns={columns}
+              />
+            );
+          })}
         </div>
 
         {loading && (

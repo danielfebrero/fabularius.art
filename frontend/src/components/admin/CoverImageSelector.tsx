@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { useAdminMedia } from "@/hooks/useAdminMedia";
+import { getThumbnailUrl } from "@/lib/utils";
 
 interface CoverImageSelectorProps {
   albumId: string;
@@ -152,11 +153,7 @@ export function CoverImageSelector({
                 >
                   <div className="aspect-square">
                     <img
-                      src={
-                        image.thumbnailUrls?.small ||
-                        image.thumbnailUrl ||
-                        image.url
-                      }
+                      src={getThumbnailUrl(image, "cover-selector")}
                       alt={image.originalFilename || image.filename}
                       className="w-full h-full object-cover"
                     />

@@ -22,7 +22,13 @@ export interface Media {
   height?: number;
   url: string;
   thumbnailUrl?: string;
-  thumbnailUrls?: { small?: string; medium?: string; large?: string };
+  thumbnailUrls?: {
+    cover?: string;
+    small?: string;
+    medium?: string;
+    large?: string;
+    xlarge?: string;
+  };
   createdAt: string;
   updatedAt: string;
   metadata?: Record<string, any>;
@@ -89,4 +95,21 @@ export interface AdminStats {
   publicAlbums: number;
   storageUsed: string;
   storageUsedBytes: number;
+}
+
+// Thumbnail system types
+export type ThumbnailSize = "cover" | "small" | "medium" | "large" | "xlarge";
+export type ThumbnailContext =
+  | "cover-selector"
+  | "homepage"
+  | "albums"
+  | "admin"
+  | "default";
+
+export interface ThumbnailUrls {
+  cover?: string;
+  small?: string;
+  medium?: string;
+  large?: string;
+  xlarge?: string;
 }

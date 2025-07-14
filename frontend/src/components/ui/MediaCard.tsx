@@ -1,18 +1,22 @@
 import React from "react";
 import { Media } from "../../types/index";
-import { cn } from "../../lib/utils";
+import { cn, getThumbnailUrl, ThumbnailContext } from "../../lib/utils";
 import { PlayCircle } from "lucide-react";
 
 interface MediaCardProps {
   media: Media;
   className?: string;
   onClick?: () => void;
+  context?: ThumbnailContext;
+  columns?: number;
 }
 
 export const MediaCard: React.FC<MediaCardProps> = ({
   media,
   className,
   onClick,
+  context = "default",
+  columns,
 }) => {
   const isVideo = media.mimeType.startsWith("video/");
 
@@ -35,7 +39,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
         />
       ) : (
         <img
-          src={media.thumbnailUrls?.small || media.thumbnailUrl || media.url}
+          src={getThumbnailUrl(media, context, undefined, columns)}
           alt={media.originalFilename || media.filename}
           className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
           loading="lazy"
