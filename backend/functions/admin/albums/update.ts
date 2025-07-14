@@ -1,16 +1,19 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { DynamoDBService } from "../../../shared/utils/dynamodb";
 import { ResponseUtil } from "../../../shared/utils/response";
 import { UpdateAlbumRequest } from "../../../shared/types";
-import { S3Service } from "../../../shared/utils/s3";
-import { ThumbnailService } from "../../../shared/utils/thumbnail";
 
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  // Handle OPTIONS requests immediately before importing any heavy dependencies
   if (event.httpMethod === "OPTIONS") {
     return ResponseUtil.noContent(event);
   }
+
+  // Import heavy dependencies only when needed (after OPTIONS check)
+  const { DynamoDBService } = await import("../../../shared/utils/dynamodb");
+  const { S3Service } = await import("../../../shared/utils/s3");
+  const { ThumbnailService } = await import("../../../shared/utils/thumbnail");
 
   try {
     const albumId = event.pathParameters?.["albumId"];

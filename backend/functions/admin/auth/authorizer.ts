@@ -38,6 +38,41 @@ export const handler = async (
   console.log("Authorizer event:", JSON.stringify(event, null, 2));
   console.log("Authorizer method ARN:", event.methodArn);
 
+  // Allow OPTIONS requests to pass through without authentication (CORS preflight)
+  if (event.httpMethod === "OPTIONS") {
+    console.log("OPTIONS request detected, allowing without authentication");
+    try {
+      const { methodArn } = event;
+      const parts = methodArn.split(":");
+      const region = parts[3];
+      const accountId = parts[4];
+      const apiGatewayArnPart = parts[5];
+
+      if (apiGatewayArnPart && region && accountId) {
+        const [apiId, stage] = apiGatewayArnPart.split("/");
+        if (apiId && stage) {
+          const wildcardResource = `arn:aws:execute-api:${region}:${accountId}:${apiId}/${stage}/*`;
+
+          return generatePolicy("anonymous", "Allow", wildcardResource, {
+            requestType: "OPTIONS",
+          });
+        }
+      }
+
+      // Fallback: allow the specific resource if ARN parsing fails
+      console.log("ARN parsing failed for OPTIONS, allowing specific resource");
+      return generatePolicy("anonymous", "Allow", event.methodArn, {
+        requestType: "OPTIONS",
+      });
+    } catch (error) {
+      console.error("Error handling OPTIONS request:", error);
+      // Even if there's an error, allow OPTIONS to pass through
+      return generatePolicy("anonymous", "Allow", event.methodArn, {
+        requestType: "OPTIONS",
+      });
+    }
+  }
+
   try {
     const cookieHeader = event.headers?.["Cookie"] || event.headers?.["cookie"];
 

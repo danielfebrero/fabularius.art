@@ -420,6 +420,15 @@ Resources:
             TableName: !Ref MediaTable
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+                - dynamodb:Query
+                - dynamodb:Scan
+              Resource:
+                - !GetAtt MediaTable.Arn
+                - !Sub "${MediaTable.Arn}/index/*"
 
   AdminListAlbumsFunction:
     Type: AWS::Serverless::Function

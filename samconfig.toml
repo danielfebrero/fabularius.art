@@ -50,7 +50,7 @@ s3_prefix = "pornspot-ai"
 region = "us-east-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=dev FrontendUrl=http://localhost:3000 RevalidateSecret=8148d8f2a8542a3bd8232c0a8fae183cf6072facec9bfa6e08ea7660ad713378"
+parameter_overrides = "Environment=dev"
 
 [dev.deploy]
 [dev.deploy.parameters]
@@ -68,7 +68,7 @@ s3_prefix = "pornspot-ai"
 region = "us-east-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=staging FrontendUrl=https://pornspot-ai-frontend-staging.vercel.app RevalidateSecret=8148d8f2a8542a3bd8232c0a8fae183cf6072facec9bfa6e08ea7660ad713378"
+parameter_overrides = "Environment=staging"
 
 [staging.deploy]
 [staging.deploy.parameters]
@@ -86,7 +86,7 @@ s3_prefix = "pornspot-ai"
 region = "us-east-1"
 confirm_changeset = true
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=prod FrontendUrl=https://pornspot-ai-frontend.vercel.app RevalidateSecret=8148d8f2a8542a3bd8232c0a8fae183cf6072facec9bfa6e08ea7660ad713378"
+parameter_overrides = "Environment=prod"
 
 [prod.deploy]
 [prod.deploy.parameters]
