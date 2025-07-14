@@ -23,6 +23,13 @@ if (isLocal) {
       secretAccessKey: "test",
     },
     forcePathStyle: true, // Required for LocalStack
+    // Disable checksums for LocalStack compatibility
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED",
+  };
+} else {
+  s3Config = {
+    region: process.env["AWS_REGION"] || "us-east-1",
   };
 }
 
@@ -52,24 +59,37 @@ export class S3Service {
         "original-filename": filename,
         "album-id": albumId,
       },
+      // Explicitly disable checksums for LocalStack compatibility
+      ...(isLocal && { ChecksumAlgorithm: undefined }),
     });
 
-    // This command-level middleware is the key to solving the 403 error.
-    // It intercepts the request just before it's signed and removes the
-    // SDK-added checksum header, which is incompatible with browser uploads.
+    // Enhanced middleware to remove checksum-related headers and parameters
+    // that cause issues with LocalStack and browser uploads
     command.middlewareStack.add(
       (next) => async (args) => {
         const request = args.request as HttpRequest;
+
+        // Remove checksum-related headers
         delete request.headers["x-amz-sdk-checksum-algorithm"];
+        delete request.headers["x-amz-checksum-crc32"];
+        delete request.headers["x-amz-content-sha256"];
+
+        // Remove checksum from query parameters if present
+        if (request.query) {
+          delete request.query["x-amz-sdk-checksum-algorithm"];
+          delete request.query["x-amz-checksum-crc32"];
+        }
+
         return next(args);
       },
       {
         step: "build",
-        name: "removeChecksumAlgorithmHeader",
+        name: "removeChecksumHeaders",
+        priority: "high",
       }
     );
 
-    const rawUrl = await getSignedUrl(s3Client, command, {
+    const signedUrlOptions: any = {
       expiresIn,
       signableHeaders: new Set([
         "host",
@@ -77,7 +97,18 @@ export class S3Service {
         "x-amz-meta-original-filename",
         "x-amz-meta-album-id",
       ]),
-    });
+    };
+
+    // For LocalStack, disable checksum validation entirely
+    if (isLocal) {
+      signedUrlOptions.unsignableHeaders = new Set([
+        "x-amz-sdk-checksum-algorithm",
+        "x-amz-checksum-crc32",
+        "x-amz-content-sha256",
+      ]);
+    }
+
+    const rawUrl = await getSignedUrl(s3Client, command, signedUrlOptions);
 
     const uploadUrl = isLocal
       ? rawUrl.replace("pornspot-local-aws", "localhost")

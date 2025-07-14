@@ -121,7 +121,35 @@ else
     fi
 fi
 
-# Step 2: Setup Local Database
+# Step 2: Initialize AWS Resources
+print_status "Initializing AWS resources (S3 bucket, CORS policy)..."
+
+# Navigate to scripts directory to ensure relative paths work correctly
+ORIGINAL_DIR=$(pwd)
+if [ ! -f "scripts/init-local-aws.sh" ]; then
+    if [ -f "init-local-aws.sh" ]; then
+        print_status "Already in scripts directory"
+    else
+        print_error "Cannot find init-local-aws.sh script"
+        exit 1
+    fi
+else
+    cd scripts || exit 1
+fi
+
+# Run the AWS initialization script
+if bash init-local-aws.sh; then
+    print_success "AWS resources initialized successfully"
+else
+    print_error "Failed to initialize AWS resources"
+    cd "$ORIGINAL_DIR" || exit 1
+    exit 1
+fi
+
+# Return to original directory
+cd "$ORIGINAL_DIR" || exit 1
+
+# Step 3: Setup Local Database
 print_status "Setting up local database..."
 
 # Navigate to scripts directory if not already there
@@ -143,7 +171,7 @@ else
     exit 1
 fi
 
-# Step 3: Create Admin User
+# Step 4: Create Admin User
 print_status "Creating admin user..."
 
 ADMIN_USERNAME="dani"
@@ -175,7 +203,7 @@ echo "  • Admin Username: $ADMIN_USERNAME"
 echo "  • Database Table: local-pornspot-media"
 echo ""
 
-# Step 4: Start Backend Server
+# Step 5: Start Backend Server
 print_status "Starting backend server..."
 echo ""
 print_warning "The backend server will now start and run in the foreground."
