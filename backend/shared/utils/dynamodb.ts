@@ -223,6 +223,44 @@ export class DynamoDBService {
     );
   }
 
+  static async updateMedia(
+    albumId: string,
+    mediaId: string,
+    updates: Partial<MediaEntity>
+  ): Promise<void> {
+    const updateExpressions: string[] = [];
+    const expressionAttributeValues: Record<string, any> = {};
+    const expressionAttributeNames: Record<string, string> = {};
+
+    // Build dynamic update expression
+    Object.entries(updates).forEach(([key, value]) => {
+      if (key !== "PK" && key !== "SK" && key !== "id" && key !== "albumId") {
+        const attrName = `#${key}`;
+        const attrValue = `:${key}`;
+        updateExpressions.push(`${attrName} = ${attrValue}`);
+        expressionAttributeNames[attrName] = key;
+        expressionAttributeValues[attrValue] = value;
+      }
+    });
+
+    if (updateExpressions.length === 0) {
+      return; // Nothing to update
+    }
+
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `ALBUM#${albumId}`,
+          SK: `MEDIA#${mediaId}`,
+        },
+        UpdateExpression: `SET ${updateExpressions.join(", ")}`,
+        ExpressionAttributeNames: expressionAttributeNames,
+        ExpressionAttributeValues: expressionAttributeValues,
+      })
+    );
+  }
+
   static async incrementAlbumMediaCount(albumId: string): Promise<void> {
     await docClient.send(
       new UpdateCommand({

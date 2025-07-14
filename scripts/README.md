@@ -248,3 +248,67 @@ Run any script with the `--help` flag to see detailed usage information:
 - [SAM Configuration](../samconfig.toml) - Environment-specific SAM settings
 - [Vercel Configuration](../vercel.json) - Frontend deployment settings
 - [AWS SAM Template](../template.yaml) - Infrastructure as Code definition
+
+### [`repair-thumbnails.js`](repair-thumbnails.js)
+
+Batch script to generate missing thumbnails for existing media files in the database.
+
+**Usage:**
+
+```bash
+npm run repair:thumbnails [OPTIONS]
+
+Options:
+  --dry-run           Show what would be processed without making changes
+  --limit NUMBER      Limit the number of items to process [default: 100]
+  --batch-size NUMBER Number of items to process concurrently [default: 5]
+
+Examples:
+  npm run repair:thumbnails                    # Process up to 100 items with default settings
+  npm run repair:thumbnails --dry-run          # Preview what would be processed
+  npm run repair:thumbnails --limit 50         # Process only 50 items
+  npm run repair:thumbnails --batch-size 3     # Process 3 items concurrently
+```
+
+**Features:**
+
+- Generates all three thumbnail sizes (small: 300x300, medium: 600x600, large: 1200x1200)
+- Downloads original images from S3, creates thumbnails, and uploads them back
+- Updates DynamoDB records with thumbnail URLs and processing status
+- Concurrent processing with configurable batch size
+- Comprehensive error handling and logging
+- Dry-run mode for safe testing
+- Progress reporting and performance metrics
+
+**Prerequisites:**
+
+- AWS CLI configured with appropriate permissions
+- Access to the S3 bucket containing original images
+- DynamoDB read/write permissions for media table
+- Node.js environment with required dependencies
+
+**How It Works:**
+
+1. Scans DynamoDB for media items without thumbnail URLs or with "pending" status
+2. Downloads original images from S3
+3. Generates three thumbnail sizes using Sharp image processing
+4. Uploads thumbnails to S3 in organized folder structure
+5. Updates DynamoDB records with thumbnail URLs and "uploaded" status
+6. Provides detailed logging and error reporting
+
+**Monitoring:**
+
+```bash
+# Monitor the script output for:
+- Number of items processed
+- Success/failure rates
+- Processing time per item
+- Any errors or warnings
+```
+
+**Production Considerations:**
+
+- Start with a small limit (--limit 10) to test in production
+- Monitor AWS costs during large batch operations
+- Use appropriate batch-size based on available memory and network
+- Consider running during off-peak hours for large datasets

@@ -20,6 +20,7 @@
     "local:logs": "docker-compose -f docker-compose.local.yml logs -f localstack",
     "db:setup": "node scripts/create-dynamodb-table.js",
     "local:setup": "npm run local:init && npm run db:setup",
+    "repair:thumbnails": "node scripts/repair-thumbnails.js",
     "deploy": "./scripts/deploy.sh",
     "deploy:guided": "./scripts/deploy.sh --guided",
     "sam:build": "sam build",

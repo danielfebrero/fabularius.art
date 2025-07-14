@@ -20,6 +20,7 @@ export interface Media {
   height?: number | undefined;
   url: string;
   thumbnailUrl?: string | undefined;
+  status?: "pending" | "uploaded" | "failed" | undefined;
   createdAt: string;
   updatedAt: string;
   metadata?: Record<string, any> | undefined;
@@ -94,6 +95,7 @@ export interface MediaEntity {
   height?: number | undefined;
   url: string;
   thumbnailUrl?: string | undefined;
+  status?: "pending" | "uploaded" | "failed" | undefined;
   createdAt: string;
   updatedAt: string;
   metadata?: Record<string, any> | undefined;

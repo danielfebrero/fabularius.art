@@ -64,7 +64,7 @@ export const handler = async (
       url: S3Service.getPublicUrl(key),
       createdAt: now,
       updatedAt: now,
-      status: "pending", // Will be updated to 'uploaded' after successful upload
+      status: "pending" as const, // Will be updated to 'uploaded' after successful upload
     };
     console.log("Generated media URL:", S3Service.getPublicUrl(key));
 
