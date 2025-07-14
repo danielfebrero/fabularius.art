@@ -18,7 +18,7 @@ const getCorsHeaders = (
     "Access-Control-Allow-Headers":
       "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent,Accept,Origin,Referer,DNT,sec-ch-ua,sec-ch-ua-mobile,sec-ch-ua-platform,Sec-Fetch-Dest,Sec-Fetch-Mode,Sec-Fetch-Site,Cookie",
     "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
-    "Access-Control-Allow-Credentials": true,
+    "Access-Control-Allow-Credentials": "true",
   };
 
   if (origin) {
