@@ -106,6 +106,59 @@ async function scanAllMediaEntities() {
 }
 
 /**
+ * Scan all Album entities from DynamoDB
+ */
+async function scanAllAlbumEntities() {
+  console.log("🔍 Scanning DynamoDB for Album entities...");
+
+  const albumEntities = [];
+  let lastEvaluatedKey;
+  let scannedCount = 0;
+
+  try {
+    do {
+      const params = {
+        TableName: DYNAMODB_TABLE,
+        FilterExpression: "EntityType = :entityType",
+        ExpressionAttributeValues: {
+          ":entityType": "Album",
+        },
+      };
+
+      if (lastEvaluatedKey) {
+        params.ExclusiveStartKey = lastEvaluatedKey;
+      }
+
+      const result = await docClient.send(new ScanCommand(params));
+
+      if (result.Items) {
+        const batchAlbums = result.Items.filter(
+          (item) =>
+            item.PK && item.PK.startsWith("ALBUM#") && item.SK === "METADATA"
+        );
+
+        albumEntities.push(...batchAlbums);
+        scannedCount += result.Items.length;
+
+        if (batchAlbums.length > 0) {
+          console.log(
+            `   Found ${batchAlbums.length} album entities in this batch (${scannedCount} total scanned)`
+          );
+        }
+      }
+
+      lastEvaluatedKey = result.LastEvaluatedKey;
+    } while (lastEvaluatedKey);
+
+    console.log(`📊 Total Album entities found: ${albumEntities.length}`);
+    return albumEntities;
+  } catch (error) {
+    console.error("❌ Error scanning DynamoDB:", error);
+    throw error;
+  }
+}
+
+/**
  * Analyze media entities for thumbnail data
  */
 function analyzeMediaEntities(entities) {
@@ -132,6 +185,41 @@ function analyzeMediaEntities(entities) {
     // Count status distribution
     const status = entity.status || "unknown";
     analysis.statusCounts[status] = (analysis.statusCounts[status] || 0) + 1;
+  });
+
+  return analysis;
+}
+
+/**
+ * Analyze album entities for thumbnail data
+ */
+function analyzeAlbumEntities(entities) {
+  const analysis = {
+    total: entities.length,
+    withThumbnailUrls: 0,
+    withoutThumbnails: 0,
+    thumbnailSizeCounts: {},
+  };
+
+  entities.forEach((entity) => {
+    const hasThumbnailUrls =
+      entity.thumbnailUrls !== undefined && entity.thumbnailUrls !== null;
+
+    if (hasThumbnailUrls) {
+      analysis.withThumbnailUrls++;
+
+      // Count available thumbnail sizes
+      if (typeof entity.thumbnailUrls === "object") {
+        Object.keys(entity.thumbnailUrls).forEach((size) => {
+          if (entity.thumbnailUrls[size]) {
+            analysis.thumbnailSizeCounts[size] =
+              (analysis.thumbnailSizeCounts[size] || 0) + 1;
+          }
+        });
+      }
+    } else {
+      analysis.withoutThumbnails++;
+    }
   });
 
   return analysis;
@@ -169,6 +257,36 @@ async function updateMediaEntity(entity) {
     return { success: true };
   } catch (error) {
     console.error(`❌ Error updating media ${mediaId}:`, error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Update a single album entity to remove thumbnail fields
+ */
+async function updateAlbumEntity(entity) {
+  const albumId = entity.id || entity.PK.replace("ALBUM#", "");
+
+  try {
+    const updateParams = {
+      TableName: DYNAMODB_TABLE,
+      Key: {
+        PK: `ALBUM#${albumId}`,
+        SK: "METADATA",
+      },
+      UpdateExpression: "REMOVE thumbnailUrls SET updatedAt = :updatedAt",
+      ExpressionAttributeValues: {
+        ":updatedAt": new Date().toISOString(),
+      },
+    };
+
+    if (!DRY_RUN) {
+      await docClient.send(new UpdateCommand(updateParams));
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error(`❌ Error updating album ${albumId}:`, error);
     return { success: false, error: error.message };
   }
 }
@@ -258,26 +376,137 @@ async function processMediaEntities(entities) {
 }
 
 /**
+ * Process album entities in batches
+ */
+async function processAlbumEntities(entities) {
+  if (entities.length === 0) {
+    console.log("✅ No album entities to process");
+    return { processed: 0, success: 0, errors: 0 };
+  }
+
+  // Filter entities that need updates (have thumbnail fields)
+  const entitiesToUpdate = entities.filter(
+    (entity) => entity.thumbnailUrls !== undefined
+  );
+
+  if (entitiesToUpdate.length === 0) {
+    console.log("✅ No album entities have thumbnail fields to remove");
+    return { processed: 0, success: 0, errors: 0 };
+  }
+
+  console.log(`🔄 Processing ${entitiesToUpdate.length} album entities...`);
+
+  const results = {
+    processed: 0,
+    success: 0,
+    errors: 0,
+    errorDetails: [],
+  };
+
+  // Process in batches to avoid overwhelming the API
+  for (let i = 0; i < entitiesToUpdate.length; i += BATCH_SIZE) {
+    const batch = entitiesToUpdate.slice(i, i + BATCH_SIZE);
+    const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
+    const totalBatches = Math.ceil(entitiesToUpdate.length / BATCH_SIZE);
+
+    console.log(
+      `   Processing batch ${batchNumber}/${totalBatches} (${batch.length} entities)`
+    );
+
+    if (DRY_RUN) {
+      console.log(`   [DRY RUN] Would update ${batch.length} entities:`);
+      batch.forEach((entity) => {
+        const albumId = entity.id || entity.PK.replace("ALBUM#", "");
+        console.log(`     - Album ${albumId}`);
+      });
+      results.processed += batch.length;
+      results.success += batch.length;
+      continue;
+    }
+
+    // Process each entity in the batch
+    const batchPromises = batch.map(async (entity) => {
+      const result = await updateAlbumEntity(entity);
+      results.processed++;
+
+      if (result.success) {
+        results.success++;
+      } else {
+        results.errors++;
+        results.errorDetails.push({
+          entityId: entity.id || entity.PK,
+          error: result.error,
+        });
+      }
+
+      return result;
+    });
+
+    await Promise.all(batchPromises);
+
+    console.log(
+      `   ✅ Completed batch ${batchNumber}: ${batch.length} entities processed`
+    );
+
+    // Small delay between batches to avoid rate limiting
+    if (i + BATCH_SIZE < entitiesToUpdate.length) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+  }
+
+  return results;
+}
+
+/**
  * Display analysis summary
  */
-function displayAnalysis(analysis) {
+function displayAnalysis(mediaAnalysis, albumAnalysis) {
   console.log("\n📋 Media Entities Analysis:");
-  console.log(`   Total entities: ${analysis.total}`);
-  console.log(`   With thumbnailUrl field: ${analysis.withThumbnailUrl}`);
-  console.log(`   With thumbnailUrls field: ${analysis.withThumbnailUrls}`);
-  console.log(`   With both fields: ${analysis.withBothFields}`);
-  console.log(`   Without thumbnail fields: ${analysis.withoutThumbnails}`);
+  console.log(`   Total entities: ${mediaAnalysis.total}`);
+  console.log(`   With thumbnailUrl field: ${mediaAnalysis.withThumbnailUrl}`);
+  console.log(
+    `   With thumbnailUrls field: ${mediaAnalysis.withThumbnailUrls}`
+  );
+  console.log(`   With both fields: ${mediaAnalysis.withBothFields}`);
+  console.log(
+    `   Without thumbnail fields: ${mediaAnalysis.withoutThumbnails}`
+  );
 
-  console.log("\n📊 Status Distribution:");
-  Object.entries(analysis.statusCounts).forEach(([status, count]) => {
+  console.log("\n📊 Media Status Distribution:");
+  Object.entries(mediaAnalysis.statusCounts).forEach(([status, count]) => {
     console.log(`   ${status}: ${count}`);
   });
 
-  const needsUpdate =
-    analysis.withThumbnailUrl +
-    analysis.withThumbnailUrls -
-    analysis.withBothFields;
-  console.log(`\n🎯 Entities needing update: ${needsUpdate}`);
+  const mediaNeedsUpdate =
+    mediaAnalysis.withThumbnailUrl +
+    mediaAnalysis.withThumbnailUrls -
+    mediaAnalysis.withBothFields;
+  console.log(`\n🎯 Media entities needing update: ${mediaNeedsUpdate}`);
+
+  console.log("\n📋 Album Entities Analysis:");
+  console.log(`   Total entities: ${albumAnalysis.total}`);
+  console.log(
+    `   With thumbnailUrls field: ${albumAnalysis.withThumbnailUrls}`
+  );
+  console.log(
+    `   Without thumbnail fields: ${albumAnalysis.withoutThumbnails}`
+  );
+
+  if (Object.keys(albumAnalysis.thumbnailSizeCounts).length > 0) {
+    console.log("\n📊 Album Thumbnail Size Distribution:");
+    Object.entries(albumAnalysis.thumbnailSizeCounts).forEach(
+      ([size, count]) => {
+        console.log(`   ${size}: ${count}`);
+      }
+    );
+  }
+
+  console.log(
+    `\n🎯 Album entities needing update: ${albumAnalysis.withThumbnailUrls}`
+  );
+
+  const totalNeedsUpdate = mediaNeedsUpdate + albumAnalysis.withThumbnailUrls;
+  console.log(`\n🎯 Total entities needing update: ${totalNeedsUpdate}`);
 }
 
 /**
@@ -292,25 +521,36 @@ async function cleanupDynamoDBThumbnails() {
   console.log();
 
   try {
-    // Scan all Media entities
-    const mediaEntities = await scanAllMediaEntities();
+    // Scan all Media and Album entities
+    const [mediaEntities, albumEntities] = await Promise.all([
+      scanAllMediaEntities(),
+      scanAllAlbumEntities(),
+    ]);
 
-    if (mediaEntities.length === 0) {
-      console.log("✅ No Media entities found. Nothing to clean up.");
+    if (mediaEntities.length === 0 && albumEntities.length === 0) {
+      console.log("✅ No Media or Album entities found. Nothing to clean up.");
       return;
     }
 
     // Analyze entities
-    const analysis = analyzeMediaEntities(mediaEntities);
-    displayAnalysis(analysis);
+    const mediaAnalysis = analyzeMediaEntities(mediaEntities);
+    const albumAnalysis = analyzeAlbumEntities(albumEntities);
+    displayAnalysis(mediaAnalysis, albumAnalysis);
 
     // Check if any updates are needed
-    const entitiesNeedingUpdate = mediaEntities.filter(
+    const mediaEntitiesNeedingUpdate = mediaEntities.filter(
       (entity) =>
         entity.thumbnailUrl !== undefined || entity.thumbnailUrls !== undefined
     );
 
-    if (entitiesNeedingUpdate.length === 0) {
+    const albumEntitiesNeedingUpdate = albumEntities.filter(
+      (entity) => entity.thumbnailUrls !== undefined
+    );
+
+    const totalEntitiesNeedingUpdate =
+      mediaEntitiesNeedingUpdate.length + albumEntitiesNeedingUpdate.length;
+
+    if (totalEntitiesNeedingUpdate === 0) {
       console.log("\n✅ No thumbnail fields found. Nothing to clean up.");
       return;
     }
@@ -318,12 +558,15 @@ async function cleanupDynamoDBThumbnails() {
     // Ask for confirmation unless dry run
     if (!DRY_RUN) {
       console.log(
-        "\n⚠️  WARNING: This will remove thumbnail fields from all Media entities!"
+        "\n⚠️  WARNING: This will remove thumbnail fields from Media and Album entities!"
       );
-      console.log("   - thumbnailUrl fields will be removed");
-      console.log("   - thumbnailUrls fields will be removed");
-      console.log("   - status will be reset to 'uploaded'");
-      console.log("   - updatedAt will be set to current timestamp");
+      console.log("   Media entities:");
+      console.log("     - thumbnailUrl fields will be removed");
+      console.log("     - thumbnailUrls fields will be removed");
+      console.log("     - status will be reset to 'uploaded'");
+      console.log("   Album entities:");
+      console.log("     - thumbnailUrls fields will be removed");
+      console.log("   - updatedAt will be set to current timestamp for all");
       console.log("   This action cannot be undone.");
 
       const confirmed = await askConfirmation(
@@ -335,23 +578,55 @@ async function cleanupDynamoDBThumbnails() {
       }
     }
 
-    // Process media entities
+    // Process entities
     console.log();
-    const results = await processMediaEntities(mediaEntities);
+    const [mediaResults, albumResults] = await Promise.all([
+      processMediaEntities(mediaEntities),
+      processAlbumEntities(albumEntities),
+    ]);
 
     // Display results
     console.log("\n📊 Cleanup Results:");
-    console.log(`   Entities processed: ${results.processed}`);
-    console.log(`   Successfully updated: ${results.success}`);
-    console.log(`   Errors: ${results.errors}`);
+    console.log("\n📱 Media Entities:");
+    console.log(`   Processed: ${mediaResults.processed}`);
+    console.log(`   Successfully updated: ${mediaResults.success}`);
+    console.log(`   Errors: ${mediaResults.errors}`);
 
-    if (results.errors > 0) {
+    console.log("\n📚 Album Entities:");
+    console.log(`   Processed: ${albumResults.processed}`);
+    console.log(`   Successfully updated: ${albumResults.success}`);
+    console.log(`   Errors: ${albumResults.errors}`);
+
+    console.log("\n🎯 Total:");
+    console.log(
+      `   Processed: ${mediaResults.processed + albumResults.processed}`
+    );
+    console.log(
+      `   Successfully updated: ${mediaResults.success + albumResults.success}`
+    );
+    console.log(`   Errors: ${mediaResults.errors + albumResults.errors}`);
+
+    const totalErrors = mediaResults.errors + albumResults.errors;
+    if (totalErrors > 0) {
       console.log("\n❌ Update Errors:");
-      results.errorDetails.forEach((error, index) => {
-        console.log(
-          `   ${index + 1}. Entity ${error.entityId}: ${error.error}`
-        );
-      });
+
+      if (mediaResults.errors > 0) {
+        console.log("   Media entities:");
+        mediaResults.errorDetails.forEach((error, index) => {
+          console.log(
+            `     ${index + 1}. Entity ${error.entityId}: ${error.error}`
+          );
+        });
+      }
+
+      if (albumResults.errors > 0) {
+        console.log("   Album entities:");
+        albumResults.errorDetails.forEach((error, index) => {
+          console.log(
+            `     ${index + 1}. Entity ${error.entityId}: ${error.error}`
+          );
+        });
+      }
     }
 
     if (DRY_RUN) {
@@ -359,7 +634,7 @@ async function cleanupDynamoDBThumbnails() {
         "\n🧪 This was a dry run. No entities were actually updated."
       );
       console.log("   Run without --dry-run flag to perform actual updates.");
-    } else if (results.errors === 0) {
+    } else if (totalErrors === 0) {
       console.log("\n✅ DynamoDB thumbnail cleanup completed successfully!");
     } else {
       console.log("\n⚠️  DynamoDB thumbnail cleanup completed with errors.");
@@ -375,7 +650,21 @@ async function cleanupDynamoDBThumbnails() {
 if (process.argv.includes("--help") || process.argv.includes("-h")) {
   console.log("DynamoDB Thumbnail Cleanup Script");
   console.log("");
+  console.log(
+    "Removes thumbnail fields from both Media and Album entities in DynamoDB."
+  );
+  console.log("This script will clean up legacy thumbnail data to prepare for");
+  console.log("the new thumbnail generation system.");
+  console.log("");
   console.log("Usage: node cleanup-thumbnails-db.js [options]");
+  console.log("");
+  console.log("What this script does:");
+  console.log(
+    "  • Scans for Media entities and removes thumbnailUrl and thumbnailUrls fields"
+  );
+  console.log("  • Scans for Album entities and removes thumbnailUrls fields");
+  console.log("  • Resets Media status to 'uploaded'");
+  console.log("  • Updates the updatedAt timestamp for all modified entities");
   console.log("");
   console.log("Options:");
   console.log(
