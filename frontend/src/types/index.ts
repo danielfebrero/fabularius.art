@@ -21,7 +21,8 @@ export interface Media {
   width?: number;
   height?: number;
   url: string;
-  thumbnailUrl: string;
+  thumbnailUrl?: string;
+  thumbnailUrls?: { small?: string; medium?: string; large?: string };
   createdAt: string;
   updatedAt: string;
   metadata?: Record<string, any>;

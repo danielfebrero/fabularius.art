@@ -20,6 +20,9 @@ export interface Media {
   height?: number | undefined;
   url: string;
   thumbnailUrl?: string | undefined;
+  thumbnailUrls?:
+    | { small?: string; medium?: string; large?: string }
+    | undefined;
   status?: "pending" | "uploaded" | "failed" | undefined;
   createdAt: string;
   updatedAt: string;
@@ -95,6 +98,9 @@ export interface MediaEntity {
   height?: number | undefined;
   url: string;
   thumbnailUrl?: string | undefined;
+  thumbnailUrls?:
+    | { small?: string; medium?: string; large?: string }
+    | undefined;
   status?: "pending" | "uploaded" | "failed" | undefined;
   createdAt: string;
   updatedAt: string;

@@ -152,7 +152,11 @@ export function CoverImageSelector({
                 >
                   <div className="aspect-square">
                     <img
-                      src={image.thumbnailUrl || image.url}
+                      src={
+                        image.thumbnailUrls?.small ||
+                        image.thumbnailUrl ||
+                        image.url
+                      }
                       alt={image.originalFilename || image.filename}
                       className="w-full h-full object-cover"
                     />

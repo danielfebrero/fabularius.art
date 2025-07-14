@@ -57,6 +57,10 @@ export const handler = async (
         response.thumbnailUrl = item.thumbnailUrl;
       }
 
+      if (item.thumbnailUrls !== undefined) {
+        response.thumbnailUrls = item.thumbnailUrls;
+      }
+
       if (item.metadata !== undefined) {
         response.metadata = item.metadata;
       }

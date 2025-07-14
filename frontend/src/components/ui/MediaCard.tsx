@@ -35,7 +35,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
         />
       ) : (
         <img
-          src={media.thumbnailUrl || media.url}
+          src={media.thumbnailUrls?.small || media.thumbnailUrl || media.url}
           alt={media.originalFilename || media.filename}
           className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
           loading="lazy"

@@ -100,20 +100,25 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
     console.log("Generating thumbnails for:", key);
 
     try {
-      const thumbnailUrl = await ThumbnailService.generateSingleThumbnail(
+      const thumbnailUrls = await ThumbnailService.generateThumbnails(
         key,
         buffer
       );
 
-      if (thumbnailUrl) {
-        // Update the media record with thumbnail URL
+      if (thumbnailUrls && Object.keys(thumbnailUrls).length > 0) {
+        // Update the media record with thumbnail URLs
         await DynamoDBService.updateMedia(albumId, mediaItem.id!, {
-          thumbnailUrl,
+          thumbnailUrl:
+            thumbnailUrls["small"] || Object.values(thumbnailUrls)[0], // Default to small or first available
+          thumbnailUrls,
           status: "uploaded",
           updatedAt: new Date().toISOString(),
         });
 
-        console.log("Updated media record with thumbnail URL:", thumbnailUrl);
+        console.log(
+          "Updated media record with thumbnail URLs:",
+          Object.keys(thumbnailUrls).join(", ")
+        );
       } else {
         // Just update status if thumbnail generation failed
         await DynamoDBService.updateMedia(albumId, mediaItem.id!, {

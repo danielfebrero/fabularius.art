@@ -257,7 +257,11 @@ export function MediaManager({
                   <div className="aspect-square">
                     {mediaItem.mimeType.startsWith("image/") ? (
                       <img
-                        src={mediaItem.thumbnailUrl || mediaItem.url}
+                        src={
+                          mediaItem.thumbnailUrls?.small ||
+                          mediaItem.thumbnailUrl ||
+                          mediaItem.url
+                        }
                         alt={mediaItem.originalFilename || mediaItem.filename}
                         className="w-full h-full object-cover"
                       />

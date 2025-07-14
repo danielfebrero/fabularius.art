@@ -255,7 +255,11 @@ export default function AdminMediaPage() {
               >
                 <div className="aspect-square relative">
                   <img
-                    src={media.thumbnailUrl || media.url}
+                    src={
+                      media.thumbnailUrls?.small ||
+                      media.thumbnailUrl ||
+                      media.url
+                    }
                     alt={media.filename}
                     className="w-full h-full object-cover"
                   />
