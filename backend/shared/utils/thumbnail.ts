@@ -83,6 +83,79 @@ export class ThumbnailService {
   }
 
   /**
+   * Generate album cover thumbnails for an album
+   */
+  static async generateAlbumCoverThumbnails(
+    coverImageBuffer: Buffer,
+    albumId: string,
+    contentType: string
+  ): Promise<{
+    cover?: string;
+    small?: string;
+    medium?: string;
+    large?: string;
+    xlarge?: string;
+  }> {
+    const thumbnailUrls: {
+      cover?: string;
+      small?: string;
+      medium?: string;
+      large?: string;
+      xlarge?: string;
+    } = {};
+    const baseKey = `albums/${albumId}/cover/thumbnails/`;
+
+    // Validate content type
+    if (!this.isImageFile(contentType)) {
+      throw new Error(
+        `Unsupported content type for album cover: ${contentType}`
+      );
+    }
+
+    // Generate thumbnails for all 5 sizes
+    const configs = Object.entries(THUMBNAIL_CONFIGS);
+
+    for (const [sizeName, config] of configs) {
+      try {
+        // Generate thumbnail buffer
+        const thumbnailBuffer = await sharp(coverImageBuffer)
+          .resize(config.width, config.height, {
+            fit: "cover",
+            position: "center",
+          })
+          .jpeg({ quality: config.quality })
+          .toBuffer();
+
+        // Create thumbnail key using simple size names for album covers
+        const thumbnailKey = `${baseKey}${sizeName}.jpg`;
+
+        // Upload thumbnail to S3
+        await S3Service.uploadBuffer(
+          thumbnailKey,
+          thumbnailBuffer,
+          "image/jpeg",
+          {
+            "album-id": albumId,
+            "thumbnail-size": sizeName,
+            "thumbnail-config": JSON.stringify(config),
+          }
+        );
+
+        // Store the URL
+        thumbnailUrls[sizeName as keyof typeof thumbnailUrls] =
+          S3Service.getPublicUrl(thumbnailKey);
+      } catch (error) {
+        console.error(
+          `Failed to generate ${sizeName} album cover thumbnail for album ${albumId}:`,
+          error
+        );
+      }
+    }
+
+    return thumbnailUrls;
+  }
+
+  /**
    * Generate a single thumbnail (default small size)
    */
   static async generateSingleThumbnail(

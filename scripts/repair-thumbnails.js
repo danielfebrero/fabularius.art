@@ -40,7 +40,9 @@ const THUMBNAIL_CONFIGS = {
  */
 function getPublicUrl(key) {
   if (CLOUDFRONT_DOMAIN) {
-    return `https://${CLOUDFRONT_DOMAIN}/${key}`;
+    // Remove any existing protocol prefix to avoid duplication
+    const domain = CLOUDFRONT_DOMAIN.replace(/^https?:\/\//, "");
+    return `https://${domain}/${key}`;
   }
   return `https://${S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${key}`;
 }
@@ -115,6 +117,47 @@ async function generateThumbnails(originalKey, imageBuffer) {
 }
 
 /**
+ * Generate album cover thumbnails
+ */
+async function generateAlbumCoverThumbnails(albumId, imageBuffer) {
+  const baseKey = `albums/${albumId}/cover/thumbnails/`;
+  const thumbnailUrls = {};
+
+  for (const [configName, config] of Object.entries(THUMBNAIL_CONFIGS)) {
+    try {
+      // Generate thumbnail buffer
+      const thumbnailBuffer = await sharp(imageBuffer)
+        .resize(config.width, config.height, {
+          fit: "cover",
+          position: "center",
+        })
+        .jpeg({ quality: config.quality })
+        .toBuffer();
+
+      // Create thumbnail key using simple size names for album covers
+      const thumbnailKey = `${baseKey}${configName}.jpg`;
+
+      // Upload thumbnail to S3
+      await uploadBuffer(thumbnailKey, thumbnailBuffer, "image/jpeg", {
+        "album-id": albumId,
+        "thumbnail-size": configName,
+        "thumbnail-config": JSON.stringify(config),
+      });
+
+      thumbnailUrls[configName] = getPublicUrl(thumbnailKey);
+    } catch (error) {
+      console.error(
+        `Failed to generate ${configName} album cover thumbnail for album ${albumId}:`,
+        error
+      );
+      return null;
+    }
+  }
+
+  return thumbnailUrls;
+}
+
+/**
  * Check if a file is an image that supports thumbnail generation
  */
 function isImageFile(mimeType) {
@@ -171,6 +214,34 @@ async function getAllMediaItems() {
 }
 
 /**
+ * Get all albums from DynamoDB
+ */
+async function getAllAlbums() {
+  const albums = [];
+  let lastEvaluatedKey;
+
+  do {
+    const params = {
+      TableName: DYNAMODB_TABLE,
+      FilterExpression: "EntityType = :entityType",
+      ExpressionAttributeValues: {
+        ":entityType": "Album",
+      },
+    };
+
+    if (lastEvaluatedKey) {
+      params.ExclusiveStartKey = lastEvaluatedKey;
+    }
+
+    const result = await docClient.send(new ScanCommand(params));
+    albums.push(...(result.Items || []));
+    lastEvaluatedKey = result.LastEvaluatedKey;
+  } while (lastEvaluatedKey);
+
+  return albums;
+}
+
+/**
  * Update media item with thumbnail URLs
  */
 async function updateMediaThumbnails(albumId, mediaId, thumbnailUrls) {
@@ -190,6 +261,27 @@ async function updateMediaThumbnails(albumId, mediaId, thumbnailUrls) {
         ":thumbnailUrl": thumbnailUrls.small, // Default to small thumbnail (240px)
         ":thumbnailUrls": thumbnailUrls,
         ":status": "uploaded",
+        ":updatedAt": new Date().toISOString(),
+      },
+    })
+  );
+}
+
+/**
+ * Update album with thumbnail URLs
+ */
+async function updateAlbumThumbnails(albumId, thumbnailUrls) {
+  await docClient.send(
+    new UpdateCommand({
+      TableName: DYNAMODB_TABLE,
+      Key: {
+        PK: `ALBUM#${albumId}`,
+        SK: "METADATA",
+      },
+      UpdateExpression:
+        "SET thumbnailUrls = :thumbnailUrls, updatedAt = :updatedAt",
+      ExpressionAttributeValues: {
+        ":thumbnailUrls": thumbnailUrls,
         ":updatedAt": new Date().toISOString(),
       },
     })
@@ -283,6 +375,65 @@ async function processMediaItem(mediaItem) {
 }
 
 /**
+ * Process a single album cover
+ */
+async function processAlbumCover(album) {
+  const { id, coverImageUrl, thumbnailUrls } = album;
+
+  // Skip if no cover image
+  if (!coverImageUrl) {
+    console.log(`- Album ${id} has no cover image`);
+    return { status: "skipped", reason: "no_cover_image" };
+  }
+
+  // Skip if thumbnails already exist
+  if (thumbnailUrls && Object.keys(thumbnailUrls).length > 0) {
+    console.log(`✓ Album ${id} already has thumbnails`);
+    return { status: "skipped", reason: "already_has_thumbnails" };
+  }
+
+  try {
+    console.log(`🔄 Processing album cover ${id}...`);
+
+    // Extract S3 key from URL
+    const s3Key = extractKeyFromUrl(coverImageUrl);
+    if (!s3Key) {
+      console.error(`❌ Could not determine S3 key for album ${id}`);
+      return { status: "error", reason: "invalid_key" };
+    }
+
+    // Download cover image
+    const imageBuffer = await downloadFromS3(s3Key);
+    if (!imageBuffer) {
+      console.error(`❌ Failed to download cover image for album ${id}`);
+      return { status: "error", reason: "download_failed" };
+    }
+
+    // Generate album cover thumbnails
+    const generatedThumbnailUrls = await generateAlbumCoverThumbnails(
+      id,
+      imageBuffer
+    );
+    if (!generatedThumbnailUrls) {
+      console.error(`❌ Failed to generate thumbnails for album ${id}`);
+      return { status: "error", reason: "thumbnail_generation_failed" };
+    }
+
+    // Update database
+    await updateAlbumThumbnails(id, generatedThumbnailUrls);
+
+    console.log(
+      `✅ Generated thumbnails for album ${id}:`,
+      Object.keys(generatedThumbnailUrls).join(", ")
+    );
+    return { status: "success", thumbnailUrls: generatedThumbnailUrls };
+  } catch (error) {
+    console.error(`❌ Error processing album ${id}:`, error);
+    return { status: "error", reason: error.message };
+  }
+}
+
+/**
  * Main repair function
  */
 async function repairThumbnails() {
@@ -293,19 +444,23 @@ async function repairThumbnails() {
   console.log();
 
   try {
-    // Get all media items
+    // Get all media items and albums
     console.log("📖 Fetching all media items...");
     const mediaItems = await getAllMediaItems();
     console.log(`📊 Found ${mediaItems.length} media items`);
+
+    console.log("📖 Fetching all albums...");
+    const albums = await getAllAlbums();
+    console.log(`📊 Found ${albums.length} albums`);
     console.log();
 
-    if (mediaItems.length === 0) {
-      console.log("No media items found. Nothing to repair.");
+    if (mediaItems.length === 0 && albums.length === 0) {
+      console.log("No media items or albums found. Nothing to repair.");
       return;
     }
 
-    // Process each media item
-    const results = {
+    // Process media items
+    const mediaResults = {
       total: mediaItems.length,
       processed: 0,
       skipped: 0,
@@ -314,46 +469,104 @@ async function repairThumbnails() {
       errors: [],
     };
 
-    for (const [index, mediaItem] of mediaItems.entries()) {
-      console.log(`[${index + 1}/${mediaItems.length}]`, "");
+    if (mediaItems.length > 0) {
+      console.log("🔧 Processing media items...");
+      for (const [index, mediaItem] of mediaItems.entries()) {
+        console.log(`[Media ${index + 1}/${mediaItems.length}]`, "");
 
-      const result = await processMediaItem(mediaItem);
-      results.processed++;
+        const result = await processMediaItem(mediaItem);
+        mediaResults.processed++;
 
-      switch (result.status) {
-        case "skipped":
-          results.skipped++;
-          break;
-        case "success":
-          results.success++;
-          break;
-        case "error":
-          results.error++;
-          results.errors.push({
-            mediaId: mediaItem.id,
-            reason: result.reason,
-          });
-          break;
+        switch (result.status) {
+          case "skipped":
+            mediaResults.skipped++;
+            break;
+          case "success":
+            mediaResults.success++;
+            break;
+          case "error":
+            mediaResults.error++;
+            mediaResults.errors.push({
+              mediaId: mediaItem.id,
+              reason: result.reason,
+            });
+            break;
+        }
+
+        // Add small delay to avoid overwhelming AWS APIs
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
+    }
 
-      // Add small delay to avoid overwhelming AWS APIs
-      await new Promise((resolve) => setTimeout(resolve, 100));
+    // Process album covers
+    const albumResults = {
+      total: albums.length,
+      processed: 0,
+      skipped: 0,
+      success: 0,
+      error: 0,
+      errors: [],
+    };
+
+    if (albums.length > 0) {
+      console.log();
+      console.log("🎨 Processing album covers...");
+      for (const [index, album] of albums.entries()) {
+        console.log(`[Album ${index + 1}/${albums.length}]`, "");
+
+        const result = await processAlbumCover(album);
+        albumResults.processed++;
+
+        switch (result.status) {
+          case "skipped":
+            albumResults.skipped++;
+            break;
+          case "success":
+            albumResults.success++;
+            break;
+          case "error":
+            albumResults.error++;
+            albumResults.errors.push({
+              albumId: album.id,
+              reason: result.reason,
+            });
+            break;
+        }
+
+        // Add small delay to avoid overwhelming AWS APIs
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
     }
 
     // Print summary
     console.log();
     console.log("📊 Repair Summary:");
-    console.log(`   Total items: ${results.total}`);
-    console.log(`   Processed: ${results.processed}`);
-    console.log(`   Skipped: ${results.skipped}`);
-    console.log(`   Success: ${results.success}`);
-    console.log(`   Errors: ${results.error}`);
+    console.log("   Media Items:");
+    console.log(`     Total: ${mediaResults.total}`);
+    console.log(`     Processed: ${mediaResults.processed}`);
+    console.log(`     Skipped: ${mediaResults.skipped}`);
+    console.log(`     Success: ${mediaResults.success}`);
+    console.log(`     Errors: ${mediaResults.error}`);
 
-    if (results.errors.length > 0) {
+    console.log("   Albums:");
+    console.log(`     Total: ${albumResults.total}`);
+    console.log(`     Processed: ${albumResults.processed}`);
+    console.log(`     Skipped: ${albumResults.skipped}`);
+    console.log(`     Success: ${albumResults.success}`);
+    console.log(`     Errors: ${albumResults.error}`);
+
+    const totalErrors = mediaResults.errors.concat(
+      albumResults.errors.map((error) => ({ ...error, type: "album" }))
+    );
+
+    if (totalErrors.length > 0) {
       console.log();
       console.log("❌ Errors:");
-      results.errors.forEach((error) => {
+      mediaResults.errors.forEach((error) => {
         console.log(`   - Media ${error.mediaId}: ${error.reason}`);
+      });
+      albumResults.errors.forEach((error) => {
+        console.log(`   - Album ${error.albumId}: ${error.reason}`);
       });
     }
 
@@ -373,4 +586,10 @@ if (require.main === module) {
   });
 }
 
-module.exports = { repairThumbnails };
+module.exports = {
+  repairThumbnails,
+  processAlbumCover,
+  generateAlbumCoverThumbnails,
+  getAllAlbums,
+  updateAlbumThumbnails,
+};

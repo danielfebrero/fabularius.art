@@ -2,6 +2,8 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "../../../shared/utils/dynamodb";
 import { ResponseUtil } from "../../../shared/utils/response";
 import { UpdateAlbumRequest } from "../../../shared/types";
+import { S3Service } from "../../../shared/utils/s3";
+import { ThumbnailService } from "../../../shared/utils/thumbnail";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -52,6 +54,64 @@ export const handler = async (
 
     if (request.coverImageUrl !== undefined) {
       updates.coverImageUrl = request.coverImageUrl;
+
+      // Generate thumbnails when cover image is updated
+      if (request.coverImageUrl) {
+        try {
+          console.log(
+            `Generating thumbnails for album ${albumId} cover image: ${request.coverImageUrl}`
+          );
+
+          // Extract S3 key from URL
+          const s3Key = S3Service.extractKeyFromUrl(request.coverImageUrl);
+          if (!s3Key) {
+            console.warn(
+              `Could not extract S3 key from URL: ${request.coverImageUrl}`
+            );
+          } else {
+            // Download cover image from S3
+            const coverImageBuffer = await S3Service.downloadBuffer(s3Key);
+
+            // Determine content type from URL extension or use default
+            const contentType =
+              s3Key.toLowerCase().endsWith(".jpg") ||
+              s3Key.toLowerCase().endsWith(".jpeg")
+                ? "image/jpeg"
+                : s3Key.toLowerCase().endsWith(".png")
+                ? "image/png"
+                : s3Key.toLowerCase().endsWith(".webp")
+                ? "image/webp"
+                : "image/jpeg"; // default
+
+            // Generate thumbnails using ThumbnailService
+            const thumbnailUrls =
+              await ThumbnailService.generateAlbumCoverThumbnails(
+                coverImageBuffer,
+                albumId,
+                contentType
+              );
+
+            // Add thumbnailUrls to the updates
+            updates.thumbnailUrls = thumbnailUrls;
+
+            console.log(
+              `Successfully generated ${
+                Object.keys(thumbnailUrls).length
+              } thumbnail sizes for album ${albumId}`
+            );
+          }
+        } catch (error) {
+          // Log error but don't block the update - graceful failure
+          console.error(
+            `Failed to generate thumbnails for album ${albumId}:`,
+            error
+          );
+          console.log(`Continuing with album update without thumbnails`);
+        }
+      } else {
+        // If coverImageUrl is being cleared, also clear thumbnailUrls
+        updates.thumbnailUrls = undefined;
+      }
     }
 
     // Update album
@@ -71,6 +131,7 @@ export const handler = async (
       title: updatedAlbum.title,
       tags: updatedAlbum.tags,
       coverImageUrl: updatedAlbum.coverImageUrl,
+      thumbnailUrls: updatedAlbum.thumbnailUrls,
       createdAt: updatedAlbum.createdAt,
       updatedAt: updatedAlbum.updatedAt,
       mediaCount: updatedAlbum.mediaCount,

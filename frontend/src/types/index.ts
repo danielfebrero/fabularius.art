@@ -3,6 +3,13 @@ export interface Album {
   title: string;
   tags?: string[];
   coverImageUrl?: string;
+  thumbnailUrls?: {
+    cover?: string;
+    small?: string;
+    medium?: string;
+    large?: string;
+    xlarge?: string;
+  };
   isPublic: boolean;
   mediaCount: number;
   createdAt: string;

@@ -36,6 +36,10 @@ export const handler = async (
       album.coverImageUrl = albumEntity.coverImageUrl;
     }
 
+    if (albumEntity.thumbnailUrls !== undefined) {
+      album.thumbnailUrls = albumEntity.thumbnailUrls;
+    }
+
     return ResponseUtil.success(event, album);
   } catch (error) {
     console.error("Error fetching album:", error);

@@ -33,7 +33,15 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
           <div className="aspect-square relative overflow-hidden rounded-t-lg bg-muted">
             {album.coverImageUrl ? (
               <img
-                src={album.coverImageUrl}
+                src={getThumbnailUrl(
+                  {
+                    url: album.coverImageUrl!,
+                    thumbnailUrls: album.thumbnailUrls,
+                  },
+                  context,
+                  undefined,
+                  columns
+                )}
                 alt={album.title}
                 className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
               />

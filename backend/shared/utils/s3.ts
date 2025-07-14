@@ -113,7 +113,9 @@ export class S3Service {
     }
 
     if (CLOUDFRONT_DOMAIN) {
-      return `https://${CLOUDFRONT_DOMAIN}/${key}`;
+      // Remove any existing protocol prefix to avoid duplication
+      const domain = CLOUDFRONT_DOMAIN.replace(/^https?:\/\//, "");
+      return `https://${domain}/${key}`;
     }
 
     const region = process.env["AWS_REGION"] || "us-east-1";
@@ -155,5 +157,27 @@ export class S3Service {
     } catch {
       return null;
     }
+  }
+  static async downloadBuffer(key: string): Promise<Buffer> {
+    const command = new GetObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: key,
+    });
+
+    const response = await s3Client.send(command);
+
+    if (!response.Body) {
+      throw new Error(`Failed to download object: ${key}`);
+    }
+
+    // Convert stream to buffer
+    const chunks: Uint8Array[] = [];
+    const stream = response.Body as any;
+
+    return new Promise((resolve, reject) => {
+      stream.on("data", (chunk: Uint8Array) => chunks.push(chunk));
+      stream.on("error", reject);
+      stream.on("end", () => resolve(Buffer.concat(chunks)));
+    });
   }
 }

@@ -3,6 +3,15 @@ export interface Album {
   title: string;
   tags?: string[] | undefined;
   coverImageUrl?: string | undefined;
+  thumbnailUrls?:
+    | {
+        cover?: string;
+        small?: string;
+        medium?: string;
+        large?: string;
+        xlarge?: string;
+      }
+    | undefined;
   createdAt: string;
   updatedAt: string;
   mediaCount: number;
@@ -76,6 +85,15 @@ export interface AlbumEntity {
   title: string;
   tags?: string[] | undefined;
   coverImageUrl?: string | undefined;
+  thumbnailUrls?:
+    | {
+        cover?: string;
+        small?: string;
+        medium?: string;
+        large?: string;
+        xlarge?: string;
+      }
+    | undefined;
   createdAt: string;
   updatedAt: string;
   mediaCount: number;
