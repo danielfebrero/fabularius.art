@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "../../../shared/utils/dynamodb";
 import { ResponseUtil } from "../../../shared/utils/response";
+import { RevalidationService } from "../../../shared/utils/revalidation";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -34,6 +35,9 @@ export const handler = async (
 
     // Delete the album
     await DynamoDBService.deleteAlbum(albumId);
+
+    // Trigger revalidation
+    await RevalidationService.revalidateAlbums();
 
     return ResponseUtil.success(event, {
       message: "Album and all associated media deleted successfully",

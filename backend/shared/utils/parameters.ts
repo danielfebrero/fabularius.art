@@ -1,8 +1,15 @@
 import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 
-const ssmClient = new SSMClient({
-  region: process.env["AWS_REGION"] || "us-east-1",
-});
+const isLocal =
+  process.env["AWS_SAM_LOCAL"] === "true" ||
+  process.env["NODE_ENV"] === "development";
+
+let ssmClient: SSMClient;
+if (!isLocal) {
+  ssmClient = new SSMClient({
+    region: process.env["AWS_REGION"] || "us-east-1",
+  });
+}
 
 // Cache for parameters to avoid repeated API calls
 const parameterCache = new Map<string, string>();
@@ -49,17 +56,43 @@ export class ParameterStoreService {
   }
 
   /**
-   * Get the revalidation secret from Parameter Store
+   * Get the revalidation secret from Parameter Store or environment variable
    */
   static async getRevalidateSecret(): Promise<string> {
+    // In local development, use environment variable directly
+    if (isLocal) {
+      const secret = process.env["REVALIDATE_SECRET"];
+      if (!secret) {
+        throw new Error(
+          "REVALIDATE_SECRET environment variable is required in local development"
+        );
+      }
+      console.log("Using local REVALIDATE_SECRET from environment variable");
+      return secret;
+    }
+
+    // In production, use Parameter Store
     const environment = process.env["ENVIRONMENT"] || "dev";
     return await this.getParameter(`/${environment}/revalidate-secret`, true);
   }
 
   /**
-   * Get the frontend URL from Parameter Store
+   * Get the frontend URL from Parameter Store or environment variable
    */
   static async getFrontendUrl(): Promise<string> {
+    // In local development, use environment variable directly
+    if (isLocal) {
+      const url = process.env["FRONTEND_URL"];
+      if (!url) {
+        throw new Error(
+          "FRONTEND_URL environment variable is required in local development"
+        );
+      }
+      console.log("Using local FRONTEND_URL from environment variable:", url);
+      return url;
+    }
+
+    // In production, use Parameter Store
     const environment = process.env["ENVIRONMENT"] || "dev";
     return await this.getParameter(`/${environment}/frontend-url`, false);
   }

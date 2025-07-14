@@ -2,6 +2,7 @@ import { S3Event, S3EventRecord } from "aws-lambda";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { DynamoDBService } from "../../shared/utils/dynamodb";
 import { ThumbnailService } from "../../shared/utils/thumbnail";
+import { RevalidationService } from "../../shared/utils/revalidation";
 import { Readable } from "stream";
 
 const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
@@ -145,5 +146,16 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
       status: "uploaded",
       updatedAt: new Date().toISOString(),
     });
+  }
+
+  // Trigger revalidation for the album containing this media
+  try {
+    await RevalidationService.revalidateAlbumMedia(albumId);
+  } catch (error) {
+    console.error(
+      "Error triggering revalidation after media processing:",
+      error
+    );
+    // Don't fail the entire operation if revalidation fails
   }
 }

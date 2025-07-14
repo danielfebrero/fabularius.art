@@ -2,7 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { v4 as uuidv4 } from "uuid";
 import { DynamoDBService } from "../../shared/utils/dynamodb";
 import { ResponseUtil } from "../../shared/utils/response";
-import { ParameterStoreService } from "../../shared/utils/parameters";
+import { RevalidationService } from "../../shared/utils/revalidation";
 import { CreateAlbumRequest, AlbumEntity, Album } from "../../shared/types";
 
 export const handler = async (
@@ -61,39 +61,7 @@ export const handler = async (
     }
 
     // Trigger revalidation
-    try {
-      console.log("Fetching revalidation parameters from Parameter Store...");
-
-      const [frontendUrl, revalidateSecret] = await Promise.all([
-        ParameterStoreService.getFrontendUrl(),
-        ParameterStoreService.getRevalidateSecret(),
-      ]);
-
-      const revalidateUrl = `${frontendUrl}/api/revalidate?secret=${revalidateSecret}&tag=albums`;
-      console.log(
-        "Triggering revalidation for URL:",
-        revalidateUrl.replace(revalidateSecret, "***")
-      );
-
-      const revalidateResponse = await fetch(revalidateUrl, {
-        method: "POST",
-      });
-
-      if (!revalidateResponse.ok) {
-        const errorText = await revalidateResponse.text();
-        console.error("Revalidation failed:", {
-          status: revalidateResponse.status,
-          statusText: revalidateResponse.statusText,
-          body: errorText,
-        });
-      } else {
-        const result = await revalidateResponse.json();
-        console.log("Revalidation successful:", result);
-      }
-    } catch (revalidateError) {
-      console.error("Error triggering revalidation:", revalidateError);
-      // Do not block the response for revalidation failure
-    }
+    await RevalidationService.revalidateAlbums();
 
     return ResponseUtil.created(event, album);
   } catch (error) {

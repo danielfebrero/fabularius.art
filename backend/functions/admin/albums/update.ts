@@ -1,5 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "../../../shared/utils/response";
+import { RevalidationService } from "../../../shared/utils/revalidation";
 import { UpdateAlbumRequest } from "../../../shared/types";
 
 export const handler = async (
@@ -140,6 +141,9 @@ export const handler = async (
       mediaCount: updatedAlbum.mediaCount,
       isPublic: updatedAlbum.isPublic,
     };
+
+    // Trigger revalidation
+    await RevalidationService.revalidateAlbum(albumId);
 
     return ResponseUtil.success(event, response);
   } catch (error) {
