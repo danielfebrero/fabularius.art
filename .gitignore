@@ -190,3 +190,4 @@ temp/
 
 # backend local environment file
 backend/env.development.json
+backend/env.development.json
