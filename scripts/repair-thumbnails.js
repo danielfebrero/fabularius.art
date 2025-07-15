@@ -28,11 +28,11 @@ const s3Client = new S3Client({ region: AWS_REGION });
 
 // Thumbnail configurations
 const THUMBNAIL_CONFIGS = {
-  cover: { width: 128, height: 128, quality: 75, suffix: "_thumb_cover" },
-  small: { width: 240, height: 240, quality: 80, suffix: "_thumb_small" },
-  medium: { width: 300, height: 300, quality: 85, suffix: "_thumb_medium" },
-  large: { width: 365, height: 365, quality: 85, suffix: "_thumb_large" },
-  xlarge: { width: 600, height: 600, quality: 90, suffix: "_thumb_xlarge" },
+  cover: { width: 128, height: 128, quality: 80, suffix: "_thumb_cover" },
+  small: { width: 240, height: 240, quality: 85, suffix: "_thumb_small" },
+  medium: { width: 300, height: 300, quality: 90, suffix: "_thumb_medium" },
+  large: { width: 365, height: 365, quality: 90, suffix: "_thumb_large" },
+  xlarge: { width: 600, height: 600, quality: 95, suffix: "_thumb_xlarge" },
 };
 
 /**
@@ -90,14 +90,14 @@ async function generateThumbnails(originalKey, imageBuffer) {
           fit: "cover",
           position: "center",
         })
-        .jpeg({ quality: config.quality })
+        .webp({ quality: config.quality })
         .toBuffer();
 
       // Create thumbnail key
-      const thumbnailKey = `${basePath}/thumbnails/${fileNameWithoutExt}${config.suffix}.jpg`;
+      const thumbnailKey = `${basePath}/thumbnails/${fileNameWithoutExt}${config.suffix}.webp`;
 
       // Upload thumbnail to S3
-      await uploadBuffer(thumbnailKey, thumbnailBuffer, "image/jpeg", {
+      await uploadBuffer(thumbnailKey, thumbnailBuffer, "image/webp", {
         "original-key": originalKey,
         "thumbnail-config": JSON.stringify(config),
       });
@@ -133,14 +133,14 @@ async function generateAlbumCoverThumbnails(albumId, imageBuffer) {
           fit: "cover",
           position: "center",
         })
-        .jpeg({ quality: config.quality })
+        .webp({ quality: config.quality })
         .toBuffer();
 
-      // Create thumbnail key using simple size names for album covers
-      const thumbnailKey = `${baseKey}${configName}.jpg`;
+      // Create thumbnail key using standardized suffix pattern for album covers
+      const thumbnailKey = `${baseKey}cover_thumb_${configName}.webp`;
 
       // Upload thumbnail to S3
-      await uploadBuffer(thumbnailKey, thumbnailBuffer, "image/jpeg", {
+      await uploadBuffer(thumbnailKey, thumbnailBuffer, "image/webp", {
         "album-id": albumId,
         "thumbnail-size": configName,
         "thumbnail-config": JSON.stringify(config),

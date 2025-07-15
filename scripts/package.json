@@ -1,0 +1,47 @@
+{
+  "name": "pornspot-webp-migration",
+  "version": "1.0.0",
+  "description": "Migration scripts for converting JPEG files to WebP format",
+  "main": "migrate-to-webp.js",
+  "scripts": {
+    "migrate": "node migrate-to-webp.js",
+    "migrate:dry-run": "node migrate-to-webp.js --dry-run",
+    "migrate:thumbnails": "node migrate-to-webp.js --skip-originals",
+    "migrate:debug": "node migrate-to-webp.js --log-level=debug --batch-size=1",
+    "migrate:album": "node migrate-to-webp.js --album-id=",
+    "validate": "node validate-migration.js",
+    "clean-reports": "rm -f migration-*.json .migration-progress.json",
+    "help": "node migrate-to-webp.js --help"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.450.0",
+    "@aws-sdk/client-s3": "^3.450.0",
+    "@aws-sdk/lib-dynamodb": "^3.450.0",
+    "sharp": "^0.34.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.0"
+  },
+  "keywords": [
+    "migration",
+    "webp",
+    "jpeg",
+    "aws",
+    "s3",
+    "dynamodb",
+    "image-optimization"
+  ],
+  "author": "pornspot.ai",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/pornspot-ai"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/pornspot-ai/issues"
+  },
+  "homepage": "https://github.com/yourusername/pornspot-ai#readme"
+}

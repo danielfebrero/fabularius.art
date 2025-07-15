@@ -86,12 +86,22 @@ export const Lightbox: React.FC<LightboxProps> = ({
 
   const handleDownload = () => {
     if (!currentMedia) return;
-    // Open in new tab to trigger browser's download manager
+    // Always use original URL for downloads to preserve original format
     window.open(composeMediaUrl(currentMedia.url), "_blank");
   };
 
   const isImage = currentMedia.mimeType.startsWith("image/");
   const isVideo = currentMedia.mimeType.startsWith("video/");
+
+  // Get display URL - use WebP version for viewing if available, otherwise original
+  const getDisplayUrl = (media: Media): string => {
+    // For images, prefer WebP display version for better performance
+    if (isImage && media.metadata?.webpDisplayUrl) {
+      return media.metadata.webpDisplayUrl;
+    }
+    // Fall back to original URL
+    return media.url;
+  };
 
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black" onClick={handleClose}>
@@ -104,7 +114,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
         <div className="w-full h-full">
           {isImage ? (
             <img
-              src={composeMediaUrl(currentMedia.url)}
+              src={composeMediaUrl(getDisplayUrl(currentMedia))}
               alt={currentMedia.originalName || currentMedia.filename}
               className="w-full h-full object-contain"
             />
@@ -146,7 +156,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
                 download
                 onClick={(e) => e.stopPropagation()}
               >
-                Download File
+                Download Original File
               </a>
             </div>
           )}

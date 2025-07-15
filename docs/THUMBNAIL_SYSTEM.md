@@ -27,16 +27,25 @@ The thumbnail system automatically generates five optimized thumbnail sizes for 
 
    - Batch processing for existing media without thumbnails
    - Generates all 5 thumbnail sizes for legacy content
+   - Uses standardized naming pattern and WebP format
    - Safe to run multiple times (idempotent)
    - Comprehensive error handling and reporting
 
-4. **Cleanup Scripts** ([`scripts/cleanup-thumbnails-*.js`](../scripts/))
+4. **Migration Script** ([`scripts/migrate-album-thumbnails.js`](../scripts/migrate-album-thumbnails.js))
+
+   - Migrates existing album cover thumbnails to standardized naming pattern
+   - Converts from `{size}.webp` to `cover_thumb_{size}.webp` pattern
+   - Updates database records with new thumbnail URLs
+   - Safely removes old thumbnails after successful migration
+   - Handles transition period with fallback support
+
+5. **Cleanup Scripts** ([`scripts/cleanup-thumbnails-*.js`](../scripts/))
 
    - Migration tools for transitioning from old 3-size to new 5-size system
    - S3 and DynamoDB cleanup utilities
    - Safe dry-run modes for testing
 
-5. **Updated Data Models** ([`backend/shared/types/index.ts`](../backend/shared/types/index.ts), [`frontend/src/types/index.ts`](../frontend/src/types/index.ts))
+6. **Updated Data Models** ([`backend/shared/types/index.ts`](../backend/shared/types/index.ts), [`frontend/src/types/index.ts`](../frontend/src/types/index.ts))
    - Added `thumbnailUrls` object with 5 sizes
    - Maintained `thumbnailUrl` for backward compatibility
    - Support for tracking upload and processing status
@@ -67,11 +76,11 @@ The thumbnail system automatically generates five optimized thumbnail sizes for 
 
 ```typescript
 const THUMBNAIL_CONFIGS = {
-  cover: { width: 128, height: 128, quality: 75, suffix: "_thumb_cover" }, // Cover selector component
-  small: { width: 240, height: 240, quality: 80, suffix: "_thumb_small" }, // Albums large grids
-  medium: { width: 300, height: 300, quality: 85, suffix: "_thumb_medium" }, // Homepage large + Albums medium
-  large: { width: 365, height: 365, quality: 85, suffix: "_thumb_large" }, // Homepage medium/very large + Albums very large
-  xlarge: { width: 600, height: 600, quality: 90, suffix: "_thumb_xlarge" }, // Small screens for both contexts
+  cover: { width: 128, height: 128, quality: 80, suffix: "_thumb_cover" }, // Cover selector component
+  small: { width: 240, height: 240, quality: 85, suffix: "_thumb_small" }, // Albums large grids
+  medium: { width: 300, height: 300, quality: 90, suffix: "_thumb_medium" }, // Homepage large + Albums medium
+  large: { width: 365, height: 365, quality: 90, suffix: "_thumb_large" }, // Homepage medium/very large + Albums very large
+  xlarge: { width: 600, height: 600, quality: 95, suffix: "_thumb_xlarge" }, // Small screens for both contexts
 };
 ```
 
@@ -126,13 +135,29 @@ albums/
   {albumId}/
     media/
       {uuid}.jpg                        # Original image
-    thumbnails/
-      {filename}_thumb_cover.jpg        # Cover (128px)
-      {filename}_thumb_small.jpg        # Small (240px)
-      {filename}_thumb_medium.jpg       # Medium (300px)
-      {filename}_thumb_large.jpg        # Large (365px)
-      {filename}_thumb_xlarge.jpg       # X-Large (600px)
+      thumbnails/
+        {filename}_thumb_cover.webp     # Cover (128px)
+        {filename}_thumb_small.webp     # Small (240px)
+        {filename}_thumb_medium.webp    # Medium (300px)
+        {filename}_thumb_large.webp     # Large (365px)
+        {filename}_thumb_xlarge.webp    # X-Large (600px)
+    cover/
+      thumbnails/
+        cover_thumb_cover.webp          # Album Cover (128px)
+        cover_thumb_small.webp          # Album Small (240px)
+        cover_thumb_medium.webp         # Album Medium (300px)
+        cover_thumb_large.webp          # Album Large (365px)
+        cover_thumb_xlarge.webp         # Album X-Large (600px)
 ```
+
+### Standardized Naming Pattern
+
+All thumbnails now use the consistent pattern: `{filename}_thumb_{size}.webp`
+
+- **Media thumbnails**: `{filename}_thumb_{size}.webp` (e.g., `image_thumb_small.webp`)
+- **Album cover thumbnails**: `cover_thumb_{size}.webp` (e.g., `cover_thumb_small.webp`)
+
+This standardization was implemented to ensure consistency across all thumbnail types and simplify maintenance.
 
 ## Supported File Types
 
@@ -154,12 +179,12 @@ interface MediaEntity {
   // ... existing fields
   thumbnailUrl?: string; // Legacy field - points to small thumbnail for backward compatibility
   thumbnailUrls?: {
-    // New 5-size thumbnail object
-    cover?: string; // 128×128px (Quality: 75%)
-    small?: string; // 240×240px (Quality: 80%)
-    medium?: string; // 300×300px (Quality: 85%)
-    large?: string; // 365×365px (Quality: 85%)
-    xlarge?: string; // 600×600px (Quality: 90%)
+    // New 5-size thumbnail object (WebP format)
+    cover?: string; // 128×128px (Quality: 80%)
+    small?: string; // 240×240px (Quality: 85%)
+    medium?: string; // 300×300px (Quality: 90%)
+    large?: string; // 365×365px (Quality: 90%)
+    xlarge?: string; // 600×600px (Quality: 95%)
   };
   status?: "pending" | "uploaded" | "failed"; // Processing status
   // ... existing fields
@@ -230,11 +255,11 @@ If the preferred size isn't available, the system automatically falls back in th
 
 | Size         | Dimensions | Quality | Typical Size | Use Case                      |
 | ------------ | ---------- | ------- | ------------ | ----------------------------- |
-| **Cover**    | 128×128px  | 75%     | 8-15KB       | Album covers, small previews  |
-| **Small**    | 240×240px  | 80%     | 20-40KB      | Dense grids, admin interfaces |
-| **Medium**   | 300×300px  | 85%     | 35-70KB      | General purpose, homepage     |
-| **Large**    | 365×365px  | 85%     | 50-100KB     | High quality grids            |
-| **X-Large**  | 600×600px  | 90%     | 120-250KB    | Mobile/small screens          |
+| **Cover**    | 128×128px  | 80%     | 6-12KB       | Album covers, small previews  |
+| **Small**    | 240×240px  | 85%     | 15-30KB      | Dense grids, admin interfaces |
+| **Medium**   | 300×300px  | 90%     | 25-50KB      | General purpose, homepage     |
+| **Large**    | 365×365px  | 90%     | 35-70KB      | High quality grids            |
+| **X-Large**  | 600×600px  | 95%     | 80-160KB     | Mobile/small screens          |
 | **Original** | Variable   | 100%    | 5-10MB       | Full resolution viewing       |
 
 ### Loading Speed Improvements
@@ -298,6 +323,59 @@ The process-upload function requires:
 ### Frontend Configuration
 
 No additional configuration required - components automatically detect and use intelligent thumbnail selection when available.
+
+## Migration Guide
+
+### Album Cover Thumbnail Naming Standardization
+
+To migrate existing album cover thumbnails from the old naming pattern to the new standardized pattern:
+
+#### 1. Run the Migration Script
+
+```bash
+# Set environment variables
+export DYNAMODB_TABLE=your-table-name
+export S3_BUCKET=your-bucket-name
+export AWS_REGION=your-region
+
+# Run the migration
+node scripts/migrate-album-thumbnails.js
+```
+
+#### 2. Migration Process
+
+The migration script will:
+
+1. **Scan all albums** in the database
+2. **Find existing thumbnails** with old naming pattern (`{size}.webp`)
+3. **Copy to new locations** using standardized pattern (`cover_thumb_{size}.webp`)
+4. **Update database records** with new thumbnail URLs
+5. **Remove old thumbnails** after successful migration
+
+#### 3. Transformation Example
+
+```
+Old: albums/123/cover/thumbnails/small.webp
+New: albums/123/cover/thumbnails/cover_thumb_small.webp
+
+Old: albums/123/cover/thumbnails/large.webp
+New: albums/123/cover/thumbnails/cover_thumb_large.webp
+```
+
+#### 4. Backward Compatibility
+
+During the migration period, the system maintains backward compatibility through:
+
+- Frontend utility functions that handle both old and new naming patterns
+- Database fallback logic for missing thumbnails
+- Gradual migration approach that doesn't break existing functionality
+
+#### 5. Post-Migration Benefits
+
+- **Consistent naming** across all thumbnail types
+- **Simplified maintenance** and debugging
+- **Clearer S3 bucket organization**
+- **Easier automated processing** and cleanup scripts
 
 ## Monitoring and Troubleshooting
 

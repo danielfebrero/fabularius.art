@@ -167,7 +167,7 @@ export class S3Service {
 
   static getThumbnailKey(originalKey: string): string {
     const parsedPath = path.parse(originalKey);
-    return `${parsedPath.dir}/thumbnails/${parsedPath.name}_thumb${parsedPath.ext}`;
+    return `${parsedPath.dir}/thumbnails/${parsedPath.name}_thumb.webp`;
   }
 
   static async uploadBuffer(

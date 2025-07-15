@@ -34,11 +34,11 @@ export interface ThumbnailConfig {
 }
 
 export const THUMBNAIL_CONFIGS: Record<string, ThumbnailConfig> = {
-  cover: { width: 128, height: 128, quality: 75, suffix: "_thumb_cover" },
-  small: { width: 240, height: 240, quality: 80, suffix: "_thumb_small" },
-  medium: { width: 300, height: 300, quality: 85, suffix: "_thumb_medium" },
-  large: { width: 365, height: 365, quality: 85, suffix: "_thumb_large" },
-  xlarge: { width: 600, height: 600, quality: 90, suffix: "_thumb_xlarge" },
+  cover: { width: 128, height: 128, quality: 80, suffix: "_thumb_cover" },
+  small: { width: 240, height: 240, quality: 85, suffix: "_thumb_small" },
+  medium: { width: 300, height: 300, quality: 90, suffix: "_thumb_medium" },
+  large: { width: 365, height: 365, quality: 90, suffix: "_thumb_large" },
+  xlarge: { width: 600, height: 600, quality: 95, suffix: "_thumb_xlarge" },
 };
 
 export class ThumbnailService {
@@ -75,17 +75,17 @@ export class ThumbnailService {
             fit: "cover",
             position: "center",
           })
-          .jpeg({ quality: config.quality })
+          .webp({ quality: config.quality })
           .toBuffer();
 
         // Create thumbnail key
-        const thumbnailKey = `${basePath}/thumbnails/${fileNameWithoutExt}${config.suffix}.jpg`;
+        const thumbnailKey = `${basePath}/thumbnails/${fileNameWithoutExt}${config.suffix}.webp`;
 
         // Upload thumbnail to S3
         await S3Service.uploadBuffer(
           thumbnailKey,
           thumbnailBuffer,
-          "image/jpeg",
+          "image/webp",
           {
             "original-key": originalKey,
             "thumbnail-config": JSON.stringify(config),
@@ -154,17 +154,17 @@ export class ThumbnailService {
             fit: "cover",
             position: "center",
           })
-          .jpeg({ quality: config.quality })
+          .webp({ quality: config.quality })
           .toBuffer();
 
-        // Create thumbnail key using simple size names for album covers
-        const thumbnailKey = `${baseKey}${sizeName}.jpg`;
+        // Create thumbnail key using standardized suffix pattern for album covers
+        const thumbnailKey = `${baseKey}cover_thumb_${sizeName}.webp`;
 
         // Upload thumbnail to S3
         await S3Service.uploadBuffer(
           thumbnailKey,
           thumbnailBuffer,
-          "image/jpeg",
+          "image/webp",
           {
             "album-id": albumId,
             "thumbnail-size": sizeName,
@@ -254,7 +254,7 @@ export class ThumbnailService {
 
     return `${basePath}/thumbnails/${fileNameWithoutExt}${
       THUMBNAIL_CONFIGS["small"]?.suffix || "_thumb_small"
-    }.jpg`;
+    }.webp`;
   }
 
   /**
