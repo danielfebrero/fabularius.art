@@ -8,6 +8,8 @@ const nextConfig = {
       // Add your CloudFront domain here when deployed
       process.env.NEXT_PUBLIC_CDN_URL?.replace("https://", "") ||
         "dpoieeap5d01g.cloudfront.net",
+
+      "cdn.pornspot.ai",
     ],
     // Removed formats since we're serving unoptimized PNG, MP4, and GIF from CDN
     remotePatterns: [
