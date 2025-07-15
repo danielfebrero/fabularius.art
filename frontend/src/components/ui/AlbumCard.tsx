@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Album } from "../../types/index";
 import { Card, CardContent, CardHeader } from "./Card";
 import { cn, formatDateShort, ThumbnailContext } from "../../lib/utils";
+import { composeAlbumCoverUrl, composeThumbnailUrls } from "../../lib/urlUtils";
 import ResponsivePicture from "./ResponsivePicture";
 
 interface AlbumCardProps {
@@ -29,8 +30,8 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
           <div className="aspect-square relative overflow-hidden rounded-t-lg bg-muted">
             {album.coverImageUrl ? (
               <ResponsivePicture
-                thumbnailUrls={album.thumbnailUrls}
-                fallbackUrl={album.coverImageUrl}
+                thumbnailUrls={composeThumbnailUrls(album.thumbnailUrls)}
+                fallbackUrl={composeAlbumCoverUrl(album.coverImageUrl)}
                 alt={album.title}
                 className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                 context={context}

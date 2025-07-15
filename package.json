@@ -20,6 +20,7 @@
     "local:logs": "docker-compose -f docker-compose.local.yml logs -f localstack",
     "db:setup": "node scripts/create-dynamodb-table.js",
     "local:setup": "npm run local:init && npm run db:setup",
+    "migrate:urls": "node scripts/migrate-urls-to-relative.js",
     "repair:thumbnails": "node scripts/repair-thumbnails.js",
     "cleanup:thumbnails:s3": "node scripts/cleanup-thumbnails-s3.js",
     "cleanup:thumbnails:db": "node scripts/cleanup-thumbnails-db.js",

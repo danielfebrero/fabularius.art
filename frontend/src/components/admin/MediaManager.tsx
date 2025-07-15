@@ -7,6 +7,11 @@ import { FileUpload } from "@/components/admin/FileUpload";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useAdminMedia } from "@/hooks/useAdminMedia";
 import { formatDateShort, formatFileSize } from "@/lib/utils";
+import {
+  composeMediaUrl,
+  composeThumbnailUrls,
+  getBestThumbnailUrl,
+} from "@/lib/urlUtils";
 import ResponsivePicture from "@/components/ui/ResponsivePicture";
 
 interface MediaManagerProps {
@@ -258,14 +263,14 @@ export function MediaManager({
                   <div className="aspect-square">
                     {mediaItem.mimeType.startsWith("image/") ? (
                       <ResponsivePicture
-                        thumbnailUrls={mediaItem.thumbnailUrls}
-                        fallbackUrl={
-                          mediaItem.thumbnailUrls?.small ||
-                          mediaItem.thumbnailUrls?.medium ||
-                          mediaItem.thumbnailUrls?.large ||
-                          mediaItem.thumbnailUrl ||
-                          mediaItem.url
-                        }
+                        thumbnailUrls={composeThumbnailUrls(
+                          mediaItem.thumbnailUrls
+                        )}
+                        fallbackUrl={getBestThumbnailUrl(
+                          mediaItem.thumbnailUrls,
+                          mediaItem.thumbnailUrl || mediaItem.url,
+                          "small"
+                        )}
                         alt={mediaItem.originalFilename || mediaItem.filename}
                         className="w-full h-full object-cover"
                         context="admin"
@@ -273,7 +278,7 @@ export function MediaManager({
                       />
                     ) : (
                       <video
-                        src={mediaItem.url}
+                        src={composeMediaUrl(mediaItem.url)}
                         className="w-full h-full object-cover"
                         controls={false}
                         muted
@@ -301,7 +306,9 @@ export function MediaManager({
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => window.open(mediaItem.url, "_blank")}
+                        onClick={() =>
+                          window.open(composeMediaUrl(mediaItem.url), "_blank")
+                        }
                         className="flex-1 border-admin-primary/30 text-admin-primary hover:bg-admin-primary hover:text-admin-primary-foreground"
                       >
                         View

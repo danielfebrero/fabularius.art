@@ -152,6 +152,19 @@ export class S3Service {
     return `https://${BUCKET_NAME}.s3.${region}.amazonaws.com/${key}`;
   }
 
+  static getRelativePath(key: string): string {
+    // Return the key as a relative path (with leading slash)
+    return key.startsWith("/") ? key : `/${key}`;
+  }
+
+  static composePublicUrl(relativePath: string): string {
+    // Remove leading slash if present for key composition
+    const key = relativePath.startsWith("/")
+      ? relativePath.substring(1)
+      : relativePath;
+    return this.getPublicUrl(key);
+  }
+
   static getThumbnailKey(originalKey: string): string {
     const parsedPath = path.parse(originalKey);
     return `${parsedPath.dir}/thumbnails/${parsedPath.name}_thumb${parsedPath.ext}`;

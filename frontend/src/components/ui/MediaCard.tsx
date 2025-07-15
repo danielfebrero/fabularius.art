@@ -2,6 +2,11 @@ import React from "react";
 import { Media } from "../../types/index";
 import { cn, ThumbnailContext } from "../../lib/utils";
 import { PlayCircle } from "lucide-react";
+import {
+  composeMediaUrl,
+  composeThumbnailUrls,
+  getBestThumbnailUrl,
+} from "../../lib/urlUtils";
 import ResponsivePicture from "./ResponsivePicture";
 
 interface MediaCardProps {
@@ -31,8 +36,8 @@ export const MediaCard: React.FC<MediaCardProps> = ({
     >
       {isVideo ? (
         <video
-          src={media.url}
-          poster={media.thumbnailUrl}
+          src={composeMediaUrl(media.url)}
+          poster={composeMediaUrl(media.thumbnailUrl)}
           className="w-full h-full object-cover"
           preload="metadata"
           muted
@@ -40,8 +45,12 @@ export const MediaCard: React.FC<MediaCardProps> = ({
         />
       ) : (
         <ResponsivePicture
-          thumbnailUrls={media.thumbnailUrls}
-          fallbackUrl={media.thumbnailUrl || media.url}
+          thumbnailUrls={composeThumbnailUrls(media.thumbnailUrls)}
+          fallbackUrl={getBestThumbnailUrl(
+            media.thumbnailUrls,
+            media.thumbnailUrl || media.url,
+            "medium"
+          )}
           alt={media.originalFilename || media.filename}
           className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
           context={context}

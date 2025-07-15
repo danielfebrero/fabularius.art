@@ -61,12 +61,15 @@ export const handler = async (
       originalFilename: request.filename,
       mimeType: request.mimeType,
       size: request.size || 0,
-      url: S3Service.getPublicUrl(key),
+      url: S3Service.getRelativePath(key),
       createdAt: now,
       updatedAt: now,
       status: "pending" as const, // Will be updated to 'uploaded' after successful upload
     };
-    console.log("Generated media URL:", S3Service.getPublicUrl(key));
+    console.log(
+      "Generated media relative path:",
+      S3Service.getRelativePath(key)
+    );
 
     await DynamoDBService.createMedia(mediaEntity);
 

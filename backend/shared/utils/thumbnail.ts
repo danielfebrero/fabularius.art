@@ -98,7 +98,7 @@ export class ThumbnailService {
             (key) => THUMBNAIL_CONFIGS[key] === config
           ) || "custom";
 
-        thumbnailUrls[configName] = S3Service.getPublicUrl(thumbnailKey);
+        thumbnailUrls[configName] = S3Service.getRelativePath(thumbnailKey);
       } catch (error) {
         console.error(
           `Failed to generate ${config.suffix} thumbnail for ${originalKey}:`,
@@ -174,7 +174,7 @@ export class ThumbnailService {
 
         // Store the URL
         thumbnailUrls[sizeName as keyof typeof thumbnailUrls] =
-          S3Service.getPublicUrl(thumbnailKey);
+          S3Service.getRelativePath(thumbnailKey);
       } catch (error) {
         console.error(
           `Failed to generate ${sizeName} album cover thumbnail for album ${albumId}:`,
@@ -262,6 +262,6 @@ export class ThumbnailService {
    */
   static getThumbnailUrl(originalKey: string): string {
     const thumbnailKey = this.getDefaultThumbnailKey(originalKey);
-    return S3Service.getPublicUrl(thumbnailKey);
+    return S3Service.getRelativePath(thumbnailKey);
   }
 }
