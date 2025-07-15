@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { ResponseUtil } from "../../../shared/utils/response";
 import { UserUtil } from "../../../shared/utils/user";
 import { DynamoDBService } from "../../../shared/utils/dynamodb";
+import { ParameterStoreService } from "../../../shared/utils/parameters";
 import { UserAuthMiddleware } from "./middleware";
 import {
   GoogleTokenResponse,
@@ -16,25 +17,12 @@ const SESSION_DURATION_DAYS = 30;
 
 // Google OAuth configuration from environment variables
 const GOOGLE_CLIENT_ID = process.env["GOOGLE_CLIENT_ID"];
-const GOOGLE_CLIENT_SECRET = process.env["GOOGLE_CLIENT_SECRET"];
-const GOOGLE_REDIRECT_URI = process.env["GOOGLE_REDIRECT_URI"];
 const FRONTEND_BASE_URL = process.env["FRONTEND_BASE_URL"];
 
-// Validate required environment variables
-if (
-  !GOOGLE_CLIENT_ID ||
-  !GOOGLE_CLIENT_SECRET ||
-  !GOOGLE_REDIRECT_URI ||
-  !FRONTEND_BASE_URL
-) {
+// Validate required environment variables (GOOGLE_CLIENT_SECRET will be validated in handler)
+if (!GOOGLE_CLIENT_ID || !FRONTEND_BASE_URL) {
   throw new Error("Missing required Google OAuth environment variables");
 }
-
-const oauth2Client = new OAuth2Client(
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET,
-  GOOGLE_REDIRECT_URI
-);
 
 /**
  * Google OAuth callback handler
@@ -46,7 +34,20 @@ export const handler = async (
   console.log("Google OAuth callback handler started");
   console.log("Query parameters:", event.queryStringParameters);
 
+  const apiDomain = event.requestContext.domainName;
+  const stage = event.requestContext.stage;
+  const redirectUri = `https://${apiDomain}/${stage}/auth/oauth/callback`;
+
   try {
+    // Fetch Google client secret from Parameter Store
+    const GOOGLE_CLIENT_SECRET =
+      await ParameterStoreService.getGoogleClientSecret();
+
+    const oauth2Client = new OAuth2Client(
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET,
+      redirectUri
+    );
     // Extract OAuth parameters from query string
     const code = event.queryStringParameters?.["code"];
     const state = event.queryStringParameters?.["state"];

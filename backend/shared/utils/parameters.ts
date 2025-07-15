@@ -96,4 +96,28 @@ export class ParameterStoreService {
     const environment = process.env["ENVIRONMENT"] || "dev";
     return await this.getParameter(`/${environment}/frontend-url`, false);
   }
+
+  /**
+   * Get the Google Client Secret from Parameter Store or environment variable
+   */
+  static async getGoogleClientSecret(): Promise<string> {
+    // In local development, use environment variable directly
+    if (isLocal) {
+      const secret = process.env["GOOGLE_CLIENT_SECRET"];
+      if (!secret) {
+        throw new Error(
+          "GOOGLE_CLIENT_SECRET environment variable is required in local development"
+        );
+      }
+      console.log("Using local GOOGLE_CLIENT_SECRET from environment variable");
+      return secret;
+    }
+
+    // In production, use Parameter Store
+    const environment = process.env["ENVIRONMENT"] || "dev";
+    return await this.getParameter(
+      `/${environment}/google-client-secret`,
+      true
+    );
+  }
 }

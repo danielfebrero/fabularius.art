@@ -14,10 +14,13 @@ Parameters:
     Default: pornspot.ai
     Description: Domain name for the application
 
+Conditions:
+  IsProduction: !Equals [!Ref Environment, prod]
+
 Globals:
   Function:
     Timeout: 30
-    Runtime: nodejs18.x
+    Runtime: nodejs20.x
     MemorySize: 256
     Environment:
       Variables:
@@ -25,6 +28,13 @@ Globals:
         DYNAMODB_TABLE: !Ref MediaTable
         S3_BUCKET: !Ref MediaBucket
         CLOUDFRONT_DOMAIN: !Sub "https://${CloudFrontDistribution.DomainName}"
+        DATABASE_TABLE_NAME: !Ref MediaTable
+        FRONTEND_BASE_URL: !Sub
+          - "https://${DomainPrefix}${DomainName}"
+          - DomainPrefix: !If [IsProduction, "www.", !Sub "${Environment}."]
+        FROM_EMAIL: !Sub "noreply@${DomainName}"
+        FROM_NAME: "PornSpot.ai"
+        GOOGLE_CLIENT_ID: !Sub "{{resolve:ssm:/${Environment}/google-client-id}}"
 
 Resources:
   # DynamoDB Table - Single table design
@@ -42,6 +52,10 @@ Resources:
           AttributeType: S
         - AttributeName: GSI1SK
           AttributeType: S
+        - AttributeName: GSI2PK
+          AttributeType: S
+        - AttributeName: GSI2SK
+          AttributeType: S
       KeySchema:
         - AttributeName: PK
           KeyType: HASH
@@ -53,6 +67,14 @@ Resources:
             - AttributeName: GSI1PK
               KeyType: HASH
             - AttributeName: GSI1SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: GSI2
+          KeySchema:
+            - AttributeName: GSI2PK
+              KeyType: HASH
+            - AttributeName: GSI2SK
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
@@ -155,6 +177,7 @@ Resources:
   # API Gateway
   ApiGateway:
     Type: AWS::Serverless::Api
+    DeletionPolicy: Retain
     Properties:
       Name: !Sub "${Environment}-pornspot-api"
       StageName: !Ref Environment
@@ -168,6 +191,24 @@ Resources:
               Headers:
                 - Cookie
             ReauthorizeEvery: 0
+          UserAuthorizer:
+            FunctionArn: !GetAtt UserAuthorizerFunction.Arn
+            FunctionPayloadType: REQUEST
+            Identity:
+              Headers:
+                - Cookie
+            ReauthorizeEvery: 0
+
+  # Authorizer Functions
+  UserAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-authorizer"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/authorizer.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
 
   # Lambda Functions
   GetAlbumsFunction:
@@ -536,6 +577,323 @@ Resources:
             TableName: !Ref MediaTable
         - S3ReadPolicy:
             BucketName: !Ref MediaBucket
+
+  # User Authentication Functions
+  UserRegisterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-register"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/register.handler
+      Events:
+        PostRegister:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/register
+            Method: POST
+            Auth:
+              Authorizer: NONE
+        OptionsRegister:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/register
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: "*"
+
+  UserLoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-login"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/login.handler
+      Events:
+        PostLogin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/login
+            Method: POST
+            Auth:
+              Authorizer: NONE
+        OptionsLogin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/login
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
+  UserLogoutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-logout"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/logout.handler
+      Events:
+        PostLogout:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/logout
+            Method: POST
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsLogout:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/logout
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
+  UserMeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-me"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/me.handler
+      Events:
+        GetMe:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/me
+            Method: GET
+            Auth:
+              Authorizer: UserAuthorizer
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
+  UserVerifyEmailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-verify-email"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/verify-email.handler
+      Events:
+        PostVerifyEmail:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/verify-email
+            Method: POST
+            Auth:
+              Authorizer: NONE
+        OptionsVerifyEmail:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/verify-email
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
+  UserResendVerificationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-resend-verification"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/resend-verification.handler
+      Events:
+        PostResendVerification:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/resend-verification
+            Method: POST
+            Auth:
+              Authorizer: NONE
+        OptionsResendVerification:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/resend-verification
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: "*"
+
+  UserOAuthGoogleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-oauth-google"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/oauth-google.handler
+      Events:
+        GetOAuthCallback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /auth/oauth/callback
+            Method: GET
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: "*"
+
+  # User Interaction Functions
+  UserLikeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-like"
+      CodeUri: backend/
+      Handler: dist/functions/user/interactions/like.handler
+      Events:
+        PostLike:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/like
+            Method: POST
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsLike:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/like
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
+  UserBookmarkFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-bookmark"
+      CodeUri: backend/
+      Handler: dist/functions/user/interactions/bookmark.handler
+      Events:
+        PostBookmark:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/bookmark
+            Method: POST
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsBookmark:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/bookmark
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
+  UserGetLikesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-get-likes"
+      CodeUri: backend/
+      Handler: dist/functions/user/interactions/get-likes.handler
+      Events:
+        GetLikes:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/likes
+            Method: GET
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsLikes:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/likes
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
+  UserGetBookmarksFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-get-bookmarks"
+      CodeUri: backend/
+      Handler: dist/functions/user/interactions/get-bookmarks.handler
+      Events:
+        GetBookmarks:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/bookmarks
+            Method: GET
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsBookmarks:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/bookmarks
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
 
   AdminAuthorizerFunction:
     Type: AWS::Serverless::Function
