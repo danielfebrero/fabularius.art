@@ -7,6 +7,7 @@ import { useLikes } from "@/hooks/useLikes";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { useUser } from "@/hooks/useUser";
 import { Button } from "@/components/ui/Button";
+import { composeAlbumCoverUrl } from "@/lib/urlUtils";
 
 const UserDashboard: React.FC = () => {
   const { user } = useUser();
@@ -67,7 +68,7 @@ const UserDashboard: React.FC = () => {
     <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
       {interaction.target?.coverImageUrl && (
         <img
-          src={interaction.target.coverImageUrl}
+          src={composeAlbumCoverUrl(interaction.target.coverImageUrl)}
           alt={interaction.target.title || "Content"}
           className="w-12 h-12 object-cover rounded-md"
         />

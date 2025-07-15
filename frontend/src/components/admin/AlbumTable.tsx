@@ -3,6 +3,7 @@
 import { Album } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
+import { composeMediaUrl } from "@/lib/urlUtils";
 
 interface AlbumTableProps {
   albums: Album[];
@@ -119,7 +120,7 @@ export function AlbumTable({
                       <div className="flex-shrink-0 h-12 w-12">
                         <img
                           className="h-12 w-12 rounded-lg object-cover border border-border"
-                          src={album.coverImageUrl}
+                          src={composeMediaUrl(album.coverImageUrl)}
                           alt={album.title}
                         />
                       </div>

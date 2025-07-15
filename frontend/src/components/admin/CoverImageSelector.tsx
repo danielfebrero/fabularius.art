@@ -5,6 +5,11 @@ import { Button } from "@/components/ui/Button";
 import { useAdminMedia } from "@/hooks/useAdminMedia";
 import { Media } from "@/types";
 import ResponsivePicture from "@/components/ui/ResponsivePicture";
+import {
+  composeMediaUrl,
+  composeThumbnailUrls,
+  getBestThumbnailUrl,
+} from "@/lib/urlUtils";
 
 interface CoverImageSelectorProps {
   albumId: string;
@@ -55,14 +60,14 @@ export function CoverImageSelector({
           {selectedCoverUrl ? (
             <div className="relative inline-block">
               <img
-                src={
-                  media.find((m) => m.url === selectedCoverUrl)?.thumbnailUrls
-                    ?.medium ||
-                  media.find((m) => m.url === selectedCoverUrl)?.thumbnailUrls
-                    ?.small ||
-                  media.find((m) => m.url === selectedCoverUrl)?.thumbnailUrl ||
-                  selectedCoverUrl
-                }
+                src={getBestThumbnailUrl(
+                  composeThumbnailUrls(
+                    media.find((m) => m.url === selectedCoverUrl)
+                      ?.thumbnailUrls || {}
+                  ),
+                  composeMediaUrl(selectedCoverUrl),
+                  "medium"
+                )}
                 alt="Current cover"
                 className="w-32 h-32 object-cover rounded-lg border-2 border-admin-primary"
               />
@@ -163,14 +168,14 @@ export function CoverImageSelector({
                 >
                   <div className="aspect-square">
                     <ResponsivePicture
-                      thumbnailUrls={image.thumbnailUrls}
-                      fallbackUrl={
-                        image.thumbnailUrls?.cover ||
-                        image.thumbnailUrls?.medium ||
-                        image.thumbnailUrls?.small ||
-                        image.thumbnailUrl ||
-                        image.url
-                      }
+                      thumbnailUrls={composeThumbnailUrls(
+                        image.thumbnailUrls || {}
+                      )}
+                      fallbackUrl={getBestThumbnailUrl(
+                        composeThumbnailUrls(image.thumbnailUrls || {}),
+                        composeMediaUrl(image.url),
+                        "cover"
+                      )}
                       alt={image.originalFilename || image.filename}
                       className="w-full h-full object-cover"
                       context="cover-selector"

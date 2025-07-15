@@ -5,6 +5,7 @@ import { Bookmark, Search, Grid, List, Calendar, Image } from "lucide-react";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { composeAlbumCoverUrl } from "@/lib/urlUtils";
 
 const UserBookmarksPage: React.FC = () => {
   const {
@@ -47,7 +48,7 @@ const UserBookmarksPage: React.FC = () => {
           {interaction.target?.coverImageUrl ? (
             <div className="aspect-video relative">
               <img
-                src={interaction.target.coverImageUrl}
+                src={composeAlbumCoverUrl(interaction.target.coverImageUrl)}
                 alt={interaction.target.title || "Content"}
                 className="w-full h-full object-cover"
               />
@@ -89,7 +90,7 @@ const UserBookmarksPage: React.FC = () => {
         <div className="flex items-center space-x-4">
           {interaction.target?.coverImageUrl ? (
             <img
-              src={interaction.target.coverImageUrl}
+              src={composeAlbumCoverUrl(interaction.target.coverImageUrl)}
               alt={interaction.target.title || "Content"}
               className="w-16 h-16 object-cover rounded-md flex-shrink-0"
             />

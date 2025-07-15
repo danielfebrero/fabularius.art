@@ -5,6 +5,7 @@ import {
   fetchAllPublicAlbums,
 } from "../../../lib/data";
 import { MediaGallery } from "../../../components/MediaGallery";
+import { composeAlbumCoverUrl } from "../../../lib/urlUtils";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -42,13 +43,21 @@ export async function generateMetadata({
       description: `${albumDescription}. Create your own custom adult content with PornSpot.ai.`,
       url: `https://pornspot.ai/albums/${params.albumId}`,
       type: "article",
-      images: [album.coverImageUrl || "/website.png"],
+      images: [
+        album.coverImageUrl
+          ? composeAlbumCoverUrl(album.coverImageUrl)
+          : "/website.png",
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: `${album.title} - AI Generated Porn Album on PornSpot.ai`,
       description: `${albumDescription}. Create your own custom adult content with PornSpot.ai.`,
-      images: [album.coverImageUrl || "/website.png"],
+      images: [
+        album.coverImageUrl
+          ? composeAlbumCoverUrl(album.coverImageUrl)
+          : "/website.png",
+      ],
     },
   };
 }

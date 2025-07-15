@@ -5,6 +5,7 @@ import { Heart, Search, Grid, List, Calendar, Image } from "lucide-react";
 import { useLikes } from "@/hooks/useLikes";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
+import { composeAlbumCoverUrl } from "@/lib/urlUtils";
 
 const UserLikesPage: React.FC = () => {
   const {
@@ -45,7 +46,7 @@ const UserLikesPage: React.FC = () => {
           {interaction.target?.coverImageUrl ? (
             <div className="aspect-video relative">
               <img
-                src={interaction.target.coverImageUrl}
+                src={composeAlbumCoverUrl(interaction.target.coverImageUrl)}
                 alt={interaction.target.title || "Content"}
                 className="w-full h-full object-cover"
               />
@@ -87,7 +88,7 @@ const UserLikesPage: React.FC = () => {
         <div className="flex items-center space-x-4">
           {interaction.target?.coverImageUrl ? (
             <img
-              src={interaction.target.coverImageUrl}
+              src={composeAlbumCoverUrl(interaction.target.coverImageUrl)}
               alt={interaction.target.title || "Content"}
               className="w-16 h-16 object-cover rounded-md flex-shrink-0"
             />
