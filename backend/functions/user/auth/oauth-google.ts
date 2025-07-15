@@ -6,6 +6,7 @@ import { ResponseUtil } from "../../../shared/utils/response";
 import { UserUtil } from "../../../shared/utils/user";
 import { DynamoDBService } from "../../../shared/utils/dynamodb";
 import { UserAuthMiddleware } from "./middleware";
+import { ParameterStoreService } from "../../../shared/utils/parameters";
 import {
   GoogleTokenResponse,
   GoogleOAuthUserInfo,
@@ -16,25 +17,19 @@ const SESSION_DURATION_DAYS = 30;
 
 // Google OAuth configuration from environment variables
 const GOOGLE_CLIENT_ID = process.env["GOOGLE_CLIENT_ID"];
-const GOOGLE_CLIENT_SECRET = process.env["GOOGLE_CLIENT_SECRET"];
 const GOOGLE_REDIRECT_URI = process.env["GOOGLE_REDIRECT_URI"];
 const FRONTEND_BASE_URL = process.env["FRONTEND_BASE_URL"];
 
 // Validate required environment variables
-if (
-  !GOOGLE_CLIENT_ID ||
-  !GOOGLE_CLIENT_SECRET ||
-  !GOOGLE_REDIRECT_URI ||
-  !FRONTEND_BASE_URL
-) {
+if (!GOOGLE_CLIENT_ID || !GOOGLE_REDIRECT_URI || !FRONTEND_BASE_URL) {
   throw new Error("Missing required Google OAuth environment variables");
 }
 
-const oauth2Client = new OAuth2Client(
-  GOOGLE_CLIENT_ID,
-  GOOGLE_CLIENT_SECRET,
-  GOOGLE_REDIRECT_URI
-);
+// Create OAuth2Client with client secret fetched at runtime
+const createOAuth2Client = async (): Promise<OAuth2Client> => {
+  const clientSecret = await ParameterStoreService.getGoogleClientSecret();
+  return new OAuth2Client(GOOGLE_CLIENT_ID, clientSecret, GOOGLE_REDIRECT_URI);
+};
 
 /**
  * Google OAuth callback handler
@@ -47,6 +42,8 @@ export const handler = async (
   console.log("Query parameters:", event.queryStringParameters);
 
   try {
+    // Create OAuth2Client with fetched client secret
+    const oauth2Client = await createOAuth2Client();
     // Extract OAuth parameters from query string
     const code = event.queryStringParameters?.["code"];
     const state = event.queryStringParameters?.["state"];

@@ -66,8 +66,7 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
   }
 
   // Find the media record by filename
-  const mediaResult = await DynamoDBService.listAlbumMedia(albumId, 100);
-  const mediaItem = mediaResult.media.find((m) => m.filename === key);
+  const mediaItem = await DynamoDBService.getMediaByFilename(key);
 
   if (!mediaItem || !mediaItem.id) {
     console.log("Media record not found for key:", key);

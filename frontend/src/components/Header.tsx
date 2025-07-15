@@ -2,18 +2,10 @@
 
 import Link from "next/link";
 import { useUser } from "@/hooks/useUser";
-import { useAdminContext } from "@/contexts/AdminContext";
-import { Button } from "./ui/Button";
 import { UserMenu } from "./user/UserMenu";
 
 export function Header() {
   const { user, loading } = useUser();
-  const { user: adminUser } = useAdminContext();
-
-  // If admin is logged in, don't show this header (admin has its own header)
-  if (adminUser) {
-    return null;
-  }
 
   return (
     <header className="border-b border-border bg-card shadow-sm">

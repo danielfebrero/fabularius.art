@@ -2,6 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "../../../shared/utils/dynamodb";
 import { ResponseUtil } from "../../../shared/utils/response";
 import { Album } from "../../../shared/types";
+import { AuthMiddleware } from "../auth/middleware";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -11,6 +12,12 @@ export const handler = async (
   }
 
   try {
+    // Validate admin session
+    const authResult = await AuthMiddleware.validateSession(event);
+    if (!authResult.isValid || !authResult.admin) {
+      return ResponseUtil.unauthorized(event, "Admin access required");
+    }
+
     const limit = parseInt(event.queryStringParameters?.["limit"] || "20");
     const lastEvaluatedKey = event.queryStringParameters?.["cursor"]
       ? JSON.parse(

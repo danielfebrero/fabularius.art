@@ -4,6 +4,7 @@ import { DynamoDBService } from "../../shared/utils/dynamodb";
 import { ResponseUtil } from "../../shared/utils/response";
 import { RevalidationService } from "../../shared/utils/revalidation";
 import { CreateAlbumRequest, AlbumEntity, Album } from "../../shared/types";
+import { AuthMiddleware } from "../admin/auth/middleware";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -13,6 +14,12 @@ export const handler = async (
   }
 
   try {
+    // Validate admin session
+    const authResult = await AuthMiddleware.validateSession(event);
+    if (!authResult.isValid || !authResult.admin) {
+      return ResponseUtil.unauthorized(event, "Admin access required");
+    }
+
     if (!event.body) {
       return ResponseUtil.badRequest(event, "Request body is required");
     }

@@ -217,6 +217,24 @@ export class DynamoDBService {
     return response;
   }
 
+  static async getMediaByFilename(
+    filename: string
+  ): Promise<MediaEntity | null> {
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI2",
+        KeyConditionExpression: "GSI2PK = :gsi2pk",
+        ExpressionAttributeValues: {
+          ":gsi2pk": `MEDIA_FILENAME#${filename}`,
+        },
+        Limit: 1,
+      })
+    );
+
+    return (result.Items?.[0] as MediaEntity) || null;
+  }
+
   static async deleteMedia(albumId: string, mediaId: string): Promise<void> {
     await docClient.send(
       new DeleteCommand({

@@ -4,6 +4,7 @@ import { QueryCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocumentClient } from "@aws-sdk/lib-dynamodb";
 import { S3Client, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { AuthMiddleware } from "../admin/auth/middleware";
 
 const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
 
@@ -50,6 +51,12 @@ export const handler = async (
   }
 
   try {
+    // Validate admin session
+    const authResult = await AuthMiddleware.validateSession(event);
+    if (!authResult.isValid || !authResult.admin) {
+      return ResponseUtil.unauthorized(event, "Admin access required");
+    }
+
     // Get total albums count
     const albumsResult = await docClient.send(
       new QueryCommand({

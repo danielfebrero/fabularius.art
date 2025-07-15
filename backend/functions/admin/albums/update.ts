@@ -2,6 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "../../../shared/utils/response";
 import { RevalidationService } from "../../../shared/utils/revalidation";
 import { UpdateAlbumRequest } from "../../../shared/types";
+import { AuthMiddleware } from "../auth/middleware";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -17,6 +18,12 @@ export const handler = async (
   const { ThumbnailService } = await import("../../../shared/utils/thumbnail");
 
   try {
+    // Validate admin session
+    const authResult = await AuthMiddleware.validateSession(event);
+    if (!authResult.isValid || !authResult.admin) {
+      return ResponseUtil.unauthorized(event, "Admin access required");
+    }
+
     const albumId = event.pathParameters?.["albumId"];
     if (!albumId) {
       return ResponseUtil.badRequest(event, "Album ID is required");

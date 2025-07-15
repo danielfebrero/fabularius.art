@@ -4,6 +4,7 @@ import { DynamoDBService } from "../../shared/utils/dynamodb";
 import { S3Service } from "../../shared/utils/s3";
 import { ResponseUtil } from "../../shared/utils/response";
 import { UploadMediaRequest } from "../../shared/types";
+import { AuthMiddleware } from "../admin/auth/middleware";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -13,6 +14,12 @@ export const handler = async (
   }
 
   try {
+    // Validate admin session
+    const authResult = await AuthMiddleware.validateSession(event);
+    if (!authResult.isValid || !authResult.admin) {
+      return ResponseUtil.unauthorized(event, "Admin access required");
+    }
+
     const albumId = event.pathParameters?.["albumId"];
 
     if (!albumId) {
@@ -54,6 +61,8 @@ export const handler = async (
       SK: `MEDIA#${mediaId}`,
       GSI1PK: `MEDIA#${albumId}`,
       GSI1SK: `${now}#${mediaId}`,
+      GSI2PK: `MEDIA_FILENAME#${key}`,
+      GSI2SK: mediaId,
       EntityType: "Media" as const,
       id: mediaId,
       albumId,

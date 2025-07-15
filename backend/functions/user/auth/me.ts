@@ -1,7 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "../../../shared/utils/response";
-import { DynamoDBService } from "../../../shared/utils/dynamodb";
-import { UserUtil } from "../../../shared/utils/user";
+import { UserAuthMiddleware } from "./middleware";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -11,19 +10,14 @@ export const handler = async (
   }
 
   try {
-    const userId = event.requestContext.authorizer?.["userId"] as string;
-
-    if (!userId) {
-      return ResponseUtil.unauthorized(event, "No user session found");
+    // Validate user session
+    const authResult = await UserAuthMiddleware.validateSession(event);
+    if (!authResult.isValid || !authResult.user) {
+      return ResponseUtil.unauthorized(event, "User access required");
     }
 
-    const userEntity = await DynamoDBService.getUserById(userId);
-    if (!userEntity) {
-      return ResponseUtil.notFound(event, "User not found");
-    }
-
-    // Return user info (without sensitive data)
-    const user = UserUtil.sanitizeUserForResponse(userEntity);
+    // Return user info (already validated and sanitized by middleware)
+    const user = authResult.user;
 
     return ResponseUtil.success(event, { user });
   } catch (error) {

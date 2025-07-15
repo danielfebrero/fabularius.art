@@ -14,10 +14,13 @@ Parameters:
     Default: pornspot.ai
     Description: Domain name for the application
 
+Conditions:
+  IsProduction: !Equals [!Ref Environment, prod]
+
 Globals:
   Function:
     Timeout: 30
-    Runtime: nodejs18.x
+    Runtime: nodejs20.x
     MemorySize: 256
     Environment:
       Variables:
@@ -25,6 +28,14 @@ Globals:
         DYNAMODB_TABLE: !Ref MediaTable
         S3_BUCKET: !Ref MediaBucket
         CLOUDFRONT_DOMAIN: !Sub "https://${CloudFrontDistribution.DomainName}"
+        DATABASE_TABLE_NAME: !Ref MediaTable
+        FRONTEND_BASE_URL: !Sub
+          - "https://${DomainPrefix}${DomainName}"
+          - DomainPrefix: !If [IsProduction, "www.", !Sub "${Environment}."]
+        FROM_EMAIL: !Sub "noreply@${DomainName}"
+        FROM_NAME: "PornSpot.ai"
+        GOOGLE_CLIENT_ID: !Sub "{{resolve:ssm:/${Environment}/google-client-id}}"
+        GOOGLE_REDIRECT_URI: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/auth/oauth/callback"
 
 Resources:
   # DynamoDB Table - Single table design
@@ -42,6 +53,10 @@ Resources:
           AttributeType: S
         - AttributeName: GSI1SK
           AttributeType: S
+        - AttributeName: GSI2PK
+          AttributeType: S
+        - AttributeName: GSI2SK
+          AttributeType: S
       KeySchema:
         - AttributeName: PK
           KeyType: HASH
@@ -53,6 +68,14 @@ Resources:
             - AttributeName: GSI1PK
               KeyType: HASH
             - AttributeName: GSI1SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: GSI2
+          KeySchema:
+            - AttributeName: GSI2PK
+              KeyType: HASH
+            - AttributeName: GSI2SK
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
@@ -152,22 +175,152 @@ Resources:
               StringEquals:
                 AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
 
-  # API Gateway
+  # Explicit API Gateway to avoid circular dependencies
   ApiGateway:
-    Type: AWS::Serverless::Api
+    Type: AWS::ApiGateway::RestApi
     Properties:
       Name: !Sub "${Environment}-pornspot-api"
+      Description: PornSpot.ai API
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  # API Gateway Deployment
+  ApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn:
+      - GetAlbumsMethod
+      - CreateAlbumMethod
+      - AdminLoginMethod
+      - AdminLogoutMethod
+      - AdminMeMethod
+    Properties:
+      RestApiId: !Ref ApiGateway
+
+  # API Gateway Stage
+  ApiGatewayStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
       StageName: !Ref Environment
-      Auth:
-        DefaultAuthorizer: AWS_IAM
-        Authorizers:
-          AdminAuthorizer:
-            FunctionArn: !GetAtt AdminAuthorizerFunction.Arn
-            FunctionPayloadType: REQUEST
-            Identity:
-              Headers:
-                - Cookie
-            ReauthorizeEvery: 0
+      RestApiId: !Ref ApiGateway
+      DeploymentId: !Ref ApiGatewayDeployment
+
+  # API Gateway Resources
+  AlbumsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: albums
+
+  AdminResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ParentId: !GetAtt ApiGateway.RootResourceId
+      PathPart: admin
+
+  # API Gateway Methods
+  GetAlbumsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref AlbumsResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetAlbumsFunction.Arn}/invocations"
+
+  CreateAlbumMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref AlbumsResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CreateAlbumFunction.Arn}/invocations"
+
+  AdminLoginMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref AdminResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AdminLoginFunction.Arn}/invocations"
+
+  AdminLogoutMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref AdminResource
+      HttpMethod: DELETE
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AdminLogoutFunction.Arn}/invocations"
+
+  AdminMeMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref ApiGateway
+      ResourceId: !Ref AdminResource
+      HttpMethod: GET
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AdminMeFunction.Arn}/invocations"
+
+  # Lambda Permissions
+  GetAlbumsPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref GetAlbumsFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*"
+
+  CreateAlbumPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref CreateAlbumFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*"
+
+  AdminLoginPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AdminLoginFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*"
+
+  AdminLogoutPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AdminLogoutFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*"
+
+  AdminMePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref AdminMeFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGateway}/*/*/*"
 
   # Lambda Functions
   GetAlbumsFunction:
@@ -176,15 +329,6 @@ Resources:
       FunctionName: !Sub "${Environment}-pornspot-get-albums"
       CodeUri: backend/
       Handler: dist/functions/albums/get.handler
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /albums
-            Method: GET
-            Auth:
-              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -195,23 +339,7 @@ Resources:
       FunctionName: !Sub "${Environment}-pornspot-create-album"
       CodeUri: backend/
       Handler: dist/functions/albums/create.handler
-      Events:
-        PostCreateAlbum:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /albums
-            Method: POST
-            Auth:
-              Authorizer: AdminAuthorizer
-        OptionsCreateAlbum:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /albums
-            Method: OPTIONS
-            Auth:
-              Authorizer: NONE
+
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
@@ -229,15 +357,6 @@ Resources:
       FunctionName: !Sub "${Environment}-pornspot-get-album"
       CodeUri: backend/
       Handler: dist/functions/albums/getById.handler
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /albums/{albumId}
-            Method: GET
-            Auth:
-              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -248,23 +367,6 @@ Resources:
       FunctionName: !Sub "${Environment}-pornspot-upload-media"
       CodeUri: backend/
       Handler: dist/functions/media/upload.handler
-      Events:
-        PostUploadMedia:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /albums/{albumId}/media
-            Method: POST
-            Auth:
-              Authorizer: AdminAuthorizer
-        OptionsUploadMedia:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /albums/{albumId}/media
-            Method: OPTIONS
-            Auth:
-              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -279,15 +381,6 @@ Resources:
       FunctionName: !Sub "${Environment}-pornspot-get-media"
       CodeUri: backend/
       Handler: dist/functions/media/get.handler
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /albums/{albumId}/media
-            Method: GET
-            Auth:
-              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -299,23 +392,6 @@ Resources:
       FunctionName: !Sub "${Environment}-pornspot-admin-login"
       CodeUri: backend/
       Handler: dist/functions/admin/auth/login.handler
-      Events:
-        PostLogin:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /admin/login
-            Method: POST
-            Auth:
-              Authorizer: NONE
-        OptionsLogin:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /admin/login
-            Method: OPTIONS
-            Auth:
-              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -328,23 +404,6 @@ Resources:
       FunctionName: !Sub "${Environment}-pornspot-admin-logout"
       CodeUri: backend/
       Handler: dist/functions/admin/auth/logout.handler
-      Events:
-        PostLogout:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /admin/logout
-            Method: POST
-            Auth:
-              Authorizer: NONE
-        OptionsLogout:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /admin/logout
-            Method: OPTIONS
-            Auth:
-              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -357,15 +416,6 @@ Resources:
       FunctionName: !Sub "${Environment}-pornspot-admin-me"
       CodeUri: backend/
       Handler: dist/functions/admin/auth/me.handler
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /admin/me
-            Method: GET
-            Auth:
-              Authorizer: AdminAuthorizer
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -379,23 +429,6 @@ Resources:
       Handler: dist/functions/admin/albums/update.handler
       MemorySize: 1024
       Timeout: 60
-      Events:
-        PutUpdateAlbum:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /admin/albums/{albumId}
-            Method: PUT
-            Auth:
-              Authorizer: AdminAuthorizer
-        OptionsUpdateAlbum:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /admin/albums/{albumId}
-            Method: OPTIONS
-            Auth:
-              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -412,15 +445,6 @@ Resources:
       FunctionName: !Sub "${Environment}-pornspot-admin-delete-album"
       CodeUri: backend/
       Handler: dist/functions/admin/albums/delete.handler
-      Events:
-        DeleteAlbum:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /admin/albums/{albumId}
-            Method: DELETE
-            Auth:
-              Authorizer: AdminAuthorizer
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -442,23 +466,6 @@ Resources:
       FunctionName: !Sub "${Environment}-pornspot-admin-list-albums"
       CodeUri: backend/
       Handler: dist/functions/admin/albums/list.handler
-      Events:
-        GetAlbums:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /admin/albums
-            Method: GET
-            Auth:
-              Authorizer: AdminAuthorizer
-        OptionsAlbums:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /admin/albums
-            Method: OPTIONS
-            Auth:
-              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -469,23 +476,6 @@ Resources:
       FunctionName: !Sub "${Environment}-pornspot-admin-delete-media"
       CodeUri: backend/
       Handler: dist/functions/admin/media/delete.handler
-      Events:
-        DeleteMedia:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /admin/albums/{albumId}/media/{mediaId}
-            Method: DELETE
-            Auth:
-              Authorizer: AdminAuthorizer
-        OptionsAdminDeleteMedia:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /admin/albums/{albumId}/media/{mediaId}
-            Method: OPTIONS
-            Auth:
-              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -514,45 +504,162 @@ Resources:
       FunctionName: !Sub "${Environment}-pornspot-admin-stats"
       CodeUri: backend/
       Handler: dist/functions/admin/stats.handler
-      Events:
-        GetStats:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /admin/stats
-            Method: GET
-            Auth:
-              Authorizer: AdminAuthorizer
-        OptionsStats:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /admin/stats
-            Method: OPTIONS
-            Auth:
-              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
         - S3ReadPolicy:
             BucketName: !Ref MediaBucket
 
-  AdminAuthorizerFunction:
+  # User Authentication Functions
+  UserRegisterFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-pornspot-admin-authorizer"
+      FunctionName: !Sub "${Environment}-pornspot-user-register"
       CodeUri: backend/
-      Handler: dist/functions/admin/auth/authorizer.handler
+      Handler: dist/functions/user/auth/register.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: "*"
+
+  UserLoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-login"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/login.handler
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
 
+  UserLogoutFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-logout"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/logout.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
+  UserMeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-me"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/me.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
+  UserVerifyEmailFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-verify-email"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/verify-email.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
+  UserResendVerificationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-resend-verification"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/resend-verification.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: "*"
+
+  UserOAuthGoogleFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-oauth-google"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/oauth-google.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ses:SendEmail
+                - ses:SendRawEmail
+              Resource: "*"
+
+  # User Interaction Functions
+  UserLikeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-like"
+      CodeUri: backend/
+      Handler: dist/functions/user/interactions/like.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
+  UserBookmarkFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-bookmark"
+      CodeUri: backend/
+      Handler: dist/functions/user/interactions/bookmark.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
+  UserGetLikesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-get-likes"
+      CodeUri: backend/
+      Handler: dist/functions/user/interactions/get-likes.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
+  UserGetBookmarksFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-get-bookmarks"
+      CodeUri: backend/
+      Handler: dist/functions/user/interactions/get-bookmarks.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
 Outputs:
   ApiGatewayUrl:
     Description: API Gateway endpoint URL
-    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${Environment}"
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${ApiGatewayStage}"
     Export:
       Name: !Sub "${Environment}-pornspot-api-url"
 

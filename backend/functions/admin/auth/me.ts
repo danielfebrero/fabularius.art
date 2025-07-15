@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "../../../shared/utils/response";
-import { DynamoDBService } from "../../../shared/utils/dynamodb";
+import { AuthMiddleware } from "./middleware";
 import { AdminUser } from "../../../shared/types";
 
 export const handler = async (
@@ -11,24 +11,14 @@ export const handler = async (
   }
 
   try {
-    const adminId = event.requestContext.authorizer?.["adminId"] as string;
-
-    if (!adminId) {
-      return ResponseUtil.unauthorized(event, "No admin session found");
+    // Validate admin session
+    const authResult = await AuthMiddleware.validateSession(event);
+    if (!authResult.isValid || !authResult.admin) {
+      return ResponseUtil.unauthorized(event, "Admin access required");
     }
 
-    const adminEntity = await DynamoDBService.getAdminById(adminId);
-    if (!adminEntity) {
-      return ResponseUtil.notFound(event, "Admin user not found");
-    }
-
-    // Return admin info (without sensitive data)
-    const admin: AdminUser = {
-      adminId: adminEntity.adminId,
-      username: adminEntity.username,
-      createdAt: adminEntity.createdAt,
-      isActive: adminEntity.isActive,
-    };
+    // Return admin info (already validated by middleware)
+    const admin: AdminUser = authResult.admin;
 
     return ResponseUtil.success(event, { admin });
   } catch (error) {
