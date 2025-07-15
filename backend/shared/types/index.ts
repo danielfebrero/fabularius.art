@@ -197,3 +197,6 @@ export interface AdminStats {
   storageUsed: string;
   storageUsedBytes: number;
 }
+
+// Export user types
+export * from "./user";

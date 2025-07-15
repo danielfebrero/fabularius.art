@@ -13,6 +13,12 @@ import {
   AdminUserEntity,
   AdminSessionEntity,
 } from "../types";
+import {
+  UserEntity,
+  UserSessionEntity,
+  EmailVerificationTokenEntity,
+  UserInteractionEntity,
+} from "../types/user";
 
 const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
 
@@ -425,5 +431,419 @@ export class DynamoDBService {
 
       await Promise.all(deletePromises);
     }
+  }
+
+  // User operations
+  static async createUser(user: UserEntity): Promise<void> {
+    await docClient.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: user,
+        ConditionExpression: "attribute_not_exists(PK)",
+      })
+    );
+  }
+
+  static async getUserByEmail(email: string): Promise<UserEntity | null> {
+    // Query using GSI1 to find user by email
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :gsi1pk AND GSI1SK = :gsi1sk",
+        ExpressionAttributeValues: {
+          ":gsi1pk": "USER_EMAIL",
+          ":gsi1sk": email.toLowerCase(),
+        },
+        Limit: 1,
+      })
+    );
+
+    return (result.Items?.[0] as UserEntity) || null;
+  }
+
+  static async getUserById(userId: string): Promise<UserEntity | null> {
+    const result = await docClient.send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `USER#${userId}`,
+          SK: "METADATA",
+        },
+      })
+    );
+
+    return (result.Item as UserEntity) || null;
+  }
+
+  static async getUserByGoogleId(googleId: string): Promise<UserEntity | null> {
+    // Query using GSI2 to find user by Google ID
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI2",
+        KeyConditionExpression: "GSI2PK = :gsi2pk AND GSI2SK = :gsi2sk",
+        ExpressionAttributeValues: {
+          ":gsi2pk": "USER_GOOGLE",
+          ":gsi2sk": googleId,
+        },
+        Limit: 1,
+      })
+    );
+
+    return (result.Items?.[0] as UserEntity) || null;
+  }
+
+  static async updateUser(
+    userId: string,
+    updates: Partial<UserEntity>
+  ): Promise<void> {
+    const updateExpression: string[] = [];
+    const expressionAttributeNames: Record<string, string> = {};
+    const expressionAttributeValues: Record<string, any> = {};
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (key !== "PK" && key !== "SK" && value !== undefined) {
+        updateExpression.push(`#${key} = :${key}`);
+        expressionAttributeNames[`#${key}`] = key;
+        expressionAttributeValues[`:${key}`] = value;
+      }
+    });
+
+    if (updateExpression.length === 0) return;
+
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `USER#${userId}`,
+          SK: "METADATA",
+        },
+        UpdateExpression: `SET ${updateExpression.join(", ")}`,
+        ExpressionAttributeNames: expressionAttributeNames,
+        ExpressionAttributeValues: expressionAttributeValues,
+      })
+    );
+  }
+
+  // User session operations
+  static async createUserSession(session: UserSessionEntity): Promise<void> {
+    await docClient.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: session,
+      })
+    );
+  }
+
+  static async getUserSession(
+    sessionId: string
+  ): Promise<UserSessionEntity | null> {
+    const result = await docClient.send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `SESSION#${sessionId}`,
+          SK: "METADATA",
+        },
+      })
+    );
+
+    return (result.Item as UserSessionEntity) || null;
+  }
+
+  static async deleteUserSession(sessionId: string): Promise<void> {
+    await docClient.send(
+      new DeleteCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `SESSION#${sessionId}`,
+          SK: "METADATA",
+        },
+      })
+    );
+  }
+
+  static async updateUserSessionLastAccessed(sessionId: string): Promise<void> {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `SESSION#${sessionId}`,
+          SK: "METADATA",
+        },
+        UpdateExpression: "SET lastAccessedAt = :lastAccessedAt",
+        ExpressionAttributeValues: {
+          ":lastAccessedAt": new Date().toISOString(),
+        },
+      })
+    );
+  }
+
+  static async cleanupExpiredUserSessions(): Promise<void> {
+    const now = new Date().toISOString();
+
+    // Query for expired user sessions using GSI1
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :gsi1pk AND GSI1SK < :now",
+        ExpressionAttributeValues: {
+          ":gsi1pk": "USER_SESSION_EXPIRY",
+          ":now": now,
+        },
+      })
+    );
+
+    // Delete expired sessions
+    if (result.Items && result.Items.length > 0) {
+      const deletePromises = result.Items.map((item) =>
+        docClient.send(
+          new DeleteCommand({
+            TableName: TABLE_NAME,
+            Key: {
+              PK: item["PK"],
+              SK: item["SK"],
+            },
+          })
+        )
+      );
+
+      await Promise.all(deletePromises);
+    }
+  }
+
+  // Email verification token operations (for Phase 2)
+  static async createEmailVerificationToken(
+    token: EmailVerificationTokenEntity
+  ): Promise<void> {
+    await docClient.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: token,
+      })
+    );
+  }
+
+  static async getEmailVerificationToken(
+    token: string
+  ): Promise<EmailVerificationTokenEntity | null> {
+    const result = await docClient.send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `EMAIL_VERIFICATION#${token}`,
+          SK: "METADATA",
+        },
+      })
+    );
+
+    return (result.Item as EmailVerificationTokenEntity) || null;
+  }
+
+  static async deleteEmailVerificationToken(token: string): Promise<void> {
+    await docClient.send(
+      new DeleteCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `EMAIL_VERIFICATION#${token}`,
+          SK: "METADATA",
+        },
+      })
+    );
+  }
+
+  static async cleanupExpiredEmailTokens(): Promise<void> {
+    const now = new Date().toISOString();
+
+    // Query for expired email verification tokens using GSI1
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :gsi1pk AND GSI1SK < :now",
+        ExpressionAttributeValues: {
+          ":gsi1pk": "EMAIL_VERIFICATION_EXPIRY",
+          ":now": now,
+        },
+      })
+    );
+
+    // Delete expired tokens
+    if (result.Items && result.Items.length > 0) {
+      const deletePromises = result.Items.map((item) =>
+        docClient.send(
+          new DeleteCommand({
+            TableName: TABLE_NAME,
+            Key: {
+              PK: item["PK"],
+              SK: item["SK"],
+            },
+          })
+        )
+      );
+
+      await Promise.all(deletePromises);
+    }
+  }
+
+  // User interaction operations
+  static async createUserInteraction(
+    interaction: UserInteractionEntity
+  ): Promise<void> {
+    await docClient.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: interaction,
+        ConditionExpression:
+          "attribute_not_exists(PK) AND attribute_not_exists(SK)",
+      })
+    );
+  }
+
+  static async deleteUserInteraction(
+    userId: string,
+    interactionType: "like" | "bookmark",
+    targetId: string
+  ): Promise<void> {
+    await docClient.send(
+      new DeleteCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `USER#${userId}`,
+          SK: `INTERACTION#${interactionType}#${targetId}`,
+        },
+      })
+    );
+  }
+
+  static async getUserInteraction(
+    userId: string,
+    interactionType: "like" | "bookmark",
+    targetId: string
+  ): Promise<UserInteractionEntity | null> {
+    const result = await docClient.send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `USER#${userId}`,
+          SK: `INTERACTION#${interactionType}#${targetId}`,
+        },
+      })
+    );
+
+    return (result.Item as UserInteractionEntity) || null;
+  }
+
+  static async getUserInteractions(
+    userId: string,
+    interactionType: "like" | "bookmark",
+    limit: number = 20,
+    lastEvaluatedKey?: Record<string, any>
+  ): Promise<{
+    interactions: UserInteractionEntity[];
+    lastEvaluatedKey?: Record<string, any>;
+  }> {
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk_prefix)",
+        ExpressionAttributeValues: {
+          ":pk": `USER#${userId}`,
+          ":sk_prefix": `INTERACTION#${interactionType}#`,
+        },
+        ScanIndexForward: false, // Most recent first
+        Limit: limit,
+        ExclusiveStartKey: lastEvaluatedKey,
+      })
+    );
+
+    const response: {
+      interactions: UserInteractionEntity[];
+      lastEvaluatedKey?: Record<string, any>;
+    } = {
+      interactions: (result.Items as UserInteractionEntity[]) || [],
+    };
+
+    if (result.LastEvaluatedKey) {
+      response.lastEvaluatedKey = result.LastEvaluatedKey;
+    }
+
+    return response;
+  }
+
+  static async getInteractionCounts(
+    _targetType: "album" | "media",
+    targetId: string
+  ): Promise<{
+    likeCount: number;
+    bookmarkCount: number;
+  }> {
+    // Get like count
+    const likeResult = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :gsi1pk",
+        ExpressionAttributeValues: {
+          ":gsi1pk": `INTERACTION#like#${targetId}`,
+        },
+        Select: "COUNT",
+      })
+    );
+
+    // Get bookmark count
+    const bookmarkResult = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :gsi1pk",
+        ExpressionAttributeValues: {
+          ":gsi1pk": `INTERACTION#bookmark#${targetId}`,
+        },
+        Select: "COUNT",
+      })
+    );
+
+    return {
+      likeCount: likeResult.Count || 0,
+      bookmarkCount: bookmarkResult.Count || 0,
+    };
+  }
+
+  static async getUserInteractionStatus(
+    userId: string,
+    targetId: string
+  ): Promise<{
+    userLiked: boolean;
+    userBookmarked: boolean;
+  }> {
+    // Check if user liked the target
+    const likeResult = await docClient.send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `USER#${userId}`,
+          SK: `INTERACTION#like#${targetId}`,
+        },
+      })
+    );
+
+    // Check if user bookmarked the target
+    const bookmarkResult = await docClient.send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `USER#${userId}`,
+          SK: `INTERACTION#bookmark#${targetId}`,
+        },
+      })
+    );
+
+    return {
+      userLiked: !!likeResult.Item,
+      userBookmarked: !!bookmarkResult.Item,
+    };
   }
 }

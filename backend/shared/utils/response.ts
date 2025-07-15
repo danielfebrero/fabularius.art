@@ -130,4 +130,14 @@ export class ResponseUtil {
       body: "",
     };
   }
+
+  static redirect(location: string): APIGatewayProxyResult {
+    return {
+      statusCode: 302,
+      headers: {
+        Location: location,
+      },
+      body: "",
+    };
+  }
 }

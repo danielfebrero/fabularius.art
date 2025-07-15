@@ -3,6 +3,7 @@ import {
   APIGatewayAuthorizerResult,
 } from "aws-lambda";
 import { AuthMiddleware } from "./middleware";
+import { UserAuthMiddleware } from "../../user/auth/middleware";
 
 // Helper function to generate an IAM policy
 const generatePolicy = (
@@ -78,7 +79,7 @@ export const handler = async (
 
     if (!cookieHeader) {
       console.log("No cookie header found, denying access.");
-      return generatePolicy("user", "Deny", event.methodArn);
+      return generatePolicy("anonymous", "Deny", event.methodArn);
     }
 
     const mockEvent: any = {
@@ -87,16 +88,54 @@ export const handler = async (
       },
     };
 
-    const validation = await AuthMiddleware.validateSession(mockEvent);
+    // First try admin session validation (backward compatibility)
+    const adminValidation = await AuthMiddleware.validateSession(mockEvent);
 
-    if (validation.isValid && validation.admin) {
-      console.log("Session is valid. Allowing access.");
+    if (adminValidation.isValid && adminValidation.admin) {
+      console.log("Admin session is valid. Allowing access.");
       const adminContext = {
-        adminId: validation.admin.adminId,
-        username: validation.admin.username,
+        adminId: adminValidation.admin.adminId,
+        username: adminValidation.admin.username,
+        sessionType: "admin",
       };
 
-      // Reconstruct the ARN to grant access to all admin endpoints for this stage
+      // Reconstruct the ARN to grant access to all endpoints for this stage
+      const { methodArn } = event;
+      const parts = methodArn.split(":");
+      const region = parts[3];
+      const accountId = parts[4];
+      const apiGatewayArnPart = parts[5];
+
+      if (!apiGatewayArnPart) {
+        console.error("Could not parse method ARN, denying access.");
+        return generatePolicy("admin", "Deny", event.methodArn);
+      }
+
+      const [apiId, stage] = apiGatewayArnPart.split("/");
+
+      // Grant access to all methods on all resources for this stage
+      const wildcardResource = `arn:aws:execute-api:${region}:${accountId}:${apiId}/${stage}/*`;
+
+      return generatePolicy(
+        adminValidation.admin.adminId,
+        "Allow",
+        wildcardResource,
+        adminContext
+      );
+    }
+
+    // If admin session validation failed, try user session validation
+    const userValidation = await UserAuthMiddleware.validateSession(mockEvent);
+
+    if (userValidation.isValid && userValidation.user) {
+      console.log("User session is valid. Allowing access.");
+      const userContext = {
+        userId: userValidation.user.userId,
+        email: userValidation.user.email,
+        sessionType: "user",
+      };
+
+      // Reconstruct the ARN to grant access to user and public endpoints
       const { methodArn } = event;
       const parts = methodArn.split(":");
       const region = parts[3];
@@ -110,19 +149,19 @@ export const handler = async (
 
       const [apiId, stage] = apiGatewayArnPart.split("/");
 
-      // Grant access to all methods on all resources for this stage
+      // Grant access to user and public endpoints (exclude admin-only endpoints)
       const wildcardResource = `arn:aws:execute-api:${region}:${accountId}:${apiId}/${stage}/*`;
 
       return generatePolicy(
-        validation.admin.adminId,
+        userValidation.user.userId,
         "Allow",
         wildcardResource,
-        adminContext
+        userContext
       );
-    } else {
-      console.log("Session is invalid. Denying access.");
-      return generatePolicy("user", "Deny", event.methodArn);
     }
+
+    console.log("No valid session found. Denying access.");
+    return generatePolicy("anonymous", "Deny", event.methodArn);
   } catch (error) {
     console.error("Authorizer error:", error);
     return generatePolicy("user", "Deny", event.methodArn);

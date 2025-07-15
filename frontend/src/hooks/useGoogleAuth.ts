@@ -1,0 +1,113 @@
+"use client";
+
+import { useCallback, useState } from "react";
+import { GoogleOAuthState } from "@/types/user";
+
+/**
+ * Custom hook for Google OAuth flow management
+ */
+export function useGoogleAuth() {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Generate random string for OAuth state parameter
+  const generateRandomString = (length: number): string => {
+    const characters =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
+    for (let i = 0; i < length; i++) {
+      result += characters.charAt(
+        Math.floor(Math.random() * characters.length)
+      );
+    }
+    return result;
+  };
+
+  // Generate OAuth state and store it
+  const generateOAuthState = (): GoogleOAuthState => {
+    const state = generateRandomString(32);
+    const codeVerifier = generateRandomString(43); // For future PKCE implementation
+
+    // Store state in sessionStorage for validation
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("google_oauth_state", state);
+      sessionStorage.setItem("google_oauth_code_verifier", codeVerifier);
+    }
+
+    return { state, codeVerifier };
+  };
+
+  // Validate OAuth state
+  const validateOAuthState = (receivedState: string): boolean => {
+    if (typeof window === "undefined") return false;
+
+    const storedState = sessionStorage.getItem("google_oauth_state");
+
+    if (!storedState || storedState !== receivedState) {
+      return false;
+    }
+
+    // Clean up stored state after validation
+    sessionStorage.removeItem("google_oauth_state");
+    sessionStorage.removeItem("google_oauth_code_verifier");
+
+    return true;
+  };
+
+  // Initiate Google OAuth login
+  const loginWithGoogle = useCallback((): void => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+
+      if (!googleClientId) {
+        throw new Error("Google Client ID not configured");
+      }
+
+      const { state } = generateOAuthState();
+
+      // Construct OAuth URL
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_BASE_URL || window.location.origin;
+      const redirectUri = `${baseUrl}/auth/oauth/callback`;
+
+      const params = new URLSearchParams({
+        client_id: googleClientId,
+        redirect_uri: redirectUri,
+        response_type: "code",
+        scope: "openid email profile",
+        state: state,
+        access_type: "offline",
+        prompt: "consent",
+      });
+
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+
+      // Redirect to Google OAuth
+      window.location.href = authUrl;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to initiate Google login";
+      setError(errorMessage);
+      setLoading(false);
+    }
+  }, []);
+
+  // Clear error state
+  const clearError = (): void => {
+    setError(null);
+  };
+
+  return {
+    loading,
+    error,
+    loginWithGoogle,
+    validateOAuthState,
+    generateOAuthState,
+    clearError,
+  };
+}
+
+export default useGoogleAuth;

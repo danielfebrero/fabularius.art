@@ -120,3 +120,6 @@ export interface ThumbnailUrls {
   large?: string;
   xlarge?: string;
 }
+
+// User authentication types
+export * from "./user";

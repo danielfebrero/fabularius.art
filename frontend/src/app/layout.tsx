@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AdminProvider } from "@/contexts/AdminContext";
+import { UserProvider } from "@/contexts/UserContext";
+import { Header } from "@/components/Header";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -91,9 +93,12 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <div className="min-h-screen bg-background">
-          <AdminProvider>
-            <main className="container mx-auto px-4 py-8">{children}</main>
-          </AdminProvider>
+          <UserProvider>
+            <AdminProvider>
+              <Header />
+              <main className="container mx-auto px-4 py-8">{children}</main>
+            </AdminProvider>
+          </UserProvider>
 
           <footer className="border-t border-border mt-16">
             <div className="container mx-auto px-4 py-8">
