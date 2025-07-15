@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Media } from "../../types/index";
 import { cn } from "../../lib/utils";
+import { composeMediaUrl } from "../../lib/urlUtils";
 
 interface LightboxProps {
   media: Media[];
@@ -86,7 +87,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
   const handleDownload = () => {
     if (!currentMedia) return;
     // Open in new tab to trigger browser's download manager
-    window.open(currentMedia.url, "_blank");
+    window.open(composeMediaUrl(currentMedia.url), "_blank");
   };
 
   const isImage = currentMedia.mimeType.startsWith("image/");
@@ -103,13 +104,13 @@ export const Lightbox: React.FC<LightboxProps> = ({
         <div className="w-full h-full">
           {isImage ? (
             <img
-              src={currentMedia.url}
+              src={composeMediaUrl(currentMedia.url)}
               alt={currentMedia.originalName || currentMedia.filename}
               className="w-full h-full object-contain"
             />
           ) : isVideo ? (
             <video
-              src={currentMedia.url}
+              src={composeMediaUrl(currentMedia.url)}
               controls
               className="w-full h-full object-contain"
               onClick={(e) => e.stopPropagation()}
@@ -138,7 +139,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
                 {currentMedia.mimeType} • {formatFileSize(currentMedia.size)}
               </p>
               <a
-                href={currentMedia.url}
+                href={composeMediaUrl(currentMedia.url)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
