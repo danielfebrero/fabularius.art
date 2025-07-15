@@ -21,6 +21,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "pornspot.ai",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.pornspot.ai",
+      },
     ],
   },
 
