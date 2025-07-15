@@ -5,7 +5,8 @@ import { Heart, Search, Grid, List, Calendar, Image } from "lucide-react";
 import { useLikes } from "@/hooks/useLikes";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { composeAlbumCoverUrl } from "@/lib/urlUtils";
+import { composeAlbumCoverUrl, composeThumbnailUrls } from "@/lib/urlUtils";
+import ResponsivePicture from "@/components/ui/ResponsivePicture";
 
 const UserLikesPage: React.FC = () => {
   const {
@@ -43,12 +44,20 @@ const UserLikesPage: React.FC = () => {
     if (viewMode === "grid") {
       return (
         <div className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow">
-          {interaction.target?.coverImageUrl ? (
+          {interaction.target?.thumbnailUrls ||
+          interaction.target?.coverImageUrl ? (
             <div className="aspect-video relative">
-              <img
-                src={composeAlbumCoverUrl(interaction.target.coverImageUrl)}
+              <ResponsivePicture
+                thumbnailUrls={composeThumbnailUrls(
+                  interaction.target.thumbnailUrls
+                )}
+                fallbackUrl={composeAlbumCoverUrl(
+                  interaction.target.coverImageUrl
+                )}
                 alt={interaction.target.title || "Content"}
                 className="w-full h-full object-cover"
+                context="albums"
+                loading="lazy"
               />
               <div className="absolute top-2 right-2">
                 <Heart className="h-5 w-5 text-red-500 fill-current drop-shadow-lg" />
@@ -86,11 +95,19 @@ const UserLikesPage: React.FC = () => {
     return (
       <div className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow">
         <div className="flex items-center space-x-4">
-          {interaction.target?.coverImageUrl ? (
-            <img
-              src={composeAlbumCoverUrl(interaction.target.coverImageUrl)}
+          {interaction.target?.thumbnailUrls ||
+          interaction.target?.coverImageUrl ? (
+            <ResponsivePicture
+              thumbnailUrls={composeThumbnailUrls(
+                interaction.target.thumbnailUrls
+              )}
+              fallbackUrl={composeAlbumCoverUrl(
+                interaction.target.coverImageUrl
+              )}
               alt={interaction.target.title || "Content"}
               className="w-16 h-16 object-cover rounded-md flex-shrink-0"
+              context="admin"
+              loading="lazy"
             />
           ) : (
             <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">

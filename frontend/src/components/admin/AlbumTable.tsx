@@ -3,7 +3,12 @@
 import { Album } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { formatDate } from "@/lib/utils";
-import { composeMediaUrl } from "@/lib/urlUtils";
+import {
+  composeMediaUrl,
+  getBestThumbnailUrl,
+  composeThumbnailUrls,
+  composeAlbumCoverUrl,
+} from "@/lib/urlUtils";
 
 interface AlbumTableProps {
   albums: Album[];
@@ -116,11 +121,15 @@ export function AlbumTable({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    {album.coverImageUrl && (
+                    {(album.thumbnailUrls || album.coverImageUrl) && (
                       <div className="flex-shrink-0 h-12 w-12">
                         <img
                           className="h-12 w-12 rounded-lg object-cover border border-border"
-                          src={composeMediaUrl(album.coverImageUrl)}
+                          src={getBestThumbnailUrl(
+                            composeThumbnailUrls(album.thumbnailUrls),
+                            composeAlbumCoverUrl(album.coverImageUrl),
+                            "small"
+                          )}
                           alt={album.title}
                         />
                       </div>

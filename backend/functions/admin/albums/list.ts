@@ -43,6 +43,10 @@ export const handler = async (
         response.coverImageUrl = album.coverImageUrl;
       }
 
+      if (album.thumbnailUrls !== undefined) {
+        response.thumbnailUrls = album.thumbnailUrls;
+      }
+
       return response;
     });
 
