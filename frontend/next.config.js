@@ -63,6 +63,16 @@ const nextConfig = {
           },
         ],
       },
+      // Image cache headers - 30 days TTL
+      {
+        source: "/:all*.(png|jpg|jpeg|gif|webp|svg|ico|mp4)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=2592000, immutable",
+          },
+        ],
+      },
     ];
   },
 
