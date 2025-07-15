@@ -29,20 +29,50 @@ function generatePictureSources(
   // Context-specific responsive strategy
   switch (context) {
     case "homepage":
-      // Homepage: Mobile-first with xlarge default
-      if (thumbnailUrls.medium) {
-        sources.push({
-          media: "(min-width: 1280px)",
-          srcSet: thumbnailUrls.medium, // 300px for very large screens
-        });
-      }
+      // Homepage: Optimized for layout columns and screen size
+      // Very wide screens (2xl:1536px+ ~1500px+ layout): xlarge (600px) for high quality
       if (thumbnailUrls.large) {
         sources.push({
-          media: "(min-width: 1024px)",
-          srcSet: thumbnailUrls.large, // 365px for large screens
+          media: "(min-width: 1536px)",
+          srcSet: thumbnailUrls.large,
         });
       }
-      // Mobile/tablet gets xlarge (600px) as default
+      // XL screens (1280-1535px, 4 col): large (365px) ~300-380px wide
+      if (thumbnailUrls.medium) {
+        sources.push({
+          media: "(min-width: 1280px) and (max-width: 1535px)",
+          srcSet: thumbnailUrls.medium,
+        });
+      }
+      // LG screens (1024-1279px, 3 col): large (365px) ~330-420px wide
+      if (thumbnailUrls.medium) {
+        sources.push({
+          media: "(min-width: 1024px) and (max-width: 1279px)",
+          srcSet: thumbnailUrls.medium,
+        });
+      }
+      // SM screens (640-1023px, 2 col): large (365px) ~320-500px wide
+      if (thumbnailUrls.large) {
+        sources.push({
+          media: "(min-width: 640px) and (max-width: 1023px)",
+          srcSet: thumbnailUrls.large,
+        });
+      }
+      // Default: mobile (400-639px, 1 col): xlarge (600px) ~400-630px wide
+      if (thumbnailUrls.large) {
+        sources.push({
+          media: "(max-width: 639px) and (min-width: 400px)",
+          srcSet: thumbnailUrls.large,
+        });
+      }
+      // Very small mobile (1 col, <400px): large (365px) ~350px wide
+      if (thumbnailUrls.medium) {
+        sources.push({
+          media: "(max-width: 399px)",
+          srcSet: thumbnailUrls.medium,
+        });
+      }
+      // Default: mobile (400-639px, 1 col): xlarge (600px) ~400-630px wide
       break;
 
     case "albums":
