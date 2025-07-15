@@ -99,7 +99,16 @@ export class AuthMiddleware {
     if (isOffline) {
       cookieParts.push("SameSite=Lax");
     } else {
-      cookieParts.push("Secure", "SameSite=None");
+      // If using custom domain (e.g., api.pornspot.ai), we can use SameSite=Lax
+      // which is more secure and reliable than SameSite=None
+      const useCustomDomain = process.env["USE_CUSTOM_DOMAIN"] === "true";
+
+      if (useCustomDomain) {
+        cookieParts.push("Secure", "SameSite=Lax");
+      } else {
+        // Fallback for AWS API Gateway domain (cross-origin)
+        cookieParts.push("Secure", "SameSite=None");
+      }
     }
 
     return cookieParts.join("; ");
@@ -118,7 +127,15 @@ export class AuthMiddleware {
     if (isOffline) {
       cookieParts.push("SameSite=Lax");
     } else {
-      cookieParts.push("Secure", "SameSite=None");
+      // If using custom domain (e.g., api.pornspot.ai), we can use SameSite=Lax
+      const useCustomDomain = process.env["USE_CUSTOM_DOMAIN"] === "true";
+
+      if (useCustomDomain) {
+        cookieParts.push("Secure", "SameSite=Lax");
+      } else {
+        // Fallback for AWS API Gateway domain (cross-origin)
+        cookieParts.push("Secure", "SameSite=None");
+      }
     }
 
     return cookieParts.join("; ");

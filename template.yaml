@@ -35,6 +35,7 @@ Globals:
         FROM_EMAIL: !Sub "noreply@${DomainName}"
         FROM_NAME: "PornSpot.ai"
         GOOGLE_CLIENT_ID: !Sub "{{resolve:ssm:/${Environment}/google-client-id}}"
+        USE_CUSTOM_DOMAIN: "true" # Set to "true" when using api.pornspot.ai
 
 Resources:
   # DynamoDB Table - Single table design
@@ -177,7 +178,6 @@ Resources:
   # API Gateway
   ApiGateway:
     Type: AWS::Serverless::Api
-    DeletionPolicy: Retain
     Properties:
       Name: !Sub "${Environment}-pornspot-api"
       StageName: !Ref Environment
