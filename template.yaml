@@ -32,7 +32,6 @@ Globals:
         FROM_NAME: "PornSpot.ai"
         GOOGLE_CLIENT_ID: !Sub "{{resolve:ssm:/${Environment}/google-client-id}}"
         USE_CUSTOM_DOMAIN: "true" # Set to "true" when using api.pornspot.ai
-        FRONTEND_URL: !Ref FrontendUrlParameter
 
 Resources:
   # DynamoDB Table - Single table design
@@ -195,39 +194,6 @@ Resources:
               Headers:
                 - Cookie
             ReauthorizeEvery: 0
-
-  # SSM Parameters for Frontend URLs
-  FrontendUrlParameterDev:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: /dev/frontend-url
-      Type: String
-      Value: https://dev.pornspot.ai
-      Description: Frontend URL for the development environment
-
-  FrontendUrlParameterStaging:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: /staging/frontend-url
-      Type: String
-      Value: https://staging.pornspot.ai
-      Description: Frontend URL for the staging environment
-
-  FrontendUrlParameterProd:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: /prod/frontend-url
-      Type: String
-      Value: https://www.pornspot.ai
-      Description: Frontend URL for the production environment
-
-  # Reference to the correct parameter based on the environment
-  FrontendUrlParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub "/${Environment}/frontend-url"
-      Type: String
-      Value: !FindInMap [EnvMap, !Ref Environment, FrontendUrl]
 
   # Authorizer Functions
   UserAuthorizerFunction:

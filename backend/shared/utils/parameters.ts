@@ -32,15 +32,25 @@ export class ParameterStoreService {
     }
 
     try {
+      let processedParameterName = parameterName;
+      if (
+        parameterName.startsWith("/prod") ||
+        parameterName.startsWith("/staging") ||
+        parameterName.startsWith("/dev")
+      ) {
+        processedParameterName = `/pornspot-ai${parameterName}`;
+      }
       const command = new GetParameterCommand({
-        Name: parameterName,
+        Name: processedParameterName,
         WithDecryption: decrypt,
       });
 
       const response = await ssmClient.send(command);
 
       if (!response.Parameter?.Value) {
-        throw new Error(`Parameter ${parameterName} not found or has no value`);
+        throw new Error(
+          `Parameter ${processedParameterName} not found or has no value`
+        );
       }
 
       const value = response.Parameter.Value;

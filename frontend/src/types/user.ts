@@ -75,6 +75,7 @@ export interface EmailVerificationResponse {
   success: boolean;
   message?: string;
   error?: string;
+  user?: User;
 }
 
 export interface ResendVerificationRequest {
@@ -120,6 +121,7 @@ export interface UserContextType {
   loading: boolean;
   error: string | null;
   isEmailVerified: boolean;
+  emailVerificationRequired: boolean;
   login: (credentials: UserLoginRequest) => Promise<boolean>;
   register: (userData: UserRegistrationRequest) => Promise<boolean>;
   logout: () => Promise<void>;

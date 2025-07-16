@@ -15,6 +15,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailVerificationRequired, setEmailVerificationRequired] =
+    useState(false);
   const [initializing, setInitializing] = useState(true);
 
   // Check authentication on mount
@@ -38,11 +40,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         setUser(response.user);
         return true;
       } else {
+        // This part will now be handled by the error catching below
         setError("Login failed");
         return false;
       }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Login failed";
+    } catch (err: any) {
+      if (err.response?.data?.error === "EMAIL_NOT_VERIFIED") {
+        setEmailVerificationRequired(true);
+        setError(null);
+        return false;
+      }
+      const errorMessage =
+        err.response?.data?.error || err.message || "Login failed";
       setError(errorMessage);
       return false;
     } finally {
@@ -170,6 +179,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     loading: loading || initializing,
     error,
     isEmailVerified: user?.isEmailVerified || false,
+    emailVerificationRequired,
     login,
     register,
     logout,

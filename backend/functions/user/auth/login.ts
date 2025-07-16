@@ -46,10 +46,12 @@ export const handler = async (
 
     // Check if email is verified
     if (!userEntity.isEmailVerified) {
-      return ResponseUtil.forbidden(
-        event,
-        "Please verify your email address before logging in. Check your inbox for the verification email."
-      );
+      const errorResponse = ResponseUtil.forbidden(event, "");
+      return {
+        statusCode: 403,
+        headers: errorResponse.headers,
+        body: JSON.stringify({ error: "EMAIL_NOT_VERIFIED" }),
+      };
     }
 
     // Check if this is an email provider user with password

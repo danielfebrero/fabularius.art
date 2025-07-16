@@ -11,6 +11,7 @@ import { GoogleLoginButton } from "./GoogleLoginButton";
 import { useUser } from "@/hooks/useUser";
 import { UserLoginFormData } from "@/types/user";
 import Link from "next/link";
+import { EmailVerificationForm } from "./EmailVerificationForm";
 
 // Validation schema
 const loginSchema = z.object({
@@ -25,13 +26,15 @@ const loginSchema = z.object({
 });
 
 export function LoginForm() {
-  const { login, loading, error, clearError } = useUser();
+  const { login, loading, error, clearError, emailVerificationRequired } =
+    useUser();
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors, isSubmitting },
     setError: setFormError,
   } = useForm<UserLoginFormData>({
@@ -41,6 +44,8 @@ export function LoginForm() {
       password: "",
     },
   });
+
+  const email = watch("email");
 
   const onSubmit = async (data: UserLoginFormData) => {
     try {
@@ -54,7 +59,7 @@ export function LoginForm() {
       if (success) {
         // Redirect to homepage or dashboard after successful login
         router.push("/");
-      } else {
+      } else if (!emailVerificationRequired) {
         setFormError("root", {
           type: "manual",
           message: error || "Login failed. Please check your credentials.",
@@ -70,6 +75,10 @@ export function LoginForm() {
   };
 
   const isLoading = loading || isSubmitting;
+
+  if (emailVerificationRequired) {
+    return <EmailVerificationForm email={email} />;
+  }
 
   return (
     <div className="space-y-6">
