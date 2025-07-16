@@ -70,7 +70,8 @@ export function EmailVerificationForm({ email }: EmailVerificationFormProps) {
           Verify Your Email
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          A verification code has been sent to {email}.
+          You must verify your email before you can log in. A verification code
+          has been sent to {email}.
         </p>
       </div>
 

@@ -50,7 +50,11 @@ export const handler = async (
       return {
         statusCode: 403,
         headers: errorResponse.headers,
-        body: JSON.stringify({ error: "EMAIL_NOT_VERIFIED" }),
+        body: JSON.stringify({
+          error: "EMAIL_NOT_VERIFIED",
+          message:
+            "Please verify your email address before logging in. Check your inbox for the verification email.",
+        }),
       };
     }
 
