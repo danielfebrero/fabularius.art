@@ -333,9 +333,11 @@ export class UserUtil {
 
     // Generate a unique username from email
     const baseUsername = email
-      .split("@")[0]
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "");
+      ? email
+          .split("@")[0]
+          ?.toLowerCase()
+          .replace(/[^a-z0-9]/g, "") || "google_user"
+      : "user";
     let username = baseUsername;
     let counter = 1;
 
