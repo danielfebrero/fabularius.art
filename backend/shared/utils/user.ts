@@ -292,6 +292,8 @@ export class UserUtil {
     userId: string;
     email: string;
     username: string;
+    firstName?: string;
+    lastName?: string;
     createdAt: string;
     isActive: boolean;
     isEmailVerified: boolean;
@@ -301,6 +303,8 @@ export class UserUtil {
       userId: userEntity.userId,
       email: userEntity.email,
       username: userEntity.username,
+      ...(userEntity.firstName && { firstName: userEntity.firstName }),
+      ...(userEntity.lastName && { lastName: userEntity.lastName }),
       createdAt: userEntity.createdAt,
       isActive: userEntity.isActive,
       isEmailVerified: userEntity.isEmailVerified,
@@ -350,7 +354,7 @@ export class UserUtil {
     const userId = uuidv4();
     const now = new Date().toISOString();
 
-    const userEntity: UserEntity = {
+    const userEntity: Partial<UserEntity> = {
       PK: `USER#${userId}`,
       SK: "METADATA",
       GSI1PK: "USER_EMAIL",
@@ -370,7 +374,15 @@ export class UserUtil {
       googleId,
     };
 
-    await DynamoDBService.createUser(userEntity);
+    if (firstName) {
+      userEntity.firstName = firstName;
+    }
+
+    if (lastName) {
+      userEntity.lastName = lastName;
+    }
+
+    await DynamoDBService.createUser(userEntity as UserEntity);
 
     return userId;
   }

@@ -2,7 +2,9 @@
 export interface User {
   userId: string;
   email: string;
-  username: string; // Now required
+  username?: string; // Now required
+  firstName?: string;
+  lastName?: string;
   createdAt: string;
   isActive: boolean;
   isEmailVerified: boolean;
@@ -116,6 +118,8 @@ export interface UserEntity {
   userId: string;
   email: string;
   username: string; // Now required
+  firstName?: string;
+  lastName?: string;
   passwordHash?: string; // Optional for OAuth users
   salt?: string; // Optional for OAuth users
   provider: "email" | "google"; // Authentication provider
