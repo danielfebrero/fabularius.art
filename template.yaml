@@ -79,15 +79,6 @@ Resources:
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
 
-  # S3 Lambda Permission - defined early to avoid circular dependency
-  ProcessUploadFunctionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Sub "${Environment}-pornspot-process-upload"
-      Action: lambda:InvokeFunction
-      Principal: s3.amazonaws.com
-      SourceArn: !Sub "arn:aws:s3:::${Environment}-pornspot-media-${AWS::AccountId}"
-
   # S3 Bucket for media storage
   MediaBucket:
     Type: AWS::S3::Bucket
@@ -130,16 +121,6 @@ Resources:
             Status: Enabled
             AbortIncompleteMultipartUpload:
               DaysAfterInitiation: 7
-      NotificationConfiguration:
-        LambdaConfigurations:
-          - Event: s3:ObjectCreated:*
-            Function: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Environment}-pornspot-process-upload"
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: prefix
-                    Value: uploads/
-    DependsOn: ProcessUploadFunctionPermission
 
   # CloudFront Origin Access Control
   OriginAccessControl:
@@ -367,15 +348,25 @@ Resources:
       Handler: dist/functions/media/process-upload.handler
       MemorySize: 1024
       Timeout: 120
+      Environment:
+        Variables:
+          MEDIA_BUCKET_NAME: !Sub "${Environment}-pornspot-media-${AWS::AccountId}"
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
-        - S3ReadPolicy:
-            BucketName: !Ref MediaBucket
-        - S3WritePolicy:
-            BucketName: !Ref MediaBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:GetObject
+                - s3:PutObject
+                - s3:DeleteObject
+              Resource: !Sub "arn:aws:s3:::${Environment}-pornspot-media-${AWS::AccountId}/*"
+            - Effect: Allow
+              Action:
+                - s3:ListBucket
+              Resource: !Sub "arn:aws:s3:::${Environment}-pornspot-media-${AWS::AccountId}"
         - Statement:
             - Effect: Allow
               Action:
@@ -383,6 +374,88 @@ Resources:
               Resource:
                 - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/pornspot-ai/${Environment}/revalidate-secret"
                 - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/pornspot-ai/${Environment}/frontend-url"
+  # Lambda permission for S3 to invoke ProcessUploadFunction
+  ProcessUploadFunctionS3Permission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ProcessUploadFunction
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub "arn:aws:s3:::${Environment}-pornspot-media-${AWS::AccountId}/*"
+      SourceAccount: !Ref AWS::AccountId
+
+  # Custom resource to configure S3 bucket notification
+  ConfigureS3NotificationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-configure-s3-notification"
+      Runtime: python3.9
+      Handler: index.handler
+      Timeout: 60
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:PutBucketNotificationConfiguration
+                - s3:GetBucketNotificationConfiguration
+              Resource: !Sub "arn:aws:s3:::${Environment}-pornspot-media-${AWS::AccountId}"
+      InlineCode: |
+        import boto3
+        import json
+        import cfnresponse
+
+        def handler(event, context):
+            s3 = boto3.client('s3')
+            bucket_name = event['ResourceProperties']['BucketName']
+            function_arn = event['ResourceProperties']['FunctionArn']
+            
+            try:
+                if event['RequestType'] == 'Delete':
+                    # Remove notification configuration
+                    s3.put_bucket_notification_configuration(
+                        Bucket=bucket_name,
+                        NotificationConfiguration={}
+                    )
+                else:
+                    # Add notification configuration
+                    s3.put_bucket_notification_configuration(
+                        Bucket=bucket_name,
+                        NotificationConfiguration={
+                            'LambdaConfigurations': [
+                                {
+                                    'Id': 'ProcessUploadTrigger',
+                                    'LambdaFunctionArn': function_arn,
+                                    'Events': ['s3:ObjectCreated:*'],
+                                    'Filter': {
+                                        'Key': {
+                                            'FilterRules': [
+                                                {
+                                                    'Name': 'prefix',
+                                                    'Value': 'uploads/'
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    )
+                
+                cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
+            except Exception as e:
+                print(f"Error: {str(e)}")
+                cfnresponse.send(event, context, cfnresponse.FAILED, {})
+
+  S3NotificationConfiguration:
+    Type: AWS::CloudFormation::CustomResource
+    Properties:
+      ServiceToken: !GetAtt ConfigureS3NotificationFunction.Arn
+      BucketName: !Sub "${Environment}-pornspot-media-${AWS::AccountId}"
+      FunctionArn: !GetAtt ProcessUploadFunction.Arn
+    DependsOn:
+      - MediaBucket
+      - ProcessUploadFunctionS3Permission
+
   # Admin Authentication Functions
   AdminLoginFunction:
     Type: AWS::Serverless::Function
