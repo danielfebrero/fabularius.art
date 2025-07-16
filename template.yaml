@@ -489,6 +489,33 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
 
+  CheckUsernameFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-check-username"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/check-username.handler
+      Events:
+        PostCheckUsername:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/auth/check-username
+            Method: POST
+            Auth:
+              Authorizer: NONE
+        OptionsCheckUsername:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/auth/check-username
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
   AdminLogoutFunction:
     Type: AWS::Serverless::Function
     Properties:
