@@ -406,7 +406,34 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
-
+  UserLoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-login"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/login.handler
+      Events:
+        PostLogin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/login
+            Method: POST
+            Auth:
+              Authorizer: NONE
+        OptionsLogin:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/login
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
   # Admin Album Management Functions
   AdminUpdateAlbumFunction:
     Type: AWS::Serverless::Function
