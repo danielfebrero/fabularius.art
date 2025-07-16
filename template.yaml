@@ -381,7 +381,7 @@ Resources:
       FunctionName: !Ref ProcessUploadFunction
       Action: lambda:InvokeFunction
       Principal: s3.amazonaws.com
-      SourceArn: !Sub "arn:aws:s3:::${Environment}-pornspot-media-${AWS::AccountId}/*"
+      SourceArn: !Sub "arn:aws:s3:::${Environment}-pornspot-media-${AWS::AccountId}"
       SourceAccount: !Ref AWS::AccountId
 
   # Custom resource to configure S3 bucket notification
@@ -456,6 +456,7 @@ Resources:
       FunctionArn: !GetAtt ProcessUploadFunction.Arn
     DependsOn:
       - MediaBucket
+      - ProcessUploadFunction
       - ProcessUploadFunctionS3Permission
 
   # Admin Authentication Functions
