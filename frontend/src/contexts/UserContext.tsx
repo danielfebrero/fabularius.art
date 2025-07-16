@@ -45,13 +45,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
     } catch (err: any) {
-      if (err.response?.data?.error === "EMAIL_NOT_VERIFIED") {
+      if (err.response?.error === "EMAIL_NOT_VERIFIED") {
         setEmailVerificationRequired(true);
         setError(null);
         return false;
       }
-      const errorMessage =
-        err.response?.data?.error || err.message || "Login failed";
+      const errorMessage = err.response?.error || err.message || "Login failed";
       setError(errorMessage);
       return false;
     } finally {
