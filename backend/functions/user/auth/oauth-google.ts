@@ -17,11 +17,10 @@ const SESSION_DURATION_DAYS = 30;
 
 // Google OAuth configuration from environment variables
 const GOOGLE_CLIENT_ID = process.env["GOOGLE_CLIENT_ID"];
-const FRONTEND_BASE_URL = process.env["FRONTEND_BASE_URL"];
 
 // Validate required environment variables (GOOGLE_CLIENT_SECRET will be validated in handler)
-if (!GOOGLE_CLIENT_ID || !FRONTEND_BASE_URL) {
-  throw new Error("Missing required Google OAuth environment variables");
+if (!GOOGLE_CLIENT_ID) {
+  throw new Error("Missing GOOGLE_CLIENT_ID environment variable");
 }
 
 /**
@@ -56,7 +55,8 @@ export const handler = async (
     // Handle OAuth errors from Google
     if (error) {
       console.error("OAuth error from Google:", error);
-      const errorRedirectUrl = `${FRONTEND_BASE_URL}/auth/error?error=${encodeURIComponent(
+      const frontendUrl = await ParameterStoreService.getFrontendUrl();
+      const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         error === "access_denied"
           ? "User cancelled Google authentication"
           : "OAuth authentication failed"
@@ -68,7 +68,8 @@ export const handler = async (
     // Validate required parameters
     if (!code) {
       console.error("Missing authorization code in OAuth callback");
-      const errorRedirectUrl = `${FRONTEND_BASE_URL}/auth/error?error=${encodeURIComponent(
+      const frontendUrl = await ParameterStoreService.getFrontendUrl();
+      const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         "Missing authorization code"
       )}`;
       return ResponseUtil.redirect(errorRedirectUrl);
@@ -77,7 +78,8 @@ export const handler = async (
     // Validate state parameter for CSRF protection
     if (!state) {
       console.error("Missing state parameter in OAuth callback");
-      const errorRedirectUrl = `${FRONTEND_BASE_URL}/auth/error?error=${encodeURIComponent(
+      const frontendUrl = await ParameterStoreService.getFrontendUrl();
+      const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         "Invalid request state"
       )}`;
       return ResponseUtil.redirect(errorRedirectUrl);
@@ -109,7 +111,8 @@ export const handler = async (
         "Failed to exchange authorization code for tokens:",
         tokenError
       );
-      const errorRedirectUrl = `${FRONTEND_BASE_URL}/auth/error?error=${encodeURIComponent(
+      const frontendUrl = await ParameterStoreService.getFrontendUrl();
+      const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         "Failed to authenticate with Google"
       )}`;
       return ResponseUtil.redirect(errorRedirectUrl);
@@ -144,7 +147,8 @@ export const handler = async (
       };
     } catch (verifyError) {
       console.error("Failed to verify Google ID token:", verifyError);
-      const errorRedirectUrl = `${FRONTEND_BASE_URL}/auth/error?error=${encodeURIComponent(
+      const frontendUrl = await ParameterStoreService.getFrontendUrl();
+      const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         "Invalid authentication token"
       )}`;
       return ResponseUtil.redirect(errorRedirectUrl);
@@ -172,7 +176,8 @@ export const handler = async (
       isNewUser = result.isNewUser;
     } catch (userError: any) {
       console.error("Failed to create or link Google user:", userError);
-      const errorRedirectUrl = `${FRONTEND_BASE_URL}/auth/error?error=${encodeURIComponent(
+      const frontendUrl = await ParameterStoreService.getFrontendUrl();
+      const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         userError.message || "Failed to create user account"
       )}`;
       return ResponseUtil.redirect(errorRedirectUrl);
@@ -216,7 +221,8 @@ export const handler = async (
     );
 
     // Redirect to frontend success page
-    const successRedirectUrl = `${FRONTEND_BASE_URL}/auth/success${
+    const frontendUrl = await ParameterStoreService.getFrontendUrl();
+    const successRedirectUrl = `${frontendUrl}/auth/success${
       isNewUser ? "?new_user=true" : ""
     }`;
 
@@ -234,7 +240,8 @@ export const handler = async (
     return response;
   } catch (error) {
     console.error("Google OAuth callback error:", error);
-    const errorRedirectUrl = `${FRONTEND_BASE_URL}/auth/error?error=${encodeURIComponent(
+    const frontendUrl = await ParameterStoreService.getFrontendUrl();
+    const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
       "Authentication failed"
     )}`;
     return ResponseUtil.redirect(errorRedirectUrl);

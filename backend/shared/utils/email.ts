@@ -1,4 +1,5 @@
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import { ParameterStoreService } from "./parameters";
 
 const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
 
@@ -39,8 +40,6 @@ export class EmailService {
     process.env["FROM_EMAIL"] || "noreply@pornspot.ai";
   private static readonly DEFAULT_FROM_NAME =
     process.env["FROM_NAME"] || "PornSpot.ai";
-  private static readonly FRONTEND_BASE_URL =
-    process.env["FRONTEND_BASE_URL"] || "https://www.pornspot.ai";
 
   /**
    * Send an email using Amazon SES
@@ -108,7 +107,8 @@ export class EmailService {
     verificationToken: string,
     firstName?: string
   ): Promise<EmailSendResult> {
-    const verificationUrl = `${this.FRONTEND_BASE_URL}/auth/verify-email?token=${verificationToken}`;
+    const frontendUrl = await ParameterStoreService.getFrontendUrl();
+    const verificationUrl = `${frontendUrl}/auth/verify-email?token=${verificationToken}`;
     const displayName = firstName ? firstName : email;
 
     const template = this.getVerificationEmailTemplate(
@@ -130,7 +130,8 @@ export class EmailService {
     firstName?: string
   ): Promise<EmailSendResult> {
     const displayName = firstName ? firstName : email;
-    const loginUrl = `${this.FRONTEND_BASE_URL}/auth/login`;
+    const frontendUrl = await ParameterStoreService.getFrontendUrl();
+    const loginUrl = `${frontendUrl}/auth/login`;
 
     const template = this.getWelcomeEmailTemplate(displayName, loginUrl);
 
@@ -454,10 +455,6 @@ This is an automated email. Please do not reply to this message.
 
     if (!this.DEFAULT_FROM_EMAIL) {
       errors.push("FROM_EMAIL environment variable is not set");
-    }
-
-    if (!this.FRONTEND_BASE_URL) {
-      errors.push("FRONTEND_BASE_URL environment variable is not set");
     }
 
     return {

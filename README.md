@@ -82,56 +82,47 @@ cd scripts && npm install && cd ..
 
 ## Environment Setup
 
-### 1. Create Environment File
+The project uses a modular environment setup, with separate configurations for the frontend, backend, and scripts.
 
-Copy the example environment file and configure it for your setup:
+### 1. Frontend Setup
+
+Create a local environment file for the frontend by copying the example:
 
 ```bash
-cp .env.example .env
+cp frontend/.env.example frontend/.env.local
 ```
 
-### 2. Configure Environment Variables
+Then, fill in the required variables in `frontend/.env.local`.
 
-Edit the `.env` file with your specific configuration:
+### 2. Backend Setup
 
-#### Local Development Variables
+For the backend, copy the JSON-based example file:
 
-```env
-# LocalStack endpoints
-LOCAL_AWS_ENDPOINT=http://localhost:4566
-LOCAL_S3_BUCKET=local-pornspot-media
-
-# Frontend configuration
-FRONTEND_URL=http://localhost:3000
-NEXT_PUBLIC_API_URL=http://localhost:3001
-
-# Security
-REVALIDATE_SECRET=8148d8f2a8542a3bd8232c0a8fae183cf6072facec9bfa6e08ea7660ad713378
+```bash
+cp backend/.env.example.json backend/.env.local.json
 ```
 
-#### Production Variables (for deployment)
+This file provides the necessary parameters for the `sam local start-api` command.
 
-```env
-# AWS Resources
-DYNAMODB_TABLE=prod-pornspot-media
-S3_BUCKET=prod-pornspot-media-bucket
-CLOUDFRONT_DOMAIN=your-cloudfront-domain.net
+### 3. Scripts Setup
 
-# Frontend URLs
-NEXT_PUBLIC_API_URL=https://api.pornspot.ai
-NEXT_PUBLIC_CDN_URL=https://your-cloudfront-domain.net
-NEXT_PUBLIC_SITE_URL=https://pornspot.ai
+The scripts also require their own environment file:
+
+```bash
+cp scripts/.env.example scripts/.env.local
 ```
 
-### 3. AWS Credentials
+This will configure the scripts for local execution against LocalStack.
 
-Ensure your AWS CLI is configured with appropriate credentials:
+### 4. AWS Credentials
+
+Ensure your AWS CLI is configured, as some scripts and local services rely on it:
 
 ```bash
 aws configure
 ```
 
-> **Detailed Configuration**: See [`docs/ENVIRONMENT_CONFIGURATION.md`](docs/ENVIRONMENT_CONFIGURATION.md) for complete environment variable documentation.
+> **Detailed Configuration**: See [`docs/ENVIRONMENT_CONFIGURATION.md`](docs/ENVIRONMENT_CONFIGURATION.md) for a complete guide to all environment variables.
 
 ## Local Development
 

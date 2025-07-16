@@ -36,13 +36,29 @@ Getting the application running locally is a two-step process:
     cd pornspot-ai
     ```
 
-2.  **Run the Setup Script**:
+2.  **Set up Environment Files**:
+    Before running any scripts, you must set up your local environment files.
+
+    ```bash
+    # For the frontend
+    cp frontend/.env.example frontend/.env.local
+
+    # For the backend
+    cp backend/.env.example.json backend/.env.local.json
+
+    # For the scripts
+    cp scripts/.env.example scripts/.env.local
+    ```
+
+    Now, review the newly created `.local` files and ensure the values are correct for your machine.
+
+3.  **Run the Setup Script**:
     ```bash
     chmod +x scripts/start-local-backend.sh
     ./scripts/start-local-backend.sh
     ```
 
-This script will set up the entire backend environment. Once it's running, you can proceed to start the frontend.
+This script will set up the entire backend environment using the variables from your new configuration files. Once it's running, you can proceed to start the frontend.
 
 ## The `start-local-backend.sh` Script
 
