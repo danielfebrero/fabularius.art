@@ -14,8 +14,7 @@ Parameters:
     Default: pornspot.ai
     Description: Domain name for the application
 
-Conditions:
-  IsProduction: !Equals [!Ref Environment, prod]
+# Conditions removed - IsProduction was not used
 
 Globals:
   Function:
@@ -80,6 +79,15 @@ Resources:
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
 
+  # S3 Lambda Permission - defined early to avoid circular dependency
+  ProcessUploadFunctionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-process-upload"
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub "arn:aws:s3:::${Environment}-pornspot-media-${AWS::AccountId}"
+
   # S3 Bucket for media storage
   MediaBucket:
     Type: AWS::S3::Bucket
@@ -122,6 +130,16 @@ Resources:
             Status: Enabled
             AbortIncompleteMultipartUpload:
               DaysAfterInitiation: 7
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Function: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Environment}-pornspot-process-upload"
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: uploads/
+    DependsOn: ProcessUploadFunctionPermission
 
   # CloudFront Origin Access Control
   OriginAccessControl:
@@ -171,6 +189,29 @@ Resources:
               StringEquals:
                 AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
 
+  # Authorizer Functions - defined before API Gateway
+  UserAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-authorizer"
+      CodeUri: backend/
+      Handler: dist/functions/user/auth/authorizer.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
+  AdminAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-admin-authorizer"
+      CodeUri: backend/
+      Handler: dist/functions/admin/auth/authorizer.handler
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
   # API Gateway
   ApiGateway:
     Type: AWS::Serverless::Api
@@ -194,17 +235,6 @@ Resources:
               Headers:
                 - Cookie
             ReauthorizeEvery: 0
-
-  # Authorizer Functions
-  UserAuthorizerFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "${Environment}-pornspot-user-authorizer"
-      CodeUri: backend/
-      Handler: dist/functions/user/auth/authorizer.handler
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref MediaTable
 
   # Lambda Functions
   GetAlbumsFunction:
@@ -337,17 +367,6 @@ Resources:
       Handler: dist/functions/media/process-upload.handler
       MemorySize: 1024
       Timeout: 120
-      Events:
-        S3Event:
-          Type: S3
-          Properties:
-            Bucket: !Ref MediaBucket
-            Events: s3:ObjectCreated:*
-            Filter:
-              S3Key:
-                Rules:
-                  - Name: prefix
-                    Value: uploads/
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -693,35 +712,6 @@ Resources:
                 - ses:SendRawEmail
               Resource: "*"
 
-  UserLoginFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "${Environment}-pornspot-user-login"
-      CodeUri: backend/
-      Handler: dist/functions/user/auth/login.handler
-      Events:
-        PostLogin:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /user/login
-            Method: POST
-            Auth:
-              Authorizer: NONE
-        OptionsLogin:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /user/login
-            Method: OPTIONS
-            Auth:
-              Authorizer: NONE
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref MediaTable
-        - DynamoDBWritePolicy:
-            TableName: !Ref MediaTable
-
   UserLogoutFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -972,18 +962,6 @@ Resources:
               Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
-            TableName: !Ref MediaTable
-
-  AdminAuthorizerFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "${Environment}-pornspot-admin-authorizer"
-      CodeUri: backend/
-      Handler: dist/functions/admin/auth/authorizer.handler
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref MediaTable
-        - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
 
 Outputs:
