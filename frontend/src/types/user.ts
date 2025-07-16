@@ -25,9 +25,21 @@ export interface UserSession {
 export interface UserRegistrationRequest {
   email: string;
   password: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
+  username: string;
+}
+
+// Username availability checking
+export interface UsernameAvailabilityRequest {
+  username: string;
+}
+
+export interface UsernameAvailabilityResponse {
+  success: boolean;
+  data?: {
+    available: boolean;
+    message?: string;
+  };
+  error?: string;
 }
 
 export interface UserLoginRequest {
@@ -94,9 +106,7 @@ export interface UserRegistrationFormData {
   email: string;
   password: string;
   confirmPassword: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
+  username: string;
 }
 
 export interface UserLoginFormData {

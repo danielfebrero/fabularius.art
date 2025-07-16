@@ -7,6 +7,8 @@ import {
   EmailVerificationResponse,
   ResendVerificationResponse,
   GoogleOAuthResponse,
+  UsernameAvailabilityRequest,
+  UsernameAvailabilityResponse,
   InteractionRequest,
   InteractionResponse,
   InteractionCountsResponse,
@@ -40,6 +42,25 @@ export const userApi = {
     return response.json();
   },
 
+  // Check username availability
+  checkUsernameAvailability: async (
+    request: UsernameAvailabilityRequest
+  ): Promise<UsernameAvailabilityResponse> => {
+    const response = await fetch(`${API_URL}/user/auth/check-username`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Username check failed: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
   // User registration
   register: async (
     userData: UserRegistrationRequest
@@ -68,8 +89,6 @@ export const userApi = {
           userId: result.data.userId,
           email: result.data.email,
           username: result.data.username,
-          firstName: result.data.firstName,
-          lastName: result.data.lastName,
           createdAt: new Date().toISOString(), // Will be updated when user logs in
           isActive: true,
           isEmailVerified: false, // New registrations are not verified yet

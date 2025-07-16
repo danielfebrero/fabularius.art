@@ -2,9 +2,7 @@
 export interface User {
   userId: string;
   email: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
+  username: string; // Now required
   createdAt: string;
   isActive: boolean;
   isEmailVerified: boolean;
@@ -24,9 +22,7 @@ export interface UserSession {
 export interface UserRegistrationRequest {
   email: string;
   password: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
+  username: string; // Now required
 }
 
 export interface UserLoginRequest {
@@ -44,6 +40,17 @@ export interface UserSessionValidationResult {
   isValid: boolean;
   user?: User;
   session?: UserSession;
+}
+
+export interface UsernameAvailabilityRequest {
+  username: string;
+}
+
+export interface UsernameAvailabilityResponse {
+  success: boolean;
+  available: boolean;
+  message?: string;
+  error?: string;
 }
 
 // User Interaction Types
@@ -103,12 +110,12 @@ export interface UserEntity {
   GSI1SK: string; // {email}
   GSI2PK?: string; // USER_GOOGLE (for Google OAuth)
   GSI2SK?: string; // {googleId}
+  GSI3PK: string; // USER_USERNAME
+  GSI3SK: string; // {username}
   EntityType: "User";
   userId: string;
   email: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
+  username: string; // Now required
   passwordHash?: string; // Optional for OAuth users
   salt?: string; // Optional for OAuth users
   provider: "email" | "google"; // Authentication provider

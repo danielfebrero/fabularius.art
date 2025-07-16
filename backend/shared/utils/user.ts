@@ -13,15 +13,19 @@ export class UserUtil {
   static async createUser(
     email: string,
     password: string,
-    username?: string,
-    firstName?: string,
-    lastName?: string,
+    username: string,
     isActive: boolean = true
   ): Promise<string> {
     // Check if email already exists
     const existingUser = await DynamoDBService.getUserByEmail(email);
     if (existingUser) {
       throw new Error("Email already exists");
+    }
+
+    // Check if username already exists
+    const existingUsername = await DynamoDBService.getUserByUsername(username);
+    if (existingUsername) {
+      throw new Error("Username already exists");
     }
 
     // Generate salt and hash password
@@ -36,12 +40,12 @@ export class UserUtil {
       SK: "METADATA",
       GSI1PK: "USER_EMAIL",
       GSI1SK: email.toLowerCase(),
+      GSI3PK: "USER_USERNAME",
+      GSI3SK: username.toLowerCase(),
       EntityType: "User",
       userId,
       email: email.toLowerCase(),
-      ...(username && { username: username.trim() }),
-      ...(firstName && { firstName: firstName.trim() }),
-      ...(lastName && { lastName: lastName.trim() }),
+      username: username.trim(),
       passwordHash,
       salt,
       provider: "email",
@@ -172,6 +176,46 @@ export class UserUtil {
   }
 
   /**
+   * Validate username format and requirements
+   */
+  static validateUsername(username: string): {
+    isValid: boolean;
+    errors: string[];
+  } {
+    const errors: string[] = [];
+
+    if (!username || username.trim().length === 0) {
+      errors.push("Username is required");
+      return { isValid: false, errors };
+    }
+
+    const trimmedUsername = username.trim();
+
+    if (trimmedUsername.length < 3) {
+      errors.push("Username must be at least 3 characters long");
+    }
+
+    if (trimmedUsername.length > 30) {
+      errors.push("Username must be at most 30 characters long");
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(trimmedUsername)) {
+      errors.push(
+        "Username can only contain letters, numbers, underscores, and hyphens"
+      );
+    }
+
+    if (/^[_-]/.test(trimmedUsername) || /[_-]$/.test(trimmedUsername)) {
+      errors.push("Username cannot start or end with underscore or hyphen");
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+    };
+  }
+
+  /**
    * Generate email verification token (for Phase 2)
    */
   static async generateEmailVerificationToken(
@@ -247,9 +291,7 @@ export class UserUtil {
   static sanitizeUserForResponse(userEntity: UserEntity): {
     userId: string;
     email: string;
-    username?: string;
-    firstName?: string;
-    lastName?: string;
+    username: string;
     createdAt: string;
     isActive: boolean;
     isEmailVerified: boolean;
@@ -258,20 +300,12 @@ export class UserUtil {
     const response: any = {
       userId: userEntity.userId,
       email: userEntity.email,
+      username: userEntity.username,
       createdAt: userEntity.createdAt,
       isActive: userEntity.isActive,
       isEmailVerified: userEntity.isEmailVerified,
     };
 
-    if (userEntity.username) {
-      response.username = userEntity.username;
-    }
-    if (userEntity.firstName) {
-      response.firstName = userEntity.firstName;
-    }
-    if (userEntity.lastName) {
-      response.lastName = userEntity.lastName;
-    }
     if (userEntity.lastLoginAt) {
       response.lastLoginAt = userEntity.lastLoginAt;
     }
@@ -297,6 +331,20 @@ export class UserUtil {
       throw new Error("Google account already linked to another user");
     }
 
+    // Generate a unique username from email
+    const baseUsername = email
+      .split("@")[0]
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "");
+    let username = baseUsername;
+    let counter = 1;
+
+    // Ensure username is unique
+    while (await DynamoDBService.getUserByUsername(username)) {
+      username = `${baseUsername}${counter}`;
+      counter++;
+    }
+
     const userId = uuidv4();
     const now = new Date().toISOString();
 
@@ -307,11 +355,12 @@ export class UserUtil {
       GSI1SK: email.toLowerCase(),
       GSI2PK: "USER_GOOGLE",
       GSI2SK: googleId,
+      GSI3PK: "USER_USERNAME",
+      GSI3SK: username.toLowerCase(),
       EntityType: "User",
       userId,
       email: email.toLowerCase(),
-      ...(firstName && { firstName: firstName.trim() }),
-      ...(lastName && { lastName: lastName.trim() }),
+      username,
       provider: "google",
       createdAt: now,
       isActive,
@@ -329,10 +378,7 @@ export class UserUtil {
    */
   static async linkGoogleToUser(
     userId: string,
-    googleId: string,
-    updateProfile: boolean = true,
-    firstName?: string,
-    lastName?: string
+    googleId: string
   ): Promise<void> {
     const user = await DynamoDBService.getUserById(userId);
     if (!user) {
@@ -354,16 +400,6 @@ export class UserUtil {
       isEmailVerified: true, // Mark email as verified when linking Google
     };
 
-    // Optionally update profile information from Google
-    if (updateProfile) {
-      if (firstName && (!user.firstName || user.firstName.trim() === "")) {
-        updateData.firstName = firstName.trim();
-      }
-      if (lastName && (!user.lastName || user.lastName.trim() === "")) {
-        updateData.lastName = lastName.trim();
-      }
-    }
-
     await DynamoDBService.updateUser(userId, updateData);
   }
 
@@ -381,13 +417,7 @@ export class UserUtil {
 
     if (existingEmailUser) {
       // Link Google account to existing user
-      await this.linkGoogleToUser(
-        existingEmailUser.userId,
-        googleId,
-        true, // Update profile from Google
-        firstName,
-        lastName
-      );
+      await this.linkGoogleToUser(existingEmailUser.userId, googleId);
 
       return {
         userId: existingEmailUser.userId,

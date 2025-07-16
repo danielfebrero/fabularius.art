@@ -494,6 +494,24 @@ export class DynamoDBService {
     return (result.Items?.[0] as UserEntity) || null;
   }
 
+  static async getUserByUsername(username: string): Promise<UserEntity | null> {
+    // Query using GSI3 to find user by username
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI3",
+        KeyConditionExpression: "GSI3PK = :gsi3pk AND GSI3SK = :gsi3sk",
+        ExpressionAttributeValues: {
+          ":gsi3pk": "USER_USERNAME",
+          ":gsi3sk": username.toLowerCase(),
+        },
+        Limit: 1,
+      })
+    );
+
+    return (result.Items?.[0] as UserEntity) || null;
+  }
+
   static async updateUser(
     userId: string,
     updates: Partial<UserEntity>

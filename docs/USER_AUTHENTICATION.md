@@ -33,12 +33,24 @@ graph TD
 - **Endpoint**: `POST /user/auth/register`
 - **Handler**: [`backend/functions/user/auth/register.ts`](../backend/functions/user/auth/register.ts)
 - **Process**:
-  1.  The user provides an email, password, and optional username, first name, and last name.
-  2.  The system validates the email format and password strength.
-  3.  A new user is created in the database with `isEmailVerified` set to `false`.
-  4.  A verification token is generated and sent to the user's email.
+  1.  The user provides an email, password, and required username.
+  2.  The system validates the email format, password strength, and username format.
+  3.  The system checks that the username is unique across all users.
+  4.  A new user is created in the database with `isEmailVerified` set to `false`.
+  5.  A verification token is generated and sent to the user's email.
 
-### 2. **Email Verification**
+### 2. **Username Availability Check**
+
+- **Endpoint**: `GET /user/auth/check-username?username={username}` or `POST /user/auth/check-username`
+- **Handler**: [`backend/functions/user/auth/check-username.ts`](../backend/functions/user/auth/check-username.ts)
+- **Process**:
+  1.  The user provides a username to check for availability.
+  2.  The system validates the username format (minimum 3 characters, alphanumeric with underscores/hyphens allowed).
+  3.  The system checks if the username is already taken by querying the GSI3 index.
+  4.  Returns availability status with appropriate message.
+- **Usage**: This endpoint is designed for real-time username validation during registration with debouncing support.
+
+### 3. **Email Verification**
 
 - **Endpoint**: `GET /user/auth/verify-email`
 - **Handler**: [`backend/functions/user/auth/verify-email.ts`](../backend/functions/user/auth/verify-email.ts)
@@ -49,7 +61,7 @@ graph TD
   4.  The verification token is deleted from the database.
   5.  A welcome email is sent to the user.
 
-### 3. **Login**
+### 4. **Login**
 
 - **Endpoint**: `POST /user/auth/login`
 - **Handler**: [`backend/functions/user/auth/login.ts`](../backend/functions/user/auth/login.ts)

@@ -21,6 +21,9 @@ The table uses Global Secondary Indexes (GSIs) to support additional query patte
 - **GSI2**: Used for querying users by their Google ID.
   - `GSI2PK`: The partition key for GSI2.
   - `GSI2SK`: The sort key for GSI2.
+- **GSI3**: Used for querying users by their username.
+  - `GSI3PK`: The partition key for GSI3.
+  - `GSI3SK`: The sort key for GSI3.
 
 ## Entity Schemas
 
@@ -122,12 +125,15 @@ Represents a regular user.
 - **GSI1SK**: `<email>`
 - **GSI2PK**: `USER_GOOGLE`
 - **GSI2SK**: `<googleId>`
+- **GSI3PK**: `USER_USERNAME`
+- **GSI3SK**: `<username>`
 - **EntityType**: `User`
 
 | Attribute       | Type      | Description                           |
 | --------------- | --------- | ------------------------------------- |
 | `userId`        | `string`  | The unique ID of the user.            |
 | `email`         | `string`  | The email of the user.                |
+| `username`      | `string`  | The unique username of the user.      |
 | `passwordHash`  | `string`  | The hashed password.                  |
 | `googleId`      | `string`  | The user's Google ID for OAuth.       |
 | `createdAt`     | `string`  | The ISO 8601 timestamp of creation.   |
@@ -226,6 +232,10 @@ erDiagram
         string SK "METADATA"
         string GSI1PK "USER_EMAIL"
         string GSI1SK "<email>"
+        string GSI2PK "USER_GOOGLE"
+        string GSI2SK "<googleId>"
+        string GSI3PK "USER_USERNAME"
+        string GSI3SK "<username>"
     }
 
     USER_SESSION {

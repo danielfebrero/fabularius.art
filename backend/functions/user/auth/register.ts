@@ -19,8 +19,11 @@ export const handler = async (
     const request: UserRegistrationRequest = JSON.parse(event.body);
 
     // Validate required fields
-    if (!request.email || !request.password) {
-      return ResponseUtil.badRequest(event, "Email and password are required");
+    if (!request.email || !request.password || !request.username) {
+      return ResponseUtil.badRequest(
+        event,
+        "Email, password, and username are required"
+      );
     }
 
     // Validate email format
@@ -37,11 +40,12 @@ export const handler = async (
       );
     }
 
-    // Validate optional username if provided
-    if (request.username && request.username.trim().length < 3) {
+    // Validate username format and requirements
+    const usernameValidation = UserUtil.validateUsername(request.username);
+    if (!usernameValidation.isValid) {
       return ResponseUtil.badRequest(
         event,
-        "Username must be at least 3 characters long"
+        `Username validation failed: ${usernameValidation.errors.join(", ")}`
       );
     }
 
@@ -49,9 +53,7 @@ export const handler = async (
       const userId = await UserUtil.createUser(
         request.email,
         request.password,
-        request.username?.trim(),
-        request.firstName?.trim(),
-        request.lastName?.trim()
+        request.username.trim()
       );
 
       // Generate email verification token
@@ -65,7 +67,7 @@ export const handler = async (
         const emailResult = await EmailService.sendVerificationEmail(
           request.email,
           verificationToken,
-          request.firstName?.trim()
+          request.username.trim()
         );
 
         if (!emailResult.success) {
@@ -89,9 +91,7 @@ export const handler = async (
       const responseData = {
         userId,
         email: request.email.toLowerCase(),
-        username: request.username?.trim(),
-        firstName: request.firstName?.trim(),
-        lastName: request.lastName?.trim(),
+        username: request.username.trim(),
         message:
           "User registered successfully. Please check your email for verification.",
       };
@@ -100,6 +100,9 @@ export const handler = async (
     } catch (error: any) {
       if (error.message === "Email already exists") {
         return ResponseUtil.badRequest(event, "Email is already registered");
+      }
+      if (error.message === "Username already exists") {
+        return ResponseUtil.badRequest(event, "Username is already taken");
       }
       throw error;
     }
