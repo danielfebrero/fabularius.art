@@ -12,7 +12,6 @@ const SESSION_DURATION_DAYS = 30; // Users get longer sessions than admins
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-  console.log("User login request received:", event);
   if (event.httpMethod === "OPTIONS") {
     return ResponseUtil.noContent(event);
   }
@@ -35,8 +34,6 @@ export const handler = async (
 
     const userEntity = await DynamoDBService.getUserByEmail(request.email);
 
-    console.log("User entity retrieved:", userEntity);
-
     if (!userEntity) {
       // Add delay to prevent timing attacks
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -50,7 +47,6 @@ export const handler = async (
     // Check if email is verified
     if (!userEntity.isEmailVerified) {
       const errorResponse = ResponseUtil.forbidden(event, "");
-      console.log("EMAIL_NOT_VERIFIED_MARKER_20250716");
       return {
         statusCode: 403,
         headers: errorResponse.headers,
