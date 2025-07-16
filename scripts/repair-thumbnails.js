@@ -7,6 +7,21 @@ const {
 const { S3Client, GetObjectCommand } = require("@aws-sdk/client-s3");
 const sharp = require("sharp");
 const path = require("path");
+const dotenv = require("dotenv");
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+const envArg = args.find((arg) => arg.startsWith("--env="));
+const env = envArg ? envArg.split("=")[1] : "dev";
+
+// Load environment variables from the parent directory
+const envPath = path.resolve(__dirname, ".env." + env);
+const result = dotenv.config({ path: envPath });
+
+if (result.error) {
+  console.error("Error loading .env." + env + " file", result.error);
+  process.exit(1);
+}
 
 // Configuration
 const AWS_REGION = process.env.AWS_REGION || "us-east-1";
@@ -34,17 +49,6 @@ const THUMBNAIL_CONFIGS = {
   large: { width: 365, height: 365, quality: 90, suffix: "_thumb_large" },
   xlarge: { width: 600, height: 600, quality: 95, suffix: "_thumb_xlarge" },
 };
-
-/**
- * Get public URL for S3 object
- */
-function getPublicUrl(key) {
-  if (CLOUDFRONT_DOMAIN) {
-    // Remove any existing protocol prefix to avoid duplication
-    return `${CLOUDFRONT_DOMAIN}/${key}`;
-  }
-  return `https://${S3_BUCKET}.s3.${AWS_REGION}.amazonaws.com/${key}`;
-}
 
 /**
  * Upload buffer to S3
@@ -94,7 +98,12 @@ async function generateThumbnails(originalKey, imageBuffer) {
         .toBuffer();
 
       // Create thumbnail key
-      const thumbnailKey = `${basePath}/thumbnails/${fileNameWithoutExt}${config.suffix}.webp`;
+      const thumbnailKey =
+        basePath +
+        "/thumbnails/" +
+        fileNameWithoutExt +
+        config.suffix +
+        ".webp";
 
       // Upload thumbnail to S3
       await uploadBuffer(thumbnailKey, thumbnailBuffer, "image/webp", {
@@ -102,13 +111,17 @@ async function generateThumbnails(originalKey, imageBuffer) {
         "thumbnail-config": JSON.stringify(config),
       });
 
-      thumbnailUrls[configName] = getPublicUrl(thumbnailKey);
+      thumbnailUrls[configName] = thumbnailKey;
       console.log(
-        `Generated ${configName} thumbnail: ${thumbnailUrls[configName]}`
+        "Generated " + configName + " thumbnail: " + thumbnailUrls[configName]
       );
     } catch (error) {
       console.error(
-        `Failed to generate ${configName} thumbnail for ${originalKey}:`,
+        "Failed to generate " +
+          configName +
+          " thumbnail for " +
+          originalKey +
+          ":",
         error
       );
       return null;
@@ -122,7 +135,7 @@ async function generateThumbnails(originalKey, imageBuffer) {
  * Generate album cover thumbnails
  */
 async function generateAlbumCoverThumbnails(albumId, imageBuffer) {
-  const baseKey = `albums/${albumId}/cover/thumbnails/`;
+  const baseKey = "albums/" + albumId + "/cover/thumbnails/";
   const thumbnailUrls = {};
 
   for (const [configName, config] of Object.entries(THUMBNAIL_CONFIGS)) {
@@ -137,7 +150,7 @@ async function generateAlbumCoverThumbnails(albumId, imageBuffer) {
         .toBuffer();
 
       // Create thumbnail key using standardized suffix pattern for album covers
-      const thumbnailKey = `${baseKey}cover_thumb_${configName}.webp`;
+      const thumbnailKey = baseKey + "cover_thumb_" + configName + ".webp";
 
       // Upload thumbnail to S3
       await uploadBuffer(thumbnailKey, thumbnailBuffer, "image/webp", {
@@ -146,10 +159,14 @@ async function generateAlbumCoverThumbnails(albumId, imageBuffer) {
         "thumbnail-config": JSON.stringify(config),
       });
 
-      thumbnailUrls[configName] = getPublicUrl(thumbnailKey);
+      thumbnailUrls[configName] = thumbnailKey;
     } catch (error) {
       console.error(
-        `Failed to generate ${configName} album cover thumbnail for album ${albumId}:`,
+        "Failed to generate " +
+          configName +
+          " album cover thumbnail for album " +
+          albumId +
+          ":",
         error
       );
       return null;
@@ -179,6 +196,16 @@ function isImageFile(mimeType) {
  * Extract S3 key from URL
  */
 function extractKeyFromUrl(url) {
+  if (!url) {
+    return null;
+  }
+
+  // If the URL is relative, remove the leading slash.
+  if (url.startsWith("/")) {
+    return url.substring(1);
+  }
+
+  // Otherwise, parse it as a full URL.
   try {
     const urlObj = new URL(url);
     return urlObj.pathname.substring(1);
@@ -251,8 +278,8 @@ async function updateMediaThumbnails(albumId, mediaId, thumbnailUrls) {
     new UpdateCommand({
       TableName: DYNAMODB_TABLE,
       Key: {
-        PK: `ALBUM#${albumId}`,
-        SK: `MEDIA#${mediaId}`,
+        PK: "ALBUM#" + albumId,
+        SK: "MEDIA#" + mediaId,
       },
       UpdateExpression:
         "SET thumbnailUrl = :thumbnailUrl, thumbnailUrls = :thumbnailUrls, #status = :status, updatedAt = :updatedAt",
@@ -260,7 +287,7 @@ async function updateMediaThumbnails(albumId, mediaId, thumbnailUrls) {
         "#status": "status",
       },
       ExpressionAttributeValues: {
-        ":thumbnailUrl": thumbnailUrls.small, // Default to small thumbnail (240px)
+        ":thumbnailUrl": thumbnailUrls.small,
         ":thumbnailUrls": thumbnailUrls,
         ":status": "uploaded",
         ":updatedAt": new Date().toISOString(),
@@ -277,7 +304,7 @@ async function updateAlbumThumbnails(albumId, thumbnailUrls) {
     new UpdateCommand({
       TableName: DYNAMODB_TABLE,
       Key: {
-        PK: `ALBUM#${albumId}`,
+        PK: "ALBUM#" + albumId,
         SK: "METADATA",
       },
       UpdateExpression:
@@ -315,7 +342,7 @@ async function downloadFromS3(key) {
 
     return Buffer.concat(chunks);
   } catch (error) {
-    console.error(`Failed to download ${key}:`, error);
+    console.error("Failed to download " + key + ":", error);
     return null;
   }
 }
@@ -328,37 +355,37 @@ async function processMediaItem(mediaItem) {
 
   // Skip if thumbnail already exists
   if (thumbnailUrl) {
-    console.log(`✓ Media ${id} already has thumbnail`);
+    console.log("✓ Media " + id + " already has thumbnail");
     return { status: "skipped", reason: "already_has_thumbnail" };
   }
 
   // Skip if not an image
   if (!isImageFile(mimeType)) {
-    console.log(`- Media ${id} is not an image (${mimeType})`);
+    console.log("- Media " + id + " is not an image (" + mimeType + ")");
     return { status: "skipped", reason: "not_image" };
   }
 
   try {
-    console.log(`🔄 Processing media ${id}...`);
+    console.log("🔄 Processing media " + id + "...");
 
     // Extract S3 key from URL or use filename
     const s3Key = extractKeyFromUrl(url) || filename;
     if (!s3Key) {
-      console.error(`❌ Could not determine S3 key for media ${id}`);
+      console.error("❌ Could not determine S3 key for media " + id);
       return { status: "error", reason: "invalid_key" };
     }
 
     // Download original image
     const imageBuffer = await downloadFromS3(s3Key);
     if (!imageBuffer) {
-      console.error(`❌ Failed to download media ${id}`);
+      console.error("❌ Failed to download media " + id);
       return { status: "error", reason: "download_failed" };
     }
 
     // Generate thumbnails (all sizes)
     const thumbnailUrls = await generateThumbnails(s3Key, imageBuffer);
     if (!thumbnailUrls) {
-      console.error(`❌ Failed to generate thumbnails for media ${id}`);
+      console.error("❌ Failed to generate thumbnails for media " + id);
       return { status: "error", reason: "thumbnail_generation_failed" };
     }
 
@@ -366,12 +393,12 @@ async function processMediaItem(mediaItem) {
     await updateMediaThumbnails(albumId, id, thumbnailUrls);
 
     console.log(
-      `✅ Generated thumbnails for media ${id}:`,
+      "✅ Generated thumbnails for media " + id + ":",
       Object.keys(thumbnailUrls).join(", ")
     );
     return { status: "success", thumbnailUrls };
   } catch (error) {
-    console.error(`❌ Error processing media ${id}:`, error);
+    console.error("❌ Error processing media " + id + ":", error);
     return { status: "error", reason: error.message };
   }
 }
@@ -384,30 +411,30 @@ async function processAlbumCover(album) {
 
   // Skip if no cover image
   if (!coverImageUrl) {
-    console.log(`- Album ${id} has no cover image`);
+    console.log("- Album " + id + " has no cover image");
     return { status: "skipped", reason: "no_cover_image" };
   }
 
   // Skip if thumbnails already exist
   if (thumbnailUrls && Object.keys(thumbnailUrls).length > 0) {
-    console.log(`✓ Album ${id} already has thumbnails`);
+    console.log("✓ Album " + id + " already has thumbnails");
     return { status: "skipped", reason: "already_has_thumbnails" };
   }
 
   try {
-    console.log(`🔄 Processing album cover ${id}...`);
+    console.log("🔄 Processing album cover " + id + "...");
 
     // Extract S3 key from URL
     const s3Key = extractKeyFromUrl(coverImageUrl);
     if (!s3Key) {
-      console.error(`❌ Could not determine S3 key for album ${id}`);
+      console.error("❌ Could not determine S3 key for album " + id);
       return { status: "error", reason: "invalid_key" };
     }
 
     // Download cover image
     const imageBuffer = await downloadFromS3(s3Key);
     if (!imageBuffer) {
-      console.error(`❌ Failed to download cover image for album ${id}`);
+      console.error("❌ Failed to download cover image for album " + id);
       return { status: "error", reason: "download_failed" };
     }
 
@@ -417,7 +444,7 @@ async function processAlbumCover(album) {
       imageBuffer
     );
     if (!generatedThumbnailUrls) {
-      console.error(`❌ Failed to generate thumbnails for album ${id}`);
+      console.error("❌ Failed to generate thumbnails for album " + id);
       return { status: "error", reason: "thumbnail_generation_failed" };
     }
 
@@ -425,12 +452,12 @@ async function processAlbumCover(album) {
     await updateAlbumThumbnails(id, generatedThumbnailUrls);
 
     console.log(
-      `✅ Generated thumbnails for album ${id}:`,
+      "✅ Generated thumbnails for album " + id + ":",
       Object.keys(generatedThumbnailUrls).join(", ")
     );
     return { status: "success", thumbnailUrls: generatedThumbnailUrls };
   } catch (error) {
-    console.error(`❌ Error processing album ${id}:`, error);
+    console.error("❌ Error processing album " + id + ":", error);
     return { status: "error", reason: error.message };
   }
 }
@@ -440,20 +467,22 @@ async function processAlbumCover(album) {
  */
 async function repairThumbnails() {
   console.log("🚀 Starting thumbnail repair process...");
-  console.log(`📋 DynamoDB Table: ${DYNAMODB_TABLE}`);
-  console.log(`🪣 S3 Bucket: ${S3_BUCKET}`);
-  console.log(`🌐 CloudFront Domain: ${CLOUDFRONT_DOMAIN || "Not configured"}`);
+  console.log("📋 DynamoDB Table: " + DYNAMODB_TABLE);
+  console.log("🪣 S3 Bucket: " + S3_BUCKET);
+  console.log(
+    "🌐 CloudFront Domain: " + (CLOUDFRONT_DOMAIN || "Not configured")
+  );
   console.log();
 
   try {
     // Get all media items and albums
     console.log("📖 Fetching all media items...");
     const mediaItems = await getAllMediaItems();
-    console.log(`📊 Found ${mediaItems.length} media items`);
+    console.log("📊 Found " + mediaItems.length + " media items");
 
     console.log("📖 Fetching all albums...");
     const albums = await getAllAlbums();
-    console.log(`📊 Found ${albums.length} albums`);
+    console.log("📊 Found " + albums.length + " albums");
     console.log();
 
     if (mediaItems.length === 0 && albums.length === 0) {
@@ -474,7 +503,10 @@ async function repairThumbnails() {
     if (mediaItems.length > 0) {
       console.log("🔧 Processing media items...");
       for (const [index, mediaItem] of mediaItems.entries()) {
-        console.log(`[Media ${index + 1}/${mediaItems.length}]`, "");
+        console.log(
+          "[Media " + (index + 1) + "/" + mediaItems.length + "]",
+          ""
+        );
 
         const result = await processMediaItem(mediaItem);
         mediaResults.processed++;
@@ -514,7 +546,7 @@ async function repairThumbnails() {
       console.log();
       console.log("🎨 Processing album covers...");
       for (const [index, album] of albums.entries()) {
-        console.log(`[Album ${index + 1}/${albums.length}]`, "");
+        console.log("[Album " + (index + 1) + "/" + albums.length + "]", "");
 
         const result = await processAlbumCover(album);
         albumResults.processed++;
@@ -544,18 +576,18 @@ async function repairThumbnails() {
     console.log();
     console.log("📊 Repair Summary:");
     console.log("   Media Items:");
-    console.log(`     Total: ${mediaResults.total}`);
-    console.log(`     Processed: ${mediaResults.processed}`);
-    console.log(`     Skipped: ${mediaResults.skipped}`);
-    console.log(`     Success: ${mediaResults.success}`);
-    console.log(`     Errors: ${mediaResults.error}`);
+    console.log("     Total: " + mediaResults.total);
+    console.log("     Processed: " + mediaResults.processed);
+    console.log("     Skipped: " + mediaResults.skipped);
+    console.log("     Success: " + mediaResults.success);
+    console.log("     Errors: " + mediaResults.error);
 
     console.log("   Albums:");
-    console.log(`     Total: ${albumResults.total}`);
-    console.log(`     Processed: ${albumResults.processed}`);
-    console.log(`     Skipped: ${albumResults.skipped}`);
-    console.log(`     Success: ${albumResults.success}`);
-    console.log(`     Errors: ${albumResults.error}`);
+    console.log("     Total: " + albumResults.total);
+    console.log("     Processed: " + albumResults.processed);
+    console.log("     Skipped: " + albumResults.skipped);
+    console.log("     Success: " + albumResults.success);
+    console.log("     Errors: " + albumResults.error);
 
     const totalErrors = mediaResults.errors.concat(
       albumResults.errors.map((error) => ({ ...error, type: "album" }))
@@ -565,10 +597,10 @@ async function repairThumbnails() {
       console.log();
       console.log("❌ Errors:");
       mediaResults.errors.forEach((error) => {
-        console.log(`   - Media ${error.mediaId}: ${error.reason}`);
+        console.log("   - Media " + error.mediaId + ": " + error.reason);
       });
       albumResults.errors.forEach((error) => {
-        console.log(`   - Album ${error.albumId}: ${error.reason}`);
+        console.log("   - Album " + error.albumId + ": " + error.reason);
       });
     }
 

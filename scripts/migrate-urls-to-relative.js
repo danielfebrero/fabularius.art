@@ -22,12 +22,26 @@ const {
   BatchWriteItemCommand,
 } = require("@aws-sdk/client-dynamodb");
 const { marshall, unmarshall } = require("@aws-sdk/util-dynamodb");
+const dotenv = require("dotenv");
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+const envArg = args.find((arg) => arg.startsWith("--env="));
+const env = envArg ? envArg.split("=")[1] : "dev";
+const isDryRun = args.includes("--dry-run");
+const isRollback = args.includes("--rollback");
+
+// Load environment variables from the parent directory
+const envPath = require("path").resolve(__dirname, ".env." + env);
+const result = dotenv.config({ path: envPath });
+
+if (result.error) {
+  console.error("Error loading .env." + env + " file", result.error);
+  process.exit(1);
+}
 
 // Configuration
-const TABLE_NAME = process.env.DYNAMODB_TABLE || "dev-pornspot-media";
-const BATCH_SIZE = 25; // DynamoDB batch write limit
-const isDryRun = process.argv.includes("--dry-run");
-const isRollback = process.argv.includes("--rollback");
+const TABLE_NAME = process.env.DYNAMODB_TABLE;
 
 // S3 configuration (inlined from backend)
 const isLocal = process.env.AWS_SAM_LOCAL === "true";
