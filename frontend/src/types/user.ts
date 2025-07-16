@@ -50,8 +50,10 @@ export interface UserLoginRequest {
 // Authentication Response Types
 export interface UserLoginResponse {
   success: boolean;
-  user: User;
-  sessionId: string;
+  user?: User;
+  sessionId?: string;
+  error?: string;
+  message?: string;
 }
 
 export interface UserRegistrationResponse {

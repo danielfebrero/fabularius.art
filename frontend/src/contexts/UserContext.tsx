@@ -33,24 +33,38 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       setError(null);
+      setEmailVerificationRequired(false); // Always reset before login
 
       const response = await userApi.login(credentials);
+
+      // If backend signals email not verified in a normal response
+      if (!response.success && response.error === "EMAIL_NOT_VERIFIED") {
+        setEmailVerificationRequired(true);
+        setError(null);
+        return false;
+      }
 
       if (response.success && response.user) {
         setUser(response.user);
         return true;
       } else {
-        // This part will now be handled by the error catching below
-        setError("Login failed");
+        // Show detailed backend error if present
+        setError(response.error || "Login failed");
         return false;
       }
     } catch (err: any) {
+      // If error thrown by API contains response JSON with backend error
       if (err.response?.error === "EMAIL_NOT_VERIFIED") {
         setEmailVerificationRequired(true);
         setError(null);
         return false;
       }
-      const errorMessage = err.response?.error || err.message || "Login failed";
+      // Prefer backend-provided error message, then error.message, then fallback
+      const errorMessage =
+        err.response?.error ||
+        err.response?.message ||
+        err.message ||
+        "Login failed";
       setError(errorMessage);
       return false;
     } finally {

@@ -36,7 +36,20 @@ export const userApi = {
     });
 
     if (!response.ok) {
-      throw new Error(`Login failed: ${response.statusText}`);
+      let errorData = null;
+      try {
+        errorData = await response.json();
+      } catch {
+        // response body is not JSON
+      }
+      const errorMessage =
+        (errorData && (errorData.error || errorData.message)) ||
+        `Login failed: ${response.statusText}`;
+      const error = new Error(errorMessage);
+      if (errorData) {
+        (error as any).response = errorData;
+      }
+      throw error;
     }
 
     return response.json();
