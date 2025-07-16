@@ -396,7 +396,9 @@ Resources:
         - Statement:
             - Effect: Allow
               Action:
-                - s3:PutBucketNotificationConfiguration
+                - s3:PutBucketNotification
+                - s3:GetBucketNotification
+                - s3:PutBucketNotificationConfiguration # (add both for safety)
                 - s3:GetBucketNotificationConfiguration
               Resource: !Sub "arn:aws:s3:::${Environment}-pornspot-media-${AWS::AccountId}"
       InlineCode: |
@@ -421,7 +423,7 @@ Resources:
                     s3.put_bucket_notification_configuration(
                         Bucket=bucket_name,
                         NotificationConfiguration={
-                            'LambdaConfigurations': [
+                            'LambdaFunctionConfigurations': [
                                 {
                                     'Id': 'ProcessUploadTrigger',
                                     'LambdaFunctionArn': function_arn,
