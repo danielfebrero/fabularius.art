@@ -70,7 +70,7 @@ export function useGoogleAuth() {
 
       // Construct OAuth URL
       const baseUrl =
-        process.env.NEXT_PUBLIC_API_BASE_URL || window.location.origin;
+        process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
       const redirectUri = `${baseUrl}/auth/oauth/callback`;
 
       const params = new URLSearchParams({
