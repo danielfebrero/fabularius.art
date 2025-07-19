@@ -21,19 +21,39 @@ export const handler = async (
     // If filtering by isPublic, we need to fetch more albums to account for filtering
     const fetchLimit = isPublic !== undefined ? Math.max(limit * 3, 50) : limit;
 
-    const { albums, lastEvaluatedKey: nextKey } =
-      await DynamoDBService.listAlbums(fetchLimit, lastEvaluatedKey);
+    // Modified: Fetch in loop if filtering, ensure at least 'limit' filtered albums or fully exhausted
+    let albums: Album[] = [];
+    let filteredAlbums: Album[] = [];
+    let nextKey = lastEvaluatedKey;
+    let exhausted = false;
 
-    // Filter albums based on isPublic parameter
-    let filteredAlbums = albums;
     if (isPublic !== undefined) {
       const isPublicBool = isPublic === "true";
-      filteredAlbums = albums.filter(
-        (album) => album.isPublic === isPublicBool
-      );
+      // Loop until we have enough filtered or exhausted DB
+      while (filteredAlbums.length < limit && !exhausted) {
+        const fetchRes = await DynamoDBService.listAlbums(fetchLimit, nextKey);
+        albums = fetchRes.albums;
+        nextKey = fetchRes.lastEvaluatedKey;
 
-      // Trim to requested limit after filtering
+        const justFiltered = albums.filter(
+          (album) => album.isPublic === isPublicBool
+        );
+        filteredAlbums = [...filteredAlbums, ...justFiltered];
+
+        if (!nextKey || albums.length === 0) {
+          exhausted = true;
+          break;
+        }
+      }
       filteredAlbums = filteredAlbums.slice(0, limit);
+    } else {
+      // No filtering, normal flow
+      const fetchRes = await DynamoDBService.listAlbums(fetchLimit, nextKey);
+      albums = fetchRes.albums;
+      nextKey = fetchRes.lastEvaluatedKey;
+      filteredAlbums = albums.slice(0, limit);
+      // No further fetch required
+      exhausted = !nextKey;
     }
 
     console.log(
@@ -68,7 +88,11 @@ export const handler = async (
     const response = {
       albums: albumsResponse,
       pagination: {
-        hasNext: !!nextKey,
+        // Only hasNext if we truly exhausted all and there is a nextKey
+        hasNext:
+          isPublic !== undefined
+            ? !exhausted || (filteredAlbums.length === limit && !!nextKey)
+            : !!nextKey,
         cursor: nextKey
           ? Buffer.from(JSON.stringify(nextKey)).toString("base64")
           : null,
