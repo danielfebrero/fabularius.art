@@ -957,6 +957,14 @@ Resources:
       CodeUri: backend/
       Handler: dist/functions/user/auth/oauth-google.handler
       Events:
+        PostOAuthCallback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /auth/oauth/callback
+            Method: POST
+            Auth:
+              Authorizer: NONE
         GetOAuthCallback:
           Type: Api
           Properties:
