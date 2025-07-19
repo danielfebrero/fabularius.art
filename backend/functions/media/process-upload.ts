@@ -58,15 +58,45 @@ if (isLocal) {
 const s3Client = new S3Client(s3Config);
 
 export const handler = async (event: S3Event): Promise<void> => {
-  console.log("Processing S3 upload event:", JSON.stringify(event, null, 2));
+  // Lambda invocation logging
+  console.log("[process-upload] Lambda started");
+  // Log event with minimal redaction (S3 event: no secrets by default)
+  // If you add secrets to S3 event, redact here.
+  try {
+    console.log(
+      "[process-upload] Received event:",
+      JSON.stringify(event, null, 2)
+    );
 
-  for (const record of event.Records) {
-    try {
-      await processUploadRecord(record);
-    } catch (error) {
-      console.error("Error processing record:", record, error);
-      // Continue processing other records
+    for (const record of event.Records) {
+      try {
+        await processUploadRecord(record);
+      } catch (error) {
+        console.error(
+          "[process-upload] Error processing record:",
+          record,
+          error
+        );
+        // Continue processing other records
+      }
     }
+
+    console.log(
+      "[process-upload] Lambda completed successfully for",
+      event.Records.length,
+      "record(s)"
+    );
+  } catch (err) {
+    // Robust error/exception logging with stack trace
+    if (err instanceof Error) {
+      console.error("[process-upload] Lambda failed:", err.message, err.stack);
+    } else {
+      console.error(
+        "[process-upload] Lambda failed with non-Error exception:",
+        err
+      );
+    }
+    throw err;
   }
 };
 
