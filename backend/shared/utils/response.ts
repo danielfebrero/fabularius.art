@@ -132,10 +132,14 @@ export class ResponseUtil {
     };
   }
 
-  static redirect(location: string): APIGatewayProxyResult {
+  static redirect(
+    event: APIGatewayProxyEvent,
+    location: string
+  ): APIGatewayProxyResult {
     return {
       statusCode: 302,
       headers: {
+        ...getCorsHeaders(event),
         Location: location,
       },
       body: "",

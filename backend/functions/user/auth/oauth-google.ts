@@ -62,7 +62,7 @@ export const handler = async (
           : "OAuth authentication failed"
       )}`;
 
-      return ResponseUtil.redirect(errorRedirectUrl);
+      return ResponseUtil.redirect(event, errorRedirectUrl);
     }
 
     // Validate required parameters
@@ -72,7 +72,7 @@ export const handler = async (
       const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         "Missing authorization code"
       )}`;
-      return ResponseUtil.redirect(errorRedirectUrl);
+      return ResponseUtil.redirect(event, errorRedirectUrl);
     }
 
     // Validate state parameter for CSRF protection
@@ -82,7 +82,7 @@ export const handler = async (
       const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         "Invalid request state"
       )}`;
-      return ResponseUtil.redirect(errorRedirectUrl);
+      return ResponseUtil.redirect(event, errorRedirectUrl);
     }
 
     console.log("Exchanging authorization code for tokens");
@@ -115,7 +115,7 @@ export const handler = async (
       const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         "Failed to authenticate with Google"
       )}`;
-      return ResponseUtil.redirect(errorRedirectUrl);
+      return ResponseUtil.redirect(event, errorRedirectUrl);
     }
 
     console.log("Verifying Google ID token");
@@ -151,7 +151,7 @@ export const handler = async (
       const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         "Invalid authentication token"
       )}`;
-      return ResponseUtil.redirect(errorRedirectUrl);
+      return ResponseUtil.redirect(event, errorRedirectUrl);
     }
 
     console.log("Google user info verified:", {
@@ -180,7 +180,7 @@ export const handler = async (
       const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         userError.message || "Failed to create user account"
       )}`;
-      return ResponseUtil.redirect(errorRedirectUrl);
+      return ResponseUtil.redirect(event, errorRedirectUrl);
     }
 
     console.log("User account processed:", { userId, isNewUser });
@@ -226,7 +226,7 @@ export const handler = async (
       isNewUser ? "?new_user=true" : ""
     }`;
 
-    const response = ResponseUtil.redirect(successRedirectUrl);
+    const response = ResponseUtil.redirect(event, successRedirectUrl);
     response.headers = {
       ...response.headers,
       "Set-Cookie": sessionCookie,
@@ -244,7 +244,7 @@ export const handler = async (
     const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
       "Authentication failed"
     )}`;
-    return ResponseUtil.redirect(errorRedirectUrl);
+    return ResponseUtil.redirect(event, errorRedirectUrl);
   }
 };
 
