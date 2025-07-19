@@ -947,6 +947,13 @@ Resources:
             Method: GET
             Auth:
               Authorizer: NONE
+        OptionsOAuthCallback:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /auth/oauth/callback
+            Method: OPTIONS
+            Auth: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable

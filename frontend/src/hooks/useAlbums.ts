@@ -54,6 +54,13 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
 
   const fetchAlbums = async (cursor?: string, append = false) => {
     try {
+      console.log("[useAlbums] fetchAlbums called", {
+        cursor,
+        append,
+        limit,
+        isPublic: effectiveIsPublic,
+        page,
+      });
       if (append) {
         setLoadingMore(true);
       } else {
@@ -86,6 +93,7 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
       }
 
       const data = await response.json();
+      console.log("[useAlbums] fetch result", data);
 
       if (data.success) {
         // Backend returns {success: true, data: {albums: Album[], pagination: {...}}}
@@ -93,11 +101,21 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
         const newPagination = data.data.pagination;
 
         if (append) {
-          setAlbums((prev) => [...prev, ...newAlbums]);
+          setAlbums((prev) => {
+            const updated = [...prev, ...newAlbums];
+            console.log("[useAlbums] setAlbums (append)", updated.length);
+            return updated;
+          });
         } else {
-          setAlbums(newAlbums);
+          setAlbums(() => {
+            console.log("[useAlbums] setAlbums (replace)", newAlbums.length);
+            return newAlbums;
+          });
         }
-        setPagination(newPagination);
+        setPagination(() => {
+          console.log("[useAlbums] setPagination", newPagination);
+          return newPagination;
+        });
       } else {
         throw new Error(data.error || "Failed to fetch albums");
       }
@@ -125,6 +143,15 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
       fetchAlbums();
     }
   }, [effectiveIsPublic, limit, page, initialAlbums.length]);
+
+  useEffect(() => {
+    console.log(
+      "[useAlbums] state change: albums",
+      albums.length,
+      "pagination",
+      pagination
+    );
+  }, [albums, pagination]);
 
   return {
     albums,

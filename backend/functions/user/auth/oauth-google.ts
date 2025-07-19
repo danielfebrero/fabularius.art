@@ -30,6 +30,9 @@ if (!GOOGLE_CLIENT_ID) {
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
+  if (event.httpMethod === "OPTIONS") {
+    return ResponseUtil.noContent(event);
+  }
   console.log("Google OAuth callback handler started");
   console.log("Query parameters:", event.queryStringParameters);
 
