@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { getAlbums } from "@/lib/data";
-import { AlbumGrid } from "../components/AlbumGrid";
 import { Album } from "@/types";
+import { HomepageClient } from "@/components/HomepageClient";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -13,6 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function HomePage() {
   let albums: Album[] = [];
+  let pagination: any = null;
   let error: string | null = null;
 
   try {
@@ -23,6 +24,7 @@ export default async function HomePage() {
       error = result.error;
     } else {
       albums = result.data?.albums || [];
+      pagination = result.data?.pagination || null;
       console.log(`Successfully fetched ${albums.length} albums`);
     }
   } catch (fetchError) {
@@ -40,7 +42,7 @@ export default async function HomePage() {
         </p>
       </section>
 
-      {error ? (
+      {error && albums.length === 0 ? (
         <div className="text-center py-8">
           <p className="text-red-500 mb-4">Error loading albums: {error}</p>
           <p className="text-gray-500">Please try refreshing the page.</p>
@@ -52,7 +54,11 @@ export default async function HomePage() {
           </p>
         </div>
       ) : (
-        <AlbumGrid albums={albums} context="homepage" />
+        <HomepageClient
+          initialAlbums={albums}
+          initialPagination={pagination}
+          initialError={error}
+        />
       )}
     </>
   );

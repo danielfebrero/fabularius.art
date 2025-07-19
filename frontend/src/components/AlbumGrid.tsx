@@ -4,18 +4,38 @@ import { Album } from "../types/index";
 import { AlbumCard } from "./ui/AlbumCard";
 import { cn } from "../lib/utils";
 import { ThumbnailContext } from "../types/index";
+import { useInView } from "react-intersection-observer";
+import { useEffect } from "react";
 
 interface AlbumGridProps {
   albums: Album[];
   className?: string;
   context?: ThumbnailContext;
+  loadMore?: () => void;
+  loading?: boolean;
+  hasMore?: boolean;
+  error?: string | null;
 }
 
 export const AlbumGrid: React.FC<AlbumGridProps> = ({
   albums,
   className,
   context = "homepage",
+  loadMore,
+  loading = false,
+  hasMore = false,
+  error = null,
 }) => {
+  const { ref, inView } = useInView({
+    threshold: 0,
+    rootMargin: "200px 0px",
+  });
+
+  useEffect(() => {
+    if (inView && hasMore && !loading && loadMore) {
+      loadMore();
+    }
+  }, [inView, hasMore, loading, loadMore]);
   if (albums.length === 0) {
     return (
       <div className={cn("text-center py-12", className)}>
@@ -72,6 +92,33 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({
           />
         ))}
       </div>
+
+      {/* Infinite scroll loading states */}
+      {albums.length > 0 && (
+        <div className="text-center py-8">
+          {error ? (
+            <div className="space-y-4">
+              <p className="text-red-500">Error loading more albums: {error}</p>
+              <button
+                onClick={loadMore}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                disabled={loading}
+              >
+                Try Again
+              </button>
+            </div>
+          ) : loading ? (
+            <div className="space-y-4">
+              <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+              <p className="text-gray-500">Loading more albums...</p>
+            </div>
+          ) : hasMore ? (
+            <div ref={ref} className="h-4" aria-hidden="true" />
+          ) : albums.length > 0 ? (
+            <p className="text-gray-500">No more albums to load</p>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 };

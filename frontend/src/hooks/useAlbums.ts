@@ -7,6 +7,13 @@ interface UseAlbumsOptions {
   limit?: number;
   cursor?: string;
   page?: number;
+  initialAlbums?: Album[];
+  initialPagination?: {
+    hasNext: boolean;
+    hasPrev: boolean;
+    cursor: string | null;
+    page?: number;
+  } | null;
 }
 
 interface UseAlbumsReturn {
@@ -25,10 +32,17 @@ interface UseAlbumsReturn {
 }
 
 export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
-  const { isPublic, publicOnly, limit = 12, page } = options;
+  const {
+    isPublic,
+    publicOnly,
+    limit = 12,
+    page,
+    initialAlbums = [],
+    initialPagination = null,
+  } = options;
   const effectiveIsPublic = isPublic !== undefined ? isPublic : publicOnly;
-  const [albums, setAlbums] = useState<Album[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [albums, setAlbums] = useState<Album[]>(initialAlbums);
+  const [loading, setLoading] = useState(initialAlbums.length === 0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState<{
@@ -36,7 +50,7 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
     hasPrev: boolean;
     cursor: string | null;
     page?: number;
-  } | null>(null);
+  } | null>(initialPagination);
 
   const fetchAlbums = async (cursor?: string, append = false) => {
     try {
@@ -106,8 +120,11 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
   };
 
   useEffect(() => {
-    fetchAlbums();
-  }, [effectiveIsPublic, limit, page, fetchAlbums]);
+    // Only fetch if we don't have initial data
+    if (initialAlbums.length === 0) {
+      fetchAlbums();
+    }
+  }, [effectiveIsPublic, limit, page, initialAlbums.length]);
 
   return {
     albums,
