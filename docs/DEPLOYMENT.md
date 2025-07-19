@@ -20,6 +20,16 @@ The project supports three environments:
 
 ## Backend Deployment
 
+### Albums Backend Migration Steps
+
+When deploying the new albums backend logic:
+
+1. **Deploy the new GSI:** Add the `isPublic-createdAt-index` to your DynamoDB table.
+2. **Run the backfill script:** Before routing any user traffic to the new albums endpoint logic, run [`backend/scripts/backfill-isPublic.ts`](../backend/scripts/backfill-isPublic.ts:1) to set the `isPublic` field for all legacy album records. This script will update only those albums missing the attribute, defaulting them to `true`.
+3. **Route traffic:** Once the backfill script has completed, it is safe to route traffic to the new `/albums` endpoint logic that depends on the `isPublic` attribute and the GSI.
+
+---
+
 ### Using the Deploy Script
 
 The [`scripts/deploy.sh`](scripts/deploy.sh) script supports environment-specific deployments:

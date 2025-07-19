@@ -25,6 +25,18 @@ The table uses Global Secondary Indexes (GSIs) to support additional query patte
   - `GSI3PK`: The partition key for GSI3.
   - `GSI3SK`: The sort key for GSI3.
 
+## New Global Secondary Index: isPublic-createdAt-index
+
+To efficiently support server-side filtering and pagination for public/private albums, the following GSI must be present:
+
+- **isPublic-createdAt-index**
+  - **Partition Key**: `isPublic`
+  - **Sort Key**: `createdAt`
+
+Every album **must** have the `isPublic` attribute (boolean, required for all records). Album inserts and updates must enforce this requirement.
+
+**Migration:** Existing album items without `isPublic` must be backfilled using the script at [`backend/scripts/backfill-isPublic.ts`](../backend/scripts/backfill-isPublic.ts:1). This script only updates items missing `isPublic`, defaulting them to `true`.
+
 ## Entity Schemas
 
 ### Album Entity

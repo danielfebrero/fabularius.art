@@ -74,6 +74,62 @@ interface Album {
 }
 ```
 
+---
+
+## Albums Endpoint (`/albums`)
+
+Retrieves a paginated list of albums. Supports server-side filtering by public/private status, DynamoDB-native pagination, and returns a new, simplified response shape.
+
+### Request
+
+- **GET** `/albums`
+- **Query Parameters**:
+  - `isPublic` (optional, boolean): Filter albums by public visibility.
+  - `limit` (optional, integer): Maximum number of results to return per page (default: 20, max: 100).
+  - `nextCursor` (optional, string): Opaque cursor from the previous response for DynamoDB pagination.
+
+#### Example
+
+```
+GET /albums?isPublic=true&limit=20
+```
+
+### Response
+
+```json
+{
+  "albums": [
+    {
+      "id": "abc123",
+      "title": "Example Album",
+      "tags": ["summer", "beach"],
+      "coverImageUrl": "...",
+      "isPublic": true,
+      "mediaCount": 15,
+      "createdAt": "2025-06-01T12:05:47.400Z",
+      "updatedAt": "2025-06-01T12:05:47.400Z"
+      // ...additional album fields
+    }
+  ],
+  "pagination": {
+    "nextCursor": "eyJpYXQiOjE2...",
+    "hasNextPage": true
+  }
+}
+```
+
+- **albums**: List of album objects (see schema above).
+- **pagination.nextCursor**: Pass this token to retrieve the next page. Omit or set to null to fetch the first page.
+- **pagination.hasNextPage**: Boolean indicating if additional pages are available.
+
+**Notes:**
+
+- Filtering by `isPublic` is implemented entirely server-side for efficiency.
+- Pagination is native to DynamoDB (no traditional offset/limit; always use `nextCursor`).
+- The response shape is always `{ albums, pagination }`.
+
+---
+
 ### API Response Wrapper
 
 ```typescript

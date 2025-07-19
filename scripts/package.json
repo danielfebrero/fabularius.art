@@ -17,11 +17,12 @@
     "@aws-sdk/client-dynamodb": "^3.450.0",
     "@aws-sdk/client-s3": "^3.450.0",
     "@aws-sdk/lib-dynamodb": "^3.450.0",
-    "sharp": "^0.34.3",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "sharp": "^0.34.3"
   },
   "devDependencies": {
-    "@types/node": "^20.9.0"
+    "@types/node": "^20.9.0",
+    "ts-node": "^10.9.2"
   },
   "keywords": [
     "migration",
