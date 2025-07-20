@@ -32,7 +32,7 @@ export const handler = async (
         createdAt: album.createdAt,
         updatedAt: album.updatedAt,
         mediaCount: album.mediaCount,
-        isPublic: album.isPublic,
+        isPublic: album.isPublic === "true",
       };
 
       if (album.tags !== undefined) {

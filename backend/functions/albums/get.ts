@@ -38,6 +38,7 @@ export const handler = async (
       );
     }
     const isPublicBool = isPublicParam === "true";
+    const isPublicString = isPublicBool.toString(); // Convert to string for GSI query
 
     // Parse DynamoDB native LastEvaluatedKey as the cursor (base64-encoded JSON)
     let lastEvaluatedKey: any = undefined;
@@ -62,7 +63,7 @@ export const handler = async (
         "#isPublic": "isPublic",
       },
       ExpressionAttributeValues: {
-        ":isPublic": { BOOL: isPublicBool },
+        ":isPublic": { S: isPublicString },
       },
       Limit: limit,
       ScanIndexForward: false,
@@ -72,7 +73,14 @@ export const handler = async (
     const command = new QueryCommand(params);
     const result = await client.send(command);
 
-    const albums = (result.Items || []).map((item: any) => unmarshall(item));
+    const albums = (result.Items || []).map((item: any) => {
+      const album = unmarshall(item);
+      // Convert isPublic back to boolean for API response
+      if (album.isPublic) {
+        album.isPublic = album.isPublic === "true";
+      }
+      return album;
+    });
     const nextCursor = result.LastEvaluatedKey
       ? Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString("base64")
       : null;

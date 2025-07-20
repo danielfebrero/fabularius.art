@@ -25,7 +25,7 @@ export const handler = async (
       createdAt: albumEntity.createdAt,
       updatedAt: albumEntity.updatedAt,
       mediaCount: albumEntity.mediaCount,
-      isPublic: albumEntity.isPublic,
+      isPublic: albumEntity.isPublic === "true",
     };
 
     if (albumEntity.tags !== undefined) {

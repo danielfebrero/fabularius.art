@@ -97,7 +97,7 @@ export interface AlbumEntity {
   createdAt: string;
   updatedAt: string;
   mediaCount: number;
-  isPublic: boolean;
+  isPublic: string; // "true" or "false" - stored as string for GSI compatibility
 }
 
 export interface MediaEntity {

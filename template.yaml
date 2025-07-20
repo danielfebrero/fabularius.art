@@ -53,7 +53,7 @@ Resources:
         - AttributeName: GSI2SK
           AttributeType: S
         - AttributeName: isPublic
-          AttributeType: B
+          AttributeType: S
         - AttributeName: createdAt
           AttributeType: S
       KeySchema:

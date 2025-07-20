@@ -62,6 +62,16 @@ sam deploy --config-env staging # Staging
 sam deploy --config-env prod    # Production
 ```
 
+### Production Deployment via npm
+
+For deploying the backend to **production**, you can simply run the following npm script from the project root:
+
+```bash
+npm run deploy:backend:prod
+```
+
+This command will build and deploy the backend to the production environment using the correct parameters.
+
 ### Environment Configuration
 
 Each environment has its own configuration in [`samconfig.toml`](samconfig.toml):

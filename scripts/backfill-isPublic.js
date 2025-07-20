@@ -127,7 +127,7 @@ async function backfillIsPublic() {
           TableName: TABLE_NAME,
           Key: { PK: "ALBUM#" + item["id"], SK: "METADATA" },
           UpdateExpression: "SET isPublic = :true",
-          ExpressionAttributeValues: { ":true": true },
+          ExpressionAttributeValues: { ":true": "true" },
           ConditionExpression: "attribute_not_exists(isPublic)",
         });
         await docClient.send(updateCmd);

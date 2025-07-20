@@ -53,7 +53,7 @@ export const handler = async (
     }
 
     if (request.isPublic !== undefined) {
-      updates.isPublic = request.isPublic;
+      updates.isPublic = request.isPublic.toString();
     }
 
     if (request.coverImageUrl !== undefined) {
@@ -139,7 +139,7 @@ export const handler = async (
       createdAt: updatedAlbum.createdAt,
       updatedAt: updatedAlbum.updatedAt,
       mediaCount: updatedAlbum.mediaCount,
-      isPublic: updatedAlbum.isPublic,
+      isPublic: updatedAlbum.isPublic === "true",
     };
 
     // Trigger revalidation
