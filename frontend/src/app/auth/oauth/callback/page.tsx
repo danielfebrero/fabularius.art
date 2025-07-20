@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { userApi } from "@/lib/api";
@@ -16,18 +16,48 @@ function OAuthCallbackContent() {
   const { validateOAuthState, clearOAuthState } = useGoogleAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const isProcessingRef = useRef(false);
+  const hasProcessedRef = useRef(false);
 
   useEffect(() => {
     const handleOAuthCallback = async () => {
+      const code = searchParams.get("code");
+      const stateParam = searchParams.get("state");
+      const error = searchParams.get("error");
+
+      // Create a unique key for this OAuth request
+      const requestKey = `oauth_processed_${stateParam || code}`;
+      
+      // Check if we've already processed this exact OAuth request
+      if (typeof window !== "undefined") {
+        const alreadyProcessed = sessionStorage.getItem(requestKey);
+        if (alreadyProcessed) {
+          console.log("OAuth callback already processed for this request, skipping");
+          return;
+        }
+        // Mark this request as being processed
+        sessionStorage.setItem(requestKey, "processing");
+      }
+
+      // Prevent multiple simultaneous calls
+      if (isProcessingRef.current || hasProcessedRef.current) {
+        console.log("OAuth callback already processed or in progress, skipping");
+        return;
+      }
+
       try {
-        const code = searchParams.get("code");
-        const stateParam = searchParams.get("state");
-        const error = searchParams.get("error");
+        isProcessingRef.current = true;
 
         // Handle OAuth error from Google
         if (error) {
           setState("error");
           setMessage(`OAuth error: ${error}`);
+          hasProcessedRef.current = true;
+          
+          // Mark as processed with error
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem(requestKey, "error");
+          }
           return;
         }
 
@@ -35,6 +65,12 @@ function OAuthCallbackContent() {
         if (!code) {
           setState("error");
           setMessage("Missing authorization code from OAuth provider.");
+          hasProcessedRef.current = true;
+          
+          // Mark as processed with error
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem(requestKey, "error");
+          }
           return;
         }
 
@@ -45,7 +81,10 @@ function OAuthCallbackContent() {
           );
           console.warn("State validation details:", {
             receivedState: stateParam,
-            storedState: typeof window !== "undefined" ? sessionStorage.getItem("google_oauth_state") : null
+            storedState:
+              typeof window !== "undefined"
+                ? sessionStorage.getItem("google_oauth_state")
+                : null,
           });
         } else if (stateParam) {
           console.log("OAuth state validation passed");
@@ -67,10 +106,23 @@ function OAuthCallbackContent() {
           // Refresh user context
           await checkAuth();
 
+          hasProcessedRef.current = true;
+          
+          // Mark as successfully processed
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem(requestKey, "completed");
+          }
+          
           router.push(response.redirectUrl || "/auth/success");
         } else {
           setState("error");
           setMessage(response.error || "OAuth authentication failed.");
+          hasProcessedRef.current = true;
+          
+          // Mark as processed with error
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem(requestKey, "error");
+          }
         }
       } catch (err) {
         setState("error");
@@ -79,6 +131,14 @@ function OAuthCallbackContent() {
             ? err.message
             : "An unexpected error occurred during OAuth authentication."
         );
+        hasProcessedRef.current = true;
+        
+        // Mark as processed with error
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem(requestKey, "error");
+        }
+      } finally {
+        isProcessingRef.current = false;
       }
     };
 

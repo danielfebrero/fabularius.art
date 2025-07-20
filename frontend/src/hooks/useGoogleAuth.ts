@@ -42,11 +42,11 @@ export function useGoogleAuth() {
     if (typeof window === "undefined") return false;
 
     const storedState = sessionStorage.getItem("google_oauth_state");
-    
+
     console.log("OAuth State Validation:", {
       receivedState,
       storedState,
-      matches: storedState === receivedState
+      matches: storedState === receivedState,
     });
 
     if (!storedState || storedState !== receivedState) {
@@ -61,6 +61,16 @@ export function useGoogleAuth() {
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("google_oauth_state");
       sessionStorage.removeItem("google_oauth_code_verifier");
+      
+      // Clean up old processed OAuth requests (keep only the last 5)
+      const keys = Object.keys(sessionStorage);
+      const oauthKeys = keys.filter(key => key.startsWith("oauth_processed_"));
+      if (oauthKeys.length > 5) {
+        // Remove oldest entries
+        oauthKeys.slice(0, oauthKeys.length - 5).forEach(key => {
+          sessionStorage.removeItem(key);
+        });
+      }
     }
   };
 
