@@ -53,59 +53,42 @@ export const handler = async (
       redirectUri
     );
 
-    // Parse POST body data
-    let postData: any = {};
+    // Parse request body (JSON from frontend API call)
+    let requestBody: any = {};
     try {
       if (event.body) {
-        // Handle both JSON and URL-encoded form data
-        if (
-          event.headers["content-type"]?.includes("application/json") ||
-          event.headers["Content-Type"]?.includes("application/json")
-        ) {
-          postData = JSON.parse(event.body);
-        } else {
-          // Parse URL-encoded form data
-          const params = new URLSearchParams(event.body);
-          postData = Object.fromEntries(params.entries());
-        }
+        requestBody = JSON.parse(event.body);
       }
     } catch (parseError) {
-      console.error("Failed to parse POST body:", parseError);
+      console.error("Failed to parse request body:", parseError);
+      return ResponseUtil.badRequest(event, "Invalid request body");
     }
 
-    // Extract OAuth parameters from POST data
-    const code = postData["code"];
-    const state = postData["state"];
-    const error = postData["error"];
+    // Extract OAuth parameters from request body
+    const code = requestBody.code;
+    const state = requestBody.state;
+    const error = requestBody.error;
 
     // Handle OAuth errors from Google
     if (error) {
       console.error("OAuth error from Google:", error);
-      const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
+      return ResponseUtil.badRequest(event, 
         error === "access_denied"
           ? "User cancelled Google authentication"
           : "OAuth authentication failed"
-      )}`;
-
-      return ResponseUtil.redirect(event, errorRedirectUrl);
+      );
     }
 
     // Validate required parameters
     if (!code) {
       console.error("Missing authorization code in OAuth callback");
-      const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
-        "Missing authorization code"
-      )}`;
-      return ResponseUtil.redirect(event, errorRedirectUrl);
+      return ResponseUtil.badRequest(event, "Missing authorization code");
     }
 
     // Validate state parameter for CSRF protection
     if (!state) {
       console.error("Missing state parameter in OAuth callback");
-      const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
-        "Invalid request state"
-      )}`;
-      return ResponseUtil.redirect(event, errorRedirectUrl);
+      return ResponseUtil.badRequest(event, "Invalid request state");
     }
 
     console.log("Exchanging authorization code for tokens");
@@ -134,10 +117,7 @@ export const handler = async (
         "Failed to exchange authorization code for tokens:",
         tokenError
       );
-      const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
-        "Failed to authenticate with Google"
-      )}`;
-      return ResponseUtil.redirect(event, errorRedirectUrl);
+      return ResponseUtil.badRequest(event, "Failed to authenticate with Google");
     }
 
     console.log("Verifying Google ID token");
@@ -169,10 +149,7 @@ export const handler = async (
       };
     } catch (verifyError) {
       console.error("Failed to verify Google ID token:", verifyError);
-      const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
-        "Invalid authentication token"
-      )}`;
-      return ResponseUtil.redirect(event, errorRedirectUrl);
+      return ResponseUtil.badRequest(event, "Invalid authentication token");
     }
 
     console.log("Google user info verified:", {
@@ -197,10 +174,9 @@ export const handler = async (
       isNewUser = result.isNewUser;
     } catch (userError: any) {
       console.error("Failed to create or link Google user:", userError);
-      const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
+      return ResponseUtil.badRequest(event, 
         userError.message || "Failed to create user account"
-      )}`;
-      return ResponseUtil.redirect(event, errorRedirectUrl);
+      );
     }
 
     console.log("User account processed:", { userId, isNewUser });
@@ -240,30 +216,30 @@ export const handler = async (
       expiresAt.toISOString()
     );
 
-    // Redirect to frontend success page
-    const successRedirectUrl = `${frontendUrl}/auth/success${
-      isNewUser ? "?new_user=true" : ""
-    }`;
+    // Return success response with user data and redirect URL
+    const response = ResponseUtil.success(event, {
+      success: true,
+      user: {
+        userId,
+        email: googleUserInfo.email,
+        isEmailVerified: true,
+        ...(googleUserInfo.firstName && { firstName: googleUserInfo.firstName }),
+        ...(googleUserInfo.lastName && { lastName: googleUserInfo.lastName }),
+      },
+      redirectUrl: `/auth/success${isNewUser ? "?new_user=true" : ""}`,
+    });
 
-    const response = ResponseUtil.redirect(event, successRedirectUrl);
     response.headers = {
       ...response.headers,
       "Set-Cookie": sessionCookie,
     };
 
-    console.log(
-      "OAuth flow completed successfully, redirecting to:",
-      successRedirectUrl
-    );
+    console.log("OAuth flow completed successfully");
 
     return response;
   } catch (error) {
     console.error("Google OAuth callback error:", error);
-    const frontendUrl = await ParameterStoreService.getFrontendUrl();
-    const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
-      "Authentication failed"
-    )}`;
-    return ResponseUtil.redirect(event, errorRedirectUrl);
+    return ResponseUtil.badRequest(event, "Authentication failed");
   }
 };
 

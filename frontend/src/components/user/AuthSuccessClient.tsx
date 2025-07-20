@@ -3,17 +3,22 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { useUserContext } from "@/contexts/UserContext";
 import Link from "next/link";
 
 export function AuthSuccessClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { checkAuth } = useUserContext();
   const [isAnimated, setIsAnimated] = useState(false);
   const [countdown, setCountdown] = useState(5);
 
   const isNewUser = searchParams.get("new_user") === "true";
 
   useEffect(() => {
+    // Refresh user context after successful OAuth
+    checkAuth();
+
     // Trigger animation after component mounts
     const animationTimer = setTimeout(() => {
       setIsAnimated(true);
