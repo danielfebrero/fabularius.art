@@ -72,7 +72,8 @@ export const handler = async (
     // Handle OAuth errors from Google
     if (error) {
       console.error("OAuth error from Google:", error);
-      return ResponseUtil.badRequest(event, 
+      return ResponseUtil.badRequest(
+        event,
         error === "access_denied"
           ? "User cancelled Google authentication"
           : "OAuth authentication failed"
@@ -117,7 +118,10 @@ export const handler = async (
         "Failed to exchange authorization code for tokens:",
         tokenError
       );
-      return ResponseUtil.badRequest(event, "Failed to authenticate with Google");
+      return ResponseUtil.badRequest(
+        event,
+        "Failed to authenticate with Google"
+      );
     }
 
     console.log("Verifying Google ID token");
@@ -174,7 +178,8 @@ export const handler = async (
       isNewUser = result.isNewUser;
     } catch (userError: any) {
       console.error("Failed to create or link Google user:", userError);
-      return ResponseUtil.badRequest(event, 
+      return ResponseUtil.badRequest(
+        event,
         userError.message || "Failed to create user account"
       );
     }
@@ -223,7 +228,9 @@ export const handler = async (
         userId,
         email: googleUserInfo.email,
         isEmailVerified: true,
-        ...(googleUserInfo.firstName && { firstName: googleUserInfo.firstName }),
+        ...(googleUserInfo.firstName && {
+          firstName: googleUserInfo.firstName,
+        }),
         ...(googleUserInfo.lastName && { lastName: googleUserInfo.lastName }),
       },
       redirectUrl: `/auth/success${isNewUser ? "?new_user=true" : ""}`,
