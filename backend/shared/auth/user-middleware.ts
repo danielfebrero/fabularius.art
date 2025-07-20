@@ -7,43 +7,67 @@ export class UserAuthMiddleware {
     event: APIGatewayProxyEvent
   ): Promise<UserSessionValidationResult> {
     try {
+      console.log("🔍 Starting session validation...");
+      console.log("📋 Event headers:", JSON.stringify(event.headers, null, 2));
+      
       // Extract session ID from cookies
       const cookieHeader =
         event.headers["Cookie"] || event.headers["cookie"] || "";
-      console.log("User cookie header received:", cookieHeader);
+      console.log("🍪 User cookie header received:", cookieHeader);
 
       const sessionId = this.extractSessionFromCookies(cookieHeader);
-      console.log("Extracted user session ID:", sessionId);
+      console.log("🔑 Extracted user session ID:", sessionId);
 
       if (!sessionId) {
-        console.log("No user session ID found in cookies");
+        console.log("❌ No user session ID found in cookies");
         return { isValid: false };
       }
 
+      console.log("🔍 Attempting to get session from database...");
       // Get session from database
       const session = await DynamoDBService.getUserSession(sessionId);
+      console.log("📊 Session from database:", session ? "Found" : "Not found");
 
       if (!session) {
+        console.log("❌ Session not found in database");
         return { isValid: false };
       }
+
+      console.log("⏰ Session details:", {
+        sessionId: session.sessionId,
+        userId: session.userId,
+        expiresAt: session.expiresAt,
+        createdAt: session.createdAt
+      });
 
       // Check if session is expired
       const now = new Date();
       const expiresAt = new Date(session.expiresAt);
+      console.log("⏱️ Time check - Now:", now.toISOString(), "Expires:", expiresAt.toISOString());
 
       if (now > expiresAt) {
+        console.log("⏰ Session is expired, cleaning up...");
         // Clean up expired session
         await DynamoDBService.deleteUserSession(sessionId);
         return { isValid: false };
       }
 
+      console.log("👤 Getting user from database...");
       // Get user
       const userEntity = await DynamoDBService.getUserById(session.userId);
+      console.log("👤 User from database:", userEntity ? `Found (${userEntity.email})` : "Not found");
 
       if (!userEntity || !userEntity.isActive) {
+        console.log("❌ User not found or inactive:", {
+          found: !!userEntity,
+          isActive: userEntity?.isActive
+        });
         return { isValid: false };
       }
 
+      console.log("✅ User is valid and active");
+      console.log("📝 Updating last accessed time...");
+      console.log("📝 Updating last accessed time...");
       // Update last accessed time
       await DynamoDBService.updateUserSessionLastAccessed(sessionId);
 
@@ -60,6 +84,13 @@ export class UserAuthMiddleware {
         ...(userEntity.googleId && { googleId: userEntity.googleId }),
       };
 
+      console.log("🎉 Session validation successful!");
+      console.log("👤 Validated user:", {
+        userId: user.userId,
+        email: user.email,
+        username: user.username
+      });
+
       return {
         isValid: true,
         user,
@@ -73,7 +104,8 @@ export class UserAuthMiddleware {
         },
       };
     } catch (error) {
-      console.error("User session validation error:", error);
+      console.error("💥 User session validation error:", error);
+      console.error("💥 Error stack:", error instanceof Error ? error.stack : "No stack trace");
       return { isValid: false };
     }
   }

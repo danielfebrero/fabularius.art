@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/Button";
 import { useUser } from "@/hooks/useUser";
 import { User } from "@/types/user";
 
@@ -143,7 +142,7 @@ export function UserMenu({ user }: UserMenuProps) {
 
             <button
               onClick={() =>
-                handleMenuItemClick(() => router.push("/dashboard"))
+                handleMenuItemClick(() => router.push("/user/dashboard"))
               }
               className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
             >
