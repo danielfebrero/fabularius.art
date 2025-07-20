@@ -237,7 +237,15 @@ fi
 # Go back to root directory
 cd ..
 
-# Step 5d: Build SAM application
+# Step 5d: Clean up previous SAM containers
+print_status "Cleaning up previous SAM containers and build artifacts..."
+if ./scripts/cleanup-sam-containers.sh; then
+    print_success "SAM cleanup completed"
+else
+    print_warning "SAM cleanup failed, continuing anyway..."
+fi
+
+# Step 5e: Build SAM application
 print_status "Building SAM application..."
 if sam build; then
     print_success "SAM build completed"
@@ -246,7 +254,7 @@ else
     exit 1
 fi
 
-# Step 5e: Start Backend Server
+# Step 5f: Start Backend Server
 print_status "Starting backend server..."
 echo ""
 print_warning "The backend server will now start and run in the foreground."

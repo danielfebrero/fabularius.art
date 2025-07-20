@@ -2,7 +2,8 @@ import { SSMClient, GetParameterCommand } from "@aws-sdk/client-ssm";
 
 const isLocal =
   process.env["AWS_SAM_LOCAL"] === "true" ||
-  process.env["NODE_ENV"] === "development";
+  process.env["NODE_ENV"] === "development" ||
+  process.env["ENVIRONMENT"] === "local";
 
 let ssmClient: SSMClient;
 if (!isLocal) {
@@ -113,6 +114,16 @@ export class ParameterStoreService {
   static async getGoogleClientSecret(): Promise<string> {
     // In local development, use environment variable directly
     if (isLocal) {
+      console.log(
+        "Local environment detected. Available env vars:",
+        Object.keys(process.env).filter(
+          (key) => key.includes("GOOGLE") || key.includes("ENVIRONMENT")
+        )
+      );
+      console.log(
+        "GOOGLE_CLIENT_SECRET value:",
+        process.env["GOOGLE_CLIENT_SECRET"]
+      );
       const secret = process.env["GOOGLE_CLIENT_SECRET"];
       if (!secret) {
         throw new Error(
