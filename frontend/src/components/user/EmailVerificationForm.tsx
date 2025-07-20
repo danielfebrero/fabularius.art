@@ -38,7 +38,7 @@ export function EmailVerificationForm({ email }: EmailVerificationFormProps) {
     setSuccess(null);
     try {
       const response = await userApi.verifyEmail(data.code);
-      if (response.user) {
+      if (response.success && response.data?.user) {
         setSuccess("Email verified successfully! Redirecting to dashboard...");
         router.push("/user/dashboard");
       }

@@ -50,21 +50,30 @@ export interface UserLoginRequest {
 // Authentication Response Types
 export interface UserLoginResponse {
   success: boolean;
-  user?: User;
-  sessionId?: string;
+  data?: {
+    user: User;
+    sessionId: string;
+  };
   error?: string;
   message?: string;
 }
 
 export interface UserRegistrationResponse {
   success: boolean;
-  user: User;
-  message?: string;
+  data?: {
+    userId: string;
+    email: string;
+    username: string;
+    message: string;
+  };
+  error?: string;
 }
 
 export interface UserMeResponse {
   success: boolean;
-  user?: User;
+  data?: {
+    user: User;
+  };
   error?: string;
 }
 
@@ -75,9 +84,11 @@ export interface EmailVerificationRequest {
 
 export interface EmailVerificationResponse {
   success: boolean;
-  message?: string;
+  data?: {
+    message: string;
+    user?: User;
+  };
   error?: string;
-  user?: User;
 }
 
 export interface ResendVerificationRequest {
@@ -86,7 +97,10 @@ export interface ResendVerificationRequest {
 
 export interface ResendVerificationResponse {
   success: boolean;
-  message?: string;
+  data?: {
+    message: string;
+    email: string;
+  };
   error?: string;
 }
 
@@ -98,9 +112,10 @@ export interface GoogleOAuthState {
 
 export interface GoogleOAuthResponse {
   success: boolean;
-  user?: User;
-  sessionId?: string;
-  redirectUrl: string;
+  data?: {
+    user: User;
+    redirectUrl: string;
+  };
   error?: string;
 }
 

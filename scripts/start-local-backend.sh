@@ -298,6 +298,15 @@ fi
 
 print_success "Docker network is ready"
 
+# Step 5d.2: Create backend environment JSON configuration
+print_status "Creating backend environment JSON configuration..."
+if .venv/bin/python scripts/create-backend-env-json.py; then
+    print_success "Backend environment JSON created successfully"
+else
+    print_error "Failed to create backend environment JSON"
+    exit 1
+fi
+
 # Step 5e: Build SAM application
 print_status "Building SAM application..."
 if sam build; then

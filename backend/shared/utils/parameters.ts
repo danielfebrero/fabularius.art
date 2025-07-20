@@ -115,10 +115,18 @@ export class ParameterStoreService {
     // In local development, use environment variable directly
     if (isLocal) {
       console.log(
-        "Local environment detected. Available env vars:",
+        "Local environment detected. Google/Environment vars:",
         Object.keys(process.env).filter(
           (key) => key.includes("GOOGLE") || key.includes("ENVIRONMENT")
         )
+      );
+      console.log(
+        "Total environment variables loaded:",
+        Object.keys(process.env).length
+      );
+      console.log(
+        "ALL ENVIRONMENT VARIABLES:",
+        JSON.stringify(process.env, null, 2)
       );
       console.log(
         "GOOGLE_CLIENT_SECRET value:",

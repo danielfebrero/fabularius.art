@@ -91,26 +91,7 @@ export const userApi = {
       throw new Error(`Registration failed: ${response.statusText}`);
     }
 
-    const result = await response.json();
-
-    // Backend returns { success: true, data: { userId, email, etc. } }
-    // Transform to match frontend expectations: { success: true, user: User, message: string }
-    if (result.success && result.data) {
-      return {
-        success: true,
-        user: {
-          userId: result.data.userId,
-          email: result.data.email,
-          username: result.data.username,
-          createdAt: new Date().toISOString(), // Will be updated when user logs in
-          isActive: true,
-          isEmailVerified: false, // New registrations are not verified yet
-        },
-        message: result.data.message,
-      };
-    }
-
-    return result;
+    return response.json();
   },
 
   // User logout

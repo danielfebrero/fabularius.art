@@ -100,7 +100,7 @@ function OAuthCallbackContent() {
           stateParam || undefined
         );
 
-        if (response.success && response.user) {
+        if (response.success && response.data?.user) {
           setState("success");
           setMessage("Successfully signed in with Google!");
 
@@ -117,7 +117,7 @@ function OAuthCallbackContent() {
             sessionStorage.setItem(requestKey, "completed");
           }
 
-          router.push(response.redirectUrl || "/auth/success");
+          router.push(response.data?.redirectUrl || "/auth/success");
         } else {
           setState("error");
           setMessage(response.error || "OAuth authentication failed.");

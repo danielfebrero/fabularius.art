@@ -223,7 +223,6 @@ export const handler = async (
 
     // Return success response with user data and redirect URL
     const response = ResponseUtil.success(event, {
-      success: true,
       user: {
         userId,
         email: googleUserInfo.email,

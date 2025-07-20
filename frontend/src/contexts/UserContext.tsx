@@ -44,8 +44,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
 
-      if (response.success && response.user) {
-        setUser(response.user);
+      if (response.success && response.data?.user) {
+        setUser(response.data.user);
         return true;
       } else {
         // Show detailed backend error if present
@@ -81,8 +81,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       const response = await userApi.register(userData);
 
-      if (response.success && response.user) {
-        setUser(response.user);
+      if (response.success && response.data?.userId) {
+        // For registration, we don't get the full user object back, just basic info
+        // We'll need to call checkAuth to get the full user data
+        await checkAuth();
         return true;
       } else {
         setError("Registration failed");
@@ -120,8 +122,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
       const response = await userApi.me();
 
-      if (response.success && response.user) {
-        setUser(response.user);
+      if (response.success && response.data?.user) {
+        setUser(response.data.user);
       } else {
         setUser(null);
       }
