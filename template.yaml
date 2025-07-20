@@ -199,11 +199,24 @@ Resources:
     Type: AWS::Serverless::LayerVersion
     Properties:
       LayerName: !Sub "${Environment}-pornspot-shared-layer"
-      Description: Shared utilities and types for PornSpot Lambda functions
-      ContentUri: backend/shared-layer/
+      Description: Shared utilities and types for PornSpot Lambda functions (without Sharp)
+      ContentUri: backend/layers/shared/
       CompatibleRuntimes:
         - nodejs20.x
       RetentionPolicy: Retain
+
+  # Sharp Layer for image processing (pH200/sharp-layer)
+  SharpLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub "${Environment}-pornspot-sharp-layer"
+      ContentUri: backend/layers/sharp/release-x64.zip
+      CompatibleArchitectures:
+        - x86_64
+      CompatibleRuntimes:
+        - nodejs18.x
+        - nodejs20.x
+      Description: Sharp image processing library v0.34.3
 
   # Authorizer Functions - defined before API Gateway
   UserAuthorizerFunction:
@@ -397,6 +410,7 @@ Resources:
       Handler: process-upload.handler
       Layers:
         - !Ref SharedLayer
+        - !Ref SharpLayer
       MemorySize: 1024
       Timeout: 120
       Environment:
@@ -460,6 +474,10 @@ Resources:
       ServiceToken: !GetAtt ConfigureS3NotificationFunction.Arn
       BucketName: !Sub "${Environment}-pornspot-media-${AWS::AccountId}"
       FunctionArn: !GetAtt ProcessUploadFunction.Arn
+      # Force update by changing this timestamp when needed
+      Version: "2025-07-20-002"
+      # Ensure permission exists before configuring notification
+      LambdaPermissionId: !Ref ProcessUploadFunctionS3Permission
     DependsOn:
       - MediaBucket
       - ProcessUploadFunctionS3Permission

@@ -6,21 +6,30 @@ let sharp: typeof import("sharp");
 const loadSharp = async () => {
   if (!sharp) {
     try {
+      // Try dynamic import first (preferred for ES modules)
       sharp = (await import("sharp")).default;
-      console.log("Sharp module loaded successfully");
+      console.log("Sharp module loaded successfully with dynamic import");
     } catch (error) {
-      console.error("Failed to load Sharp module:", error);
-      console.error("Error details:", {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        platform: process.platform,
-        arch: process.arch,
-        nodeVersion: process.version,
-        awsExecutionEnv: process.env["AWS_EXECUTION_ENV"],
-      });
-      throw new Error(
-        "Sharp module not available. Please ensure Sharp is installed with the correct platform binaries for Lambda (linux-x64)."
-      );
+      console.warn("Dynamic import failed, trying require:", error);
+      try {
+        // Fallback to require for CommonJS compatibility
+        sharp = require("sharp");
+        console.log("Sharp module loaded successfully with require");
+      } catch (requireError) {
+        console.error("Failed to load Sharp module:", error);
+        console.error("Require error:", requireError);
+        console.error("Error details:", {
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined,
+          platform: process.platform,
+          arch: process.arch,
+          nodeVersion: process.version,
+          awsExecutionEnv: process.env["AWS_EXECUTION_ENV"],
+        });
+        throw new Error(
+          "Sharp module not available. Please ensure Sharp is installed with the correct platform binaries for Lambda (linux-x64)."
+        );
+      }
     }
   }
   return sharp;
