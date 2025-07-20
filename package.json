@@ -8,7 +8,7 @@
     "install:backend": "cd backend && npm install",
     "install:frontend": "cd frontend && npm install",
     "build": "npm run build:backend && npm run build:frontend",
-    "build:backend": "cd backend && npm run build",
+    "build:backend": "cd backend && npm run build:layer",
     "build:frontend": "cd frontend && npm run build",
     "dev:backend": "npm run build:backend && sam build && sam local start-api --port 3001 --docker-network pornspot-ai_local-network --env-vars backend/.env.local.json",
     "dev:backend:log": "npm run build:backend && sam build && sam local start-api --port 3001 --docker-network pornspot-ai_local-network --env-vars backend/.env.local.json > backend.log 2>&1",
