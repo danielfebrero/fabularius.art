@@ -150,7 +150,7 @@ fi
 cd "$ORIGINAL_DIR" || exit 1
 
 # Step 3: Setup Local Database
-print_status "Setting up local database..."
+print_status "Setting up local database and ensuring all indexes exist..."
 
 # Navigate to scripts directory if not already there
 if [ ! -f "scripts/setup-local-db.js" ]; then
@@ -165,9 +165,9 @@ else
 fi
 
 if node setup-local-db.js; then
-    print_success "Database setup completed"
+    print_success "Database setup and index verification completed"
 else
-    print_error "Failed to setup database"
+    print_error "Failed to setup database or create missing indexes"
     exit 1
 fi
 
