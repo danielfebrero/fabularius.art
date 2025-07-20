@@ -27,9 +27,7 @@ function AuthSuccessFallback() {
             />
           </svg>
         </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          Loading...
-        </h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Loading...</h2>
         <p className="text-muted-foreground">
           Please wait while we complete your authentication.
         </p>

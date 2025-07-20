@@ -24,7 +24,7 @@ export function useGoogleAuth() {
   };
 
   // Generate OAuth state and store it
-  const generateOAuthState = (): GoogleOAuthState => {
+  const generateOAuthState = useCallback((): GoogleOAuthState => {
     const state = generateRandomString(32);
     const codeVerifier = generateRandomString(43); // For future PKCE implementation
 
@@ -35,23 +35,33 @@ export function useGoogleAuth() {
     }
 
     return { state, codeVerifier };
-  };
+  }, []);
 
   // Validate OAuth state
   const validateOAuthState = (receivedState: string): boolean => {
     if (typeof window === "undefined") return false;
 
     const storedState = sessionStorage.getItem("google_oauth_state");
+    
+    console.log("OAuth State Validation:", {
+      receivedState,
+      storedState,
+      matches: storedState === receivedState
+    });
 
     if (!storedState || storedState !== receivedState) {
       return false;
     }
 
-    // Clean up stored state after validation
-    sessionStorage.removeItem("google_oauth_state");
-    sessionStorage.removeItem("google_oauth_code_verifier");
-
     return true;
+  };
+
+  // Clear OAuth state after successful authentication
+  const clearOAuthState = (): void => {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("google_oauth_state");
+      sessionStorage.removeItem("google_oauth_code_verifier");
+    }
   };
 
   // Initiate Google OAuth login
@@ -93,7 +103,7 @@ export function useGoogleAuth() {
       setError(errorMessage);
       setLoading(false);
     }
-  }, []);
+  }, [generateOAuthState]);
 
   // Clear error state
   const clearError = (): void => {
@@ -105,6 +115,7 @@ export function useGoogleAuth() {
     error,
     loginWithGoogle,
     validateOAuthState,
+    clearOAuthState,
     generateOAuthState,
     clearError,
   };

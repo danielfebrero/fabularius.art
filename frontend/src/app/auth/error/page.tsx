@@ -14,9 +14,7 @@ function AuthErrorFallback() {
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 dark:bg-red-900/20 mb-6">
           <span className="text-3xl">⚠️</span>
         </div>
-        <h2 className="text-2xl font-bold text-foreground mb-2">
-          Loading...
-        </h2>
+        <h2 className="text-2xl font-bold text-foreground mb-2">Loading...</h2>
         <p className="text-muted-foreground">
           Please wait while we process your authentication error.
         </p>

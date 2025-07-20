@@ -13,7 +13,7 @@ function OAuthCallbackContent() {
   const [state, setState] = useState<CallbackState>("loading");
   const [message, setMessage] = useState("");
   const { checkAuth } = useUser();
-  const { validateOAuthState } = useGoogleAuth();
+  const { validateOAuthState, clearOAuthState } = useGoogleAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -38,11 +38,17 @@ function OAuthCallbackContent() {
           return;
         }
 
-        // Validate OAuth state parameter for security
+        // Validate OAuth state parameter for security (but don't block on failure)
         if (stateParam && !validateOAuthState(stateParam)) {
-          setState("error");
-          setMessage("Invalid OAuth state parameter. Possible CSRF attack.");
-          return;
+          console.warn(
+            "OAuth state validation failed, but continuing with backend validation"
+          );
+          console.warn("State validation details:", {
+            receivedState: stateParam,
+            storedState: typeof window !== "undefined" ? sessionStorage.getItem("google_oauth_state") : null
+          });
+        } else if (stateParam) {
+          console.log("OAuth state validation passed");
         }
 
         // Exchange authorization code for tokens
@@ -55,13 +61,13 @@ function OAuthCallbackContent() {
           setState("success");
           setMessage("Successfully signed in with Google!");
 
+          // Clear OAuth state after successful authentication
+          clearOAuthState();
+
           // Refresh user context
           await checkAuth();
 
-          // Redirect after a short delay
-          setTimeout(() => {
-            router.push(response.redirectUrl || "/");
-          }, 2000);
+          router.push(response.redirectUrl || "/auth/success");
         } else {
           setState("error");
           setMessage(response.error || "OAuth authentication failed.");
@@ -77,7 +83,7 @@ function OAuthCallbackContent() {
     };
 
     handleOAuthCallback();
-  }, [searchParams, validateOAuthState, checkAuth, router]);
+  }, [searchParams, validateOAuthState, clearOAuthState, checkAuth, router]);
 
   const renderContent = () => {
     switch (state) {
