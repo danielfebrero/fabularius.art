@@ -22,7 +22,7 @@ export const mockAlbumEntity: AlbumEntity = {
   createdAt: mockTimestamp,
   updatedAt: mockTimestamp,
   mediaCount: 5,
-  isPublic: true,
+  isPublic: "true",
 };
 
 export const mockAlbum: Album = {
@@ -47,7 +47,7 @@ export const mockAlbumEntityMinimal: AlbumEntity = {
   createdAt: mockTimestamp,
   updatedAt: mockTimestamp,
   mediaCount: 0,
-  isPublic: false,
+  isPublic: "false",
 };
 
 export const mockAlbumMinimal: Album = {
@@ -77,7 +77,7 @@ export const mockAlbumsList: AlbumEntity[] = [
     GSI1SK: "2023-01-03T00:00:00.000Z#album-3",
     title: "Third Album",
     mediaCount: 0,
-    isPublic: false,
+    isPublic: "false",
     tags: undefined,
     coverImageUrl: undefined,
   },
