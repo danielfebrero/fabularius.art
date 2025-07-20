@@ -9,7 +9,7 @@ export class UserAuthMiddleware {
     try {
       console.log("🔍 Starting session validation...");
       console.log("📋 Event headers:", JSON.stringify(event.headers, null, 2));
-      
+
       // Extract session ID from cookies
       const cookieHeader =
         event.headers["Cookie"] || event.headers["cookie"] || "";
@@ -37,13 +37,18 @@ export class UserAuthMiddleware {
         sessionId: session.sessionId,
         userId: session.userId,
         expiresAt: session.expiresAt,
-        createdAt: session.createdAt
+        createdAt: session.createdAt,
       });
 
       // Check if session is expired
       const now = new Date();
       const expiresAt = new Date(session.expiresAt);
-      console.log("⏱️ Time check - Now:", now.toISOString(), "Expires:", expiresAt.toISOString());
+      console.log(
+        "⏱️ Time check - Now:",
+        now.toISOString(),
+        "Expires:",
+        expiresAt.toISOString()
+      );
 
       if (now > expiresAt) {
         console.log("⏰ Session is expired, cleaning up...");
@@ -55,21 +60,23 @@ export class UserAuthMiddleware {
       console.log("👤 Getting user from database...");
       // Get user
       const userEntity = await DynamoDBService.getUserById(session.userId);
-      console.log("👤 User from database:", userEntity ? `Found (${userEntity.email})` : "Not found");
+      console.log(
+        "👤 User from database:",
+        userEntity ? `Found (${userEntity.email})` : "Not found"
+      );
 
       if (!userEntity || !userEntity.isActive) {
         console.log("❌ User not found or inactive:", {
           found: !!userEntity,
-          isActive: userEntity?.isActive
+          isActive: userEntity?.isActive,
         });
         return { isValid: false };
       }
 
       console.log("✅ User is valid and active");
-      console.log("📝 Updating last accessed time...");
-      console.log("📝 Updating last accessed time...");
-      // Update last accessed time
-      await DynamoDBService.updateUserSessionLastAccessed(sessionId);
+
+      // Note: We don't update lastAccessedAt here to keep the authorizer fast
+      // Individual endpoints can update it if needed
 
       const user: User = {
         userId: userEntity.userId,
@@ -88,7 +95,7 @@ export class UserAuthMiddleware {
       console.log("👤 Validated user:", {
         userId: user.userId,
         email: user.email,
-        username: user.username
+        username: user.username,
       });
 
       return {
@@ -105,7 +112,10 @@ export class UserAuthMiddleware {
       };
     } catch (error) {
       console.error("💥 User session validation error:", error);
-      console.error("💥 Error stack:", error instanceof Error ? error.stack : "No stack trace");
+      console.error(
+        "💥 Error stack:",
+        error instanceof Error ? error.stack : "No stack trace"
+      );
       return { isValid: false };
     }
   }

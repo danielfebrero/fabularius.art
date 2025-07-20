@@ -98,16 +98,16 @@ export const handler = async (
     console.log("📊 User validation result:", {
       isValid: userValidation.isValid,
       hasUser: !!userValidation.user,
-      userId: userValidation.user?.userId
+      userId: userValidation.user?.userId,
     });
 
     if (userValidation.isValid && userValidation.user) {
       console.log("✅ User session is valid. Allowing access.");
       console.log("👤 User details:", {
         userId: userValidation.user.userId,
-        email: userValidation.user.email
+        email: userValidation.user.email,
       });
-      
+
       const userContext = {
         userId: userValidation.user.userId,
         email: userValidation.user.email,
@@ -147,7 +147,10 @@ export const handler = async (
     return generatePolicy("anonymous", "Deny", event.methodArn);
   } catch (error) {
     console.error("💥 Authorizer error:", error);
-    console.error("💥 Error stack:", error instanceof Error ? error.stack : "No stack trace");
+    console.error(
+      "💥 Error stack:",
+      error instanceof Error ? error.stack : "No stack trace"
+    );
     return generatePolicy("user", "Deny", event.methodArn);
   }
 };

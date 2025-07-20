@@ -8,7 +8,7 @@ export const handler = async (
 ): Promise<APIGatewayProxyResult> => {
   console.log("🔍 /user/me handler called");
   console.log("📋 Full event:", JSON.stringify(event, null, 2));
-  
+
   if (event.httpMethod === "OPTIONS") {
     console.log("⚡ Handling OPTIONS request");
     return ResponseUtil.noContent(event);
@@ -16,8 +16,11 @@ export const handler = async (
 
   try {
     console.log("🔑 Checking authorizer context...");
-    console.log("📊 Request context:", JSON.stringify(event.requestContext, null, 2));
-    
+    console.log(
+      "📊 Request context:",
+      JSON.stringify(event.requestContext, null, 2)
+    );
+
     const userId = event.requestContext.authorizer?.["userId"] as string;
     console.log("👤 UserId from authorizer:", userId);
 
@@ -28,8 +31,11 @@ export const handler = async (
 
     console.log("🔍 Getting user from database...");
     const userEntity = await DynamoDBService.getUserById(userId);
-    console.log("👤 User entity:", userEntity ? `Found (${userEntity.email})` : "Not found");
-    
+    console.log(
+      "👤 User entity:",
+      userEntity ? `Found (${userEntity.email})` : "Not found"
+    );
+
     if (!userEntity) {
       console.log("❌ User not found in database");
       return ResponseUtil.notFound(event, "User not found");
@@ -42,7 +48,10 @@ export const handler = async (
     return ResponseUtil.success(event, { user });
   } catch (error) {
     console.error("💥 Get user info error:", error);
-    console.error("💥 Error stack:", error instanceof Error ? error.stack : "No stack trace");
+    console.error(
+      "💥 Error stack:",
+      error instanceof Error ? error.stack : "No stack trace"
+    );
     return ResponseUtil.internalError(event, "Failed to get user info");
   }
 };
