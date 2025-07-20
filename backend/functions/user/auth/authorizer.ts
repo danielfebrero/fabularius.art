@@ -2,7 +2,7 @@ import {
   APIGatewayRequestAuthorizerEvent,
   APIGatewayAuthorizerResult,
 } from "aws-lambda";
-import { UserAuthMiddleware } from "./middleware";
+import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 
 // Helper function to generate an IAM policy
 const generatePolicy = (

@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { ResponseUtil } from "../../../shared/utils/response";
-import { RevalidationService } from "../../../shared/utils/revalidation";
-import { UpdateAlbumRequest } from "../../../shared/types";
+import { ResponseUtil } from "@shared/utils/response";
+import { RevalidationService } from "@shared/utils/revalidation";
+import { UpdateAlbumRequest } from "@shared/types";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -12,9 +12,9 @@ export const handler = async (
   }
 
   // Import heavy dependencies only when needed (after OPTIONS check)
-  const { DynamoDBService } = await import("../../../shared/utils/dynamodb");
-  const { S3Service } = await import("../../../shared/utils/s3");
-  const { ThumbnailService } = await import("../../../shared/utils/thumbnail");
+  const { DynamoDBService } = await import("@shared/utils/dynamodb");
+  const { S3Service } = await import("@shared/utils/s3");
+  const { ThumbnailService } = await import("@shared/utils/thumbnail");
 
   try {
     const albumId = event.pathParameters?.["albumId"];

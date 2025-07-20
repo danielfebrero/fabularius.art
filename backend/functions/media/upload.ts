@@ -1,9 +1,9 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { v4 as uuidv4 } from "uuid";
-import { DynamoDBService } from "../../shared/utils/dynamodb";
-import { S3Service } from "../../shared/utils/s3";
-import { ResponseUtil } from "../../shared/utils/response";
-import { UploadMediaRequest } from "../../shared/types";
+import { DynamoDBService } from "@shared/utils/dynamodb";
+import { S3Service } from "@shared/utils/s3";
+import { ResponseUtil } from "@shared/utils/response";
+import { UploadMediaRequest } from "@shared/types";
 
 export const handler = async (
   event: APIGatewayProxyEvent

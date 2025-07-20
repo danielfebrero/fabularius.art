@@ -1,11 +1,11 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { ResponseUtil } from "../../../shared/utils/response";
-import { UserUtil } from "../../../shared/utils/user";
-import { DynamoDBService } from "../../../shared/utils/dynamodb";
+import { ResponseUtil } from "@shared/utils/response";
+import { UserUtil } from "@shared/utils/user";
+import { DynamoDBService } from "@shared/utils/dynamodb";
 import {
   UsernameAvailabilityRequest,
   UsernameAvailabilityResponse,
-} from "../../../shared/types";
+} from "@shared/types";
 
 export const handler = async (
   event: APIGatewayProxyEvent

@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { DynamoDBService } from "../../shared/utils/dynamodb";
-import { ResponseUtil } from "../../shared/utils/response";
-import { Media } from "../../shared/types";
+import { DynamoDBService } from "@shared/utils/dynamodb";
+import { ResponseUtil } from "@shared/utils/response";
+import { Media } from "@shared/types";
 
 export const handler = async (
   event: APIGatewayProxyEvent

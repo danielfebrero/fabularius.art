@@ -1,8 +1,8 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { ResponseUtil } from "../../../shared/utils/response";
-import { UserUtil } from "../../../shared/utils/user";
-import { EmailService } from "../../../shared/utils/email";
-import { DynamoDBService } from "../../../shared/utils/dynamodb";
+import { ResponseUtil } from "@shared/utils/response";
+import { UserUtil } from "@shared/utils/user";
+import { EmailService } from "@shared/utils/email";
+import { DynamoDBService } from "@shared/utils/dynamodb";
 
 interface ResendVerificationRequest {
   email: string;

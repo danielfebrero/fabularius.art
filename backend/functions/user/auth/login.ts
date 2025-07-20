@@ -1,11 +1,11 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { v4 as uuidv4 } from "uuid";
 import * as bcrypt from "bcrypt";
-import { DynamoDBService } from "../../../shared/utils/dynamodb";
-import { ResponseUtil } from "../../../shared/utils/response";
-import { UserUtil } from "../../../shared/utils/user";
-import { UserLoginRequest, UserSessionEntity } from "../../../shared/types";
-import { UserAuthMiddleware } from "./middleware";
+import { DynamoDBService } from "@shared/utils/dynamodb";
+import { ResponseUtil } from "@shared/utils/response";
+import { UserUtil } from "@shared/utils/user";
+import { UserLoginRequest, UserSessionEntity } from "@shared/types";
+import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 
 const SESSION_DURATION_DAYS = 30; // Users get longer sessions than admins
 

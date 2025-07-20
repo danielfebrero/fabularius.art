@@ -2,16 +2,16 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { OAuth2Client } from "google-auth-library";
 import { google } from "googleapis";
 import { v4 as uuidv4 } from "uuid";
-import { ResponseUtil } from "../../../shared/utils/response";
-import { UserUtil } from "../../../shared/utils/user";
-import { DynamoDBService } from "../../../shared/utils/dynamodb";
-import { ParameterStoreService } from "../../../shared/utils/parameters";
-import { UserAuthMiddleware } from "./middleware";
+import { ResponseUtil } from "@shared/utils/response";
+import { UserUtil } from "@shared/utils/user";
+import { DynamoDBService } from "@shared/utils/dynamodb";
+import { ParameterStoreService } from "@shared/utils/parameters";
+import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 import {
   GoogleTokenResponse,
   GoogleOAuthUserInfo,
   UserSessionEntity,
-} from "../../../shared/types";
+} from "@shared/types";
 
 const SESSION_DURATION_DAYS = 30;
 

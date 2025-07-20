@@ -1,10 +1,10 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { v4 as uuidv4 } from "uuid";
 import * as bcrypt from "bcrypt";
-import { DynamoDBService } from "../../../shared/utils/dynamodb";
-import { ResponseUtil } from "../../../shared/utils/response";
-import { LoginRequest, AdminSessionEntity } from "../../../shared/types";
-import { AuthMiddleware } from "./middleware";
+import { DynamoDBService } from "@shared/utils/dynamodb";
+import { ResponseUtil } from "@shared/utils/response";
+import { LoginRequest, AdminSessionEntity } from "@shared/types";
+import { AuthMiddleware } from "@shared/auth/admin-middleware";
 
 const SESSION_DURATION_HOURS = 24;
 

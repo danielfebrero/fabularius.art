@@ -182,13 +182,26 @@ Resources:
               StringEquals:
                 AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}"
 
+  # Lambda Shared Layer
+  SharedLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: !Sub "${Environment}-pornspot-shared-layer"
+      Description: Shared utilities and types for PornSpot Lambda functions
+      ContentUri: backend/shared-layer/
+      CompatibleRuntimes:
+        - nodejs20.x
+      RetentionPolicy: Retain
+
   # Authorizer Functions - defined before API Gateway
   UserAuthorizerFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-user-authorizer"
-      CodeUri: backend/
-      Handler: dist/functions/user/auth/authorizer.handler
+      CodeUri: backend/dist/functions/user/auth/
+      Handler: authorizer.handler
+      Layers:
+        - !Ref SharedLayer
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -197,8 +210,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-admin-authorizer"
-      CodeUri: backend/
-      Handler: dist/functions/admin/auth/authorizer.handler
+      CodeUri: backend/dist/functions/admin/auth/
+      Handler: authorizer.handler
+      Layers:
+        - !Ref SharedLayer
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -234,8 +249,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-get-albums"
-      CodeUri: backend/
-      Handler: dist/functions/albums/get.handler
+      CodeUri: backend/dist/functions/albums/
+      Handler: get.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         Api:
           Type: Api
@@ -253,8 +270,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-create-album"
-      CodeUri: backend/
-      Handler: dist/functions/albums/create.handler
+      CodeUri: backend/dist/functions/albums/
+      Handler: create.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         PostCreateAlbum:
           Type: Api
@@ -287,8 +306,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-get-album"
-      CodeUri: backend/
-      Handler: dist/functions/albums/getById.handler
+      CodeUri: backend/dist/functions/albums/
+      Handler: getById.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         Api:
           Type: Api
@@ -306,8 +327,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-upload-media"
-      CodeUri: backend/
-      Handler: dist/functions/media/upload.handler
+      CodeUri: backend/dist/functions/media/
+      Handler: upload.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         PostUploadMedia:
           Type: Api
@@ -337,8 +360,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-get-media"
-      CodeUri: backend/
-      Handler: dist/functions/media/get.handler
+      CodeUri: backend/dist/functions/media/
+      Handler: get.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         Api:
           Type: Api
@@ -356,8 +381,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-process-upload"
-      CodeUri: backend/
-      Handler: dist/functions/media/process-upload.handler
+      CodeUri: backend/dist/functions/media/
+      Handler: process-upload.handler
+      Layers:
+        - !Ref SharedLayer
       MemorySize: 1024
       Timeout: 120
       Environment:
@@ -401,7 +428,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-configure-s3-notification"
-      Runtime: python3.9
+      Runtime: python3.12
       Handler: index.handler
       CodeUri: backend/functions/ConfigureS3Notification/
       Timeout: 60
@@ -430,8 +457,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-admin-login"
-      CodeUri: backend/
-      Handler: dist/functions/admin/auth/login.handler
+      CodeUri: backend/dist/functions/admin/auth/
+      Handler: login.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         PostLogin:
           Type: Api
@@ -459,8 +488,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-check-username"
-      CodeUri: backend/
-      Handler: dist/functions/user/auth/check-username.handler
+      CodeUri: backend/dist/functions/user/auth/
+      Handler: check-username.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         PostCheckUsername:
           Type: Api
@@ -486,8 +517,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-admin-logout"
-      CodeUri: backend/
-      Handler: dist/functions/admin/auth/logout.handler
+      CodeUri: backend/dist/functions/admin/auth/
+      Handler: logout.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         PostLogout:
           Type: Api
@@ -515,8 +548,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-admin-me"
-      CodeUri: backend/
-      Handler: dist/functions/admin/auth/me.handler
+      CodeUri: backend/dist/functions/admin/auth/
+      Handler: me.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         Api:
           Type: Api
@@ -533,8 +568,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-user-login"
-      CodeUri: backend/
-      Handler: dist/functions/user/auth/login.handler
+      CodeUri: backend/dist/functions/user/auth/
+      Handler: login.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         PostLogin:
           Type: Api
@@ -562,8 +599,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-admin-update-album"
-      CodeUri: backend/
-      Handler: dist/functions/admin/albums/update.handler
+      CodeUri: backend/dist/functions/admin/albums/
+      Handler: update.handler
+      Layers:
+        - !Ref SharedLayer
       MemorySize: 1024
       Timeout: 60
       Events:
@@ -604,8 +643,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-admin-delete-album"
-      CodeUri: backend/
-      Handler: dist/functions/admin/albums/delete.handler
+      CodeUri: backend/dist/functions/admin/albums/
+      Handler: delete.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         DeleteAlbum:
           Type: Api
@@ -641,8 +682,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-admin-list-albums"
-      CodeUri: backend/
-      Handler: dist/functions/admin/albums/list.handler
+      CodeUri: backend/dist/functions/admin/albums/
+      Handler: list.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         GetAlbums:
           Type: Api
@@ -668,8 +711,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-admin-delete-media"
-      CodeUri: backend/
-      Handler: dist/functions/admin/media/delete.handler
+      CodeUri: backend/dist/functions/admin/media/
+      Handler: delete.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         DeleteMedia:
           Type: Api
@@ -720,8 +765,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-admin-stats"
-      CodeUri: backend/
-      Handler: dist/functions/admin/stats.handler
+      CodeUri: backend/dist/functions/admin/
+      Handler: stats.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         GetStats:
           Type: Api
@@ -750,8 +797,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-user-register"
-      CodeUri: backend/
-      Handler: dist/functions/user/auth/register.handler
+      CodeUri: backend/dist/functions/user/auth/
+      Handler: register.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         PostRegister:
           Type: Api
@@ -785,8 +834,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-user-logout"
-      CodeUri: backend/
-      Handler: dist/functions/user/auth/logout.handler
+      CodeUri: backend/dist/functions/user/auth/
+      Handler: logout.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         PostLogout:
           Type: Api
@@ -814,8 +865,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-user-me"
-      CodeUri: backend/
-      Handler: dist/functions/user/auth/me.handler
+      CodeUri: backend/dist/functions/user/auth/
+      Handler: me.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         GetMe:
           Type: Api
@@ -833,8 +886,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-user-verify-email"
-      CodeUri: backend/
-      Handler: dist/functions/user/auth/verify-email.handler
+      CodeUri: backend/dist/functions/user/auth/
+      Handler: verify-email.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         PostVerifyEmail:
           Type: Api
@@ -862,8 +917,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-user-resend-verification"
-      CodeUri: backend/
-      Handler: dist/functions/user/auth/resend-verification.handler
+      CodeUri: backend/dist/functions/user/auth/
+      Handler: resend-verification.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         PostResendVerification:
           Type: Api
@@ -902,8 +959,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-user-oauth-google"
-      CodeUri: backend/
-      Handler: dist/functions/user/auth/oauth-google.handler
+      CodeUri: backend/dist/functions/user/auth/
+      Handler: oauth-google.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         PostOAuthCallback:
           Type: Api
@@ -951,8 +1010,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-user-like"
-      CodeUri: backend/
-      Handler: dist/functions/user/interactions/like.handler
+      CodeUri: backend/dist/functions/user/interactions/
+      Handler: like.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         PostLike:
           Type: Api
@@ -980,8 +1041,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-user-bookmark"
-      CodeUri: backend/
-      Handler: dist/functions/user/interactions/bookmark.handler
+      CodeUri: backend/dist/functions/user/interactions/
+      Handler: bookmark.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         PostBookmark:
           Type: Api
@@ -1009,8 +1072,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-user-get-likes"
-      CodeUri: backend/
-      Handler: dist/functions/user/interactions/get-likes.handler
+      CodeUri: backend/dist/functions/user/interactions/
+      Handler: get-likes.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         GetLikes:
           Type: Api
@@ -1036,8 +1101,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-user-get-bookmarks"
-      CodeUri: backend/
-      Handler: dist/functions/user/interactions/get-bookmarks.handler
+      CodeUri: backend/dist/functions/user/interactions/
+      Handler: get-bookmarks.handler
+      Layers:
+        - !Ref SharedLayer
       Events:
         GetBookmarks:
           Type: Api

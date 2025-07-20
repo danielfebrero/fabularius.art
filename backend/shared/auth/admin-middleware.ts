@@ -1,27 +1,27 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
-import { DynamoDBService } from "../../../shared/utils/dynamodb";
-import { UserSessionValidationResult, User } from "../../../shared/types";
+import { DynamoDBService } from "@shared/utils/dynamodb";
+import { SessionValidationResult, AdminUser } from "@shared/types";
 
-export class UserAuthMiddleware {
+export class AuthMiddleware {
   static async validateSession(
     event: APIGatewayProxyEvent
-  ): Promise<UserSessionValidationResult> {
+  ): Promise<SessionValidationResult> {
     try {
       // Extract session ID from cookies
       const cookieHeader =
         event.headers["Cookie"] || event.headers["cookie"] || "";
-      console.log("User cookie header received:", cookieHeader);
+      console.log("Cookie header received:", cookieHeader);
 
       const sessionId = this.extractSessionFromCookies(cookieHeader);
-      console.log("Extracted user session ID:", sessionId);
+      console.log("Extracted session ID:", sessionId);
 
       if (!sessionId) {
-        console.log("No user session ID found in cookies");
+        console.log("No session ID found in cookies");
         return { isValid: false };
       }
 
       // Get session from database
-      const session = await DynamoDBService.getUserSession(sessionId);
+      const session = await DynamoDBService.getSession(sessionId);
 
       if (!session) {
         return { isValid: false };
@@ -33,47 +33,41 @@ export class UserAuthMiddleware {
 
       if (now > expiresAt) {
         // Clean up expired session
-        await DynamoDBService.deleteUserSession(sessionId);
+        await DynamoDBService.deleteSession(sessionId);
         return { isValid: false };
       }
 
-      // Get user
-      const userEntity = await DynamoDBService.getUserById(session.userId);
+      // Get admin user
+      const adminEntity = await DynamoDBService.getAdminById(session.adminId);
 
-      if (!userEntity || !userEntity.isActive) {
+      if (!adminEntity || !adminEntity.isActive) {
         return { isValid: false };
       }
 
       // Update last accessed time
-      await DynamoDBService.updateUserSessionLastAccessed(sessionId);
+      await DynamoDBService.updateSessionLastAccessed(sessionId);
 
-      const user: User = {
-        userId: userEntity.userId,
-        email: userEntity.email,
-        createdAt: userEntity.createdAt,
-        isActive: userEntity.isActive,
-        isEmailVerified: userEntity.isEmailVerified,
-        ...(userEntity.username && { username: userEntity.username }),
-        ...(userEntity.firstName && { firstName: userEntity.firstName }),
-        ...(userEntity.lastName && { lastName: userEntity.lastName }),
-        ...(userEntity.lastLoginAt && { lastLoginAt: userEntity.lastLoginAt }),
-        ...(userEntity.googleId && { googleId: userEntity.googleId }),
+      const admin: AdminUser = {
+        adminId: adminEntity.adminId,
+        username: adminEntity.username,
+        createdAt: adminEntity.createdAt,
+        isActive: adminEntity.isActive,
       };
 
       return {
         isValid: true,
-        user,
+        admin,
         session: {
           sessionId: session.sessionId,
-          userId: session.userId,
-          userEmail: session.userEmail,
+          adminId: session.adminId,
+          adminUsername: session.adminUsername,
           createdAt: session.createdAt,
           expiresAt: session.expiresAt,
           lastAccessedAt: session.lastAccessedAt,
         },
       };
     } catch (error) {
-      console.error("User session validation error:", error);
+      console.error("Session validation error:", error);
       return { isValid: false };
     }
   }
@@ -83,7 +77,7 @@ export class UserAuthMiddleware {
 
     const cookies = cookieHeader.split(";").map((cookie) => cookie.trim());
     const sessionCookie = cookies.find((cookie) =>
-      cookie.startsWith("user_session=")
+      cookie.startsWith("admin_session=")
     );
 
     if (!sessionCookie) return null;
@@ -96,7 +90,7 @@ export class UserAuthMiddleware {
     const isOffline = process.env["IS_OFFLINE"] === "true";
 
     const cookieParts = [
-      `user_session=${sessionId}`,
+      `admin_session=${sessionId}`,
       "HttpOnly",
       "Path=/",
       `Expires=${expires.toUTCString()}`,
@@ -105,7 +99,16 @@ export class UserAuthMiddleware {
     if (isOffline) {
       cookieParts.push("SameSite=Lax");
     } else {
-      cookieParts.push("Secure", "SameSite=None");
+      // If using custom domain (e.g., api.pornspot.ai), we can use SameSite=Lax
+      // which is more secure and reliable than SameSite=None
+      const useCustomDomain = process.env["USE_CUSTOM_DOMAIN"] === "true";
+
+      if (useCustomDomain) {
+        cookieParts.push("Secure", "SameSite=Lax");
+      } else {
+        // Fallback for AWS API Gateway domain (cross-origin)
+        cookieParts.push("Secure", "SameSite=None");
+      }
     }
 
     return cookieParts.join("; ");
@@ -115,7 +118,7 @@ export class UserAuthMiddleware {
     const isOffline = process.env["IS_OFFLINE"] === "true";
 
     const cookieParts = [
-      "user_session=",
+      "admin_session=",
       "HttpOnly",
       "Path=/",
       "Expires=Thu, 01 Jan 1970 00:00:00 GMT",
@@ -124,7 +127,15 @@ export class UserAuthMiddleware {
     if (isOffline) {
       cookieParts.push("SameSite=Lax");
     } else {
-      cookieParts.push("Secure", "SameSite=None");
+      // If using custom domain (e.g., api.pornspot.ai), we can use SameSite=Lax
+      const useCustomDomain = process.env["USE_CUSTOM_DOMAIN"] === "true";
+
+      if (useCustomDomain) {
+        cookieParts.push("Secure", "SameSite=Lax");
+      } else {
+        // Fallback for AWS API Gateway domain (cross-origin)
+        cookieParts.push("Secure", "SameSite=None");
+      }
     }
 
     return cookieParts.join("; ");

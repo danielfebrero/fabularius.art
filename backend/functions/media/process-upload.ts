@@ -1,9 +1,9 @@
 import { S3Event, S3EventRecord } from "aws-lambda";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { DynamoDBService } from "../../shared/utils/dynamodb";
-import { ThumbnailService } from "../../shared/utils/thumbnail";
-import { RevalidationService } from "../../shared/utils/revalidation";
-import { S3Service } from "../../shared/utils/s3";
+import { DynamoDBService } from "@shared/utils/dynamodb";
+import { ThumbnailService } from "@shared/utils/thumbnail";
+import { RevalidationService } from "@shared/utils/revalidation";
+import { S3Service } from "@shared/utils/s3";
 import { Readable } from "stream";
 
 // Dynamically import Sharp to handle platform-specific binaries
@@ -216,7 +216,7 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
 
       if (thumbnailUrls && Object.keys(thumbnailUrls).length > 0) {
         // Update the media record with thumbnail URLs and WebP display URL
-        const updateData: Partial<import("../../shared/types").MediaEntity> = {
+        const updateData: Partial<import("@shared/types").MediaEntity> = {
           thumbnailUrl:
             thumbnailUrls["small"] || Object.values(thumbnailUrls)[0], // Default to small (240px) or first available
           thumbnailUrls,
@@ -243,7 +243,7 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
         }
       } else {
         // Just update status and WebP URL if thumbnail generation failed
-        const updateData: Partial<import("../../shared/types").MediaEntity> = {
+        const updateData: Partial<import("@shared/types").MediaEntity> = {
           status: "uploaded" as const,
           updatedAt: new Date().toISOString(),
         };

@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import { ResponseUtil } from "../../shared/utils/response";
+import { ResponseUtil } from "@shared/utils/response";
 
 /**
  * Refactored to use DynamoDB isPublic-createdAt-index GSI only.
