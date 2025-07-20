@@ -13,6 +13,7 @@
     "dev:backend": "npm run build:backend && sam build && sam local start-api --port 3001 --docker-network pornspot-ai_local-network --env-vars backend/.env.local.json",
     "dev:backend:log": "npm run build:backend && sam build && sam local start-api --port 3001 --docker-network pornspot-ai_local-network --env-vars backend/.env.local.json > backend.log 2>&1",
     "dev:frontend": "cd frontend && npm run dev",
+    "deploy:backend:prod": "cd backend && npm run deploy:prod",
     "local:start": "docker-compose -f docker-compose.local.yml up -d",
     "local:stop": "docker-compose -f docker-compose.local.yml down",
     "local:clean": "docker-compose -f docker-compose.local.yml down -v",
