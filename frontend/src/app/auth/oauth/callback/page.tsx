@@ -27,12 +27,14 @@ function OAuthCallbackContent() {
 
       // Create a unique key for this OAuth request
       const requestKey = `oauth_processed_${stateParam || code}`;
-      
+
       // Check if we've already processed this exact OAuth request
       if (typeof window !== "undefined") {
         const alreadyProcessed = sessionStorage.getItem(requestKey);
         if (alreadyProcessed) {
-          console.log("OAuth callback already processed for this request, skipping");
+          console.log(
+            "OAuth callback already processed for this request, skipping"
+          );
           return;
         }
         // Mark this request as being processed
@@ -41,7 +43,9 @@ function OAuthCallbackContent() {
 
       // Prevent multiple simultaneous calls
       if (isProcessingRef.current || hasProcessedRef.current) {
-        console.log("OAuth callback already processed or in progress, skipping");
+        console.log(
+          "OAuth callback already processed or in progress, skipping"
+        );
         return;
       }
 
@@ -53,7 +57,7 @@ function OAuthCallbackContent() {
           setState("error");
           setMessage(`OAuth error: ${error}`);
           hasProcessedRef.current = true;
-          
+
           // Mark as processed with error
           if (typeof window !== "undefined") {
             sessionStorage.setItem(requestKey, "error");
@@ -66,7 +70,7 @@ function OAuthCallbackContent() {
           setState("error");
           setMessage("Missing authorization code from OAuth provider.");
           hasProcessedRef.current = true;
-          
+
           // Mark as processed with error
           if (typeof window !== "undefined") {
             sessionStorage.setItem(requestKey, "error");
@@ -107,18 +111,18 @@ function OAuthCallbackContent() {
           await checkAuth();
 
           hasProcessedRef.current = true;
-          
+
           // Mark as successfully processed
           if (typeof window !== "undefined") {
             sessionStorage.setItem(requestKey, "completed");
           }
-          
+
           router.push(response.redirectUrl || "/auth/success");
         } else {
           setState("error");
           setMessage(response.error || "OAuth authentication failed.");
           hasProcessedRef.current = true;
-          
+
           // Mark as processed with error
           if (typeof window !== "undefined") {
             sessionStorage.setItem(requestKey, "error");
@@ -132,7 +136,7 @@ function OAuthCallbackContent() {
             : "An unexpected error occurred during OAuth authentication."
         );
         hasProcessedRef.current = true;
-        
+
         // Mark as processed with error
         if (typeof window !== "undefined") {
           sessionStorage.setItem(requestKey, "error");

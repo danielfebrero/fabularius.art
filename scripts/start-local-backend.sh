@@ -203,7 +203,50 @@ echo "  • Admin Username: $ADMIN_USERNAME"
 echo "  • Database Table: local-pornspot-media"
 echo ""
 
-# Step 5: Start Backend Server
+# Step 5: Build Backend Components
+print_status "Building backend components..."
+echo ""
+
+# Step 5a: Compile TypeScript
+print_status "Compiling TypeScript code..."
+if cd backend && npm run build; then
+    print_success "TypeScript compilation completed"
+else
+    print_error "Failed to compile TypeScript code"
+    exit 1
+fi
+
+# Step 5b: Install bcrypt for development
+print_status "Installing bcrypt for development environment..."
+if npm run install-bcrypt-dev; then
+    print_success "Bcrypt installed for development"
+else
+    print_error "Failed to install bcrypt for development"
+    exit 1
+fi
+
+# Step 5c: Copy shared code to layer
+print_status "Copying shared code to Lambda layer..."
+if npm run copy:layer; then
+    print_success "Shared code copied to layer"
+else
+    print_error "Failed to copy shared code to layer"
+    exit 1
+fi
+
+# Go back to root directory
+cd ..
+
+# Step 5d: Build SAM application
+print_status "Building SAM application..."
+if sam build; then
+    print_success "SAM build completed"
+else
+    print_error "Failed to build SAM application"
+    exit 1
+fi
+
+# Step 5e: Start Backend Server
 print_status "Starting backend server..."
 echo ""
 print_warning "The backend server will now start and run in the foreground."
@@ -214,8 +257,8 @@ echo ""
 echo "🚀 Starting SAM local API server..."
 echo ""
 
-# Start the backend development server
-if npm run dev:backend; then
+# Start the SAM local API server
+if sam local start-api --port 3001 --docker-network pornspot-ai_local-network --env-vars backend/.env.local.json; then
     print_success "Backend server stopped gracefully"
 else
     EXIT_CODE=$?
