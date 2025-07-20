@@ -44,15 +44,9 @@ export function UserMenu({ user }: UserMenuProps) {
     setIsOpen(false);
   };
 
-  const displayName =
-    user.firstName && user.lastName
-      ? `${user.firstName} ${user.lastName}`
-      : user.username || user.email.split("@")[0];
+  const displayName = user.username || user.email.split("@")[0];
 
-  const initials =
-    user.firstName && user.lastName
-      ? `${user.firstName[0]}${user.lastName[0]}`
-      : displayName.slice(0, 2);
+  const initials = displayName.slice(0, 2);
 
   return (
     <div className="relative" ref={menuRef}>

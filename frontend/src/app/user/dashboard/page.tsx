@@ -107,7 +107,7 @@ const UserDashboard: React.FC = () => {
       {/* Welcome Section */}
       <div className="bg-white rounded-lg shadow-sm border p-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Welcome back, {user?.firstName || user?.username || user?.email}!
+          Welcome back, {user?.username || user?.email}!
         </h1>
         <p className="text-gray-600">
           {/* eslint-disable-next-line react/no-unescaped-entities */}

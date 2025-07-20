@@ -147,8 +147,6 @@ export const handler = async (
       googleUserInfo = {
         googleId: payload.sub,
         email: payload.email,
-        ...(payload.given_name && { firstName: payload.given_name }),
-        ...(payload.family_name && { lastName: payload.family_name }),
         ...(payload.picture && { profilePicture: payload.picture }),
       };
     } catch (verifyError) {
@@ -159,8 +157,6 @@ export const handler = async (
     console.log("Google user info verified:", {
       googleId: googleUserInfo.googleId,
       email: googleUserInfo.email,
-      firstName: googleUserInfo.firstName,
-      lastName: googleUserInfo.lastName,
     });
 
     // Create or link Google user account
@@ -169,9 +165,7 @@ export const handler = async (
     try {
       const result = await OAuthUserUtil.createOrLinkGoogleUser(
         googleUserInfo.googleId,
-        googleUserInfo.email,
-        googleUserInfo.firstName,
-        googleUserInfo.lastName
+        googleUserInfo.email
       );
 
       userId = result.userId;
@@ -227,10 +221,6 @@ export const handler = async (
         userId,
         email: googleUserInfo.email,
         isEmailVerified: true,
-        ...(googleUserInfo.firstName && {
-          firstName: googleUserInfo.firstName,
-        }),
-        ...(googleUserInfo.lastName && { lastName: googleUserInfo.lastName }),
       },
       redirectUrl: `/auth/success${isNewUser ? "?new_user=true" : ""}`,
     });

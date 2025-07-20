@@ -176,8 +176,6 @@ export interface EmailVerificationTokenEntity {
 export interface GoogleOAuthUserInfo {
   googleId: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
   profilePicture?: string;
 }
 

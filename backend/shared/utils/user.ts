@@ -292,8 +292,6 @@ export class UserUtil {
     userId: string;
     email: string;
     username: string;
-    firstName?: string;
-    lastName?: string;
     createdAt: string;
     isActive: boolean;
     isEmailVerified: boolean;
@@ -303,8 +301,6 @@ export class UserUtil {
       userId: userEntity.userId,
       email: userEntity.email,
       username: userEntity.username,
-      ...(userEntity.firstName && { firstName: userEntity.firstName }),
-      ...(userEntity.lastName && { lastName: userEntity.lastName }),
       createdAt: userEntity.createdAt,
       isActive: userEntity.isActive,
       isEmailVerified: userEntity.isEmailVerified,
@@ -323,8 +319,6 @@ export class UserUtil {
   static async createGoogleUser(
     googleId: string,
     email: string,
-    firstName?: string,
-    lastName?: string,
     isActive: boolean = true
   ): Promise<string> {
     // Check if Google ID already exists
@@ -374,14 +368,6 @@ export class UserUtil {
       googleId,
     };
 
-    if (firstName) {
-      userEntity.firstName = firstName;
-    }
-
-    if (lastName) {
-      userEntity.lastName = lastName;
-    }
-
     await DynamoDBService.createUser(userEntity as UserEntity);
 
     return userId;
@@ -422,9 +408,7 @@ export class UserUtil {
    */
   static async createOrLinkGoogleUser(
     googleId: string,
-    email: string,
-    firstName?: string,
-    lastName?: string
+    email: string
   ): Promise<{ userId: string; isNewUser: boolean }> {
     // Check if user exists by email
     const existingEmailUser = await DynamoDBService.getUserByEmail(email);
@@ -441,9 +425,7 @@ export class UserUtil {
       // Create new Google user
       const userId = await this.createGoogleUser(
         googleId,
-        email,
-        firstName,
-        lastName
+        email
       );
 
       return {
