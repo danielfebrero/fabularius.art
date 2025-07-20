@@ -8,6 +8,7 @@ import {
   DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import {
+  Album,
   AlbumEntity,
   MediaEntity,
   AdminUserEntity,
@@ -145,6 +146,75 @@ export class DynamoDBService {
       lastEvaluatedKey?: Record<string, any>;
     } = {
       albums: (result.Items as AlbumEntity[]) || [],
+    };
+
+    if (result.LastEvaluatedKey) {
+      response.lastEvaluatedKey = result.LastEvaluatedKey;
+    }
+
+    return response;
+  }
+
+  static async listAlbumsByPublicStatus(
+    isPublic: boolean,
+    limit: number = 20,
+    lastEvaluatedKey?: Record<string, any>
+  ): Promise<{
+    albums: Album[];
+    lastEvaluatedKey?: Record<string, any>;
+  }> {
+    const isPublicString = isPublic.toString();
+
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "isPublic-createdAt-index",
+        KeyConditionExpression: "#isPublic = :isPublic",
+        ExpressionAttributeNames: {
+          "#isPublic": "isPublic",
+        },
+        ExpressionAttributeValues: {
+          ":isPublic": isPublicString,
+        },
+        ScanIndexForward: false, // Most recent first
+        Limit: limit,
+        ExclusiveStartKey: lastEvaluatedKey,
+      })
+    );
+
+    const albumEntities = (result.Items as AlbumEntity[]) || [];
+
+    // Convert AlbumEntity to Album format for API response
+    const albums: Album[] = albumEntities.map((entity) => {
+      const album: Album = {
+        id: entity.id,
+        title: entity.title,
+        createdAt: entity.createdAt,
+        updatedAt: entity.updatedAt,
+        mediaCount: entity.mediaCount,
+        isPublic: entity.isPublic === "true",
+      };
+
+      if (entity.tags !== undefined) {
+        album.tags = entity.tags;
+      }
+
+      if (entity.coverImageUrl !== undefined) {
+        album.coverImageUrl = entity.coverImageUrl;
+      }
+
+      if (entity.thumbnailUrls !== undefined) {
+        album.thumbnailUrls = entity.thumbnailUrls;
+      }
+
+      return album;
+    });
+
+    const response: {
+      albums: Album[];
+      lastEvaluatedKey?: Record<string, any>;
+    } = {
+      albums,
     };
 
     if (result.LastEvaluatedKey) {

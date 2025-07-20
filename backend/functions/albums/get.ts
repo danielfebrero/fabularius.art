@@ -1,5 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "@shared/utils/response";
+import { DynamoDBService } from "@shared/utils/dynamodb";
 
 /**
  * Refactored to use DynamoDB isPublic-createdAt-index GSI only.
@@ -14,34 +15,9 @@ export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
   try {
-    // Use AWS SDK v3 for DynamoDB query
-    const {
-      DynamoDBClient,
-      QueryCommand,
-    } = require("@aws-sdk/client-dynamodb");
-    const { unmarshall } = require("@aws-sdk/util-dynamodb");
-
-    const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
-
-    const clientConfig: any = {};
-    if (isLocal) {
-      clientConfig.endpoint = "http://pornspot-local-aws:4566";
-      clientConfig.region = "us-east-1";
-      clientConfig.credentials = {
-        accessKeyId: "test",
-        secretAccessKey: "test",
-      };
-    } else {
-      clientConfig.region = process.env["AWS_REGION"] || "eu-west-1";
-    }
-
-    const client = new DynamoDBClient(clientConfig);
-
     const limit = parseInt(event.queryStringParameters?.["limit"] || "20");
     const isPublicParam = event.queryStringParameters?.["isPublic"];
     const rawCursor = event.queryStringParameters?.["cursor"];
-    const TABLE_NAME = process.env["DYNAMODB_TABLE"];
-    const GSI_NAME = "isPublic-createdAt-index";
 
     // Enforce 'isPublic' parameter: required for GSI
     if (typeof isPublicParam === "undefined") {
@@ -51,7 +27,6 @@ export const handler = async (
       );
     }
     const isPublicBool = isPublicParam === "true";
-    const isPublicString = isPublicBool.toString(); // Convert to string for GSI query
 
     // Parse DynamoDB native LastEvaluatedKey as the cursor (base64-encoded JSON)
     let lastEvaluatedKey: any = undefined;
@@ -65,42 +40,20 @@ export const handler = async (
       }
     }
 
-    // ⚠️ Possible data migration need:
-    // All album records must have 'isPublic' set. If some items lack it, a data backfill is necessary.
+    // Use the shared DynamoDBService method
+    const result = await DynamoDBService.listAlbumsByPublicStatus(
+      isPublicBool,
+      limit,
+      lastEvaluatedKey
+    );
 
-    const params = {
-      TableName: TABLE_NAME,
-      IndexName: GSI_NAME,
-      KeyConditionExpression: "#isPublic = :isPublic",
-      ExpressionAttributeNames: {
-        "#isPublic": "isPublic",
-      },
-      ExpressionAttributeValues: {
-        ":isPublic": { S: isPublicString },
-      },
-      Limit: limit,
-      ScanIndexForward: false,
-      ...(lastEvaluatedKey ? { ExclusiveStartKey: lastEvaluatedKey } : {}),
-    };
-
-    const command = new QueryCommand(params);
-    const result = await client.send(command);
-
-    const albums = (result.Items || []).map((item: any) => {
-      const album = unmarshall(item);
-      // Convert isPublic back to boolean for API response
-      if (album.isPublic) {
-        album.isPublic = album.isPublic === "true";
-      }
-      return album;
-    });
-    const nextCursor = result.LastEvaluatedKey
-      ? Buffer.from(JSON.stringify(result.LastEvaluatedKey)).toString("base64")
+    const nextCursor = result.lastEvaluatedKey
+      ? Buffer.from(JSON.stringify(result.lastEvaluatedKey)).toString("base64")
       : null;
-    const hasNext = !!result.LastEvaluatedKey;
+    const hasNext = !!result.lastEvaluatedKey;
 
     return ResponseUtil.success(event, {
-      albums,
+      albums: result.albums,
       nextCursor,
       hasNext,
     });
