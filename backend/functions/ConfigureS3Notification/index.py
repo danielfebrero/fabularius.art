@@ -38,7 +38,7 @@ def handler(event, context):
                         "Events": ["s3:ObjectCreated:*"],
                         "Filter": {
                             "Key": {
-                                "FilterRules": [{"Name": "prefix", "Value": "uploads/"}]
+                                "FilterRules": [{"Name": "prefix", "Value": "albums/"}]
                             }
                         },
                     }

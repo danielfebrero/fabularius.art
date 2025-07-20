@@ -3,6 +3,7 @@
 ## Problem
 
 The Google OAuth authentication was failing with the error:
+
 ```
 ValidationException: The table does not have the specified index: GSI3
 ```
@@ -16,6 +17,7 @@ The GSI3 index was missing from the DynamoDB table configuration. While the code
 Added the missing GSI3 index with the following configuration:
 
 ### GSI3 Index Details
+
 - **Purpose**: Query users by username
 - **Partition Key (GSI3PK)**: `"USER_USERNAME"`
 - **Sort Key (GSI3SK)**: `{username}` (lowercase)
@@ -31,6 +33,7 @@ Added the missing GSI3 index with the following configuration:
 ### For Production Environment
 
 1. **Deploy the updated CloudFormation template**:
+
    ```bash
    sam deploy --config-env prod
    ```
@@ -45,11 +48,12 @@ Added the missing GSI3 index with the following configuration:
 ### For Development Environment
 
 1. **For local development**, recreate the local table:
+
    ```bash
    cd scripts
    # Delete the existing table first (if using LocalStack)
    aws dynamodb delete-table --table-name local-pornspot-media --endpoint-url http://localhost:4566
-   
+
    # Recreate with the new schema
    node setup-local-db.js
    ```
@@ -69,12 +73,13 @@ aws dynamodb describe-table --table-name {environment}-pornspot-media \
 ```
 
 Expected output:
+
 ```json
 [
-    {
-        "IndexName": "GSI3",
-        "IndexStatus": "ACTIVE"
-    }
+  {
+    "IndexName": "GSI3",
+    "IndexStatus": "ACTIVE"
+  }
 ]
 ```
 
@@ -87,6 +92,7 @@ Expected output:
 ## Related Code
 
 The GSI3 index is used by:
+
 - `backend/shared/utils/dynamodb.ts` - `getUserByUsername()` function
 - `backend/shared/utils/user.ts` - User creation with username indexing
 - `backend/functions/user/auth/check-username.ts` - Username availability checking
@@ -94,6 +100,7 @@ The GSI3 index is used by:
 ## Testing
 
 After migration, test the following scenarios:
+
 1. Google OAuth login for new users
 2. Google OAuth login for existing users
 3. Username availability checking
