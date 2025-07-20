@@ -3,7 +3,7 @@ import { OAuth2Client } from "google-auth-library";
 import { google } from "googleapis";
 import { v4 as uuidv4 } from "uuid";
 import { ResponseUtil } from "@shared/utils/response";
-import { UserUtil } from "@shared/utils/user";
+import { OAuthUserUtil } from "@shared/utils/oauth-user";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { ParameterStoreService } from "@shared/utils/parameters";
 import { UserAuthMiddleware } from "@shared/auth/user-middleware";
@@ -186,7 +186,7 @@ export const handler = async (
     let userId: string;
     let isNewUser: boolean;
     try {
-      const result = await UserUtil.createOrLinkGoogleUser(
+      const result = await OAuthUserUtil.createOrLinkGoogleUser(
         googleUserInfo.googleId,
         googleUserInfo.email,
         googleUserInfo.firstName,
@@ -206,7 +206,7 @@ export const handler = async (
     console.log("User account processed:", { userId, isNewUser });
 
     // Update last login timestamp
-    await UserUtil.updateLastLogin(userId);
+    await OAuthUserUtil.updateLastLogin(userId);
 
     // Create user session
     const sessionId = uuidv4();
