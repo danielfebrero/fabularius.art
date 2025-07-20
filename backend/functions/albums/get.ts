@@ -20,9 +20,22 @@ export const handler = async (
       QueryCommand,
     } = require("@aws-sdk/client-dynamodb");
     const { unmarshall } = require("@aws-sdk/util-dynamodb");
-    const client = new DynamoDBClient({
-      region: process.env["AWS_REGION"] || "eu-west-1",
-    });
+
+    const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
+
+    const clientConfig: any = {};
+    if (isLocal) {
+      clientConfig.endpoint = "http://pornspot-local-aws:4566";
+      clientConfig.region = "us-east-1";
+      clientConfig.credentials = {
+        accessKeyId: "test",
+        secretAccessKey: "test",
+      };
+    } else {
+      clientConfig.region = process.env["AWS_REGION"] || "eu-west-1";
+    }
+
+    const client = new DynamoDBClient(clientConfig);
 
     const limit = parseInt(event.queryStringParameters?.["limit"] || "20");
     const isPublicParam = event.queryStringParameters?.["isPublic"];
