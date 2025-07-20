@@ -65,6 +65,39 @@ fi
 
 print_success "Docker daemon is running"
 
+# Step 0: Clean up Docker networks and containers
+print_status "Cleaning up Docker environment..."
+
+# Clean up any orphaned networks and containers first
+docker network prune -f >/dev/null 2>&1 || true
+docker container prune -f >/dev/null 2>&1 || true
+
+# Check if the network exists and has correct labels
+NETWORK_NAME="pornspot-ai_local-network"
+NETWORK_EXISTS=$(docker network ls --filter "name=${NETWORK_NAME}" --format "{{.Name}}" | grep -x "${NETWORK_NAME}" || true)
+
+if [ -n "$NETWORK_EXISTS" ]; then
+    # Check if network has correct labels
+    NETWORK_LABEL=$(docker network inspect "${NETWORK_NAME}" --format '{{index .Labels "com.docker.compose.network"}}' 2>/dev/null || echo "")
+    
+    if [ "$NETWORK_LABEL" != "local-network" ]; then
+        print_warning "Network ${NETWORK_NAME} has incorrect labels, removing..."
+        
+        # Stop and remove any containers using this network
+        CONTAINERS_USING_NETWORK=$(docker network inspect "${NETWORK_NAME}" --format '{{range .Containers}}{{.Name}} {{end}}' 2>/dev/null || true)
+        if [ -n "$CONTAINERS_USING_NETWORK" ]; then
+            echo "$CONTAINERS_USING_NETWORK" | xargs docker stop >/dev/null 2>&1 || true
+            echo "$CONTAINERS_USING_NETWORK" | xargs docker rm -f >/dev/null 2>&1 || true
+        fi
+        
+        # Remove the incorrectly labeled network
+        docker network rm "${NETWORK_NAME}" >/dev/null 2>&1 || true
+        print_success "Removed incorrectly labeled network"
+    fi
+fi
+
+print_success "Docker environment cleaned up"
+
 # Step 1: Check and Start LocalStack if needed
 print_status "Checking LocalStack status..."
 
@@ -245,6 +278,26 @@ else
     print_warning "SAM cleanup failed, continuing anyway..."
 fi
 
+# Step 5d.1: Verify Docker network is ready
+print_status "Verifying Docker network is ready..."
+
+# Ensure LocalStack is running and network is available
+if ! docker ps | grep -q "pornspot-local-aws"; then
+    print_warning "LocalStack container not running, restarting..."
+    docker-compose -f docker-compose.local.yml up -d >/dev/null 2>&1 || true
+    sleep 3
+fi
+
+# Verify network exists
+NETWORK_NAME="pornspot-ai_local-network"
+if ! docker network ls | grep -q "${NETWORK_NAME}"; then
+    print_warning "Network not found, recreating with Docker Compose..."
+    docker-compose -f docker-compose.local.yml up -d >/dev/null 2>&1 || true
+    sleep 2
+fi
+
+print_success "Docker network is ready"
+
 # Step 5e: Build SAM application
 print_status "Building SAM application..."
 if sam build; then
@@ -266,6 +319,7 @@ echo "🚀 Starting SAM local API server..."
 echo ""
 
 # Start the SAM local API server
+print_status "Attempting to start SAM with Docker network..."
 if sam local start-api --port 3001 --docker-network pornspot-ai_local-network --env-vars backend/.env.local.json; then
     print_success "Backend server stopped gracefully"
 else
@@ -273,6 +327,23 @@ else
     if [ $EXIT_CODE -eq 130 ]; then
         # Ctrl+C was pressed
         print_success "Backend server stopped by user"
+    elif [ $EXIT_CODE -eq 1 ]; then
+        # Network error, try without Docker network
+        print_warning "Failed to start with Docker network, trying without network..."
+        print_warning "Note: LocalStack integration may not work properly without the network"
+        echo ""
+        
+        if sam local start-api --port 3001 --env-vars backend/.env.local.json; then
+            print_success "Backend server stopped gracefully"
+        else
+            EXIT_CODE_FALLBACK=$?
+            if [ $EXIT_CODE_FALLBACK -eq 130 ]; then
+                print_success "Backend server stopped by user"
+            else
+                print_error "Backend server exited with error code: $EXIT_CODE_FALLBACK"
+                exit $EXIT_CODE_FALLBACK
+            fi
+        fi
     else
         print_error "Backend server exited with error code: $EXIT_CODE"
         exit $EXIT_CODE
