@@ -36,28 +36,32 @@ export const handler = async (
   console.log("Google OAuth callback handler started");
   console.log("Query parameters:", event.queryStringParameters);
 
-  const apiDomain = event.requestContext.domainName;
-  const stage = event.requestContext.stage;
-  const redirectUri = `https://${apiDomain}/${stage}/auth/oauth/callback`;
-
   try {
-    // Fetch Google client secret from Parameter Store
-    const GOOGLE_CLIENT_SECRET =
-      await ParameterStoreService.getGoogleClientSecret();
+    // Fetch Google client secret and frontend URL from Parameter Store
+    const [GOOGLE_CLIENT_SECRET, frontendUrl] = await Promise.all([
+      ParameterStoreService.getGoogleClientSecret(),
+      ParameterStoreService.getFrontendUrl(),
+    ]);
+
+    // Use frontend URL for redirect URI (matching what was used to initiate OAuth)
+    const redirectUri = `${frontendUrl}/auth/oauth/callback`;
+    console.log("Using redirect URI:", redirectUri);
 
     const oauth2Client = new OAuth2Client(
       GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET,
       redirectUri
     );
-    
+
     // Parse POST body data
     let postData: any = {};
     try {
       if (event.body) {
         // Handle both JSON and URL-encoded form data
-        if (event.headers['content-type']?.includes('application/json') || 
-            event.headers['Content-Type']?.includes('application/json')) {
+        if (
+          event.headers["content-type"]?.includes("application/json") ||
+          event.headers["Content-Type"]?.includes("application/json")
+        ) {
           postData = JSON.parse(event.body);
         } else {
           // Parse URL-encoded form data
@@ -68,7 +72,7 @@ export const handler = async (
     } catch (parseError) {
       console.error("Failed to parse POST body:", parseError);
     }
-    
+
     // Extract OAuth parameters from POST data
     const code = postData["code"];
     const state = postData["state"];
@@ -77,7 +81,6 @@ export const handler = async (
     // Handle OAuth errors from Google
     if (error) {
       console.error("OAuth error from Google:", error);
-      const frontendUrl = await ParameterStoreService.getFrontendUrl();
       const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         error === "access_denied"
           ? "User cancelled Google authentication"
@@ -90,7 +93,6 @@ export const handler = async (
     // Validate required parameters
     if (!code) {
       console.error("Missing authorization code in OAuth callback");
-      const frontendUrl = await ParameterStoreService.getFrontendUrl();
       const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         "Missing authorization code"
       )}`;
@@ -100,7 +102,6 @@ export const handler = async (
     // Validate state parameter for CSRF protection
     if (!state) {
       console.error("Missing state parameter in OAuth callback");
-      const frontendUrl = await ParameterStoreService.getFrontendUrl();
       const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         "Invalid request state"
       )}`;
@@ -133,7 +134,6 @@ export const handler = async (
         "Failed to exchange authorization code for tokens:",
         tokenError
       );
-      const frontendUrl = await ParameterStoreService.getFrontendUrl();
       const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         "Failed to authenticate with Google"
       )}`;
@@ -169,7 +169,6 @@ export const handler = async (
       };
     } catch (verifyError) {
       console.error("Failed to verify Google ID token:", verifyError);
-      const frontendUrl = await ParameterStoreService.getFrontendUrl();
       const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         "Invalid authentication token"
       )}`;
@@ -198,7 +197,6 @@ export const handler = async (
       isNewUser = result.isNewUser;
     } catch (userError: any) {
       console.error("Failed to create or link Google user:", userError);
-      const frontendUrl = await ParameterStoreService.getFrontendUrl();
       const errorRedirectUrl = `${frontendUrl}/auth/error?error=${encodeURIComponent(
         userError.message || "Failed to create user account"
       )}`;
@@ -243,7 +241,6 @@ export const handler = async (
     );
 
     // Redirect to frontend success page
-    const frontendUrl = await ParameterStoreService.getFrontendUrl();
     const successRedirectUrl = `${frontendUrl}/auth/success${
       isNewUser ? "?new_user=true" : ""
     }`;

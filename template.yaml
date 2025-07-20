@@ -52,6 +52,10 @@ Resources:
           AttributeType: S
         - AttributeName: GSI2SK
           AttributeType: S
+        - AttributeName: GSI3PK
+          AttributeType: S
+        - AttributeName: GSI3SK
+          AttributeType: S
         - AttributeName: isPublic
           AttributeType: S
         - AttributeName: createdAt
@@ -78,6 +82,14 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
+        - IndexName: GSI3
+          KeySchema:
+            - AttributeName: GSI3PK
+              KeyType: HASH
+            - AttributeName: GSI3SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
         - IndexName: isPublic-createdAt-index
           KeySchema:
             - AttributeName: isPublic
@@ -85,7 +97,7 @@ Resources:
             - AttributeName: createdAt
               KeyType: RANGE
           Projection:
-            ProjectionType: KEYS_ONLY
+            ProjectionType: ALL
       StreamSpecification:
         StreamViewType: NEW_AND_OLD_IMAGES
       PointInTimeRecoverySpecification:
