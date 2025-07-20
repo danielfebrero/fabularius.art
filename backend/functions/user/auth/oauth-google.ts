@@ -50,10 +50,29 @@ export const handler = async (
       GOOGLE_CLIENT_SECRET,
       redirectUri
     );
-    // Extract OAuth parameters from query string
-    const code = event.queryStringParameters?.["code"];
-    const state = event.queryStringParameters?.["state"];
-    const error = event.queryStringParameters?.["error"];
+    
+    // Parse POST body data
+    let postData: any = {};
+    try {
+      if (event.body) {
+        // Handle both JSON and URL-encoded form data
+        if (event.headers['content-type']?.includes('application/json') || 
+            event.headers['Content-Type']?.includes('application/json')) {
+          postData = JSON.parse(event.body);
+        } else {
+          // Parse URL-encoded form data
+          const params = new URLSearchParams(event.body);
+          postData = Object.fromEntries(params.entries());
+        }
+      }
+    } catch (parseError) {
+      console.error("Failed to parse POST body:", parseError);
+    }
+    
+    // Extract OAuth parameters from POST data
+    const code = postData["code"];
+    const state = postData["state"];
+    const error = postData["error"];
 
     // Handle OAuth errors from Google
     if (error) {
