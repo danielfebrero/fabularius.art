@@ -1186,13 +1186,16 @@ export class DynamoDBService {
   // Cleanup methods for orphaned interactions
   static async deleteAllInteractionsForTarget(targetId: string): Promise<void> {
     console.log(`🧹 Cleaning up all interactions for target: ${targetId}`);
-    
+
     // Delete all likes for this target and decrement counts
     const likeCount = await this.deleteInteractionsByType(targetId, "like");
-    
-    // Delete all bookmarks for this target and decrement counts  
-    const bookmarkCount = await this.deleteInteractionsByType(targetId, "bookmark");
-    
+
+    // Delete all bookmarks for this target and decrement counts
+    const bookmarkCount = await this.deleteInteractionsByType(
+      targetId,
+      "bookmark"
+    );
+
     // If this is an album, decrement the counts on the album itself
     // Note: For media, we don't currently store individual media interaction counts
     try {
@@ -1203,18 +1206,22 @@ export class DynamoDBService {
           await this.incrementAlbumLikeCount(targetId, -likeCount);
         }
         if (bookmarkCount > 0) {
-          await this.incrementAlbumBookmarkCount(targetId, -bookmarkCount);  
+          await this.incrementAlbumBookmarkCount(targetId, -bookmarkCount);
         }
-        console.log(`📉 Decremented album counts: ${likeCount} likes, ${bookmarkCount} bookmarks`);
+        console.log(
+          `📉 Decremented album counts: ${likeCount} likes, ${bookmarkCount} bookmarks`
+        );
       }
     } catch (error) {
       // Target is not an album or doesn't exist, which is expected for media or deleted items
-      console.log(`📝 Target ${targetId} is not an album or doesn't exist (expected for media)`);
+      console.log(
+        `📝 Target ${targetId} is not an album or doesn't exist (expected for media)`
+      );
     }
   }
 
   private static async deleteInteractionsByType(
-    targetId: string, 
+    targetId: string,
     interactionType: "like" | "bookmark"
   ): Promise<number> {
     try {
@@ -1231,17 +1238,21 @@ export class DynamoDBService {
       );
 
       if (!result.Items || result.Items.length === 0) {
-        console.log(`📭 No ${interactionType} interactions found for target: ${targetId}`);
+        console.log(
+          `📭 No ${interactionType} interactions found for target: ${targetId}`
+        );
         return 0;
       }
 
-      console.log(`🗑️  Deleting ${result.Items.length} ${interactionType} interactions for target: ${targetId}`);
+      console.log(
+        `🗑️  Deleting ${result.Items.length} ${interactionType} interactions for target: ${targetId}`
+      );
 
       // Delete each interaction in batches
       const batchSize = 25; // DynamoDB batch write limit
       for (let i = 0; i < result.Items.length; i += batchSize) {
         const batch = result.Items.slice(i, i + batchSize);
-        
+
         const deleteRequests = batch.map((item: any) => ({
           DeleteRequest: {
             Key: {
@@ -1260,10 +1271,15 @@ export class DynamoDBService {
         );
       }
 
-      console.log(`✅ Deleted ${result.Items.length} ${interactionType} interactions for target: ${targetId}`);
+      console.log(
+        `✅ Deleted ${result.Items.length} ${interactionType} interactions for target: ${targetId}`
+      );
       return result.Items.length;
     } catch (error) {
-      console.error(`❌ Error deleting ${interactionType} interactions for target ${targetId}:`, error);
+      console.error(
+        `❌ Error deleting ${interactionType} interactions for target ${targetId}:`,
+        error
+      );
       throw error;
     }
   }
