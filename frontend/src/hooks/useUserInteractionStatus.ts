@@ -54,10 +54,12 @@ export function UserInteractionProvider({ children }: { children: ReactNode }) {
     Map<string, UserInteractionStatus>
   >(new Map());
   const [loadingTargets, setLoadingTargets] = useState<Set<string>>(new Set());
+  const [preloadInProgress, setPreloadInProgress] = useState<Set<string>>(new Set());
 
   // Use refs to avoid recreating callbacks when state changes
   const statusCacheRef = useRef(statusCache);
   const loadingTargetsRef = useRef(loadingTargets);
+  const preloadInProgressRef = useRef(preloadInProgress);
 
   // Update refs when state changes
   useEffect(() => {
@@ -67,6 +69,10 @@ export function UserInteractionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     loadingTargetsRef.current = loadingTargets;
   }, [loadingTargets]);
+
+  useEffect(() => {
+    preloadInProgressRef.current = preloadInProgress;
+  }, [preloadInProgress]);
 
   // Helper to generate cache key
   const getCacheKey = (targetType: "album" | "media", targetId: string) =>
@@ -127,6 +133,10 @@ export function UserInteractionProvider({ children }: { children: ReactNode }) {
       if (statusCacheRef.current.has(key) || loadingTargetsRef.current.has(key))
         return;
 
+      // Don't load individually if a preload operation is in progress for this key
+      if (preloadInProgressRef.current.has(key))
+        return;
+
       setLoadingTargets((prev) => new Set(prev).add(key));
 
       try {
@@ -173,6 +183,16 @@ export function UserInteractionProvider({ children }: { children: ReactNode }) {
       });
 
       if (uncachedTargets.length === 0) return;
+
+      // Mark these keys as being preloaded to prevent individual loads
+      const preloadKeys = uncachedTargets.map((t) =>
+        getCacheKey(t.targetType, t.targetId)
+      );
+      setPreloadInProgress((prev) => {
+        const newSet = new Set(prev);
+        preloadKeys.forEach((key) => newSet.add(key));
+        return newSet;
+      });
 
       // Mark as loading
       const newLoadingKeys = uncachedTargets.map((t) =>
@@ -224,6 +244,13 @@ export function UserInteractionProvider({ children }: { children: ReactNode }) {
           newLoadingKeys.forEach((key) => newSet.delete(key));
           return newSet;
         });
+
+        // Remove from preload in progress set
+        setPreloadInProgress((prev) => {
+          const newSet = new Set(prev);
+          preloadKeys.forEach((key) => newSet.delete(key));
+          return newSet;
+        });
       }
     },
     [user]
@@ -232,6 +259,7 @@ export function UserInteractionProvider({ children }: { children: ReactNode }) {
   const clearCache = useCallback(() => {
     setStatusCache(new Map());
     setLoadingTargets(new Set());
+    setPreloadInProgress(new Set());
   }, []);
 
   // Clear cache when user changes
@@ -239,6 +267,7 @@ export function UserInteractionProvider({ children }: { children: ReactNode }) {
     if (!user) {
       setStatusCache(new Map());
       setLoadingTargets(new Set());
+      setPreloadInProgress(new Set());
     }
   }, [user]);
 
