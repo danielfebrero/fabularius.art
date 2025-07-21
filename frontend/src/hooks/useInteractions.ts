@@ -48,7 +48,12 @@ export const useInteractions = (): UseInteractionsReturn => {
   }, []);
 
   const toggleLike = useCallback(
-    async (targetType: "album" | "media", targetId: string, albumId?: string, currentlyLiked?: boolean) => {
+    async (
+      targetType: "album" | "media",
+      targetId: string,
+      albumId?: string,
+      currentlyLiked?: boolean
+    ) => {
       if (!user) {
         setError("You must be logged in to like content");
         return;
@@ -89,7 +94,12 @@ export const useInteractions = (): UseInteractionsReturn => {
   );
 
   const toggleBookmark = useCallback(
-    async (targetType: "album" | "media", targetId: string, albumId?: string, currentlyBookmarked?: boolean) => {
+    async (
+      targetType: "album" | "media",
+      targetId: string,
+      albumId?: string,
+      currentlyBookmarked?: boolean
+    ) => {
       if (!user) {
         setError("You must be logged in to bookmark content");
         return;

@@ -4,24 +4,25 @@ import Link from "next/link";
 import { Heart, Bookmark, Eye, Calendar } from "lucide-react";
 import { useLikes } from "@/hooks/useLikes";
 import { useBookmarks } from "@/hooks/useBookmarks";
+import { useInsights } from "@/hooks/useInsights";
 import { useUser } from "@/hooks/useUser";
 import { Button } from "@/components/ui/Button";
 import {
   composeAlbumCoverUrl,
   getBestThumbnailUrl,
   composeThumbnailUrls,
+  composeMediaUrl,
 } from "@/lib/urlUtils";
 
 const UserDashboard: React.FC = () => {
   const { user } = useUser();
+  const { insights, isLoading: insightsLoading } = useInsights();
   const {
     likes,
-    totalCount: likesCount,
     isLoading: likesLoading,
   } = useLikes(true);
   const {
     bookmarks,
-    totalCount: bookmarksCount,
     isLoading: bookmarksLoading,
   } = useBookmarks(true);
 
@@ -67,43 +68,75 @@ const UserDashboard: React.FC = () => {
     </div>
   );
 
-  const ContentItem = ({ interaction }: { interaction: any }) => (
-    <div className="flex items-center space-x-4 p-4 bg-card/50 backdrop-blur-sm rounded-xl border border-admin-primary/5 hover:border-admin-primary/20 transition-all duration-200">
-      {(interaction.target?.thumbnailUrls ||
-        interaction.target?.coverImageUrl) && (
-        <img
-          src={getBestThumbnailUrl(
-            composeThumbnailUrls(interaction.target.thumbnailUrls),
-            composeAlbumCoverUrl(interaction.target.coverImageUrl),
-            "small"
-          )}
-          alt={interaction.target.title || "Content"}
-          className="w-12 h-12 object-cover rounded-lg shadow-sm"
-        />
-      )}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-foreground truncate">
-          {interaction.target?.title ||
-            `${interaction.targetType} ${interaction.targetId}`}
-        </p>
-        <p className="text-xs text-muted-foreground flex items-center mt-1">
-          <Calendar className="h-3 w-3 mr-1" />
-          {formatDate(interaction.createdAt)}
-        </p>
-      </div>
-      <div className="flex-shrink-0">
-        {interaction.interactionType === "like" ? (
-          <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-pink-500 rounded-lg flex items-center justify-center">
-            <Heart className="h-4 w-4 text-white" />
-          </div>
-        ) : (
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
-            <Bookmark className="h-4 w-4 text-white" />
-          </div>
+  const ContentItem = ({ interaction }: { interaction: any }) => {
+    // Determine thumbnail URL for both album and media items
+    const getThumbnailUrl = () => {
+      if (interaction.target?.thumbnailUrls) {
+        // Try thumbnail URLs object (common for both albums and media)
+        return getBestThumbnailUrl(
+          composeThumbnailUrls(interaction.target.thumbnailUrls),
+          null,
+          "small"
+        );
+      }
+      
+      if (interaction.target?.coverImageUrl) {
+        // Album cover image fallback
+        return composeAlbumCoverUrl(interaction.target.coverImageUrl);
+      }
+      
+      if (interaction.target?.thumbnailUrl) {
+        // Single thumbnail URL fallback (for media items)
+        return composeMediaUrl(interaction.target.thumbnailUrl);
+      }
+      
+      if (interaction.target?.url) {
+        // Media URL fallback
+        return composeMediaUrl(interaction.target.url);
+      }
+      
+      return null;
+    };
+
+    const thumbnailUrl = getThumbnailUrl();
+
+    return (
+      <div className="flex items-center space-x-4 p-4 bg-card/50 backdrop-blur-sm rounded-xl border border-admin-primary/5 hover:border-admin-primary/20 transition-all duration-200">
+        {thumbnailUrl && (
+          <img
+            src={thumbnailUrl}
+            alt={interaction.target?.title || "Content"}
+            className="w-12 h-12 object-cover rounded-lg shadow-sm"
+            onError={(e) => {
+              console.warn("Failed to load thumbnail:", thumbnailUrl);
+              (e.target as HTMLImageElement).style.display = 'none';
+            }}
+          />
         )}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground truncate">
+            {interaction.target?.title ||
+              `${interaction.targetType} ${interaction.targetId}`}
+          </p>
+          <p className="text-xs text-muted-foreground flex items-center mt-1">
+            <Calendar className="h-3 w-3 mr-1" />
+            {formatDate(interaction.createdAt)}
+          </p>
+        </div>
+        <div className="flex-shrink-0">
+          {interaction.interactionType === "like" ? (
+            <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-pink-500 rounded-lg flex items-center justify-center">
+              <Heart className="h-4 w-4 text-white" />
+            </div>
+          ) : (
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
+              <Bookmark className="h-4 w-4 text-white" />
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-8">
@@ -147,13 +180,13 @@ const UserDashboard: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <StatCard
             title="Likes Received"
-            value={likesCount}
+            value={insights.totalLikesReceived}
             icon={Heart}
             color="bg-gradient-to-br from-red-500 to-pink-500"
           />
           <StatCard
             title="Bookmarked Content"
-            value={bookmarksCount}
+            value={insights.totalBookmarksReceived}
             icon={Bookmark}
             color="bg-gradient-to-br from-blue-500 to-indigo-500"
           />

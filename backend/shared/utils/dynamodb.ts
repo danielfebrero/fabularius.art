@@ -1057,4 +1057,104 @@ export class DynamoDBService {
       userBookmarked: !!bookmarkResult.Item,
     };
   }
+
+  static async getTotalLikesReceivedOnUserContent(
+    userId: string
+  ): Promise<number> {
+    // First, get all user's albums
+    const userAlbumsResult = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk)",
+        ExpressionAttributeValues: {
+          ":pk": `USER#${userId}`,
+          ":sk": "ALBUM#",
+        },
+      })
+    );
+
+    const userAlbums = userAlbumsResult.Items || [];
+    const albumIds = userAlbums.map((album: any) =>
+      album["SK"].replace("ALBUM#", "")
+    );
+
+    if (albumIds.length === 0) {
+      return 0;
+    }
+
+    // Count likes on all user's albums
+    let totalLikes = 0;
+
+    for (const albumId of albumIds) {
+      try {
+        const likesResult = await docClient.send(
+          new QueryCommand({
+            TableName: TABLE_NAME,
+            IndexName: "GSI1",
+            KeyConditionExpression: "GSI1PK = :gsi1pk",
+            ExpressionAttributeValues: {
+              ":gsi1pk": `INTERACTION#like#${albumId}`,
+            },
+            Select: "COUNT",
+          })
+        );
+
+        totalLikes += likesResult.Count || 0;
+      } catch (error) {
+        console.warn(`Failed to count likes for album ${albumId}:`, error);
+      }
+    }
+
+    return totalLikes;
+  }
+
+  static async getTotalBookmarksReceivedOnUserContent(
+    userId: string
+  ): Promise<number> {
+    // First, get all user's albums
+    const userAlbumsResult = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk)",
+        ExpressionAttributeValues: {
+          ":pk": `USER#${userId}`,
+          ":sk": "ALBUM#",
+        },
+      })
+    );
+
+    const userAlbums = userAlbumsResult.Items || [];
+    const albumIds = userAlbums.map((album: any) =>
+      album["SK"].replace("ALBUM#", "")
+    );
+
+    if (albumIds.length === 0) {
+      return 0;
+    }
+
+    // Count bookmarks on all user's albums
+    let totalBookmarks = 0;
+
+    for (const albumId of albumIds) {
+      try {
+        const bookmarksResult = await docClient.send(
+          new QueryCommand({
+            TableName: TABLE_NAME,
+            IndexName: "GSI1",
+            KeyConditionExpression: "GSI1PK = :gsi1pk",
+            ExpressionAttributeValues: {
+              ":gsi1pk": `INTERACTION#bookmark#${albumId}`,
+            },
+            Select: "COUNT",
+          })
+        );
+
+        totalBookmarks += bookmarksResult.Count || 0;
+      } catch (error) {
+        console.warn(`Failed to count bookmarks for album ${albumId}:`, error);
+      }
+    }
+
+    return totalBookmarks;
+  }
 }

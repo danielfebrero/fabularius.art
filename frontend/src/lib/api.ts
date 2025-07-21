@@ -13,6 +13,7 @@ import {
   InteractionResponse,
   InteractionCountsResponse,
   UserInteractionsResponse,
+  UserInteractionStatsResponse,
 } from "@/types/user";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -318,6 +319,22 @@ export const interactionApi = {
     if (!response.ok) {
       throw new Error(
         `Failed to get interaction counts: ${response.statusText}`
+      );
+    }
+
+    return response.json();
+  },
+
+  // Get user's interaction stats (likes and bookmarks received on user's content)
+  getInsights: async (): Promise<UserInteractionStatsResponse> => {
+    const response = await fetch(`${API_URL}/user/insights`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to get insights: ${response.statusText}`
       );
     }
 

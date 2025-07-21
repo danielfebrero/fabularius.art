@@ -1203,6 +1203,35 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
 
+  UserGetInteractionStatsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-get-insights"
+      CodeUri: backend/dist/functions/user/interactions/
+      Handler: get-insights.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        GetInteractionStats:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/insights
+            Method: GET
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsInteractionStats:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/insights
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
 Outputs:
   ApiGatewayUrl:
     Description: API Gateway endpoint URL

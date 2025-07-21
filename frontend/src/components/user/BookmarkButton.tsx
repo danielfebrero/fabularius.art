@@ -67,7 +67,9 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
 
       // Update count optimistically
       if (bookmarkCount !== null) {
-        setBookmarkCount(newBookmarkedState ? bookmarkCount + 1 : bookmarkCount - 1);
+        setBookmarkCount(
+          newBookmarkedState ? bookmarkCount + 1 : bookmarkCount - 1
+        );
       }
 
       await toggleBookmark(targetType, targetId, albumId, isBookmarked);

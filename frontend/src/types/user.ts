@@ -232,6 +232,15 @@ export interface UserInteractionsResponse {
   error?: string;
 }
 
+export interface UserInteractionStatsResponse {
+  success: boolean;
+  data?: {
+    totalLikesReceived: number;
+    totalBookmarksReceived: number;
+  };
+  error?: string;
+}
+
 // API Response wrapper
 export interface ApiResponse<T = any> {
   success: boolean;
