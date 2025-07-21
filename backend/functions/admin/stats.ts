@@ -74,7 +74,7 @@ export const handler = async (
         FilterExpression: "isPublic = :isPublic",
         ExpressionAttributeValues: {
           ":gsi1pk": "ALBUM",
-          ":isPublic": true,
+          ":isPublic": "true",
         },
         Select: "COUNT",
       })

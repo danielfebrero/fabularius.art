@@ -193,9 +193,7 @@ export function UserMenu({ user }: UserMenuProps) {
             {/* Show Admin menu item if user is logged in as admin */}
             {adminUser && (
               <button
-                onClick={() =>
-                  handleMenuItemClick(() => router.push("/admin"))
-                }
+                onClick={() => handleMenuItemClick(() => router.push("/admin"))}
                 className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
               >
                 <div className="flex items-center space-x-2">
