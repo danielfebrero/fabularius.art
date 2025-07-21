@@ -10,11 +10,13 @@ import {
   Image,
   FolderOpen,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useLikes } from "@/hooks/useLikes";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { composeAlbumCoverUrl, composeThumbnailUrls } from "@/lib/urlUtils";
 import ResponsivePicture from "@/components/ui/ResponsivePicture";
+import { Lightbox } from "@/components/ui/Lightbox";
 
 const UserLikesPage: React.FC = () => {
   const {
@@ -30,6 +32,9 @@ const UserLikesPage: React.FC = () => {
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchTerm, setSearchTerm] = useState("");
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const router = useRouter();
 
   // Filter likes based on search term
   const filteredLikes = likes.filter(
@@ -37,6 +42,55 @@ const UserLikesPage: React.FC = () => {
       like.target?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       like.targetId.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Get media items for lightbox (only media type likes)
+  const mediaItems = filteredLikes
+    .filter((like) => like.targetType === "media")
+    .map((like) => ({
+      id: like.targetId,
+      albumId: like.target?.albumId || like.albumId || "",
+      filename: like.target?.title || "",
+      originalFilename: like.target?.title || "",
+      mimeType: like.target?.mimeType || "image/jpeg",
+      size: like.target?.size || 0,
+      url: like.target?.url || "",
+      thumbnailUrl: like.target?.thumbnailUrls?.medium || "",
+      thumbnailUrls: like.target?.thumbnailUrls,
+      createdAt: like.createdAt,
+      updatedAt: like.createdAt,
+    }));
+
+  const handleCardClick = (interaction: any) => {
+    if (interaction.targetType === "media") {
+      // Show lightbox for media
+      const mediaIndex = mediaItems.findIndex(
+        (item) => item.id === interaction.targetId
+      );
+      if (mediaIndex !== -1) {
+        setCurrentMediaIndex(mediaIndex);
+        setLightboxOpen(true);
+      }
+    } else {
+      // Navigate to album for albums
+      router.push(`/albums/${interaction.targetId}`);
+    }
+  };
+
+  const handleLightboxClose = () => {
+    setLightboxOpen(false);
+  };
+
+  const handleLightboxNext = () => {
+    if (currentMediaIndex < mediaItems.length - 1) {
+      setCurrentMediaIndex(currentMediaIndex + 1);
+    }
+  };
+
+  const handleLightboxPrevious = () => {
+    if (currentMediaIndex > 0) {
+      setCurrentMediaIndex(currentMediaIndex - 1);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -50,11 +104,15 @@ const UserLikesPage: React.FC = () => {
 
   const ContentCard = ({ interaction }: { interaction: any }) => {
     if (viewMode === "grid") {
-      return (
-        <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 overflow-hidden hover:shadow-xl hover:border-admin-primary/30 transition-all duration-300">
-          {interaction.target?.thumbnailUrls ||
-          interaction.target?.coverImageUrl ? (
-            <div className="aspect-video relative">
+      // Square cards for user likes page
+      if (interaction.targetType === "media") {
+        // Media cards: show only image (square)
+        return (
+          <div
+            className="group relative cursor-pointer overflow-hidden rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02] aspect-square"
+            onClick={() => handleCardClick(interaction)}
+          >
+            {interaction.target?.thumbnailUrls ? (
               <ResponsivePicture
                 thumbnailUrls={composeThumbnailUrls(
                   interaction.target.thumbnailUrls
@@ -63,48 +121,64 @@ const UserLikesPage: React.FC = () => {
                   interaction.target.coverImageUrl
                 )}
                 alt={interaction.target.title || "Content"}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
                 context="albums"
                 loading="lazy"
               />
-              <div className="absolute top-2 right-2">
-                <Heart className="h-5 w-5 text-red-500 fill-current drop-shadow-lg" />
+            ) : (
+              <div className="w-full h-full bg-muted/50 flex items-center justify-center">
+                <Image className="h-12 w-12 text-muted-foreground" />
               </div>
-            </div>
-          ) : (
-            <div className="aspect-video bg-muted/50 flex items-center justify-center">
-              <Image className="h-12 w-12 text-muted-foreground" />
-            </div>
-          )}
-
-          <div className="p-4">
-            {interaction.targetType === "album" && (
-              <>
-                <h3 className="font-medium text-foreground line-clamp-2 mb-2">
-                  {interaction.target?.title || `Album ${interaction.targetId}`}
-                </h3>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center space-x-1 text-blue-600">
-                      <FolderOpen className="h-3 w-3" />
-                      <span className="capitalize font-medium">Album</span>
-                    </div>
-                  </div>
-                  <span className="flex items-center">
-                    <Calendar className="h-3 w-3 mr-1" />
-                    {formatDate(interaction.createdAt)}
-                  </span>
-                </div>
-                {interaction.target?.mediaCount && (
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    {interaction.target.mediaCount} items
-                  </div>
-                )}
-              </>
             )}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+            <div className="absolute top-2 right-2">
+              <Heart className="h-5 w-5 text-red-500 fill-current drop-shadow-lg" />
+            </div>
           </div>
-        </div>
-      );
+        );
+      } else {
+        // Album cards: show image and title only (square)
+        return (
+          <div
+            className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 overflow-hidden hover:shadow-xl hover:border-admin-primary/30 transition-all duration-300 cursor-pointer"
+            onClick={() => handleCardClick(interaction)}
+          >
+            {interaction.target?.thumbnailUrls ||
+            interaction.target?.coverImageUrl ? (
+              <div className="aspect-square relative">
+                <ResponsivePicture
+                  thumbnailUrls={composeThumbnailUrls(
+                    interaction.target.thumbnailUrls
+                  )}
+                  fallbackUrl={composeAlbumCoverUrl(
+                    interaction.target.coverImageUrl
+                  )}
+                  alt={interaction.target.title || "Content"}
+                  className="w-full h-full object-cover"
+                  context="albums"
+                  loading="lazy"
+                />
+                <div className="absolute top-2 right-2">
+                  <Heart className="h-5 w-5 text-red-500 fill-current drop-shadow-lg" />
+                </div>
+              </div>
+            ) : (
+              <div className="aspect-square bg-muted/50 flex items-center justify-center relative">
+                <Image className="h-12 w-12 text-muted-foreground" />
+                <div className="absolute top-2 right-2">
+                  <Heart className="h-5 w-5 text-red-500 fill-current drop-shadow-lg" />
+                </div>
+              </div>
+            )}
+
+            <div className="p-4">
+              <h3 className="font-medium text-foreground line-clamp-2 text-center">
+                {interaction.target?.title || `Album ${interaction.targetId}`}
+              </h3>
+            </div>
+          </div>
+        );
+      }
     }
 
     // List view
@@ -267,11 +341,13 @@ const UserLikesPage: React.FC = () => {
             <div key={i} className="animate-pulse">
               {viewMode === "grid" ? (
                 <div className="bg-card/60 rounded-xl shadow-lg border border-admin-primary/10 overflow-hidden">
-                  <div className="aspect-video bg-muted/50"></div>
-                  <div className="p-4 space-y-2">
-                    <div className="h-4 bg-muted/50 rounded w-3/4"></div>
-                    <div className="h-3 bg-muted/50 rounded w-1/2"></div>
-                  </div>
+                  <div className="aspect-square bg-muted/50"></div>
+                  {/* Only show skeleton text for albums, media cards are image-only */}
+                  {i % 2 === 0 && (
+                    <div className="p-4 space-y-2">
+                      <div className="h-4 bg-muted/50 rounded w-3/4 mx-auto"></div>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="bg-card/60 rounded-xl shadow-lg border border-admin-primary/10 p-4">
@@ -335,6 +411,16 @@ const UserLikesPage: React.FC = () => {
             </Button>
           )}
         </div>
+      )}
+      {lightboxOpen && (
+        <Lightbox
+          isOpen={lightboxOpen}
+          onClose={handleLightboxClose}
+          media={mediaItems}
+          currentIndex={currentMediaIndex}
+          onNext={handleLightboxNext}
+          onPrevious={handleLightboxPrevious}
+        />
       )}
     </div>
   );

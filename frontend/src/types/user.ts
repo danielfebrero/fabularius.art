@@ -164,6 +164,7 @@ export interface UserInteraction {
   interactionType: "like" | "bookmark";
   targetType: "album" | "media";
   targetId: string;
+  albumId?: string; // Available for media interactions
   createdAt: string;
   target?: {
     id: string;
@@ -181,6 +182,12 @@ export interface UserInteraction {
     createdAt?: string;
     updatedAt?: string;
     type?: string;
+    // Media-specific fields
+    mimeType?: string;
+    size?: number;
+    url?: string;
+    albumId?: string;
+    albumTitle?: string;
   };
 }
 
