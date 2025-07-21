@@ -2,6 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "@shared/utils/response";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { UserUtil } from "@shared/utils/user";
+import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -36,15 +37,25 @@ export const handler = async (
       console.log("[ME] Authorizer context missing or empty.");
     }
 
-    const userId = event.requestContext.authorizer?.["userId"] as string;
+    let userId = event.requestContext.authorizer?.["userId"] as string;
     console.log("👤 UserId from authorizer:", userId);
 
+    // Fallback for local development or when authorizer context is missing
     if (!userId) {
-      console.log(
-        "❌ No userId found in authorizer context. Cookie was:",
-        cookieHeader
-      );
-      return ResponseUtil.unauthorized(event, "No user session found");
+      console.log("⚠️ No userId from authorizer, falling back to session validation");
+      const validation = await UserAuthMiddleware.validateSession(event);
+      
+      if (!validation.isValid || !validation.user) {
+        console.log("❌ User session validation failed");
+        console.log(
+          "❌ No userId found in authorizer context. Cookie was:",
+          cookieHeader
+        );
+        return ResponseUtil.unauthorized(event, "No user session found");
+      }
+      
+      userId = validation.user.userId;
+      console.log("✅ Got userId from session validation:", userId);
     }
 
     console.log("🔍 Getting user from database...");
