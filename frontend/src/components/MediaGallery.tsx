@@ -7,6 +7,7 @@ import { Lightbox } from "./ui/Lightbox";
 import { Button } from "./ui/Button";
 import { cn } from "../lib/utils";
 import { getMediaForAlbum } from "../lib/data";
+import { useUserInteractionStatus } from "../hooks/useUserInteractionStatus";
 
 interface MediaGalleryProps {
   albumId: string;
@@ -31,10 +32,23 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
+  const { preloadStatuses } = useUserInteractionStatus();
+
   useEffect(() => {
     setMedia(initialMedia);
     setPagination(initialPagination);
   }, [initialMedia, initialPagination]);
+
+  // Preload interaction statuses for all media items to avoid individual API calls
+  useEffect(() => {
+    if (media.length > 0) {
+      const targets = media.map((mediaItem) => ({
+        targetType: "media" as const,
+        targetId: mediaItem.id,
+      }));
+      preloadStatuses(targets).catch(console.error);
+    }
+  }, [media, preloadStatuses]);
 
   const handleLoadMore = async () => {
     if (!pagination?.hasNext || loading) return;
@@ -48,6 +62,13 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
 
     const { data, error: apiError } = result;
     if (data && data.media) {
+      // Preload interaction statuses for newly loaded media items
+      const newMediaTargets = data.media.map((mediaItem) => ({
+        targetType: "media" as const,
+        targetId: mediaItem.id,
+      }));
+      preloadStatuses(newMediaTargets).catch(console.error);
+
       setMedia((prevMedia) => [...prevMedia, ...data.media]);
       setPagination(data.pagination);
     } else {
