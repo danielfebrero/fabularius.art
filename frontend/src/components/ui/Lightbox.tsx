@@ -3,6 +3,10 @@ import { createPortal } from "react-dom";
 import { Media } from "../../types/index";
 import { cn } from "../../lib/utils";
 import { composeMediaUrl } from "../../lib/urlUtils";
+import { LikeButton } from "../user/LikeButton";
+import { BookmarkButton } from "../user/BookmarkButton";
+import { ShareDropdown } from "./ShareDropdown";
+import { Share2 } from "lucide-react";
 
 interface LightboxProps {
   media: Media[];
@@ -180,6 +184,83 @@ export const Lightbox: React.FC<LightboxProps> = ({
               </span>
             </div>
             <div className="flex items-center">
+              <LikeButton
+                targetType="media"
+                targetId={currentMedia.id}
+                initialLiked={false}
+                size="sm"
+                variant="default"
+                className="p-2 hover:bg-white/10 rounded-full transition-colors mr-2 cursor-pointer"
+              />
+              <BookmarkButton
+                targetType="media"
+                targetId={currentMedia.id}
+                initialBookmarked={false}
+                size="sm"
+                variant="default"
+                className="p-2 hover:bg-white/10 rounded-full transition-colors mr-2 cursor-pointer"
+              />
+              <ShareDropdown
+                trigger={({ toggle }: { toggle: () => void }) => (
+                  <button
+                    className="p-2 hover:bg-white/10 rounded-full transition-colors mr-2 cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      toggle();
+                    }}
+                    aria-label="Share media"
+                    tabIndex={0}
+                    type="button"
+                  >
+                    <Share2 className="w-6 h-6" />
+                  </button>
+                )}
+              >
+                {({ close }: { close: () => void }) => (
+                  <>
+                    <button
+                      className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        navigator.clipboard.writeText(
+                          `${window.location.origin}/media/${currentMedia.id}`
+                        );
+                        close();
+                      }}
+                    >
+                      Copy link
+                    </button>
+                    <a
+                      className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                      href={`https://www.reddit.com/submit?url=${encodeURIComponent(
+                        window.location.origin + "/media/" + currentMedia.id
+                      )}&title=${encodeURIComponent(
+                        currentMedia.originalName || currentMedia.filename
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={close}
+                    >
+                      Reddit
+                    </a>
+                    <a
+                      className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                      href={`https://x.com/intent/tweet?url=${encodeURIComponent(
+                        window.location.origin + "/media/" + currentMedia.id
+                      )}&text=${encodeURIComponent(
+                        currentMedia.originalName || currentMedia.filename
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={close}
+                    >
+                      X
+                    </a>
+                  </>
+                )}
+              </ShareDropdown>
               <button
                 onClick={(e) => {
                   e.stopPropagation();

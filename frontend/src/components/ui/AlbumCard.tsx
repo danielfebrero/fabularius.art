@@ -7,6 +7,7 @@ import { composeAlbumCoverUrl, composeThumbnailUrls } from "../../lib/urlUtils";
 import ResponsivePicture from "./ResponsivePicture";
 import { LikeButton } from "../user/LikeButton";
 import { BookmarkButton } from "../user/BookmarkButton";
+import { ShareDropdown } from "./ShareDropdown";
 import { interactionApi } from "../../lib/api";
 import { useIsMobile } from "../../hooks/useIsMobile";
 import React, { useState, useCallback, useRef } from "react";
@@ -26,7 +27,6 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const [actionsOpen, setActionsOpen] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handleViewClick = (e?: React.MouseEvent | React.TouchEvent) => {
@@ -63,26 +63,6 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
     },
     []
   );
-
-  // close share dropdown on outside click
-  React.useEffect(() => {
-    if (!shareOpen) return;
-    function handler(event: Event) {
-      if (
-        cardRef.current &&
-        event.target &&
-        !cardRef.current.contains(event.target as Node)
-      ) {
-        setShareOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handler);
-    document.addEventListener("touchstart", handler);
-    return () => {
-      document.removeEventListener("mousedown", handler);
-      document.removeEventListener("touchstart", handler);
-    };
-  }, [shareOpen]);
 
   return (
     <Card
@@ -225,22 +205,25 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
             <div className="flex items-center gap-2 text-xs text-muted-foreground relative">
               <span>{formatDateShort(album.createdAt)}</span>
               {/* Share icon and dropdown */}
-              <div className="relative">
-                <button
-                  className="ml-1 p-1 rounded hover:bg-muted transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                    setShareOpen((v) => !v);
-                  }}
-                  aria-label="Share album"
-                  tabIndex={0}
-                  type="button"
-                >
-                  <Share2 className="w-4 h-4" />
-                </button>
-                {shareOpen && (
-                  <div className="absolute right-0 mt-2 w-40 bg-popover border border-border rounded shadow-lg z-30 animate-fade-in">
+              <ShareDropdown
+                trigger={({ toggle }: { toggle: () => void }) => (
+                  <button
+                    className="ml-1 p-1 rounded hover:bg-muted transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      toggle();
+                    }}
+                    aria-label="Share album"
+                    tabIndex={0}
+                    type="button"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
+                )}
+              >
+                {({ close }: { close: () => void }) => (
+                  <>
                     <button
                       className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
                       onClick={(e) => {
@@ -249,7 +232,7 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
                         navigator.clipboard.writeText(
                           `${window.location.origin}/albums/${album.id}`
                         );
-                        setShareOpen(false);
+                        close();
                       }}
                     >
                       Copy link
@@ -261,7 +244,7 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
                       )}&title=${encodeURIComponent(album.title)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={() => setShareOpen(false)}
+                      onClick={close}
                     >
                       Reddit
                     </a>
@@ -272,13 +255,13 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
                       )}&text=${encodeURIComponent(album.title)}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={() => setShareOpen(false)}
+                      onClick={close}
                     >
                       X
                     </a>
-                  </div>
+                  </>
                 )}
-              </div>
+              </ShareDropdown>
             </div>
           </div>
         </div>

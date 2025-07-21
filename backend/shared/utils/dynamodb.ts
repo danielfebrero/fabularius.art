@@ -711,6 +711,16 @@ export class DynamoDBService {
   static async getUserSession(
     sessionId: string
   ): Promise<UserSessionEntity | null> {
+    // Diagnostic logging for debugging session bug
+    console.log("[DDB] getUserSession called:", {
+      sessionId,
+      table: TABLE_NAME,
+      region: process.env["AWS_REGION"],
+      env: {
+        IS_OFFLINE: process.env["IS_OFFLINE"],
+        NODE_ENV: process.env["NODE_ENV"],
+      },
+    });
     const result = await docClient.send(
       new GetCommand({
         TableName: TABLE_NAME,

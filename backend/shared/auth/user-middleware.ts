@@ -137,6 +137,14 @@ export class UserAuthMiddleware {
     const expires = new Date(expiresAt);
     const isOffline = process.env["IS_OFFLINE"] === "true";
 
+    // Logging for local debug
+    console.log(
+      "[AUTH] IS_OFFLINE raw:",
+      process.env["IS_OFFLINE"],
+      "| computed isOffline:",
+      isOffline
+    );
+
     const cookieParts = [
       `user_session=${sessionId}`,
       "HttpOnly",
@@ -145,12 +153,20 @@ export class UserAuthMiddleware {
     ];
 
     if (isOffline) {
-      cookieParts.push("SameSite=Lax");
+      // Try WITHOUT SameSite for local dev to fix OAuth session persistence
+      // Comment out the below line to test with/without SameSite
+      // cookieParts.push("SameSite=Lax");
+      // console.log("[AUTH] (Local) SameSite NOT SET for OAuth local dev test");
+      console.log(
+        "[AUTH] (Local) NOT setting SameSite for session cookie (testing for OAuth)"
+      );
     } else {
       cookieParts.push("Secure", "SameSite=None");
     }
 
-    return cookieParts.join("; ");
+    const cookieStr = cookieParts.join("; ");
+    console.log("[AUTH] Final Set-Cookie:", cookieStr);
+    return cookieStr;
   }
 
   static createClearSessionCookie(): string {

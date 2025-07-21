@@ -15,17 +15,35 @@ export const handler = async (
   }
 
   try {
+    // Log IS_OFFLINE for local/prod mode debugging
+    console.log("[ME] IS_OFFLINE:", process.env["IS_OFFLINE"]);
+    // Surface all possible debugging info for session/cookie bug on /user/me
+    const cookieHeader =
+      event.headers["Cookie"] || event.headers["cookie"] || "";
+    console.log("[ME] Incoming Cookie header:", cookieHeader);
+
     console.log("🔑 Checking authorizer context...");
     console.log(
       "📊 Request context:",
       JSON.stringify(event.requestContext, null, 2)
     );
+    if (event.requestContext && event.requestContext.authorizer) {
+      console.log(
+        "[ME] Authorizer context:",
+        JSON.stringify(event.requestContext.authorizer, null, 2)
+      );
+    } else {
+      console.log("[ME] Authorizer context missing or empty.");
+    }
 
     const userId = event.requestContext.authorizer?.["userId"] as string;
     console.log("👤 UserId from authorizer:", userId);
 
     if (!userId) {
-      console.log("❌ No userId found in authorizer context");
+      console.log(
+        "❌ No userId found in authorizer context. Cookie was:",
+        cookieHeader
+      );
       return ResponseUtil.unauthorized(event, "No user session found");
     }
 

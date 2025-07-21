@@ -214,6 +214,17 @@ export const handler = async (
       sessionId,
       expiresAt.toISOString()
     );
+    // LOG actual cookie for local dev (HTTP vs. HTTPS debugging)
+    console.log(
+      "[OAUTH] New session; login flow set-cookie:",
+      JSON.stringify({
+        sessionId,
+        IS_OFFLINE: process.env["IS_OFFLINE"],
+        SetCookie: sessionCookie,
+        origin: event.headers?.["origin"] || event.headers?.["Origin"],
+        referer: event.headers?.["referer"] || event.headers?.["Referer"],
+      })
+    );
 
     // Return success response with user data and redirect URL
     const response = ResponseUtil.success(event, {
