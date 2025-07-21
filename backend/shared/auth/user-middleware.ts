@@ -153,12 +153,10 @@ export class UserAuthMiddleware {
     ];
 
     if (isOffline) {
-      // Try WITHOUT SameSite for local dev to fix OAuth session persistence
-      // Comment out the below line to test with/without SameSite
-      // cookieParts.push("SameSite=Lax");
-      // console.log("[AUTH] (Local) SameSite NOT SET for OAuth local dev test");
+      // Set SameSite=Lax for local development to match admin sessions
+      cookieParts.push("SameSite=Lax");
       console.log(
-        "[AUTH] (Local) NOT setting SameSite for session cookie (testing for OAuth)"
+        "[AUTH] (Local) Setting SameSite=Lax for user session cookie"
       );
     } else {
       cookieParts.push("Secure", "SameSite=None");

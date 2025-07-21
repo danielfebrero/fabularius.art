@@ -26,7 +26,8 @@ const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
 const clientConfig: any = {};
 
 if (isLocal) {
-  clientConfig.endpoint = "http://pornspot-local-aws:4566";
+  clientConfig.endpoint =
+    process.env["LOCAL_AWS_ENDPOINT"] || "http://localhost:4566";
   clientConfig.region = "us-east-1";
   clientConfig.credentials = {
     accessKeyId: "test",
@@ -700,12 +701,21 @@ export class DynamoDBService {
 
   // User session operations
   static async createUserSession(session: UserSessionEntity): Promise<void> {
-    await docClient.send(
-      new PutCommand({
-        TableName: TABLE_NAME,
-        Item: session,
-      })
-    );
+    try {
+      await docClient.send(
+        new PutCommand({
+          TableName: TABLE_NAME,
+          Item: session,
+        })
+      );
+    } catch (err) {
+      console.error("[DDB] Failed to write user session", {
+        pk: session.PK,
+        table: TABLE_NAME,
+        err,
+      });
+      throw err;
+    }
   }
 
   static async getUserSession(
