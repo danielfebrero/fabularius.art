@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Heart, Bookmark, Eye, Calendar } from "lucide-react";
 import { useLikes } from "@/hooks/useLikes";
@@ -220,49 +221,51 @@ const UserDashboard: React.FC = () => {
               </p>
             )}
           </div>
+            </p>
+          )}
+        </div>
 
-          {/* Recent Bookmarks */}
-          <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-blue-500/10 p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-foreground flex items-center">
-                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3">
-                  <Bookmark className="h-4 w-4 text-white" />
-                </div>
-                Recent Bookmarks
-              </h3>
-              <Link href="/user/bookmarks">
-                <Button variant="ghost" size="sm" className="text-blue-500 hover:bg-blue-50">
-                  View All
-                </Button>
-              </Link>
-            </div>
+        {/* Recent Bookmarks */}
+        <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-blue-500/10 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-foreground flex items-center">
+              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3">
+                <Bookmark className="h-4 w-4 text-white" />
+              </div>
+              Recent Bookmarks
+            </h3>
+            <Link href="/user/bookmarks">
+              <Button variant="ghost" size="sm" className="text-blue-500 hover:bg-blue-50">
+                View All
+              </Button>
+            </Link>
+          </div>
 
-            {bookmarksLoading ? (
-              <div className="space-y-4">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="flex items-center space-x-4 p-4 bg-muted/20 rounded-lg">
-                      <div className="w-12 h-12 bg-muted rounded-md"></div>
-                      <div className="flex-1">
-                        <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-muted rounded w-1/2"></div>
-                      </div>
+          {bookmarksLoading ? (
+            <div className="space-y-4">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="flex items-center space-x-4 p-4 bg-muted/20 rounded-lg">
+                    <div className="w-12 h-12 bg-muted rounded-md"></div>
+                    <div className="flex-1">
+                      <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-muted rounded w-1/2"></div>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : recentBookmarks.length > 0 ? (
-              <div className="space-y-3">
-                {recentBookmarks.map((bookmark, index) => (
-                  <ContentItem key={index} interaction={bookmark} />
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground text-center py-8">
-                No bookmarked content yet. Start saving your favorites!
-              </p>
-            )}
-          </div>
+                </div>
+              ))}
+            </div>
+          ) : recentBookmarks.length > 0 ? (
+            <div className="space-y-3">
+              {recentBookmarks.map((bookmark, index) => (
+                <ContentItem key={index} interaction={bookmark} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-8">
+              No bookmarked content yet. Start saving your favorites!
+            </p>
+          )}
         </div>
       </div>
     </div>

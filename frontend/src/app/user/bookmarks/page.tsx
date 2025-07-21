@@ -160,15 +160,18 @@ const UserBookmarksPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-gradient-to-r from-blue-500/10 to-admin-secondary/10 rounded-xl border border-blue-500/20 shadow-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <Bookmark className="h-6 w-6 text-blue-500" />
-            <h1 className="text-2xl font-bold text-gray-900">
-              Bookmarked Content
-            </h1>
-            <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
-              {totalCount.toLocaleString()}
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-admin-secondary rounded-lg flex items-center justify-center">
+              <Bookmark className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">My Bookmarks</h1>
+              <p className="text-muted-foreground">Your saved favorites</p>
+            </div>
+            <span className="bg-blue-500/20 text-blue-600 text-sm font-semibold px-3 py-1.5 rounded-full">
+              {totalCount.toLocaleString()} bookmarks
             </span>
           </div>
 

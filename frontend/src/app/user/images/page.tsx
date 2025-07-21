@@ -54,13 +54,18 @@ const UserImagesPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm border p-6">
+      <div className="bg-gradient-to-r from-admin-accent/10 to-admin-primary/10 rounded-xl border border-admin-accent/20 shadow-lg p-6">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <ImageIcon className="h-6 w-6 text-purple-500" />
-            <h1 className="text-2xl font-bold text-gray-900">My Images</h1>
-            <span className="bg-purple-100 text-purple-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
-              {totalCount.toLocaleString()}
+            <div className="w-10 h-10 bg-gradient-to-br from-admin-accent to-admin-primary rounded-lg flex items-center justify-center">
+              <ImageIcon className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">My Images</h1>
+              <p className="text-muted-foreground">Your personal photo gallery</p>
+            </div>
+            <span className="bg-admin-accent/20 text-admin-accent text-sm font-semibold px-3 py-1.5 rounded-full">
+              {totalCount.toLocaleString()} images
             </span>
           </div>
 
@@ -69,6 +74,7 @@ const UserImagesPage: React.FC = () => {
               variant={viewMode === "grid" ? "default" : "ghost"}
               size="sm"
               onClick={() => setViewMode("grid")}
+              className={viewMode === "grid" ? "bg-admin-accent text-admin-accent-foreground hover:bg-admin-accent/90" : ""}
             >
               <Grid className="h-4 w-4" />
             </Button>
@@ -76,6 +82,7 @@ const UserImagesPage: React.FC = () => {
               variant={viewMode === "list" ? "default" : "ghost"}
               size="sm"
               onClick={() => setViewMode("list")}
+              className={viewMode === "list" ? "bg-admin-accent text-admin-accent-foreground hover:bg-admin-accent/90" : ""}
             >
               <List className="h-4 w-4" />
             </Button>
@@ -84,13 +91,13 @@ const UserImagesPage: React.FC = () => {
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-admin-accent/60" />
           <input
             type="text"
             placeholder="Search your images..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full pl-11 pr-4 py-3 border border-admin-accent/20 rounded-xl focus:ring-2 focus:ring-admin-accent/50 focus:border-admin-accent/50 bg-card/50 backdrop-blur-sm transition-all duration-200"
           />
         </div>
       </div>

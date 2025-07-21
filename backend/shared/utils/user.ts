@@ -423,10 +423,7 @@ export class UserUtil {
       };
     } else {
       // Create new Google user
-      const userId = await this.createGoogleUser(
-        googleId,
-        email
-      );
+      const userId = await this.createGoogleUser(googleId, email);
 
       return {
         userId,
