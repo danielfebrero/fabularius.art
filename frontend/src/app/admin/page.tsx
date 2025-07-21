@@ -3,6 +3,7 @@
 import { useAdminContext } from "../../contexts/AdminContext";
 import { useAdminStats } from "../../hooks/useAdminStats";
 import { Card } from "../../components/ui/Card";
+import { AnalyticsDashboard } from "../../components/admin/AnalyticsDashboard";
 
 export default function AdminDashboard() {
   const { user } = useAdminContext();
@@ -154,3 +155,9 @@ export default function AdminDashboard() {
     </div>
   );
 }
+
+// At the end of the AdminDashboard component's JSX (inside the return)
+{
+  /* --- Analytics Dashboard Section --- */
+}
+<AnalyticsDashboard />;

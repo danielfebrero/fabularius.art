@@ -326,3 +326,58 @@ export const interactionApi = {
 };
 
 export default API_URL;
+
+// Admin Analytics Time Series API Client
+export const adminAnalyticsApi = {
+  /**
+   * Query analytics time series.
+   * @param params
+   *  entityType: e.g. "album", "user"
+   *  entityId: string (ID of entity)
+   *  metricName: e.g. "views", "likes"
+   *  intervalType: "hour" | "day" | etc.
+   *  from: ISO start string
+   *  to: ISO end string
+   */
+  query: async ({
+    entityType,
+    entityId,
+    metricName,
+    intervalType,
+    from,
+    to,
+  }: {
+    entityType: string;
+    entityId: string;
+    metricName: string;
+    intervalType: string;
+    from: string;
+    to: string;
+  }): Promise<{
+    series: Array<{
+      window_start: string;
+      window_end: string;
+      value: number;
+      meta?: any;
+    }>;
+  }> => {
+    const url = new URL(`${API_URL}/admin/analytics/query`);
+    url.searchParams.set("entity_type", entityType);
+    url.searchParams.set("entity_id", entityId);
+    url.searchParams.set("metric_name", metricName);
+    url.searchParams.set("interval_type", intervalType);
+    url.searchParams.set("from", from);
+    url.searchParams.set("to", to);
+
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Analytics query failed: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+};
