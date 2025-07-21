@@ -110,7 +110,7 @@ export function GenerateClient() {
   const plan = getCurrentPlan();
 
   const canUseBulk = canUseBulkGeneration();
-  const canUseCustomSizes = plan === 'unlimited' || plan === 'pro'; // Based on canSelectImageSizes from plan
+  const canUseCustomSizes = plan === "unlimited" || plan === "pro"; // Based on canSelectImageSizes from plan
   const canUseLoras = canUseLoRAModels();
 
   const updateSettings = (key: keyof GenerationSettings, value: any) => {

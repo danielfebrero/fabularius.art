@@ -7,39 +7,40 @@ export type UserRole = "user" | "admin" | "moderator";
 // Specific permissions for different features
 export interface PlanPermissions {
   // Image generation limits
-  imagesPerMonth: number | 'unlimited';
-  imagesPerDay: number | 'unlimited';
-  
+  imagesPerMonth: number | "unlimited";
+  imagesPerDay: number | "unlimited";
+
   // Core features
   canGenerateImages: boolean;
   canUseAdvancedPrompts: boolean;
   canUseBulkGeneration: boolean;
   canUseLoRAModels: boolean;
   canSelectImageSizes: boolean;
-  
+
   // Content management
   canCreatePrivateContent: boolean;
   canMakeContentPublic: boolean;
-  
+
   // Quality & Processing
-  maxImageQuality: 'standard' | 'high' | 'premium';
-  processingPriority: 'standard' | 'high' | 'priority';
-  
+  maxImageQuality: "standard" | "high" | "premium";
+  processingPriority: "standard" | "high" | "priority";
+
   // Export & Downloads
   canDownloadOriginal: boolean;
   canExportContent: boolean;
-  
+
   // Community features
   canBookmark: boolean;
   canLike: boolean;
   canComment: boolean;
   canShare: boolean;
-  
+
   // Support & API
-  supportLevel: 'community' | 'email' | 'priority';
+  supportLevel: "community" | "email" | "priority";
   hasApiAccess: boolean;
   apiRequestsPerMonth: number;
-}export interface UserPlanInfo {
+}
+export interface UserPlanInfo {
   plan: UserPlan;
   isActive: boolean;
   subscriptionId?: string;

@@ -130,7 +130,7 @@ export interface UserEntity {
   isEmailVerified: boolean;
   lastLoginAt?: string;
   googleId?: string; // For Google OAuth integration
-  
+
   // Plan and subscription information
   role?: "user" | "admin" | "moderator"; // User role
   plan?: "free" | "starter" | "unlimited" | "pro"; // Current plan
@@ -138,10 +138,10 @@ export interface UserEntity {
   subscriptionStatus?: "active" | "canceled" | "expired"; // Subscription status
   planStartDate?: string; // When current plan started
   planEndDate?: string; // When current plan expires (for paid plans)
-  
+
   // Usage statistics
   imagesGeneratedThisMonth?: number; // Current month usage
-  imagesGeneratedToday?: number; // Today's usage  
+  imagesGeneratedToday?: number; // Today's usage
   lastGenerationAt?: string; // Last generation timestamp
 }
 

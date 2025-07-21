@@ -32,7 +32,6 @@ export function createUserWithPlan(
     usageStats: baseUser.usageStats || {
       imagesGeneratedThisMonth: 0,
       imagesGeneratedToday: 0,
-      storageUsedGB: 0,
     },
   };
 }
