@@ -18,7 +18,7 @@
     "install-sharp-dev": "npm uninstall sharp && npm install sharp",
     "install-bcrypt-lambda": "cd layers/shared/nodejs && npm uninstall bcrypt && npm install --os=linux --cpu=x64 bcrypt",
     "install-bcrypt-dev": "cd layers/shared/nodejs && npm uninstall bcrypt && npm install bcrypt",
-    "install-native-lambda": "npm run install-bcrypt-lambda && npm run install-sharp-lambda",
+    "install-native-lambda": "npm run install-bcrypt-lambda",
     "install-native-dev": "npm run install-bcrypt-dev && npm run install-sharp-dev",
     "test": "jest",
     "test:watch": "jest --watch",
