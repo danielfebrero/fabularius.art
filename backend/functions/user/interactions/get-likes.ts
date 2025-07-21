@@ -63,6 +63,7 @@ export const handler = async (
       interactionType: item.interactionType,
       targetType: item.targetType,
       targetId: item.targetId,
+      ...(item.albumId && { albumId: item.albumId }),
       createdAt: item.createdAt,
     }));
 
@@ -86,14 +87,34 @@ export const handler = async (
             };
           }
         } else if (interaction.targetType === "media") {
-          // For media, we need to find the album it belongs to
-          // Since we store media as ALBUM#{albumId}/MEDIA#{mediaId}, we need to query differently
-          // This is a limitation of our current structure - we'd need to store albumId in the interaction
-          // For now, we'll return basic info
-          targetDetails = {
-            id: interaction.targetId,
-            type: "media",
-          };
+          // For media, we can now use the stored albumId to get proper media details
+          if (interaction.albumId) {
+            const media = await DynamoDBService.getMedia(interaction.albumId, interaction.targetId);
+            if (media) {
+              // Also get the album to provide context
+              const album = await DynamoDBService.getAlbum(interaction.albumId);
+              targetDetails = {
+                id: media.id,
+                title: media.originalFilename,
+                type: "media",
+                mimeType: media.mimeType,
+                size: media.size,
+                thumbnailUrls: media.thumbnailUrls,
+                url: media.url,
+                albumId: interaction.albumId,
+                albumTitle: album?.title || "Unknown Album",
+                createdAt: media.createdAt,
+                updatedAt: media.updatedAt,
+              };
+            }
+          } else {
+            // Fallback for old interactions without albumId
+            targetDetails = {
+              id: interaction.targetId,
+              type: "media",
+              title: `Media ${interaction.targetId}`,
+            };
+          }
         }
 
         return {

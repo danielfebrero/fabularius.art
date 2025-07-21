@@ -97,6 +97,7 @@ export const handler = async (
         interactionType: "like",
         targetType,
         targetId,
+        ...(targetType === "media" && albumId ? { albumId } : {}),
         createdAt: now,
       };
 

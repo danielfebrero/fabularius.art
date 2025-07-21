@@ -97,6 +97,7 @@ export const handler = async (
         interactionType: "bookmark",
         targetType,
         targetId,
+        ...(targetType === "media" && albumId ? { albumId } : {}),
         createdAt: now,
       };
 

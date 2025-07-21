@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, Search, Grid, List, Calendar, Image } from "lucide-react";
+import { Heart, Search, Grid, List, Calendar, Image, FolderOpen } from "lucide-react";
 import { useLikes } from "@/hooks/useLikes";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -70,21 +70,30 @@ const UserLikesPage: React.FC = () => {
           )}
 
           <div className="p-4">
-            <h3 className="font-medium text-foreground line-clamp-2 mb-2">
-              {interaction.target?.title ||
-                `${interaction.targetType} ${interaction.targetId}`}
-            </h3>
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span className="capitalize">{interaction.targetType}</span>
-              <span className="flex items-center">
-                <Calendar className="h-3 w-3 mr-1" />
-                {formatDate(interaction.createdAt)}
-              </span>
-            </div>
-            {interaction.target?.mediaCount && (
-              <div className="mt-2 text-xs text-muted-foreground">
-                {interaction.target.mediaCount} items
-              </div>
+            {interaction.targetType === "album" && (
+              <>
+                <h3 className="font-medium text-foreground line-clamp-2 mb-2">
+                  {interaction.target?.title ||
+                    `Album ${interaction.targetId}`}
+                </h3>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1 text-blue-600">
+                      <FolderOpen className="h-3 w-3" />
+                      <span className="capitalize font-medium">Album</span>
+                    </div>
+                  </div>
+                  <span className="flex items-center">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    {formatDate(interaction.createdAt)}
+                  </span>
+                </div>
+                {interaction.target?.mediaCount && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {interaction.target.mediaCount} items
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -116,20 +125,36 @@ const UserLikesPage: React.FC = () => {
           )}
 
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-foreground truncate mb-1">
-              {interaction.target?.title ||
-                `${interaction.targetType} ${interaction.targetId}`}
-            </h3>
-            <div className="flex items-center justify-between text-sm text-muted-foreground">
-              <span className="capitalize">{interaction.targetType}</span>
-              {interaction.target?.mediaCount && (
-                <span>{interaction.target.mediaCount} items</span>
-              )}
-            </div>
-            <div className="flex items-center text-xs text-muted-foreground mt-1">
-              <Calendar className="h-3 w-3 mr-1" />
-              {formatDate(interaction.createdAt)}
-            </div>
+            {interaction.targetType === "album" ? (
+              <>
+                <h3 className="font-medium text-foreground truncate mb-1">
+                  {interaction.target?.title || `Album ${interaction.targetId}`}
+                </h3>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1 text-blue-600">
+                      <FolderOpen className="h-3 w-3" />
+                      <span className="font-medium">Album</span>
+                    </div>
+                    {interaction.target?.mediaCount && (
+                      <span>{interaction.target.mediaCount} items</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center text-xs text-muted-foreground mt-1">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  {formatDate(interaction.createdAt)}
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center text-xs text-muted-foreground">
+                <Calendar className="h-3 w-3 mr-1" />
+                {formatDate(interaction.createdAt)}
+                {interaction.target?.albumTitle && (
+                  <span className="ml-2 text-xs">from {interaction.target.albumTitle}</span>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex-shrink-0">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bookmark, Search, Grid, List, Calendar, Image } from "lucide-react";
+import { Bookmark, Search, Grid, List, Calendar, Image, FolderOpen } from "lucide-react";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -66,27 +66,36 @@ const UserBookmarksPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="aspect-video bg-gray-100 flex items-center justify-center">
-              <Image className="h-12 w-12 text-gray-400" aria-hidden="true" />
+            <div className="aspect-video bg-muted/50 flex items-center justify-center">
+              <Image className="h-12 w-12 text-muted-foreground" />
             </div>
           )}
 
           <div className="p-4">
-            <h3 className="font-medium text-gray-900 line-clamp-2 mb-2">
-              {interaction.target?.title ||
-                `${interaction.targetType} ${interaction.targetId}`}
-            </h3>
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <span className="capitalize">{interaction.targetType}</span>
-              <span className="flex items-center">
-                <Calendar className="h-3 w-3 mr-1" />
-                {formatDate(interaction.createdAt)}
-              </span>
-            </div>
-            {interaction.target?.mediaCount && (
-              <div className="mt-2 text-xs text-gray-500">
-                {interaction.target.mediaCount} items
-              </div>
+            {interaction.targetType === "album" && (
+              <>
+                <h3 className="font-medium text-foreground line-clamp-2 mb-2">
+                  {interaction.target?.title ||
+                    `Album ${interaction.targetId}`}
+                </h3>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1 text-blue-600">
+                      <FolderOpen className="h-3 w-3" />
+                      <span className="capitalize font-medium">Album</span>
+                    </div>
+                  </div>
+                  <span className="flex items-center">
+                    <Calendar className="h-3 w-3 mr-1" />
+                    {formatDate(interaction.createdAt)}
+                  </span>
+                </div>
+                {interaction.target?.mediaCount && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    {interaction.target.mediaCount} items
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -112,26 +121,42 @@ const UserBookmarksPage: React.FC = () => {
               loading="lazy"
             />
           ) : (
-            <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">
-              <Image className="h-6 w-6 text-gray-400" />
+            <div className="w-16 h-16 bg-muted/50 rounded-md flex items-center justify-center flex-shrink-0">
+              <Image className="h-6 w-6 text-muted-foreground" />
             </div>
           )}
 
           <div className="flex-1 min-w-0">
-            <h3 className="font-medium text-gray-900 truncate">
-              {interaction.target?.title ||
-                `${interaction.targetType} ${interaction.targetId}`}
-            </h3>
-            <div className="flex items-center space-x-4 mt-1 text-sm text-gray-500">
-              <span className="capitalize">{interaction.targetType}</span>
-              {interaction.target?.mediaCount && (
-                <span>{interaction.target.mediaCount} items</span>
-              )}
-              <span className="flex items-center">
+            {interaction.targetType === "album" ? (
+              <>
+                <h3 className="font-medium text-foreground truncate mb-1">
+                  {interaction.target?.title || `Album ${interaction.targetId}`}
+                </h3>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-1 text-blue-600">
+                      <FolderOpen className="h-3 w-3" />
+                      <span className="font-medium">Album</span>
+                    </div>
+                    {interaction.target?.mediaCount && (
+                      <span>{interaction.target.mediaCount} items</span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center text-xs text-muted-foreground mt-1">
+                  <Calendar className="h-3 w-3 mr-1" />
+                  {formatDate(interaction.createdAt)}
+                </div>
+              </>
+            ) : (
+              <div className="flex items-center text-xs text-muted-foreground">
                 <Calendar className="h-3 w-3 mr-1" />
                 {formatDate(interaction.createdAt)}
-              </span>
-            </div>
+                {interaction.target?.albumTitle && (
+                  <span className="ml-2 text-xs">from {interaction.target.albumTitle}</span>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex-shrink-0">
@@ -199,13 +224,13 @@ const UserBookmarksPage: React.FC = () => {
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-admin-primary/60" />
           <input
             type="text"
             placeholder="Search your bookmarks..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-3 bg-card/50 border border-admin-primary/20 rounded-lg focus:ring-2 focus:ring-admin-primary/30 focus:border-admin-primary/50 transition-all duration-200 text-foreground placeholder:text-muted-foreground"
           />
         </div>
       </div>
