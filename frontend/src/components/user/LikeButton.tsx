@@ -17,6 +17,7 @@ interface LikeButtonProps {
   size?: "sm" | "md" | "lg";
   variant?: "default" | "ghost" | "outline";
   className?: string;
+  useCache?: boolean; // If true, only use cache (don't make individual API calls)
 }
 
 export const LikeButton: React.FC<LikeButtonProps> = ({
@@ -28,12 +29,14 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
   size = "md",
   variant = "ghost",
   className,
+  useCache = false,
 }) => {
   const { user } = useUser();
   const { toggleLike, isToggling, error } = useInteractions();
   const { userLiked, updateStatusOptimistically } = useTargetInteractionStatus(
     targetType,
-    targetId
+    targetId,
+    { useCache }
   );
   const [likeCount, setLikeCount] = useState<number | null>(null);
 

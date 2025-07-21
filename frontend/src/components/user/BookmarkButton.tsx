@@ -17,6 +17,7 @@ interface BookmarkButtonProps {
   size?: "sm" | "md" | "lg";
   variant?: "default" | "ghost" | "outline";
   className?: string;
+  useCache?: boolean; // If true, only use cache (don't make individual API calls)
 }
 
 export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
@@ -28,11 +29,12 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
   size = "md",
   variant = "ghost",
   className,
+  useCache = false,
 }) => {
   const { user } = useUser();
   const { toggleBookmark, isToggling, error } = useInteractions();
   const { userBookmarked, updateStatusOptimistically } =
-    useTargetInteractionStatus(targetType, targetId);
+    useTargetInteractionStatus(targetType, targetId, { useCache });
   const [bookmarkCount, setBookmarkCount] = useState<number | null>(null);
 
   // Use the cached status instead of local state

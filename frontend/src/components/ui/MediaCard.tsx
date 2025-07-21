@@ -118,6 +118,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
                 size="sm"
                 variant="default"
                 className="bg-white/90 hover:bg-white shadow-lg"
+                useCache={true}
               />
             </span>
             <span onClick={handleActionClick} onTouchEnd={handleActionClick}>
@@ -128,6 +129,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
                 size="sm"
                 variant="default"
                 className="bg-white/90 hover:bg-white shadow-lg"
+                useCache={true}
               />
             </span>
           </div>

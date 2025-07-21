@@ -62,13 +62,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
 
     const { data, error: apiError } = result;
     if (data && data.media) {
-      // Preload interaction statuses for newly loaded media items
-      const newMediaTargets = data.media.map((mediaItem) => ({
-        targetType: "media" as const,
-        targetId: mediaItem.id,
-      }));
-      preloadStatuses(newMediaTargets).catch(console.error);
-
       setMedia((prevMedia) => [...prevMedia, ...data.media]);
       setPagination(data.pagination);
     } else {
