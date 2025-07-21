@@ -126,3 +126,6 @@ export interface ThumbnailUrls {
 
 // User authentication types
 export * from "./user";
+
+// Permission and plan types
+export * from "./permissions";

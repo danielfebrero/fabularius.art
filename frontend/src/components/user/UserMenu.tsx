@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useUser } from "@/hooks/useUser";
 import { useAdminContext } from "@/contexts/AdminContext";
 import { User } from "@/types/user";
+import { UserPlanBadge } from "@/components/UserPlanBadge";
 
 interface UserMenuProps {
   user: User;
@@ -104,6 +105,9 @@ export function UserMenu({ user }: UserMenuProps) {
                 <div className="text-xs text-muted-foreground truncate">
                   {user.email}
                 </div>
+                <div className="mt-2">
+                  <UserPlanBadge />
+                </div>
                 {!user.isEmailVerified && (
                   <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
                     Email not verified
@@ -187,6 +191,30 @@ export function UserMenu({ user }: UserMenuProps) {
                   />
                 </svg>
                 <span>Settings</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() =>
+                handleMenuItemClick(() => router.push("/pricing"))
+              }
+              className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
+            >
+              <div className="flex items-center space-x-2">
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                  />
+                </svg>
+                <span>Manage Plan</span>
               </div>
             </button>
 
