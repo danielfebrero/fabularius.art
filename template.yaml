@@ -579,6 +579,11 @@ Resources:
             TableName: !Ref MediaTable
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+              Resource: !GetAtt MediaTable.Arn
 
   AdminMeFunction:
     Type: AWS::Serverless::Function
@@ -896,6 +901,11 @@ Resources:
             TableName: !Ref MediaTable
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+              Resource: !GetAtt MediaTable.Arn
 
   UserMeFunction:
     Type: AWS::Serverless::Function

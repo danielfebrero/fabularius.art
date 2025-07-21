@@ -147,7 +147,9 @@ const UserBookmarksPage: React.FC = () => {
       <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-8 text-center">
         <div className="text-admin-primary mb-4">
           <Bookmark className="h-12 w-12 mx-auto mb-2" />
-          <p className="text-lg font-medium text-foreground">Failed to load bookmarks</p>
+          <p className="text-lg font-medium text-foreground">
+            Failed to load bookmarks
+          </p>
           <p className="text-sm text-muted-foreground mt-1">{error}</p>
         </div>
         <Button onClick={refresh} variant="outline">

@@ -72,7 +72,8 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">{/* Sidebar Navigation */}
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Sidebar Navigation */}
           <aside className="lg:w-64 flex-shrink-0">
             <nav className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-4">
               <ul className="space-y-2">

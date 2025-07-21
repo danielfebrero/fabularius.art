@@ -132,12 +132,6 @@ export function AuthSuccessClient() {
             </Button>
           </Link>
         )}
-
-        <Link href="/albums" className="block">
-          <Button variant="ghost" className="w-full">
-            Browse Albums
-          </Button>
-        </Link>
       </div>
 
       {/* Auto-redirect Info */}

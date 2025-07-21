@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Heart, Bookmark, Eye } from "lucide-react";
 import { Album } from "../../types/index";
 import { Card, CardContent, CardHeader } from "./Card";
 import { cn, formatDateShort, ThumbnailContext } from "../../lib/utils";
@@ -19,15 +20,15 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
   columns,
 }) => {
   return (
-    <Link href={`/albums/${album.id}`} className="group block">
-      <Card
-        className={cn(
-          "h-full transition-all duration-200 hover:shadow-lg hover:scale-[1.02]",
-          className
-        )}
-      >
-        <CardHeader className="p-0">
-          <div className="aspect-square relative overflow-hidden rounded-t-lg bg-muted">
+    <Card
+      className={cn(
+        "h-full transition-all duration-200 hover:shadow-lg hover:scale-[1.02] group",
+        className
+      )}
+    >
+      <CardHeader className="p-0">
+        <div className="aspect-square relative overflow-hidden rounded-t-lg bg-muted">
+          <Link href={`/albums/${album.id}`} className="block w-full h-full">
             {album.coverImageUrl ? (
               <ResponsivePicture
                 thumbnailUrls={composeThumbnailUrls(album.thumbnailUrls)}
@@ -59,41 +60,97 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
                 </div>
               </div>
             )}
-            {album.mediaCount > 0 && (
-              <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
-                {album.mediaCount} {album.mediaCount === 1 ? "item" : "items"}
-              </div>
-            )}
+          </Link>
+          
+          {/* Media count overlay */}
+          {album.mediaCount > 0 && (
+            <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
+              {album.mediaCount} {album.mediaCount === 1 ? "item" : "items"}
+            </div>
+          )}
+
+          {/* Action buttons overlay */}
+          <div className="absolute top-2 left-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            {/* Like Button Placeholder */}
+            <button
+              className="h-8 w-8 bg-white/90 hover:bg-white shadow-lg rounded-md flex items-center justify-center transition-colors duration-200 hover:text-red-500"
+              title="Like"
+            >
+              <Heart className="h-4 w-4" />
+            </button>
+            
+            {/* Bookmark Button Placeholder */}
+            <button
+              className="h-8 w-8 bg-white/90 hover:bg-white shadow-lg rounded-md flex items-center justify-center transition-colors duration-200 hover:text-blue-500"
+              title="Bookmark"
+            >
+              <Bookmark className="h-4 w-4" />
+            </button>
           </div>
-        </CardHeader>
-        <CardContent className="p-4">
-          <div className="space-y-2">
+        </div>
+      </CardHeader>
+      
+      <CardContent className="p-4">
+        <div className="space-y-3">
+          <Link href={`/albums/${album.id}`}>
             <h3 className="font-semibold text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">
               {album.title}
             </h3>
-            {album.tags && album.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {album.tags.slice(0, 3).map((tag, index) => (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-admin-primary/10 to-admin-secondary/10 text-admin-primary border border-admin-primary/20"
-                  >
-                    {tag}
-                  </span>
-                ))}
-                {album.tags.length > 3 && (
-                  <span className="text-xs text-muted-foreground font-medium">
-                    +{album.tags.length - 3} more
-                  </span>
-                )}
+          </Link>
+          
+          {album.tags && album.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {album.tags.slice(0, 3).map((tag, index) => (
+                <span
+                  key={index}
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-admin-primary/10 to-admin-secondary/10 text-admin-primary border border-admin-primary/20"
+                >
+                  {tag}
+                </span>
+              ))}
+              {album.tags.length > 3 && (
+                <span className="text-xs text-muted-foreground font-medium">
+                  +{album.tags.length - 3} more
+                </span>
+              )}
+            </div>
+          )}
+          
+          {/* Interaction stats */}
+          <div className="flex items-center justify-between pt-2 border-t border-border/50">
+            {/* Placeholder interaction counts */}
+            <div className="flex items-center gap-3">
+              {/* Likes */}
+              <div className="flex items-center gap-1">
+                <Heart className="h-3 w-3 text-red-500 fill-current" />
+                <span className="text-xs text-muted-foreground font-medium">
+                  {Math.floor(Math.random() * 50) + 5}
+                </span>
               </div>
-            )}
-            <div className="flex items-center justify-between text-xs text-muted-foreground pt-2">
-              <span>{formatDateShort(album.createdAt)}</span>
+              
+              {/* Bookmarks */}
+              <div className="flex items-center gap-1">
+                <Bookmark className="h-3 w-3 text-blue-500 fill-current" />
+                <span className="text-xs text-muted-foreground font-medium">
+                  {Math.floor(Math.random() * 20) + 2}
+                </span>
+              </div>
+            </div>
+            
+            {/* View counter placeholder */}
+            <div className="flex items-center gap-1">
+              <Eye className="h-3 w-3 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground font-medium">
+                {Math.floor(Math.random() * 1000) + 100}
+              </span>
             </div>
           </div>
-        </CardContent>
-      </Card>
-    </Link>
+          
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>{formatDateShort(album.createdAt)}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
