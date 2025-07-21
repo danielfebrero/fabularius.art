@@ -42,9 +42,11 @@ export const handler = async (
 
     // Fallback for local development or when authorizer context is missing
     if (!userId) {
-      console.log("⚠️ No userId from authorizer, falling back to session validation");
+      console.log(
+        "⚠️ No userId from authorizer, falling back to session validation"
+      );
       const validation = await UserAuthMiddleware.validateSession(event);
-      
+
       if (!validation.isValid || !validation.user) {
         console.log("❌ User session validation failed");
         console.log(
@@ -53,7 +55,7 @@ export const handler = async (
         );
         return ResponseUtil.unauthorized(event, "No user session found");
       }
-      
+
       userId = validation.user.userId;
       console.log("✅ Got userId from session validation:", userId);
     }
