@@ -34,7 +34,7 @@ export function DiscoverClient({
   return (
     <AlbumGrid
       albums={albums}
-      context="homepage"
+      context="discover"
       loadMore={loadMore}
       loading={loading}
       hasMore={pagination?.hasNext || false}
