@@ -122,19 +122,6 @@ export function UsageLimitsDisplay() {
             </div>
           </div>
         </div>
-
-        {/* Storage */}
-        <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">Storage used</span>
-          <div className="text-right">
-            <div className="font-medium">
-              {user.usageStats.storageUsedGB.toFixed(1)} GB
-              {limits.maxStorageGB === "unlimited"
-                ? ""
-                : ` / ${limits.maxStorageGB} GB`}
-            </div>
-          </div>
-        </div>
       </CardContent>
     </Card>
   );
@@ -157,8 +144,6 @@ export function FeatureAvailability({ feature }: { feature: string }) {
         return limits.canUseLoRAModels;
       case "private-content":
         return limits.canCreatePrivateContent;
-      case "custom-parameters":
-        return limits.canUseCustomParameters;
       default:
         return false;
     }

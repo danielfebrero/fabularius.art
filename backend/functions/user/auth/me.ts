@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "@shared/utils/response";
 import { DynamoDBService } from "@shared/utils/dynamodb";
-import { UserUtil } from "@shared/utils/user";
+import { PlanUtil } from "@shared/utils/plan";
 import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 
 export const handler = async (
@@ -72,9 +72,9 @@ export const handler = async (
       return ResponseUtil.notFound(event, "User not found");
     }
 
-    // Return user info (without sensitive data)
-    const user = UserUtil.sanitizeUserForResponse(userEntity);
-    console.log("✅ Returning sanitized user data:", user);
+    // Return enhanced user info with plan information
+    const user = await PlanUtil.enhanceUser(userEntity);
+    console.log("✅ Returning enhanced user data:", user);
 
     return ResponseUtil.success(event, { user });
   } catch (error) {

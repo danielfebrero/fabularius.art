@@ -25,8 +25,6 @@ interface PermissionsContextType {
   canUseBulkGeneration: () => boolean;
   canUseLoRAModels: () => boolean;
   canCreatePrivateContent: () => boolean;
-  canUseCustomParameters: () => boolean;
-  hasStorageSpace: (sizeGB: number) => boolean;
 
   // Role-based permission checks
   canAccessAdmin: () => boolean;
@@ -120,19 +118,6 @@ export function PermissionsProvider({
     return planPermissions.canCreatePrivateContent && user.planInfo.isActive;
   };
 
-  const canUseCustomParameters = (): boolean => {
-    if (!user || !planPermissions) return false;
-    return planPermissions.canUseCustomParameters && user.planInfo.isActive;
-  };
-
-  const hasStorageSpace = (sizeGB: number): boolean => {
-    if (!user || !planPermissions) return false;
-    if (planPermissions.maxStorageGB === "unlimited") return true;
-    return (
-      user.usageStats.storageUsedGB + sizeGB <= planPermissions.maxStorageGB
-    );
-  };
-
   // Role-based permission checks
   const canAccessAdmin = (): boolean => {
     if (!user || !rolePermissions) return false;
@@ -162,8 +147,6 @@ export function PermissionsProvider({
             return canUseBulkGeneration();
           case "lora":
             return canUseLoRAModels();
-          case "custom":
-            return canUseCustomParameters();
           case "private":
             return canCreatePrivateContent();
           default:
@@ -224,10 +207,6 @@ export function PermissionsProvider({
           user.usageStats.imagesGeneratedToday < planPermissions.imagesPerDay
         );
 
-      case "maxStorageGB":
-        if (planPermissions.maxStorageGB === "unlimited") return true;
-        return user.usageStats.storageUsedGB < planPermissions.maxStorageGB;
-
       default:
         return true;
     }
@@ -242,8 +221,6 @@ export function PermissionsProvider({
     canUseBulkGeneration,
     canUseLoRAModels,
     canCreatePrivateContent,
-    canUseCustomParameters,
-    hasStorageSpace,
     canAccessAdmin,
     canManageUsers,
     canModerateContent,

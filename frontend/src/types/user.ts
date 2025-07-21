@@ -267,7 +267,6 @@ export interface UserWithPlanInfo extends User {
   usageStats?: {
     imagesGeneratedThisMonth: number;
     imagesGeneratedToday: number;
-    storageUsedGB: number;
     lastGenerationAt?: string;
   };
 }

@@ -7,45 +7,39 @@ export type UserRole = "user" | "admin" | "moderator";
 // Specific permissions for different features
 export interface PlanPermissions {
   // Image generation limits
-  imagesPerMonth: number | "unlimited";
-  imagesPerDay: number | "unlimited";
-
-  // Image generation features
+  imagesPerMonth: number | 'unlimited';
+  imagesPerDay: number | 'unlimited';
+  
+  // Core features
   canGenerateImages: boolean;
   canUseAdvancedPrompts: boolean;
   canUseBulkGeneration: boolean;
-  canUseCustomParameters: boolean;
   canUseLoRAModels: boolean;
   canSelectImageSizes: boolean;
-
-  // Content privacy
+  
+  // Content management
   canCreatePrivateContent: boolean;
   canMakeContentPublic: boolean;
-
-  // Quality and processing
-  maxImageQuality: "standard" | "high" | "premium";
-  processingPriority: "standard" | "high" | "priority";
-
-  // Storage and management
-  maxStorageGB: number | "unlimited";
+  
+  // Quality & Processing
+  maxImageQuality: 'standard' | 'high' | 'premium';
+  processingPriority: 'standard' | 'high' | 'priority';
+  
+  // Export & Downloads
   canDownloadOriginal: boolean;
   canExportContent: boolean;
-
+  
   // Community features
   canBookmark: boolean;
   canLike: boolean;
   canComment: boolean;
   canShare: boolean;
-
-  // Support level
-  supportLevel: "community" | "email" | "priority";
-
-  // API access (future feature)
+  
+  // Support & API
+  supportLevel: 'community' | 'email' | 'priority';
   hasApiAccess: boolean;
   apiRequestsPerMonth: number;
-}
-
-export interface UserPlanInfo {
+}export interface UserPlanInfo {
   plan: UserPlan;
   isActive: boolean;
   subscriptionId?: string;
@@ -63,7 +57,6 @@ export interface UserWithPlan extends User {
   usageStats: {
     imagesGeneratedThisMonth: number;
     imagesGeneratedToday: number;
-    storageUsedGB: number;
     lastGenerationAt?: string;
   };
 }
@@ -76,14 +69,12 @@ export const PLAN_DEFINITIONS: Record<UserPlan, PlanPermissions> = {
     canGenerateImages: true,
     canUseAdvancedPrompts: false,
     canUseBulkGeneration: false,
-    canUseCustomParameters: false,
     canUseLoRAModels: false,
     canSelectImageSizes: false,
     canCreatePrivateContent: false,
     canMakeContentPublic: true,
     maxImageQuality: "standard",
     processingPriority: "standard",
-    maxStorageGB: 1,
     canDownloadOriginal: true,
     canExportContent: false,
     canBookmark: true,
@@ -100,14 +91,12 @@ export const PLAN_DEFINITIONS: Record<UserPlan, PlanPermissions> = {
     canGenerateImages: true,
     canUseAdvancedPrompts: true,
     canUseBulkGeneration: false,
-    canUseCustomParameters: false,
     canUseLoRAModels: false,
     canSelectImageSizes: false,
     canCreatePrivateContent: false,
     canMakeContentPublic: true,
     maxImageQuality: "high",
     processingPriority: "standard",
-    maxStorageGB: 5,
     canDownloadOriginal: true,
     canExportContent: true,
     canBookmark: true,
@@ -124,14 +113,12 @@ export const PLAN_DEFINITIONS: Record<UserPlan, PlanPermissions> = {
     canGenerateImages: true,
     canUseAdvancedPrompts: true,
     canUseBulkGeneration: false,
-    canUseCustomParameters: true,
     canUseLoRAModels: false,
     canSelectImageSizes: true,
     canCreatePrivateContent: false,
     canMakeContentPublic: true,
     maxImageQuality: "high",
     processingPriority: "high",
-    maxStorageGB: "unlimited",
     canDownloadOriginal: true,
     canExportContent: true,
     canBookmark: true,
@@ -148,14 +135,12 @@ export const PLAN_DEFINITIONS: Record<UserPlan, PlanPermissions> = {
     canGenerateImages: true,
     canUseAdvancedPrompts: true,
     canUseBulkGeneration: true,
-    canUseCustomParameters: true,
     canUseLoRAModels: true,
     canSelectImageSizes: true,
     canCreatePrivateContent: true,
     canMakeContentPublic: true,
     maxImageQuality: "premium",
     processingPriority: "priority",
-    maxStorageGB: "unlimited",
     canDownloadOriginal: true,
     canExportContent: true,
     canBookmark: true,

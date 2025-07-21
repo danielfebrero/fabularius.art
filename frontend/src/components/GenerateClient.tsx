@@ -104,14 +104,13 @@ export function GenerateClient() {
     getCurrentPlan,
     canUseBulkGeneration,
     canUseLoRAModels,
-    canUseCustomParameters,
   } = useUserPermissions();
 
   const { allowed, remaining } = checkGenerationLimits(settings.batchCount);
   const plan = getCurrentPlan();
 
   const canUseBulk = canUseBulkGeneration();
-  const canUseCustomSizes = canUseCustomParameters();
+  const canUseCustomSizes = plan === 'unlimited' || plan === 'pro'; // Based on canSelectImageSizes from plan
   const canUseLoras = canUseLoRAModels();
 
   const updateSettings = (key: keyof GenerationSettings, value: any) => {

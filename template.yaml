@@ -1272,6 +1272,36 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
 
+  # AI Generation Functions
+  GenerationCreateFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-generation-create"
+      CodeUri: backend/dist/functions/generation/
+      Handler: generate.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        GeneratePost:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /generation/generate
+            Method: POST
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsGenerate:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /generation/generate
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
 Outputs:
   ApiGatewayUrl:
     Description: API Gateway endpoint URL
