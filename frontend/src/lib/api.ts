@@ -220,6 +220,28 @@ export const interactionApi = {
     return response.json();
   },
 
+  // Track view
+  trackView: async (request: {
+    targetType: "album" | "media";
+    targetId: string;
+  }): Promise<{ success: boolean }> => {
+    const response = await fetch(`${API_URL}/user/interactions/view`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      // Don't throw error for view tracking - it's not critical
+      console.warn(`View tracking failed: ${response.statusText}`);
+      return { success: false };
+    }
+
+    return { success: true };
+  },
+
   // Get user's likes
   getLikes: async (
     page: number = 1,

@@ -47,6 +47,44 @@ const TABLE_NAME = process.env["DYNAMODB_TABLE"]!;
 console.log("📋 Table name from env:", TABLE_NAME);
 
 export class DynamoDBService {
+  // Helper method to convert AlbumEntity to Album
+  private static convertAlbumEntityToAlbum(entity: AlbumEntity): Album {
+    const album: Album = {
+      id: entity.id,
+      title: entity.title,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+      mediaCount: entity.mediaCount,
+      isPublic: entity.isPublic === "true",
+    };
+
+    if (entity.tags !== undefined) {
+      album.tags = entity.tags;
+    }
+
+    if (entity.coverImageUrl !== undefined) {
+      album.coverImageUrl = entity.coverImageUrl;
+    }
+
+    if (entity.thumbnailUrls !== undefined) {
+      album.thumbnailUrls = entity.thumbnailUrls;
+    }
+
+    if (entity.likeCount !== undefined) {
+      album.likeCount = entity.likeCount;
+    }
+
+    if (entity.bookmarkCount !== undefined) {
+      album.bookmarkCount = entity.bookmarkCount;
+    }
+
+    if (entity.viewCount !== undefined) {
+      album.viewCount = entity.viewCount;
+    }
+
+    return album;
+  }
+
   // Album operations
   static async createAlbum(album: AlbumEntity): Promise<void> {
     await docClient.send(
@@ -70,6 +108,11 @@ export class DynamoDBService {
     );
 
     return (result.Item as AlbumEntity) || null;
+  }
+
+  static async getAlbumForAPI(albumId: string): Promise<Album | null> {
+    const entity = await this.getAlbum(albumId);
+    return entity ? this.convertAlbumEntityToAlbum(entity) : null;
   }
 
   static async updateAlbum(
@@ -120,7 +163,7 @@ export class DynamoDBService {
     limit: number = 20,
     lastEvaluatedKey?: Record<string, any>
   ): Promise<{
-    albums: AlbumEntity[];
+    albums: Album[];
     lastEvaluatedKey?: Record<string, any>;
   }> {
     console.log("🔄 About to call DynamoDBService.listAlbums");
@@ -141,11 +184,15 @@ export class DynamoDBService {
       })
     );
 
+    const albumEntities = (result.Items as AlbumEntity[]) || [];
+
     const response: {
-      albums: AlbumEntity[];
+      albums: Album[];
       lastEvaluatedKey?: Record<string, any>;
     } = {
-      albums: (result.Items as AlbumEntity[]) || [],
+      albums: albumEntities.map((entity) =>
+        this.convertAlbumEntityToAlbum(entity)
+      ),
     };
 
     if (result.LastEvaluatedKey) {
@@ -185,30 +232,9 @@ export class DynamoDBService {
     const albumEntities = (result.Items as AlbumEntity[]) || [];
 
     // Convert AlbumEntity to Album format for API response
-    const albums: Album[] = albumEntities.map((entity) => {
-      const album: Album = {
-        id: entity.id,
-        title: entity.title,
-        createdAt: entity.createdAt,
-        updatedAt: entity.updatedAt,
-        mediaCount: entity.mediaCount,
-        isPublic: entity.isPublic === "true",
-      };
-
-      if (entity.tags !== undefined) {
-        album.tags = entity.tags;
-      }
-
-      if (entity.coverImageUrl !== undefined) {
-        album.coverImageUrl = entity.coverImageUrl;
-      }
-
-      if (entity.thumbnailUrls !== undefined) {
-        album.thumbnailUrls = entity.thumbnailUrls;
-      }
-
-      return album;
-    });
+    const albums: Album[] = albumEntities.map((entity) =>
+      this.convertAlbumEntityToAlbum(entity)
+    );
 
     const response: {
       albums: Album[];
@@ -222,6 +248,64 @@ export class DynamoDBService {
     }
 
     return response;
+  }
+
+  // Album counter operations
+  static async incrementAlbumLikeCount(
+    albumId: string,
+    increment: number = 1
+  ): Promise<void> {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `ALBUM#${albumId}`,
+          SK: "METADATA",
+        },
+        UpdateExpression: "ADD likeCount :inc",
+        ExpressionAttributeValues: {
+          ":inc": increment,
+        },
+      })
+    );
+  }
+
+  static async incrementAlbumBookmarkCount(
+    albumId: string,
+    increment: number = 1
+  ): Promise<void> {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `ALBUM#${albumId}`,
+          SK: "METADATA",
+        },
+        UpdateExpression: "ADD bookmarkCount :inc",
+        ExpressionAttributeValues: {
+          ":inc": increment,
+        },
+      })
+    );
+  }
+
+  static async incrementAlbumViewCount(
+    albumId: string,
+    increment: number = 1
+  ): Promise<void> {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `ALBUM#${albumId}`,
+          SK: "METADATA",
+        },
+        UpdateExpression: "ADD viewCount :inc",
+        ExpressionAttributeValues: {
+          ":inc": increment,
+        },
+      })
+    );
   }
 
   // Media operations

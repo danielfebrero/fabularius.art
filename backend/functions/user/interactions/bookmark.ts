@@ -106,6 +106,11 @@ export const handler = async (
 
       await DynamoDBService.createUserInteraction(interaction);
 
+      // Increment bookmark count for the target
+      if (targetType === "album") {
+        await DynamoDBService.incrementAlbumBookmarkCount(targetId, 1);
+      }
+
       return ResponseUtil.created(event, {
         userId: user.userId,
         interactionType: "bookmark",
@@ -120,6 +125,11 @@ export const handler = async (
         "bookmark",
         targetId
       );
+
+      // Decrement bookmark count for the target
+      if (targetType === "album") {
+        await DynamoDBService.incrementAlbumBookmarkCount(targetId, -1);
+      }
 
       return ResponseUtil.success(event, {
         userId: user.userId,

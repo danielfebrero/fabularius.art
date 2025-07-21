@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader } from "./Card";
 import { cn, formatDateShort, ThumbnailContext } from "../../lib/utils";
 import { composeAlbumCoverUrl, composeThumbnailUrls } from "../../lib/urlUtils";
 import ResponsivePicture from "./ResponsivePicture";
+import { LikeButton } from "../user/LikeButton";
+import { BookmarkButton } from "../user/BookmarkButton";
+import { interactionApi } from "../../lib/api";
 
 interface AlbumCardProps {
   album: Album;
@@ -19,6 +22,17 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
   context = "homepage",
   columns,
 }) => {
+  const handleViewClick = async () => {
+    try {
+      await interactionApi.trackView({
+        targetType: "album",
+        targetId: album.id,
+      });
+    } catch (error) {
+      // Silently fail view tracking - not critical
+      console.debug("View tracking failed:", error);
+    }
+  };
   return (
     <Card
       className={cn(
@@ -28,7 +42,11 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
     >
       <CardHeader className="p-0">
         <div className="aspect-square relative overflow-hidden rounded-t-lg bg-muted">
-          <Link href={`/albums/${album.id}`} className="block w-full h-full">
+          <Link
+            href={`/albums/${album.id}`}
+            className="block w-full h-full"
+            onClick={handleViewClick}
+          >
             {album.coverImageUrl ? (
               <ResponsivePicture
                 thumbnailUrls={composeThumbnailUrls(album.thumbnailUrls)}
@@ -61,7 +79,7 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
               </div>
             )}
           </Link>
-          
+
           {/* Media count overlay */}
           {album.mediaCount > 0 && (
             <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
@@ -71,33 +89,32 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
 
           {/* Action buttons overlay */}
           <div className="absolute top-2 left-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            {/* Like Button Placeholder */}
-            <button
-              className="h-8 w-8 bg-white/90 hover:bg-white shadow-lg rounded-md flex items-center justify-center transition-colors duration-200 hover:text-red-500"
-              title="Like"
-            >
-              <Heart className="h-4 w-4" />
-            </button>
-            
-            {/* Bookmark Button Placeholder */}
-            <button
-              className="h-8 w-8 bg-white/90 hover:bg-white shadow-lg rounded-md flex items-center justify-center transition-colors duration-200 hover:text-blue-500"
-              title="Bookmark"
-            >
-              <Bookmark className="h-4 w-4" />
-            </button>
+            <LikeButton
+              targetType="album"
+              targetId={album.id}
+              size="sm"
+              variant="default"
+              className="bg-white/90 hover:bg-white shadow-lg"
+            />
+            <BookmarkButton
+              targetType="album"
+              targetId={album.id}
+              size="sm"
+              variant="default"
+              className="bg-white/90 hover:bg-white shadow-lg"
+            />
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="p-4">
         <div className="space-y-3">
-          <Link href={`/albums/${album.id}`}>
+          <Link href={`/albums/${album.id}`} onClick={handleViewClick}>
             <h3 className="font-semibold text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">
               {album.title}
             </h3>
           </Link>
-          
+
           {album.tags && album.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {album.tags.slice(0, 3).map((tag, index) => (
@@ -115,37 +132,37 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
               )}
             </div>
           )}
-          
+
           {/* Interaction stats */}
           <div className="flex items-center justify-between pt-2 border-t border-border/50">
-            {/* Placeholder interaction counts */}
+            {/* Album interaction counts from database */}
             <div className="flex items-center gap-3">
               {/* Likes */}
               <div className="flex items-center gap-1">
                 <Heart className="h-3 w-3 text-red-500 fill-current" />
                 <span className="text-xs text-muted-foreground font-medium">
-                  {Math.floor(Math.random() * 50) + 5}
+                  {album.likeCount || 0}
                 </span>
               </div>
-              
+
               {/* Bookmarks */}
               <div className="flex items-center gap-1">
                 <Bookmark className="h-3 w-3 text-blue-500 fill-current" />
                 <span className="text-xs text-muted-foreground font-medium">
-                  {Math.floor(Math.random() * 20) + 2}
+                  {album.bookmarkCount || 0}
                 </span>
               </div>
             </div>
-            
-            {/* View counter placeholder */}
+
+            {/* Views */}
             <div className="flex items-center gap-1">
               <Eye className="h-3 w-3 text-muted-foreground" />
               <span className="text-xs text-muted-foreground font-medium">
-                {Math.floor(Math.random() * 1000) + 100}
+                {album.viewCount || 0}
               </span>
             </div>
           </div>
-          
+
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>{formatDateShort(album.createdAt)}</span>
           </div>

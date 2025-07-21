@@ -12,6 +12,9 @@ export interface Album {
   };
   isPublic: boolean;
   mediaCount: number;
+  likeCount?: number;
+  bookmarkCount?: number;
+  viewCount?: number;
   createdAt: string;
   updatedAt: string;
   media?: Media[];

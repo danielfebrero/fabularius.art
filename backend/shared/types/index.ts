@@ -16,6 +16,9 @@ export interface Album {
   updatedAt: string;
   mediaCount: number;
   isPublic: boolean;
+  likeCount?: number;
+  bookmarkCount?: number;
+  viewCount?: number;
 }
 
 export interface Media {
@@ -98,6 +101,9 @@ export interface AlbumEntity {
   updatedAt: string;
   mediaCount: number;
   isPublic: string; // "true" or "false" - stored as string for GSI compatibility
+  likeCount?: number;
+  bookmarkCount?: number;
+  viewCount?: number;
 }
 
 export interface MediaEntity {

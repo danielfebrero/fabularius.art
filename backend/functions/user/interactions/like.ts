@@ -106,6 +106,11 @@ export const handler = async (
 
       await DynamoDBService.createUserInteraction(interaction);
 
+      // Increment like count for the target
+      if (targetType === "album") {
+        await DynamoDBService.incrementAlbumLikeCount(targetId, 1);
+      }
+
       return ResponseUtil.created(event, {
         userId: user.userId,
         interactionType: "like",
@@ -120,6 +125,11 @@ export const handler = async (
         "like",
         targetId
       );
+
+      // Decrement like count for the target
+      if (targetType === "album") {
+        await DynamoDBService.incrementAlbumLikeCount(targetId, -1);
+      }
 
       return ResponseUtil.success(event, {
         userId: user.userId,

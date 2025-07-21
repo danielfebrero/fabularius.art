@@ -1114,6 +1114,37 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
 
+  UserViewFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-view"
+      CodeUri: backend/dist/functions/user/interactions/
+      Handler: view.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        PostView:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/view
+            Method: POST
+            Auth:
+              Authorizer: NONE # Views can be tracked without authentication
+        OptionsView:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/view
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
   UserGetLikesFunction:
     Type: AWS::Serverless::Function
     Properties:

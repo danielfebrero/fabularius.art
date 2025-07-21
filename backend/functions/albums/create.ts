@@ -39,6 +39,9 @@ export const handler = async (
       updatedAt: now,
       mediaCount: 0,
       isPublic: (request.isPublic ?? false).toString(),
+      likeCount: 0,
+      bookmarkCount: 0,
+      viewCount: 0,
     };
 
     await DynamoDBService.createAlbum(albumEntity);
@@ -50,6 +53,9 @@ export const handler = async (
       updatedAt: albumEntity.updatedAt,
       mediaCount: albumEntity.mediaCount,
       isPublic: albumEntity.isPublic === "true",
+      likeCount: albumEntity.likeCount || 0,
+      bookmarkCount: albumEntity.bookmarkCount || 0,
+      viewCount: albumEntity.viewCount || 0,
     };
 
     if (albumEntity.tags !== undefined) {

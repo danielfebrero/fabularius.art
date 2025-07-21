@@ -6,6 +6,7 @@ import {
 } from "../../../lib/data";
 import { MediaGallery } from "../../../components/MediaGallery";
 import { composeAlbumCoverUrl } from "../../../lib/urlUtils";
+import { ViewTracker } from "../../../components/ui/ViewTracker";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -85,6 +86,8 @@ export default async function AlbumDetailPage({
 
   return (
     <div className="space-y-6">
+      <ViewTracker targetType="album" targetId={albumId} />
+
       <nav className="flex items-center space-x-2 text-sm text-muted-foreground">
         <Link href="/" className="hover:text-foreground transition-colors">
           Albums
