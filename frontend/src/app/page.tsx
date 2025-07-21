@@ -7,7 +7,26 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: "PornSpot.ai - Discover AI Generated Porn",
     description:
-      "Browse and generate AI-powered porn images and videos. Free to start, with premium plans for unlimited creation.",
+      "Browse and generate AI-powered porn images and videos. Free to start, with premium plans for unlimited creation. Explore AI-generated adult content: images, videos, and more.",
+    openGraph: {
+      title: "PornSpot.ai - Discover AI Generated Porn",
+      description:
+        "Browse and generate AI-powered porn images and videos. Free to start, with premium plans for unlimited creation.",
+      siteName: "PornSpot.ai",
+    },
+    twitter: {
+      title: "PornSpot.ai - Discover AI Generated Porn",
+      description:
+        "Browse and generate AI-powered porn images and videos. Free to start, with premium plans for unlimited creation.",
+    },
+    keywords: [
+      "AI porn",
+      "AI generated content",
+      "adult content",
+      "AI videos",
+      "AI images",
+      "generated porn",
+    ],
   };
 }
 
@@ -34,13 +53,14 @@ export default async function HomePage() {
 
   return (
     <>
-      <section className="text-center py-12">
-        <h1 className="text-4xl font-bold mb-4">Welcome to PornSpot.ai</h1>
-        <p className="text-xl mb-8">
+      {/* SEO-friendly hidden content for search engines */}
+      <div className="sr-only">
+        <h1>Welcome to PornSpot.ai - AI Generated Adult Content</h1>
+        <p>
           Explore and create AI-generated adult content: images, videos, and
           more.
         </p>
-      </section>
+      </div>
 
       {error && albums.length === 0 ? (
         <div className="text-center py-8">

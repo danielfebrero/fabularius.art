@@ -67,7 +67,7 @@ const UserBookmarksPage: React.FC = () => {
             </div>
           ) : (
             <div className="aspect-video bg-gray-100 flex items-center justify-center">
-              <Image className="h-12 w-12 text-gray-400" />
+              <Image className="h-12 w-12 text-gray-400" aria-hidden="true" />
             </div>
           )}
 
@@ -167,7 +167,9 @@ const UserBookmarksPage: React.FC = () => {
               <Bookmark className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">My Bookmarks</h1>
+              <h1 className="text-3xl font-bold text-foreground">
+                My Bookmarks
+              </h1>
               <p className="text-muted-foreground">Your saved favorites</p>
             </div>
             <span className="bg-blue-500/20 text-blue-600 text-sm font-semibold px-3 py-1.5 rounded-full">

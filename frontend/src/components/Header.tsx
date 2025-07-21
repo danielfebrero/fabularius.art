@@ -25,15 +25,9 @@ export function Header() {
           {/* Logo/Brand */}
           <Link href="/" className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <svg
-                className="w-5 h-5 text-white"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" />
-              </svg>
+              <img src="/logo.svg" alt="PornSpot.ai" className="w-5 h-5" />
             </div>
-            <div>
+            <div className="hidden sm:block">
               <h1 className="text-xl font-bold text-foreground">PornSpot.ai</h1>
               <p className="text-xs text-muted-foreground hidden sm:block">
                 AI Generated Content

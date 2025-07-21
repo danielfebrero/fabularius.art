@@ -203,7 +203,7 @@ const UserDashboard: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-red-500 hover:bg-red-500/10 hover:text-red-400"
+                  className="text-red-500 hover:bg-red-50"
                 >
                   View All
                 </Button>
@@ -250,7 +250,7 @@ const UserDashboard: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-blue-500 hover:bg-blue-500/10 hover:text-blue-400"
+                  className="text-blue-500 hover:bg-blue-50"
                 >
                   View All
                 </Button>

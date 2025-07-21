@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { useUser } from "@/hooks/useUser";
-import { Heart, Bookmark, User, LayoutDashboard } from "lucide-react";
+import {
+  Heart,
+  Bookmark,
+  User,
+  LayoutDashboard,
+  Image,
+  FolderOpen,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface UserLayoutProps {
@@ -14,6 +21,7 @@ interface UserLayoutProps {
 const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
   const { user, loading } = useUser();
   const router = useRouter();
+  const pathname = usePathname();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -24,8 +32,8 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-admin-primary"></div>
       </div>
     );
   }
@@ -50,28 +58,38 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
       label: "Bookmarks",
       icon: Bookmark,
     },
+    {
+      href: "/user/images",
+      label: "My Images",
+      icon: Image,
+    },
+    {
+      href: "/user/albums",
+      label: "My Albums",
+      icon: FolderOpen,
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
+      <header className="bg-card/80 backdrop-blur-sm shadow-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-4">
-              <Link href="/" className="text-xl font-bold text-blue-600">
+              <Link href="/" className="text-xl font-bold text-admin-primary">
                 PornSpot.ai
               </Link>
-              <span className="text-gray-300">|</span>
-              <h1 className="text-lg font-semibold text-gray-900">
+              <span className="text-muted-foreground">|</span>
+              <h1 className="text-lg font-semibold text-foreground">
                 User Dashboard
               </h1>
             </div>
 
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <User className="h-5 w-5 text-gray-500" />
-                <span className="text-sm text-gray-700">{user.email}</span>
+                <User className="h-5 w-5 text-admin-primary" />
+                <span className="text-sm text-foreground">{user.email}</span>
               </div>
             </div>
           </div>
@@ -82,22 +100,20 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar Navigation */}
           <aside className="lg:w-64 flex-shrink-0">
-            <nav className="bg-white rounded-lg shadow-sm border p-4">
+            <nav className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-4">
               <ul className="space-y-2">
                 {navigationItems.map((item) => {
-                  const isActive =
-                    typeof window !== "undefined" &&
-                    window.location.pathname === item.href;
+                  const isActive = pathname === item.href;
 
                   return (
                     <li key={item.href}>
                       <Link
                         href={item.href}
                         className={cn(
-                          "flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                          "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                           isActive
-                            ? "bg-blue-50 text-blue-700 border border-blue-200"
-                            : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+                            ? "bg-gradient-to-r from-admin-primary to-admin-secondary text-admin-primary-foreground shadow-lg"
+                            : "text-muted-foreground hover:bg-admin-primary/10 hover:text-foreground"
                         )}
                       >
                         <item.icon className="h-5 w-5" />

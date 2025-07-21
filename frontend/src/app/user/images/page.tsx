@@ -62,7 +62,9 @@ const UserImagesPage: React.FC = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-foreground">My Images</h1>
-              <p className="text-muted-foreground">Your personal photo gallery</p>
+              <p className="text-muted-foreground">
+                Your personal photo gallery
+              </p>
             </div>
             <span className="bg-admin-accent/20 text-admin-accent text-sm font-semibold px-3 py-1.5 rounded-full">
               {totalCount.toLocaleString()} images
@@ -74,7 +76,11 @@ const UserImagesPage: React.FC = () => {
               variant={viewMode === "grid" ? "default" : "ghost"}
               size="sm"
               onClick={() => setViewMode("grid")}
-              className={viewMode === "grid" ? "bg-admin-accent text-admin-accent-foreground hover:bg-admin-accent/90" : ""}
+              className={
+                viewMode === "grid"
+                  ? "bg-admin-accent text-admin-accent-foreground hover:bg-admin-accent/90"
+                  : ""
+              }
             >
               <Grid className="h-4 w-4" />
             </Button>
@@ -82,7 +88,11 @@ const UserImagesPage: React.FC = () => {
               variant={viewMode === "list" ? "default" : "ghost"}
               size="sm"
               onClick={() => setViewMode("list")}
-              className={viewMode === "list" ? "bg-admin-accent text-admin-accent-foreground hover:bg-admin-accent/90" : ""}
+              className={
+                viewMode === "list"
+                  ? "bg-admin-accent text-admin-accent-foreground hover:bg-admin-accent/90"
+                  : ""
+              }
             >
               <List className="h-4 w-4" />
             </Button>

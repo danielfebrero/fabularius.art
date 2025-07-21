@@ -61,7 +61,9 @@ const UserAlbumsPage: React.FC = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-foreground">My Albums</h1>
-              <p className="text-muted-foreground">Your personal photo collections</p>
+              <p className="text-muted-foreground">
+                Your personal photo collections
+              </p>
             </div>
             <span className="bg-admin-primary/20 text-admin-primary text-sm font-semibold px-3 py-1.5 rounded-full">
               {totalCount.toLocaleString()} albums
@@ -73,7 +75,11 @@ const UserAlbumsPage: React.FC = () => {
               variant={viewMode === "grid" ? "default" : "ghost"}
               size="sm"
               onClick={() => setViewMode("grid")}
-              className={viewMode === "grid" ? "bg-admin-primary text-admin-primary-foreground hover:bg-admin-primary/90" : ""}
+              className={
+                viewMode === "grid"
+                  ? "bg-admin-primary text-admin-primary-foreground hover:bg-admin-primary/90"
+                  : ""
+              }
             >
               <Grid className="h-4 w-4" />
             </Button>
@@ -81,7 +87,11 @@ const UserAlbumsPage: React.FC = () => {
               variant={viewMode === "list" ? "default" : "ghost"}
               size="sm"
               onClick={() => setViewMode("list")}
-              className={viewMode === "list" ? "bg-admin-primary text-admin-primary-foreground hover:bg-admin-primary/90" : ""}
+              className={
+                viewMode === "list"
+                  ? "bg-admin-primary text-admin-primary-foreground hover:bg-admin-primary/90"
+                  : ""
+              }
             >
               <List className="h-4 w-4" />
             </Button>
@@ -153,8 +163,8 @@ const UserAlbumsPage: React.FC = () => {
           </p>
           <div className="flex justify-center space-x-4">
             {searchTerm && (
-              <Button 
-                onClick={() => setSearchTerm("")} 
+              <Button
+                onClick={() => setSearchTerm("")}
                 variant="outline"
                 className="border-admin-primary/30 text-admin-primary hover:bg-admin-primary/10"
               >
