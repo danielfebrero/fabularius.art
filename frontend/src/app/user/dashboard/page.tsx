@@ -8,7 +8,7 @@ import { useLikes } from "@/hooks/useLikes";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { useInsights } from "@/hooks/useInsights";
 import { useUser } from "@/hooks/useUser";
-import { useTargetInteractionStatus } from "@/hooks/useUserInteractionStatus";
+import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
 import { Button } from "@/components/ui/Button";
 import ResponsivePicture from "@/components/ui/ResponsivePicture";
 import { Lightbox } from "@/components/ui/Lightbox";
@@ -24,6 +24,7 @@ const UserDashboard: React.FC = () => {
   const { insights } = useInsights();
   const { likes, isLoading: likesLoading } = useLikes(true);
   const { bookmarks, isLoading: bookmarksLoading } = useBookmarks(true);
+  const { getStatus } = useUserInteractionStatus();
 
   // Lightbox state
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -93,10 +94,10 @@ const UserDashboard: React.FC = () => {
   };
 
   const ContentCard = ({ interaction }: { interaction: any }) => {
-    const { userLiked, userBookmarked } = useTargetInteractionStatus(
-      interaction.targetType,
-      interaction.targetId
-    );
+    // Get the cached status instead of triggering a new load
+    const status = getStatus(interaction.targetType, interaction.targetId);
+    const userLiked = status?.userLiked ?? false;
+    const userBookmarked = status?.userBookmarked ?? false;
 
     // Determine if this item is currently liked/bookmarked by the user
     const isCurrentlyLiked = userLiked;

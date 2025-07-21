@@ -31,64 +31,67 @@ export function useMedia(options: UseMediaOptions): UseMediaReturn {
     cursor: string | null;
   } | null>(null);
 
-  const fetchMedia = useCallback(async (cursor?: string, append = false) => {
-    try {
-      if (append) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-        setError(null);
-      }
-
-      const params = new URLSearchParams({
-        limit: limit.toString(),
-      });
-
-      if (cursor) {
-        params.append("cursor", cursor);
-      }
-
-      const response = await fetch(
-        `${API_URL}/albums/${albumId}/media?${params}`
-      );
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error("Album not found");
-        }
-        if (response.status === 403) {
-          throw new Error("Access denied - this album is private");
-        }
-        throw new Error(`Failed to fetch media: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Backend returns {success: true, data: {media: Media[], pagination: {...}}}
-        const newMedia = data.data.media || data.data; // Handle both formats
-        const newPagination = data.data.pagination;
-
+  const fetchMedia = useCallback(
+    async (cursor?: string, append = false) => {
+      try {
         if (append) {
-          setMedia((prev) => [...prev, ...newMedia]);
+          setLoadingMore(true);
         } else {
-          setMedia(newMedia);
+          setLoading(true);
+          setError(null);
         }
-        setPagination(newPagination);
-      } else {
-        throw new Error(data.error || "Failed to fetch media");
+
+        const params = new URLSearchParams({
+          limit: limit.toString(),
+        });
+
+        if (cursor) {
+          params.append("cursor", cursor);
+        }
+
+        const response = await fetch(
+          `${API_URL}/albums/${albumId}/media?${params}`
+        );
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error("Album not found");
+          }
+          if (response.status === 403) {
+            throw new Error("Access denied - this album is private");
+          }
+          throw new Error(`Failed to fetch media: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+          // Backend returns {success: true, data: {media: Media[], pagination: {...}}}
+          const newMedia = data.data.media || data.data; // Handle both formats
+          const newPagination = data.data.pagination;
+
+          if (append) {
+            setMedia((prev) => [...prev, ...newMedia]);
+          } else {
+            setMedia(newMedia);
+          }
+          setPagination(newPagination);
+        } else {
+          throw new Error(data.error || "Failed to fetch media");
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        if (!append) {
+          setMedia([]);
+          setPagination(null);
+        }
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      if (!append) {
-        setMedia([]);
-        setPagination(null);
-      }
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [albumId, limit]);
+    },
+    [albumId, limit]
+  );
 
   const loadMore = useCallback(() => {
     if (pagination?.hasNext && pagination.cursor && !loadingMore) {

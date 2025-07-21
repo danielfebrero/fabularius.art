@@ -52,84 +52,87 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
     page?: number;
   } | null>(initialPagination);
 
-  const fetchAlbums = useCallback(async (cursor?: string, append = false) => {
-    try {
-      console.log("[useAlbums] fetchAlbums called", {
-        cursor,
-        append,
-        limit,
-        isPublic: effectiveIsPublic,
-        page,
-      });
-      if (append) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-        setError(null);
-      }
-
-      const params = new URLSearchParams({
-        limit: limit.toString(),
-      });
-
-      if (effectiveIsPublic !== undefined) {
-        params.append("isPublic", effectiveIsPublic.toString());
-      }
-
-      if (page !== undefined) {
-        params.append("page", page.toString());
-      }
-
-      if (cursor) {
-        params.append("cursor", cursor);
-      }
-
-      const apiUrl =
-        process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:3001/api";
-      const response = await fetch(`${apiUrl}/albums?${params}`);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch albums: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log("[useAlbums] fetch result", data);
-
-      if (data.success) {
-        // Backend returns {success: true, data: {albums: Album[], pagination: {...}}}
-        const newAlbums = data.data.albums;
-        const newPagination = data.data.pagination;
-
+  const fetchAlbums = useCallback(
+    async (cursor?: string, append = false) => {
+      try {
+        console.log("[useAlbums] fetchAlbums called", {
+          cursor,
+          append,
+          limit,
+          isPublic: effectiveIsPublic,
+          page,
+        });
         if (append) {
-          setAlbums((prev) => {
-            const updated = [...prev, ...newAlbums];
-            console.log("[useAlbums] setAlbums (append)", updated.length);
-            return updated;
+          setLoadingMore(true);
+        } else {
+          setLoading(true);
+          setError(null);
+        }
+
+        const params = new URLSearchParams({
+          limit: limit.toString(),
+        });
+
+        if (effectiveIsPublic !== undefined) {
+          params.append("isPublic", effectiveIsPublic.toString());
+        }
+
+        if (page !== undefined) {
+          params.append("page", page.toString());
+        }
+
+        if (cursor) {
+          params.append("cursor", cursor);
+        }
+
+        const apiUrl =
+          process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:3001/api";
+        const response = await fetch(`${apiUrl}/albums?${params}`);
+
+        if (!response.ok) {
+          throw new Error(`Failed to fetch albums: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("[useAlbums] fetch result", data);
+
+        if (data.success) {
+          // Backend returns {success: true, data: {albums: Album[], pagination: {...}}}
+          const newAlbums = data.data.albums;
+          const newPagination = data.data.pagination;
+
+          if (append) {
+            setAlbums((prev) => {
+              const updated = [...prev, ...newAlbums];
+              console.log("[useAlbums] setAlbums (append)", updated.length);
+              return updated;
+            });
+          } else {
+            setAlbums(() => {
+              console.log("[useAlbums] setAlbums (replace)", newAlbums.length);
+              return newAlbums;
+            });
+          }
+          setPagination(() => {
+            console.log("[useAlbums] setPagination", newPagination);
+            return newPagination;
           });
         } else {
-          setAlbums(() => {
-            console.log("[useAlbums] setAlbums (replace)", newAlbums.length);
-            return newAlbums;
-          });
+          throw new Error(data.error || "Failed to fetch albums");
         }
-        setPagination(() => {
-          console.log("[useAlbums] setPagination", newPagination);
-          return newPagination;
-        });
-      } else {
-        throw new Error(data.error || "Failed to fetch albums");
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        if (!append) {
+          setAlbums([]);
+          setPagination(null);
+        }
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      if (!append) {
-        setAlbums([]);
-        setPagination(null);
-      }
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [effectiveIsPublic, limit, page]);
+    },
+    [effectiveIsPublic, limit, page]
+  );
 
   const loadMore = useCallback(() => {
     if (pagination?.hasNext && pagination.cursor && !loadingMore) {
