@@ -7,7 +7,6 @@ import { useUser } from "@/hooks/useUser";
 import {
   Heart,
   Bookmark,
-  User,
   LayoutDashboard,
   Image,
   FolderOpen,
@@ -72,33 +71,8 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card/80 backdrop-blur-sm shadow-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-4">
-              <Link href="/" className="text-xl font-bold text-admin-primary">
-                PornSpot.ai
-              </Link>
-              <span className="text-muted-foreground">|</span>
-              <h1 className="text-lg font-semibold text-foreground">
-                User Dashboard
-              </h1>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <User className="h-5 w-5 text-admin-primary" />
-                <span className="text-sm text-foreground">{user.email}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Navigation */}
+        <div className="flex flex-col lg:flex-row gap-8">{/* Sidebar Navigation */}
           <aside className="lg:w-64 flex-shrink-0">
             <nav className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-4">
               <ul className="space-y-2">

@@ -45,7 +45,7 @@ const UserBookmarksPage: React.FC = () => {
   const ContentCard = ({ interaction }: { interaction: any }) => {
     if (viewMode === "grid") {
       return (
-        <div className="bg-white rounded-lg shadow-sm border overflow-hidden hover:shadow-md transition-shadow">
+        <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 overflow-hidden hover:shadow-xl hover:border-admin-primary/20 transition-all duration-300">
           {interaction.target?.thumbnailUrls ||
           interaction.target?.coverImageUrl ? (
             <div className="aspect-video relative">
@@ -95,7 +95,7 @@ const UserBookmarksPage: React.FC = () => {
 
     // List view
     return (
-      <div className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow">
+      <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-4 hover:shadow-xl hover:border-admin-primary/20 transition-all duration-300">
         <div className="flex items-center space-x-4">
           {interaction.target?.thumbnailUrls ||
           interaction.target?.coverImageUrl ? (
@@ -144,11 +144,11 @@ const UserBookmarksPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border p-8 text-center">
-        <div className="text-blue-500 mb-4">
+      <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-8 text-center">
+        <div className="text-admin-primary mb-4">
           <Bookmark className="h-12 w-12 mx-auto mb-2" />
-          <p className="text-lg font-medium">Failed to load bookmarks</p>
-          <p className="text-sm text-gray-600 mt-1">{error}</p>
+          <p className="text-lg font-medium text-foreground">Failed to load bookmarks</p>
+          <p className="text-sm text-muted-foreground mt-1">{error}</p>
         </div>
         <Button onClick={refresh} variant="outline">
           Try Again
@@ -220,20 +220,20 @@ const UserBookmarksPage: React.FC = () => {
           {[...Array(8)].map((_, i) => (
             <div key={i} className="animate-pulse">
               {viewMode === "grid" ? (
-                <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                  <div className="aspect-video bg-gray-200"></div>
+                <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 overflow-hidden">
+                  <div className="aspect-video bg-muted/50"></div>
                   <div className="p-4 space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                    <div className="h-4 bg-muted/50 rounded w-3/4"></div>
+                    <div className="h-3 bg-muted/50 rounded w-1/2"></div>
                   </div>
                 </div>
               ) : (
-                <div className="bg-white rounded-lg shadow-sm border p-4">
+                <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-4">
                   <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-gray-200 rounded-md"></div>
+                    <div className="w-16 h-16 bg-muted/50 rounded-md"></div>
                     <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                      <div className="h-4 bg-muted/50 rounded w-3/4"></div>
+                      <div className="h-3 bg-muted/50 rounded w-1/2"></div>
                     </div>
                   </div>
                 </div>
@@ -273,12 +273,12 @@ const UserBookmarksPage: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
-          <Bookmark className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-12 text-center">
+          <Bookmark className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-foreground mb-2">
             {searchTerm ? "No matching bookmarks found" : "No bookmarks yet"}
           </h3>
-          <p className="text-gray-600 mb-6">
+          <p className="text-muted-foreground mb-6">
             {searchTerm
               ? `Try adjusting your search for "${searchTerm}"`
               : "Start exploring content and bookmark what you want to save for later!"}

@@ -42,33 +42,29 @@ const UserDashboard: React.FC = () => {
     value,
     icon: Icon,
     color,
-    href,
   }: {
     title: string;
     value: number;
     icon: any;
     color: string;
-    href: string;
   }) => (
-    <Link href={href}>
-      <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-6 hover:shadow-xl hover:border-admin-primary/30 transition-all duration-300 cursor-pointer group">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground group-hover:text-muted-foreground/80 transition-colors">
-              {title}
-            </p>
-            <p className="text-3xl font-bold text-foreground group-hover:text-admin-primary transition-colors">
-              {value.toLocaleString()}
-            </p>
-          </div>
-          <div
-            className={`p-3 rounded-lg ${color} group-hover:scale-110 transition-transform duration-300`}
-          >
-            <Icon className="h-6 w-6 text-white" />
-          </div>
+    <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-6 hover:shadow-xl hover:border-admin-primary/30 transition-all duration-300 group">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground group-hover:text-muted-foreground/80 transition-colors">
+            {title}
+          </p>
+          <p className="text-3xl font-bold text-foreground group-hover:text-admin-primary transition-colors">
+            {value.toLocaleString()}
+          </p>
+        </div>
+        <div
+          className={`p-3 rounded-lg ${color} group-hover:scale-110 transition-transform duration-300`}
+        >
+          <Icon className="h-6 w-6 text-white" />
         </div>
       </div>
-    </Link>
+    </div>
   );
 
   const ContentItem = ({ interaction }: { interaction: any }) => (
@@ -154,21 +150,18 @@ const UserDashboard: React.FC = () => {
             value={likesCount}
             icon={Heart}
             color="bg-gradient-to-br from-red-500 to-pink-500"
-            href="/user/likes"
           />
           <StatCard
             title="Bookmarked Content"
             value={bookmarksCount}
             icon={Bookmark}
             color="bg-gradient-to-br from-blue-500 to-indigo-500"
-            href="/user/bookmarks"
           />
           <StatCard
             title="Profile Views"
             value={0}
             icon={Eye}
             color="bg-gradient-to-br from-green-500 to-emerald-500"
-            href="/user/dashboard"
           />
         </div>
       </div>

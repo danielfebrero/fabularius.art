@@ -25,10 +25,10 @@ const UserAlbumsPage: React.FC = () => {
     return (
       <div className="space-y-6">
         {/* Header Skeleton */}
-        <div className="bg-white rounded-lg shadow-sm border p-6">
+        <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-6">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/3 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-8 bg-muted/50 rounded w-1/3 mb-4"></div>
+            <div className="h-4 bg-muted/50 rounded w-1/2"></div>
           </div>
         </div>
 
@@ -36,11 +36,11 @@ const UserAlbumsPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[...Array(8)].map((_, i) => (
             <div key={i} className="animate-pulse">
-              <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                <div className="aspect-video bg-gray-200"></div>
+              <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 overflow-hidden">
+                <div className="aspect-video bg-muted/50"></div>
                 <div className="p-4 space-y-2">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-muted/50 rounded w-3/4"></div>
+                  <div className="h-3 bg-muted/50 rounded w-1/2"></div>
                 </div>
               </div>
             </div>
