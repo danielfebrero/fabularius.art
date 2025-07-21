@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 interface SwitchProps {
-  checked: boolean
-  onCheckedChange: (checked: boolean) => void
-  className?: string
-  disabled?: boolean
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+  className?: string;
+  disabled?: boolean;
 }
 
 const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
@@ -34,9 +34,9 @@ const Switch = React.forwardRef<HTMLButtonElement, SwitchProps>(
           )}
         />
       </button>
-    )
+    );
   }
-)
-Switch.displayName = "Switch"
+);
+Switch.displayName = "Switch";
 
-export { Switch }
+export { Switch };

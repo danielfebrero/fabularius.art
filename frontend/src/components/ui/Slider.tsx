@@ -1,64 +1,70 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 interface SliderProps {
-  value: number[]
-  onValueChange: (value: number[]) => void
-  min?: number
-  max?: number
-  step?: number
-  className?: string
+  value: number[];
+  onValueChange: (value: number[]) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  className?: string;
 }
 
 const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
-  ({ className, value, onValueChange, min = 0, max = 100, step = 1, ...props }, ref) => {
-    const [isDragging, setIsDragging] = React.useState(false)
-    const sliderRef = React.useRef<HTMLDivElement>(null)
+  (
+    { className, value, onValueChange, min = 0, max = 100, step = 1, ...props },
+    ref
+  ) => {
+    const [isDragging, setIsDragging] = React.useState(false);
+    const sliderRef = React.useRef<HTMLDivElement>(null);
 
-    const currentValue = value[0] || min
-    const percentage = ((currentValue - min) / (max - min)) * 100
+    const currentValue = value[0] || min;
+    const percentage = ((currentValue - min) / (max - min)) * 100;
 
     const handleMouseDown = (e: React.MouseEvent) => {
-      setIsDragging(true)
-      updateValue(e)
-    }
+      setIsDragging(true);
+      updateValue(e);
+    };
 
-    const handleMouseMove = React.useCallback((e: MouseEvent) => {
-      if (!isDragging) return
-      updateValue(e)
-    }, [isDragging])
+    const handleMouseMove = React.useCallback(
+      (e: MouseEvent) => {
+        if (!isDragging) return;
+        updateValue(e);
+      },
+      [isDragging]
+    );
 
     const handleMouseUp = React.useCallback(() => {
-      setIsDragging(false)
-    }, [])
+      setIsDragging(false);
+    }, []);
 
     const updateValue = (e: MouseEvent | React.MouseEvent) => {
-      if (!sliderRef.current) return
+      if (!sliderRef.current) return;
 
-      const rect = sliderRef.current.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const width = rect.width
-      const percentage = Math.max(0, Math.min(100, (x / width) * 100))
-      
-      const rawValue = min + (percentage / 100) * (max - min)
-      const steppedValue = Math.round(rawValue / step) * step
-      const clampedValue = Math.max(min, Math.min(max, steppedValue))
-      
-      onValueChange([clampedValue])
-    }
+      const rect = sliderRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const width = rect.width;
+      const percentage = Math.max(0, Math.min(100, (x / width) * 100));
+
+      const rawValue = min + (percentage / 100) * (max - min);
+      const steppedValue = Math.round(rawValue / step) * step;
+      const clampedValue = Math.max(min, Math.min(max, steppedValue));
+
+      onValueChange([clampedValue]);
+    };
 
     React.useEffect(() => {
       if (isDragging) {
-        document.addEventListener('mousemove', handleMouseMove)
-        document.addEventListener('mouseup', handleMouseUp)
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleMouseUp);
         return () => {
-          document.removeEventListener('mousemove', handleMouseMove)
-          document.removeEventListener('mouseup', handleMouseUp)
-        }
+          document.removeEventListener("mousemove", handleMouseMove);
+          document.removeEventListener("mouseup", handleMouseUp);
+        };
       }
-    }, [isDragging, handleMouseMove, handleMouseUp])
+    }, [isDragging, handleMouseMove, handleMouseUp]);
 
     return (
       <div
@@ -85,9 +91,9 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(
           onMouseDown={handleMouseDown}
         />
       </div>
-    )
+    );
   }
-)
-Slider.displayName = "Slider"
+);
+Slider.displayName = "Slider";
 
-export { Slider }
+export { Slider };

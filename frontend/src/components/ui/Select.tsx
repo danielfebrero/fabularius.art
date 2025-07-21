@@ -1,62 +1,60 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { ChevronDown } from "lucide-react"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SelectProps {
-  value: string
-  onValueChange: (value: string) => void
-  children: React.ReactNode
+  value: string;
+  onValueChange: (value: string) => void;
+  children: React.ReactNode;
 }
 
 interface SelectItemProps {
-  value: string
-  children: React.ReactNode
+  value: string;
+  children: React.ReactNode;
 }
 
 interface SelectContentProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 interface SelectTriggerProps {
-  children: React.ReactNode
-  className?: string
+  children: React.ReactNode;
+  className?: string;
 }
 
 const SelectContext = React.createContext<{
-  value: string
-  onValueChange: (newValue: string) => void
-  isOpen: boolean
-  setIsOpen: (isOpen: boolean) => void
-} | null>(null)
+  value: string;
+  onValueChange: (newValue: string) => void;
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+} | null>(null);
 
 const Select: React.FC<SelectProps> = ({ value, onValueChange, children }) => {
-  const [isOpen, setIsOpen] = React.useState(false)
+  const [isOpen, setIsOpen] = React.useState(false);
 
   return (
     <SelectContext.Provider value={{ value, onValueChange, isOpen, setIsOpen }}>
-      <div className="relative">
-        {children}
-      </div>
+      <div className="relative">{children}</div>
     </SelectContext.Provider>
-  )
-}
+  );
+};
 
 const SelectValue: React.FC<{ placeholder?: string }> = ({ placeholder }) => {
-  const context = React.useContext(SelectContext)
-  if (!context) return null
+  const context = React.useContext(SelectContext);
+  if (!context) return null;
 
-  const { value } = context
-  return <span>{value || placeholder}</span>
-}
+  const { value } = context;
+  return <span>{value || placeholder}</span>;
+};
 
 const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(
   ({ children, className, ...props }, ref) => {
-    const context = React.useContext(SelectContext)
-    if (!context) return null
+    const context = React.useContext(SelectContext);
+    if (!context) return null;
 
-    const { setIsOpen, isOpen } = context
+    const { setIsOpen, isOpen } = context;
 
     return (
       <button
@@ -72,43 +70,41 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(
         {children}
         <ChevronDown className="h-4 w-4 opacity-50" />
       </button>
-    )
+    );
   }
-)
-SelectTrigger.displayName = "SelectTrigger"
+);
+SelectTrigger.displayName = "SelectTrigger";
 
 const SelectContent: React.FC<SelectContentProps> = ({ children }) => {
-  const context = React.useContext(SelectContext)
-  
+  const context = React.useContext(SelectContext);
+
   React.useEffect(() => {
-    if (!context || !context.isOpen) return
+    if (!context || !context.isOpen) return;
 
-    const handleClickOutside = () => context.setIsOpen(false)
-    document.addEventListener('click', handleClickOutside)
-    return () => document.removeEventListener('click', handleClickOutside)
-  }, [context])
+    const handleClickOutside = () => context.setIsOpen(false);
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, [context]);
 
-  if (!context || !context.isOpen) return null
+  if (!context || !context.isOpen) return null;
 
   return (
     <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-md border bg-white shadow-lg">
-      <div className="max-h-60 overflow-auto p-1">
-        {children}
-      </div>
+      <div className="max-h-60 overflow-auto p-1">{children}</div>
     </div>
-  )
-}
+  );
+};
 
 const SelectItem: React.FC<SelectItemProps> = ({ value, children }) => {
-  const context = React.useContext(SelectContext)
-  if (!context) return null
+  const context = React.useContext(SelectContext);
+  if (!context) return null;
 
-  const { onValueChange, value: selectedValue, setIsOpen } = context
+  const { onValueChange, value: selectedValue, setIsOpen } = context;
 
   const handleSelect = () => {
-    onValueChange(value)
-    setIsOpen(false)
-  }
+    onValueChange(value);
+    setIsOpen(false);
+  };
 
   return (
     <div
@@ -120,13 +116,7 @@ const SelectItem: React.FC<SelectItemProps> = ({ value, children }) => {
     >
       {children}
     </div>
-  )
-}
+  );
+};
 
-export {
-  Select,
-  SelectValue,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-}
+export { Select, SelectValue, SelectTrigger, SelectContent, SelectItem };

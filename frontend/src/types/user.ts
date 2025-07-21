@@ -261,7 +261,7 @@ export interface UserWithPlanInfo extends User {
   plan?: string; // 'free', 'starter', 'unlimited', 'pro'
   role?: string; // 'user', 'admin', 'moderator'
   subscriptionId?: string;
-  subscriptionStatus?: 'active' | 'canceled' | 'expired';
+  subscriptionStatus?: "active" | "canceled" | "expired";
   planStartDate?: string;
   planEndDate?: string;
   usageStats?: {

@@ -1,15 +1,15 @@
 // User Plan and Permission System Types
 
-export type UserPlan = 'free' | 'starter' | 'unlimited' | 'pro';
+export type UserPlan = "free" | "starter" | "unlimited" | "pro";
 
-export type UserRole = 'user' | 'admin' | 'moderator';
+export type UserRole = "user" | "admin" | "moderator";
 
 // Specific permissions for different features
 export interface PlanPermissions {
   // Image generation limits
-  imagesPerMonth: number | 'unlimited';
-  imagesPerDay: number | 'unlimited';
-  
+  imagesPerMonth: number | "unlimited";
+  imagesPerDay: number | "unlimited";
+
   // Image generation features
   canGenerateImages: boolean;
   canUseAdvancedPrompts: boolean;
@@ -17,29 +17,29 @@ export interface PlanPermissions {
   canUseCustomParameters: boolean;
   canUseLoRAModels: boolean;
   canSelectImageSizes: boolean;
-  
+
   // Content privacy
   canCreatePrivateContent: boolean;
   canMakeContentPublic: boolean;
-  
+
   // Quality and processing
-  maxImageQuality: 'standard' | 'high' | 'premium';
-  processingPriority: 'standard' | 'high' | 'priority';
-  
+  maxImageQuality: "standard" | "high" | "premium";
+  processingPriority: "standard" | "high" | "priority";
+
   // Storage and management
-  maxStorageGB: number | 'unlimited';
+  maxStorageGB: number | "unlimited";
   canDownloadOriginal: boolean;
   canExportContent: boolean;
-  
+
   // Community features
   canBookmark: boolean;
   canLike: boolean;
   canComment: boolean;
   canShare: boolean;
-  
+
   // Support level
-  supportLevel: 'community' | 'email' | 'priority';
-  
+  supportLevel: "community" | "email" | "priority";
+
   // API access (future feature)
   hasApiAccess: boolean;
   apiRequestsPerMonth: number;
@@ -81,8 +81,8 @@ export const PLAN_DEFINITIONS: Record<UserPlan, PlanPermissions> = {
     canSelectImageSizes: false,
     canCreatePrivateContent: false,
     canMakeContentPublic: true,
-    maxImageQuality: 'standard',
-    processingPriority: 'standard',
+    maxImageQuality: "standard",
+    processingPriority: "standard",
     maxStorageGB: 1,
     canDownloadOriginal: true,
     canExportContent: false,
@@ -90,7 +90,7 @@ export const PLAN_DEFINITIONS: Record<UserPlan, PlanPermissions> = {
     canLike: true,
     canComment: true,
     canShare: true,
-    supportLevel: 'community',
+    supportLevel: "community",
     hasApiAccess: false,
     apiRequestsPerMonth: 0,
   },
@@ -105,8 +105,8 @@ export const PLAN_DEFINITIONS: Record<UserPlan, PlanPermissions> = {
     canSelectImageSizes: false,
     canCreatePrivateContent: false,
     canMakeContentPublic: true,
-    maxImageQuality: 'high',
-    processingPriority: 'standard',
+    maxImageQuality: "high",
+    processingPriority: "standard",
     maxStorageGB: 5,
     canDownloadOriginal: true,
     canExportContent: true,
@@ -114,13 +114,13 @@ export const PLAN_DEFINITIONS: Record<UserPlan, PlanPermissions> = {
     canLike: true,
     canComment: true,
     canShare: true,
-    supportLevel: 'email',
+    supportLevel: "email",
     hasApiAccess: false,
     apiRequestsPerMonth: 0,
   },
   unlimited: {
-    imagesPerMonth: 'unlimited',
-    imagesPerDay: 'unlimited',
+    imagesPerMonth: "unlimited",
+    imagesPerDay: "unlimited",
     canGenerateImages: true,
     canUseAdvancedPrompts: true,
     canUseBulkGeneration: false,
@@ -129,22 +129,22 @@ export const PLAN_DEFINITIONS: Record<UserPlan, PlanPermissions> = {
     canSelectImageSizes: true,
     canCreatePrivateContent: false,
     canMakeContentPublic: true,
-    maxImageQuality: 'high',
-    processingPriority: 'high',
-    maxStorageGB: 'unlimited',
+    maxImageQuality: "high",
+    processingPriority: "high",
+    maxStorageGB: "unlimited",
     canDownloadOriginal: true,
     canExportContent: true,
     canBookmark: true,
     canLike: true,
     canComment: true,
     canShare: true,
-    supportLevel: 'email',
+    supportLevel: "email",
     hasApiAccess: false,
     apiRequestsPerMonth: 0,
   },
   pro: {
-    imagesPerMonth: 'unlimited',
-    imagesPerDay: 'unlimited',
+    imagesPerMonth: "unlimited",
+    imagesPerDay: "unlimited",
     canGenerateImages: true,
     canUseAdvancedPrompts: true,
     canUseBulkGeneration: true,
@@ -153,16 +153,16 @@ export const PLAN_DEFINITIONS: Record<UserPlan, PlanPermissions> = {
     canSelectImageSizes: true,
     canCreatePrivateContent: true,
     canMakeContentPublic: true,
-    maxImageQuality: 'premium',
-    processingPriority: 'priority',
-    maxStorageGB: 'unlimited',
+    maxImageQuality: "premium",
+    processingPriority: "priority",
+    maxStorageGB: "unlimited",
     canDownloadOriginal: true,
     canExportContent: true,
     canBookmark: true,
     canLike: true,
     canComment: true,
     canShare: true,
-    supportLevel: 'priority',
+    supportLevel: "priority",
     hasApiAccess: true,
     apiRequestsPerMonth: 10000,
   },
@@ -221,4 +221,4 @@ export interface PermissionContext {
 }
 
 // Import the base User interface
-import { User } from './user';
+import { User } from "./user";
