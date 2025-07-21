@@ -24,8 +24,9 @@ export const handler = async (
     const user = authResult.user;
 
     // Parse request body for bulk status check
-    let targets: Array<{ targetType: "album" | "media"; targetId: string }> = [];
-    
+    let targets: Array<{ targetType: "album" | "media"; targetId: string }> =
+      [];
+
     if (event.body) {
       try {
         const body = JSON.parse(event.body);
@@ -37,26 +38,44 @@ export const handler = async (
 
     // Validate targets
     if (!Array.isArray(targets) || targets.length === 0) {
-      return ResponseUtil.badRequest(event, "targets array is required and must not be empty");
+      return ResponseUtil.badRequest(
+        event,
+        "targets array is required and must not be empty"
+      );
     }
 
     if (targets.length > 50) {
-      return ResponseUtil.badRequest(event, "Maximum 50 targets allowed per request");
+      return ResponseUtil.badRequest(
+        event,
+        "Maximum 50 targets allowed per request"
+      );
     }
 
     // Validate each target
     for (const target of targets) {
-      if (!target.targetType || !["album", "media"].includes(target.targetType)) {
-        return ResponseUtil.badRequest(event, "Each target must have a valid targetType ('album' or 'media')");
+      if (
+        !target.targetType ||
+        !["album", "media"].includes(target.targetType)
+      ) {
+        return ResponseUtil.badRequest(
+          event,
+          "Each target must have a valid targetType ('album' or 'media')"
+        );
       }
       if (!target.targetId || typeof target.targetId !== "string") {
-        return ResponseUtil.badRequest(event, "Each target must have a valid targetId");
+        return ResponseUtil.badRequest(
+          event,
+          "Each target must have a valid targetId"
+        );
       }
     }
 
     // Get user interactions for all targets
-    const statusMap = new Map<string, { userLiked: boolean; userBookmarked: boolean }>();
-    
+    const statusMap = new Map<
+      string,
+      { userLiked: boolean; userBookmarked: boolean }
+    >();
+
     // Initialize all targets as not interacted
     for (const target of targets) {
       const key = `${target.targetType}:${target.targetId}`;
@@ -67,7 +86,7 @@ export const handler = async (
       // Get user likes
       const [likesResult, bookmarksResult] = await Promise.all([
         DynamoDBService.getUserInteractions(user.userId, "like"),
-        DynamoDBService.getUserInteractions(user.userId, "bookmark")
+        DynamoDBService.getUserInteractions(user.userId, "bookmark"),
       ]);
 
       // Process likes
@@ -95,26 +114,28 @@ export const handler = async (
       }
     } catch (error) {
       console.error("❌ Error fetching user interactions:", error);
-      return ResponseUtil.internalError(event, "Failed to fetch interaction status");
+      return ResponseUtil.internalError(
+        event,
+        "Failed to fetch interaction status"
+      );
     }
 
     // Format response
-    const statuses = targets.map(target => ({
+    const statuses = targets.map((target) => ({
       targetType: target.targetType,
       targetId: target.targetId,
-      ...statusMap.get(`${target.targetType}:${target.targetId}`)!
+      ...statusMap.get(`${target.targetType}:${target.targetId}`)!,
     }));
 
     const response = {
       success: true,
       data: {
-        statuses
-      }
+        statuses,
+      },
     };
 
     console.log("✅ Successfully retrieved interaction statuses");
     return ResponseUtil.success(event, response);
-
   } catch (error) {
     console.error("❌ Error in get-interaction-status function:", error);
     return ResponseUtil.internalError(event, "Internal server error");

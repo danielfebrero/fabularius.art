@@ -2,9 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { interactionApi } from "@/lib/api";
-import {
-  InteractionRequest,
-} from "@/types/user";
+import { InteractionRequest } from "@/types/user";
 import { useUser } from "./useUser";
 import { useUserInteractionStatus } from "./useUserInteractionStatus";
 

@@ -116,7 +116,7 @@ export function UserInteractionProvider({ children }: { children: ReactNode }) {
 
       try {
         const response = await interactionApi.getInteractionStatus([
-          { targetType, targetId }
+          { targetType, targetId },
         ]);
         if (response.data?.statuses?.[0]) {
           const statusData = response.data.statuses[0];
@@ -196,10 +196,7 @@ export function UserInteractionProvider({ children }: { children: ReactNode }) {
               }
             }
           } catch (error) {
-            console.error(
-              `Failed to preload status batch:`,
-              error
-            );
+            console.error(`Failed to preload status batch:`, error);
           }
         }
       } finally {
