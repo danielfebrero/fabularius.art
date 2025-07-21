@@ -127,15 +127,12 @@ export const handler = async (
       ...statusMap.get(`${target.targetType}:${target.targetId}`)!,
     }));
 
-    const response = {
-      success: true,
-      data: {
-        statuses,
-      },
+    const responseData = {
+      statuses,
     };
 
     console.log("✅ Successfully retrieved interaction statuses");
-    return ResponseUtil.success(event, response);
+    return ResponseUtil.success(event, responseData);
   } catch (error) {
     console.error("❌ Error in get-interaction-status function:", error);
     return ResponseUtil.internalError(event, "Internal server error");
