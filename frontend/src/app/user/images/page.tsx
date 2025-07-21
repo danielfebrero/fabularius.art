@@ -61,7 +61,7 @@ const UserImagesPage: React.FC = () => {
               <ImageIcon className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">My Images</h1>
+              <h1 className="text-3xl font-bold text-foreground">Images</h1>
               <p className="text-muted-foreground">
                 Your personal photo gallery
               </p>

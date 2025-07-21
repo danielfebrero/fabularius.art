@@ -60,7 +60,7 @@ const UserAlbumsPage: React.FC = () => {
               <FolderOpen className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-foreground">My Albums</h1>
+              <h1 className="text-3xl font-bold text-foreground">Albums</h1>
               <p className="text-muted-foreground">
                 Your personal photo collections
               </p>

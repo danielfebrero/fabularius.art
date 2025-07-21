@@ -299,7 +299,7 @@ const UserBookmarksPage: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-foreground">
-                  My Bookmarks
+                  Bookmarks
                 </h1>
                 <p className="text-muted-foreground">Your saved favorites</p>
               </div>

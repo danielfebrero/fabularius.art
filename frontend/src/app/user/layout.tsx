@@ -59,12 +59,12 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
     },
     {
       href: "/user/images",
-      label: "My Images",
+      label: "Images",
       icon: Image,
     },
     {
       href: "/user/albums",
-      label: "My Albums",
+      label: "Albums",
       icon: FolderOpen,
     },
   ];

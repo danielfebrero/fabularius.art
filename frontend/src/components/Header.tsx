@@ -61,25 +61,25 @@ export function Header() {
                   href="/user/images"
                   className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  My Images
+                  Images
                 </Link>
                 <Link
                   href="/user/bookmarks"
                   className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  My Bookmarks
+                  Bookmarks
                 </Link>
                 <Link
                   href="/user/likes"
                   className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  My Likes
+                  Likes
                 </Link>
                 <Link
                   href="/user/albums"
                   className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  My Albums
+                  Albums
                 </Link>
               </>
             )}
@@ -176,28 +176,28 @@ export function Header() {
                       onClick={closeMobileMenu}
                       className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
                     >
-                      My Images
+                      Images
                     </Link>
                     <Link
                       href="/user/bookmarks"
                       onClick={closeMobileMenu}
                       className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
                     >
-                      My Bookmarks
+                      Bookmarks
                     </Link>
                     <Link
                       href="/user/likes"
                       onClick={closeMobileMenu}
                       className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
                     >
-                      My Likes
+                      Likes
                     </Link>
                     <Link
                       href="/user/albums"
                       onClick={closeMobileMenu}
                       className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
                     >
-                      My Albums
+                      Albums
                     </Link>
                   </div>
                 </>

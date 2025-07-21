@@ -54,16 +54,16 @@ export function UserInteractionProvider({ children }: { children: ReactNode }) {
     Map<string, UserInteractionStatus>
   >(new Map());
   const [loadingTargets, setLoadingTargets] = useState<Set<string>>(new Set());
-  
+
   // Use refs to avoid recreating callbacks when state changes
   const statusCacheRef = useRef(statusCache);
   const loadingTargetsRef = useRef(loadingTargets);
-  
+
   // Update refs when state changes
   useEffect(() => {
     statusCacheRef.current = statusCache;
   }, [statusCache]);
-  
+
   useEffect(() => {
     loadingTargetsRef.current = loadingTargets;
   }, [loadingTargets]);
@@ -124,7 +124,8 @@ export function UserInteractionProvider({ children }: { children: ReactNode }) {
       const key = getCacheKey(targetType, targetId);
 
       // Don't load if already cached or currently loading
-      if (statusCacheRef.current.has(key) || loadingTargetsRef.current.has(key)) return;
+      if (statusCacheRef.current.has(key) || loadingTargetsRef.current.has(key))
+        return;
 
       setLoadingTargets((prev) => new Set(prev).add(key));
 
@@ -165,7 +166,10 @@ export function UserInteractionProvider({ children }: { children: ReactNode }) {
       // Filter out targets that are already cached or loading
       const uncachedTargets = targets.filter((target) => {
         const key = getCacheKey(target.targetType, target.targetId);
-        return !statusCacheRef.current.has(key) && !loadingTargetsRef.current.has(key);
+        return (
+          !statusCacheRef.current.has(key) &&
+          !loadingTargetsRef.current.has(key)
+        );
       });
 
       if (uncachedTargets.length === 0) return;
