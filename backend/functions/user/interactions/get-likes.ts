@@ -89,7 +89,10 @@ export const handler = async (
         } else if (interaction.targetType === "media") {
           // For media, we can now use the stored albumId to get proper media details
           if (interaction.albumId) {
-            const media = await DynamoDBService.getMedia(interaction.albumId, interaction.targetId);
+            const media = await DynamoDBService.getMedia(
+              interaction.albumId,
+              interaction.targetId
+            );
             if (media) {
               // Also get the album to provide context
               const album = await DynamoDBService.getAlbum(interaction.albumId);
@@ -108,12 +111,34 @@ export const handler = async (
               };
             }
           } else {
-            // Fallback for old interactions without albumId
-            targetDetails = {
-              id: interaction.targetId,
-              type: "media",
-              title: `Media ${interaction.targetId}`,
-            };
+            // Fallback for old interactions without albumId - try to find media by scanning
+            const media = await DynamoDBService.findMediaById(
+              interaction.targetId
+            );
+            if (media) {
+              // Also get the album to provide context
+              const album = await DynamoDBService.getAlbum(media.albumId);
+              targetDetails = {
+                id: media.id,
+                title: media.originalFilename,
+                type: "media",
+                mimeType: media.mimeType,
+                size: media.size,
+                thumbnailUrls: media.thumbnailUrls,
+                url: media.url,
+                albumId: media.albumId,
+                albumTitle: album?.title || "Unknown Album",
+                createdAt: media.createdAt,
+                updatedAt: media.updatedAt,
+              };
+            } else {
+              // If we still can't find the media, use basic fallback
+              targetDetails = {
+                id: interaction.targetId,
+                type: "media",
+                title: `Media ${interaction.targetId}`,
+              };
+            }
           }
         }
 

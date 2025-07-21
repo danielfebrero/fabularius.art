@@ -54,6 +54,8 @@ export const handler = async (
       SK: `MEDIA#${mediaId}`,
       GSI1PK: `MEDIA#${albumId}`,
       GSI1SK: `${now}#${mediaId}`,
+      GSI2PK: "MEDIA_ID",
+      GSI2SK: mediaId,
       EntityType: "Media" as const,
       id: mediaId,
       albumId,

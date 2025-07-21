@@ -644,6 +644,7 @@ Resources:
       Handler: update.handler
       Layers:
         - !Ref SharedLayer
+        - !Ref SharpLayer
       MemorySize: 1024
       Timeout: 60
       Events:

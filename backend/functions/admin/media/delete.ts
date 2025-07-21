@@ -39,6 +39,9 @@ export const handler = async (
     // Delete S3 object
     await S3Service.deleteObject(existingMedia.filename);
 
+    // Clean up interactions for this media
+    await DynamoDBService.deleteAllInteractionsForTarget(mediaId);
+
     // Delete the media record from DynamoDB
     await DynamoDBService.deleteMedia(albumId, mediaId);
 

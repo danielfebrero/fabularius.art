@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, Search, Grid, List, Calendar, Image, FolderOpen } from "lucide-react";
+import {
+  Heart,
+  Search,
+  Grid,
+  List,
+  Calendar,
+  Image,
+  FolderOpen,
+} from "lucide-react";
 import { useLikes } from "@/hooks/useLikes";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -73,8 +81,7 @@ const UserLikesPage: React.FC = () => {
             {interaction.targetType === "album" && (
               <>
                 <h3 className="font-medium text-foreground line-clamp-2 mb-2">
-                  {interaction.target?.title ||
-                    `Album ${interaction.targetId}`}
+                  {interaction.target?.title || `Album ${interaction.targetId}`}
                 </h3>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <div className="flex items-center space-x-2">
@@ -151,7 +158,9 @@ const UserLikesPage: React.FC = () => {
                 <Calendar className="h-3 w-3 mr-1" />
                 {formatDate(interaction.createdAt)}
                 {interaction.target?.albumTitle && (
-                  <span className="ml-2 text-xs">from {interaction.target.albumTitle}</span>
+                  <span className="ml-2 text-xs">
+                    from {interaction.target.albumTitle}
+                  </span>
                 )}
               </div>
             )}

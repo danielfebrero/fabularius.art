@@ -6,6 +6,7 @@ import {
   QueryCommand,
   UpdateCommand,
   DeleteCommand,
+  BatchWriteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import {
   Album,
@@ -369,6 +370,30 @@ export class DynamoDBService {
     }
 
     return response;
+  }
+
+  static async findMediaById(mediaId: string): Promise<MediaEntity | null> {
+    // Use GSI2 for efficient direct media lookup by ID
+    try {
+      const result = await docClient.send(
+        new QueryCommand({
+          TableName: TABLE_NAME,
+          IndexName: "GSI2",
+          KeyConditionExpression: "GSI2PK = :gsi2pk AND GSI2SK = :gsi2sk",
+          ExpressionAttributeValues: {
+            ":gsi2pk": "MEDIA_ID",
+            ":gsi2sk": mediaId,
+          },
+          Limit: 1, // We expect only one result
+        })
+      );
+
+      const items = result.Items as MediaEntity[] | undefined;
+      return items?.[0] || null;
+    } catch (error) {
+      console.error("❌ Error finding media by ID:", error);
+      return null;
+    }
   }
 
   static async deleteMedia(albumId: string, mediaId: string): Promise<void> {
@@ -1156,5 +1181,90 @@ export class DynamoDBService {
     }
 
     return totalBookmarks;
+  }
+
+  // Cleanup methods for orphaned interactions
+  static async deleteAllInteractionsForTarget(targetId: string): Promise<void> {
+    console.log(`🧹 Cleaning up all interactions for target: ${targetId}`);
+    
+    // Delete all likes for this target and decrement counts
+    const likeCount = await this.deleteInteractionsByType(targetId, "like");
+    
+    // Delete all bookmarks for this target and decrement counts  
+    const bookmarkCount = await this.deleteInteractionsByType(targetId, "bookmark");
+    
+    // If this is an album, decrement the counts on the album itself
+    // Note: For media, we don't currently store individual media interaction counts
+    try {
+      const album = await this.getAlbum(targetId);
+      if (album) {
+        // This is an album, decrement the counts
+        if (likeCount > 0) {
+          await this.incrementAlbumLikeCount(targetId, -likeCount);
+        }
+        if (bookmarkCount > 0) {
+          await this.incrementAlbumBookmarkCount(targetId, -bookmarkCount);  
+        }
+        console.log(`📉 Decremented album counts: ${likeCount} likes, ${bookmarkCount} bookmarks`);
+      }
+    } catch (error) {
+      // Target is not an album or doesn't exist, which is expected for media or deleted items
+      console.log(`📝 Target ${targetId} is not an album or doesn't exist (expected for media)`);
+    }
+  }
+
+  private static async deleteInteractionsByType(
+    targetId: string, 
+    interactionType: "like" | "bookmark"
+  ): Promise<number> {
+    try {
+      // Query GSI1 to find all interactions for this target
+      const result = await docClient.send(
+        new QueryCommand({
+          TableName: TABLE_NAME,
+          IndexName: "GSI1",
+          KeyConditionExpression: "GSI1PK = :gsi1pk",
+          ExpressionAttributeValues: {
+            ":gsi1pk": `INTERACTION#${interactionType}#${targetId}`,
+          },
+        })
+      );
+
+      if (!result.Items || result.Items.length === 0) {
+        console.log(`📭 No ${interactionType} interactions found for target: ${targetId}`);
+        return 0;
+      }
+
+      console.log(`🗑️  Deleting ${result.Items.length} ${interactionType} interactions for target: ${targetId}`);
+
+      // Delete each interaction in batches
+      const batchSize = 25; // DynamoDB batch write limit
+      for (let i = 0; i < result.Items.length; i += batchSize) {
+        const batch = result.Items.slice(i, i + batchSize);
+        
+        const deleteRequests = batch.map((item: any) => ({
+          DeleteRequest: {
+            Key: {
+              PK: item["PK"],
+              SK: item["SK"],
+            },
+          },
+        }));
+
+        await docClient.send(
+          new BatchWriteCommand({
+            RequestItems: {
+              [TABLE_NAME]: deleteRequests,
+            },
+          })
+        );
+      }
+
+      console.log(`✅ Deleted ${result.Items.length} ${interactionType} interactions for target: ${targetId}`);
+      return result.Items.length;
+    } catch (error) {
+      console.error(`❌ Error deleting ${interactionType} interactions for target ${targetId}:`, error);
+      throw error;
+    }
   }
 }

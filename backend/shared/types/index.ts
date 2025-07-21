@@ -111,6 +111,8 @@ export interface MediaEntity {
   SK: string; // MEDIA#{mediaId}
   GSI1PK: string; // MEDIA#{albumId}
   GSI1SK: string; // {createdAt}#{mediaId}
+  GSI2PK: string; // MEDIA_ID
+  GSI2SK: string; // {mediaId}
   EntityType: "Media";
   id: string;
   albumId: string;

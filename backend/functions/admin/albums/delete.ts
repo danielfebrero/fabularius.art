@@ -31,7 +31,16 @@ export const handler = async (
         DynamoDBService.deleteMedia(albumId, mediaItem.id)
       );
       await Promise.all(deleteMediaPromises);
+
+      // Clean up interactions for each media item
+      const cleanupMediaPromises = media.map((mediaItem) =>
+        DynamoDBService.deleteAllInteractionsForTarget(mediaItem.id)
+      );
+      await Promise.all(cleanupMediaPromises);
     }
+
+    // Clean up interactions for the album itself
+    await DynamoDBService.deleteAllInteractionsForTarget(albumId);
 
     // Delete the album
     await DynamoDBService.deleteAlbum(albumId);
