@@ -129,6 +129,7 @@ const UserBookmarksPage: React.FC = () => {
               />
             ) : (
               <div className="w-full h-full bg-muted/50 flex items-center justify-center">
+                {/* eslint-disable-next-line jsx-a11y/alt-text */}
                 <Image className="h-12 w-12 text-muted-foreground" />
               </div>
             )}
@@ -166,6 +167,7 @@ const UserBookmarksPage: React.FC = () => {
               </div>
             ) : (
               <div className="aspect-square bg-muted/50 flex items-center justify-center relative">
+                {/* eslint-disable-next-line jsx-a11y/alt-text */}
                 <Image className="h-12 w-12 text-muted-foreground" />
                 <div className="absolute top-2 right-2">
                   <Bookmark className="h-5 w-5 text-blue-500 fill-current drop-shadow-lg" />
@@ -211,6 +213,7 @@ const UserBookmarksPage: React.FC = () => {
               className="w-16 h-16 bg-muted/50 rounded-lg flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => handleCardClick(interaction)}
             >
+              {/* eslint-disable-next-line jsx-a11y/alt-text */}
               <Image className="h-6 w-6 text-muted-foreground" />
             </div>
           )}

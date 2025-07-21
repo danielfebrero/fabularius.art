@@ -1083,6 +1083,11 @@ Resources:
             TableName: !Ref MediaTable
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+              Resource: !GetAtt MediaTable.Arn
 
   UserBookmarkFunction:
     Type: AWS::Serverless::Function
@@ -1114,6 +1119,11 @@ Resources:
             TableName: !Ref MediaTable
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+              Resource: !GetAtt MediaTable.Arn
 
   UserViewFunction:
     Type: AWS::Serverless::Function
