@@ -188,6 +188,15 @@ export class S3Service {
   }
 
   static extractKeyFromUrl(url: string): string | null {
+    if (!url || typeof url !== "string") {
+      return null;
+    }
+
+    // If it's already a relative path (starts with /), remove the leading slash and return
+    if (url.startsWith("/")) {
+      return url.substring(1);
+    }
+
     try {
       const urlObj = new URL(url);
 

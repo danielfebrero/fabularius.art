@@ -333,9 +333,7 @@ export const interactionApi = {
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to get insights: ${response.statusText}`
-      );
+      throw new Error(`Failed to get insights: ${response.statusText}`);
     }
 
     return response.json();

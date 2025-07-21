@@ -17,14 +17,8 @@ import {
 const UserDashboard: React.FC = () => {
   const { user } = useUser();
   const { insights, isLoading: insightsLoading } = useInsights();
-  const {
-    likes,
-    isLoading: likesLoading,
-  } = useLikes(true);
-  const {
-    bookmarks,
-    isLoading: bookmarksLoading,
-  } = useBookmarks(true);
+  const { likes, isLoading: likesLoading } = useLikes(true);
+  const { bookmarks, isLoading: bookmarksLoading } = useBookmarks(true);
 
   // Get recent items (first 3)
   const recentLikes = likes.slice(0, 3);
@@ -79,22 +73,22 @@ const UserDashboard: React.FC = () => {
           "small"
         );
       }
-      
+
       if (interaction.target?.coverImageUrl) {
         // Album cover image fallback
         return composeAlbumCoverUrl(interaction.target.coverImageUrl);
       }
-      
+
       if (interaction.target?.thumbnailUrl) {
         // Single thumbnail URL fallback (for media items)
         return composeMediaUrl(interaction.target.thumbnailUrl);
       }
-      
+
       if (interaction.target?.url) {
         // Media URL fallback
         return composeMediaUrl(interaction.target.url);
       }
-      
+
       return null;
     };
 
@@ -109,7 +103,7 @@ const UserDashboard: React.FC = () => {
             className="w-12 h-12 object-cover rounded-lg shadow-sm"
             onError={(e) => {
               console.warn("Failed to load thumbnail:", thumbnailUrl);
-              (e.target as HTMLImageElement).style.display = 'none';
+              (e.target as HTMLImageElement).style.display = "none";
             }}
           />
         )}

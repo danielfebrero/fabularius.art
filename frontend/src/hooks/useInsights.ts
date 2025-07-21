@@ -20,8 +20,9 @@ export const useInsights = () => {
       setIsLoading(true);
       setError(null);
 
-      const response: UserInteractionStatsResponse = await interactionApi.getInsights();
-      
+      const response: UserInteractionStatsResponse =
+        await interactionApi.getInsights();
+
       if (response.success && response.data) {
         setInsights({
           totalLikesReceived: response.data.totalLikesReceived,

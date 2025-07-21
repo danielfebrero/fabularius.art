@@ -307,5 +307,18 @@ describe("S3Service", () => {
 
       expect(result).toBe("albums/test%20album/image%20file.jpg");
     });
+
+    it("should extract key from relative path", () => {
+      const relativePath = "/albums/test-album/media/image.jpg";
+      const result = S3Service.extractKeyFromUrl(relativePath);
+
+      expect(result).toBe("albums/test-album/media/image.jpg");
+    });
+
+    it("should handle null and empty inputs", () => {
+      expect(S3Service.extractKeyFromUrl(null as any)).toBeNull();
+      expect(S3Service.extractKeyFromUrl("")).toBeNull();
+      expect(S3Service.extractKeyFromUrl(undefined as any)).toBeNull();
+    });
   });
 });

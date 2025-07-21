@@ -24,8 +24,10 @@ export const handler = async (
     const user = authResult.user;
 
     // Get total likes received on user's content
-    const totalLikesReceived = await DynamoDBService.getTotalLikesReceivedOnUserContent(user.userId);
-    const totalBookmarksReceived = await DynamoDBService.getTotalBookmarksReceivedOnUserContent(user.userId);
+    const totalLikesReceived =
+      await DynamoDBService.getTotalLikesReceivedOnUserContent(user.userId);
+    const totalBookmarksReceived =
+      await DynamoDBService.getTotalBookmarksReceivedOnUserContent(user.userId);
 
     return ResponseUtil.success(event, {
       totalLikesReceived,
