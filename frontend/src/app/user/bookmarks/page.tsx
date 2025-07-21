@@ -189,20 +189,28 @@ const UserBookmarksPage: React.FC = () => {
         <div className="flex items-center space-x-4">
           {interaction.target?.thumbnailUrls ||
           interaction.target?.coverImageUrl ? (
-            <ResponsivePicture
-              thumbnailUrls={composeThumbnailUrls(
-                interaction.target.thumbnailUrls
-              )}
-              fallbackUrl={composeAlbumCoverUrl(
-                interaction.target.coverImageUrl
-              )}
-              alt={interaction.target.title || "Content"}
-              className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
-              context="admin"
-              loading="lazy"
-            />
+            <div
+              className="cursor-pointer"
+              onClick={() => handleCardClick(interaction)}
+            >
+              <ResponsivePicture
+                thumbnailUrls={composeThumbnailUrls(
+                  interaction.target.thumbnailUrls
+                )}
+                fallbackUrl={composeAlbumCoverUrl(
+                  interaction.target.coverImageUrl
+                )}
+                alt={interaction.target.title || "Content"}
+                className="w-16 h-16 object-cover rounded-lg flex-shrink-0 hover:opacity-80 transition-opacity"
+                context="admin"
+                loading="lazy"
+              />
+            </div>
           ) : (
-            <div className="w-16 h-16 bg-muted/50 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div
+              className="w-16 h-16 bg-muted/50 rounded-lg flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => handleCardClick(interaction)}
+            >
               <Image className="h-6 w-6 text-muted-foreground" />
             </div>
           )}
@@ -235,7 +243,16 @@ const UserBookmarksPage: React.FC = () => {
                 {formatDate(interaction.createdAt)}
                 {interaction.target?.albumTitle && (
                   <span className="ml-2 text-xs">
-                    from {interaction.target.albumTitle}
+                    from{" "}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/albums/${interaction.target?.albumId}`);
+                      }}
+                      className="text-blue-600 hover:text-blue-800 underline hover:no-underline transition-colors"
+                    >
+                      {interaction.target.albumTitle}
+                    </button>
                   </span>
                 )}
               </div>

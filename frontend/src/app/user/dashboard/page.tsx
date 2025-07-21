@@ -1,36 +1,37 @@
 "use client";
 
 import Link from "next/link";
-import { Heart, Bookmark, Eye, Calendar } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Heart, Bookmark, Eye, Calendar, Image } from "lucide-react";
 import { useLikes } from "@/hooks/useLikes";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { useInsights } from "@/hooks/useInsights";
 import { useUser } from "@/hooks/useUser";
+import { useTargetInteractionStatus } from "@/hooks/useUserInteractionStatus";
 import { Button } from "@/components/ui/Button";
+import ResponsivePicture from "@/components/ui/ResponsivePicture";
+import { Lightbox } from "@/components/ui/Lightbox";
 import {
   composeAlbumCoverUrl,
-  getBestThumbnailUrl,
   composeThumbnailUrls,
   composeMediaUrl,
 } from "@/lib/urlUtils";
 
 const UserDashboard: React.FC = () => {
   const { user } = useUser();
-  const { insights, isLoading: insightsLoading } = useInsights();
+  const router = useRouter();
+  const { insights } = useInsights();
   const { likes, isLoading: likesLoading } = useLikes(true);
   const { bookmarks, isLoading: bookmarksLoading } = useBookmarks(true);
+
+  // Lightbox state
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState<any>(null);
 
   // Get recent items (first 3)
   const recentLikes = likes.slice(0, 3);
   const recentBookmarks = bookmarks.slice(0, 3);
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
 
   const StatCard = ({
     title,
@@ -62,74 +63,161 @@ const UserDashboard: React.FC = () => {
     </div>
   );
 
-  const ContentItem = ({ interaction }: { interaction: any }) => {
-    // Determine thumbnail URL for both album and media items
-    const getThumbnailUrl = () => {
-      if (interaction.target?.thumbnailUrls) {
-        // Try thumbnail URLs object (common for both albums and media)
-        return getBestThumbnailUrl(
-          composeThumbnailUrls(interaction.target.thumbnailUrls),
-          null,
-          "small"
-        );
-      }
+  const handleCardClick = (interaction: any) => {
+    if (interaction.targetType === "media") {
+      // Show lightbox for media
+      const media = {
+        id: interaction.targetId,
+        albumId: interaction.target?.albumId || interaction.albumId || "",
+        filename: interaction.target?.title || "",
+        originalFilename: interaction.target?.title || "",
+        mimeType: interaction.target?.mimeType || "image/jpeg",
+        size: interaction.target?.size || 0,
+        url: interaction.target?.url || "",
+        thumbnailUrl: interaction.target?.thumbnailUrls?.medium || "",
+        thumbnailUrls: interaction.target?.thumbnailUrls,
+        createdAt: interaction.createdAt,
+        updatedAt: interaction.createdAt,
+      };
 
-      if (interaction.target?.coverImageUrl) {
-        // Album cover image fallback
-        return composeAlbumCoverUrl(interaction.target.coverImageUrl);
-      }
+      setSelectedMedia(media);
+      setLightboxOpen(true);
+    } else {
+      // Navigate to album for albums
+      router.push(`/albums/${interaction.targetId}`);
+    }
+  };
 
-      if (interaction.target?.thumbnailUrl) {
-        // Single thumbnail URL fallback (for media items)
-        return composeMediaUrl(interaction.target.thumbnailUrl);
-      }
+  const handleLightboxClose = () => {
+    setLightboxOpen(false);
+  };
 
-      if (interaction.target?.url) {
-        // Media URL fallback
-        return composeMediaUrl(interaction.target.url);
-      }
+  const ContentCard = ({ interaction }: { interaction: any }) => {
+    const { userLiked, userBookmarked } = useTargetInteractionStatus(
+      interaction.targetType,
+      interaction.targetId
+    );
 
-      return null;
-    };
+    // Determine if this item is currently liked/bookmarked by the user
+    const isCurrentlyLiked = userLiked;
+    const isCurrentlyBookmarked = userBookmarked;
 
-    const thumbnailUrl = getThumbnailUrl();
-
-    return (
-      <div className="flex items-center space-x-4 p-4 bg-card/50 backdrop-blur-sm rounded-xl border border-admin-primary/5 hover:border-admin-primary/20 transition-all duration-200">
-        {thumbnailUrl && (
-          <img
-            src={thumbnailUrl}
-            alt={interaction.target?.title || "Content"}
-            className="w-12 h-12 object-cover rounded-lg shadow-sm"
-            onError={(e) => {
-              console.warn("Failed to load thumbnail:", thumbnailUrl);
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
-        )}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">
-            {interaction.target?.title ||
-              `${interaction.targetType} ${interaction.targetId}`}
-          </p>
-          <p className="text-xs text-muted-foreground flex items-center mt-1">
-            <Calendar className="h-3 w-3 mr-1" />
-            {formatDate(interaction.createdAt)}
-          </p>
-        </div>
-        <div className="flex-shrink-0">
-          {interaction.interactionType === "like" ? (
-            <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-pink-500 rounded-lg flex items-center justify-center">
-              <Heart className="h-4 w-4 text-white" />
-            </div>
+    if (interaction.targetType === "media") {
+      // Media cards: show only image (square)
+      return (
+        <div
+          className="group relative cursor-pointer overflow-hidden rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02] aspect-square"
+          onClick={() => handleCardClick(interaction)}
+        >
+          {interaction.target?.thumbnailUrls ? (
+            <ResponsivePicture
+              thumbnailUrls={composeThumbnailUrls(
+                interaction.target.thumbnailUrls
+              )}
+              fallbackUrl={composeMediaUrl(interaction.target?.url || "")}
+              alt={interaction.target.title || "Content"}
+              className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+              context="albums"
+              loading="lazy"
+            />
           ) : (
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center">
-              <Bookmark className="h-4 w-4 text-white" />
+            <div className="w-full h-full bg-muted/50 flex items-center justify-center">
+              <Image className="h-12 w-12 text-muted-foreground" />
             </div>
           )}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+          <div className="absolute top-2 right-2 flex gap-1">
+            {/* Show current status with visual indicators */}
+            {isCurrentlyLiked && (
+              <Heart className="h-4 w-4 text-red-500 fill-current drop-shadow-lg" />
+            )}
+            {isCurrentlyBookmarked && (
+              <Bookmark className="h-4 w-4 text-blue-500 fill-current drop-shadow-lg" />
+            )}
+            {/* If this is from user's interactions, also show the original interaction type */}
+            {!isCurrentlyLiked && interaction.interactionType === "like" && (
+              <Heart className="h-4 w-4 text-red-300 drop-shadow-lg opacity-50" />
+            )}
+            {!isCurrentlyBookmarked &&
+              interaction.interactionType === "bookmark" && (
+                <Bookmark className="h-4 w-4 text-blue-300 drop-shadow-lg opacity-50" />
+              )}
+          </div>
         </div>
-      </div>
-    );
+      );
+    } else {
+      // Album cards: show image and title only (square)
+      return (
+        <div
+          className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 overflow-hidden hover:shadow-xl hover:border-admin-primary/30 transition-all duration-300 cursor-pointer"
+          onClick={() => handleCardClick(interaction)}
+        >
+          {interaction.target?.thumbnailUrls ||
+          interaction.target?.coverImageUrl ? (
+            <div className="aspect-square relative">
+              <ResponsivePicture
+                thumbnailUrls={composeThumbnailUrls(
+                  interaction.target.thumbnailUrls
+                )}
+                fallbackUrl={composeAlbumCoverUrl(
+                  interaction.target.coverImageUrl
+                )}
+                alt={interaction.target.title || "Content"}
+                className="w-full h-full object-cover"
+                context="albums"
+                loading="lazy"
+              />
+              <div className="absolute top-2 right-2 flex gap-1">
+                {/* Show current status with visual indicators */}
+                {isCurrentlyLiked && (
+                  <Heart className="h-4 w-4 text-red-500 fill-current drop-shadow-lg" />
+                )}
+                {isCurrentlyBookmarked && (
+                  <Bookmark className="h-4 w-4 text-blue-500 fill-current drop-shadow-lg" />
+                )}
+                {/* If this is from user's interactions, also show the original interaction type */}
+                {!isCurrentlyLiked &&
+                  interaction.interactionType === "like" && (
+                    <Heart className="h-4 w-4 text-red-300 drop-shadow-lg opacity-50" />
+                  )}
+                {!isCurrentlyBookmarked &&
+                  interaction.interactionType === "bookmark" && (
+                    <Bookmark className="h-4 w-4 text-blue-300 drop-shadow-lg opacity-50" />
+                  )}
+              </div>
+            </div>
+          ) : (
+            <div className="aspect-square bg-muted/50 flex items-center justify-center relative">
+              <Image className="h-12 w-12 text-muted-foreground" />
+              <div className="absolute top-2 right-2 flex gap-1">
+                {/* Show current status with visual indicators */}
+                {isCurrentlyLiked && (
+                  <Heart className="h-4 w-4 text-red-500 fill-current drop-shadow-lg" />
+                )}
+                {isCurrentlyBookmarked && (
+                  <Bookmark className="h-4 w-4 text-blue-500 fill-current drop-shadow-lg" />
+                )}
+                {/* If this is from user's interactions, also show the original interaction type */}
+                {!isCurrentlyLiked &&
+                  interaction.interactionType === "like" && (
+                    <Heart className="h-4 w-4 text-red-300 drop-shadow-lg opacity-50" />
+                  )}
+                {!isCurrentlyBookmarked &&
+                  interaction.interactionType === "bookmark" && (
+                    <Bookmark className="h-4 w-4 text-blue-300 drop-shadow-lg opacity-50" />
+                  )}
+              </div>
+            </div>
+          )}
+
+          <div className="p-4">
+            <h3 className="font-medium text-foreground line-clamp-2 text-center">
+              {interaction.target?.title || `Album ${interaction.targetId}`}
+            </h3>
+          </div>
+        </div>
+      );
+    }
   };
 
   return (
@@ -231,23 +319,25 @@ const UserDashboard: React.FC = () => {
             </div>
 
             {likesLoading ? (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="flex items-center space-x-4 p-4 bg-muted/20 rounded-lg">
-                      <div className="w-12 h-12 bg-muted rounded-md"></div>
-                      <div className="flex-1">
-                        <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-muted rounded w-1/2"></div>
-                      </div>
+                    <div className="bg-card/60 rounded-xl shadow-lg border border-admin-primary/10 overflow-hidden">
+                      <div className="aspect-square bg-muted/50"></div>
+                      {/* Only show skeleton text for albums (simulate every other) */}
+                      {i % 2 === 0 && (
+                        <div className="p-4 space-y-2">
+                          <div className="h-4 bg-muted/50 rounded w-3/4 mx-auto"></div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
             ) : recentLikes.length > 0 ? (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {recentLikes.map((like, index) => (
-                  <ContentItem key={index} interaction={like} />
+                  <ContentCard key={index} interaction={like} />
                 ))}
               </div>
             ) : (
@@ -278,23 +368,25 @@ const UserDashboard: React.FC = () => {
             </div>
 
             {bookmarksLoading ? (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="flex items-center space-x-4 p-4 bg-muted/20 rounded-lg">
-                      <div className="w-12 h-12 bg-muted rounded-md"></div>
-                      <div className="flex-1">
-                        <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                        <div className="h-3 bg-muted rounded w-1/2"></div>
-                      </div>
+                    <div className="bg-card/60 rounded-xl shadow-lg border border-admin-primary/10 overflow-hidden">
+                      <div className="aspect-square bg-muted/50"></div>
+                      {/* Only show skeleton text for albums (simulate every other) */}
+                      {i % 2 === 0 && (
+                        <div className="p-4 space-y-2">
+                          <div className="h-4 bg-muted/50 rounded w-3/4 mx-auto"></div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
             ) : recentBookmarks.length > 0 ? (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {recentBookmarks.map((bookmark, index) => (
-                  <ContentItem key={index} interaction={bookmark} />
+                  <ContentCard key={index} interaction={bookmark} />
                 ))}
               </div>
             ) : (
@@ -305,6 +397,17 @@ const UserDashboard: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {lightboxOpen && selectedMedia && (
+        <Lightbox
+          isOpen={lightboxOpen}
+          onClose={handleLightboxClose}
+          media={[selectedMedia]}
+          currentIndex={0}
+          onNext={() => {}}
+          onPrevious={() => {}}
+        />
+      )}
     </div>
   );
 };

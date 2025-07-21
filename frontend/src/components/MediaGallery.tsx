@@ -5,7 +5,7 @@ import { Media } from "../types/index";
 import { MediaCard } from "./ui/MediaCard";
 import { Lightbox } from "./ui/Lightbox";
 import { Button } from "./ui/Button";
-import { cn, getScreenSize } from "../lib/utils";
+import { cn } from "../lib/utils";
 import { getMediaForAlbum } from "../lib/data";
 
 interface MediaGalleryProps {
@@ -134,6 +134,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
                 onClick={() => handleMediaClick(index)}
                 context="albums"
                 columns={getColumns()}
+                albumId={albumId}
               />
             );
           })}

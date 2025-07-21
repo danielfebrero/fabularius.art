@@ -11,7 +11,6 @@ import {
   UsernameAvailabilityResponse,
   InteractionRequest,
   InteractionResponse,
-  InteractionCountsResponse,
   UserInteractionsResponse,
   UserInteractionStatsResponse,
 } from "@/types/user";
@@ -303,22 +302,32 @@ export const interactionApi = {
     return response.json();
   },
 
-  // Get interaction counts and user status for content
-  getCounts: async (
-    targetType: "album" | "media",
-    targetId: string
-  ): Promise<InteractionCountsResponse> => {
-    const response = await fetch(
-      `${API_URL}/user/interactions/counts/${targetType}/${targetId}`,
-      {
-        method: "GET",
-        credentials: "include",
-      }
-    );
+  // Get user interaction status for multiple targets (optimized replacement for getCounts)
+  getInteractionStatus: async (
+    targets: Array<{ targetType: "album" | "media"; targetId: string }>
+  ): Promise<{
+    success: boolean;
+    data: {
+      statuses: Array<{
+        targetType: "album" | "media";
+        targetId: string;
+        userLiked: boolean;
+        userBookmarked: boolean;
+      }>;
+    };
+  }> => {
+    const response = await fetch(`${API_URL}/user/interactions/status`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ targets }),
+    });
 
     if (!response.ok) {
       throw new Error(
-        `Failed to get interaction counts: ${response.statusText}`
+        `Failed to get interaction status: ${response.statusText}`
       );
     }
 

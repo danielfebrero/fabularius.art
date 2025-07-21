@@ -24,7 +24,7 @@ export const InteractionCounts: React.FC<InteractionCountsProps> = ({
   size = "md",
   className,
 }) => {
-  const { getStatus } = useUserInteractionStatus();
+  const { getStatus, isLoading } = useUserInteractionStatus();
   const [userLiked, setUserLiked] = useState<boolean>(false);
   const [userBookmarked, setUserBookmarked] = useState<boolean>(false);
 
@@ -49,7 +49,7 @@ export const InteractionCounts: React.FC<InteractionCountsProps> = ({
 
   const config = sizeConfig[size];
 
-  // Load user interaction status on mount and when status changes
+  // Load user interaction status on mount
   useEffect(() => {
     const status = getStatus(targetType, targetId);
     if (status) {
@@ -57,6 +57,34 @@ export const InteractionCounts: React.FC<InteractionCountsProps> = ({
       setUserBookmarked(status.userBookmarked);
     }
   }, [targetType, targetId, getStatus]);
+
+  if (isLoading(targetType, targetId)) {
+  useEffect(() => {
+    const loadCounts = async () => {
+      const counts = await getCounts(targetType, targetId);
+      if (counts?.data) {
+        setLikeCount(counts.data.likeCount);
+        setBookmarkCount(counts.data.bookmarkCount);
+        setUserLiked(counts.data.userLiked);
+        setUserBookmarked(counts.data.userBookmarked);
+      }
+    };
+
+    loadCounts();
+  }, [targetType, targetId, getCounts]);
+
+  if (isLoadingCounts) {
+    return (
+      <div className={cn("flex items-center", config.gap, className)}>
+        <div className="animate-pulse">
+          <div className="h-4 w-8 bg-gray-200 rounded"></div>
+        </div>
+        <div className="animate-pulse">
+          <div className="h-4 w-8 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={cn("flex items-center", config.gap, className)}>

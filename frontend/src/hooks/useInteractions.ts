@@ -4,15 +4,13 @@ import { useState, useCallback } from "react";
 import { interactionApi } from "@/lib/api";
 import {
   InteractionRequest,
-  InteractionResponse,
-  InteractionCountsResponse,
 } from "@/types/user";
 import { useUser } from "./useUser";
+import { useUserInteractionStatus } from "./useUserInteractionStatus";
 
 export interface UseInteractionsReturn {
   // Loading states
   isToggling: boolean;
-  isLoadingCounts: boolean;
 
   // Actions
   toggleLike: (
@@ -27,10 +25,6 @@ export interface UseInteractionsReturn {
     albumId?: string,
     currentlyBookmarked?: boolean
   ) => Promise<void>;
-  getCounts: (
-    targetType: "album" | "media",
-    targetId: string
-  ) => Promise<InteractionCountsResponse | null>;
 
   // Error handling
   error: string | null;
@@ -39,8 +33,8 @@ export interface UseInteractionsReturn {
 
 export const useInteractions = (): UseInteractionsReturn => {
   const { user } = useUser();
+  const { updateStatus } = useUserInteractionStatus();
   const [isToggling, setIsToggling] = useState(false);
-  const [isLoadingCounts, setIsLoadingCounts] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const clearError = useCallback(() => {
@@ -81,6 +75,9 @@ export const useInteractions = (): UseInteractionsReturn => {
         }
 
         await interactionApi.like(request);
+
+        // Update the status cache to reflect the change
+        updateStatus(targetType, targetId, { userLiked: !currentlyLiked });
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to toggle like";
@@ -90,7 +87,7 @@ export const useInteractions = (): UseInteractionsReturn => {
         setIsToggling(false);
       }
     },
-    [user]
+    [user, updateStatus]
   );
 
   const toggleBookmark = useCallback(
@@ -127,6 +124,11 @@ export const useInteractions = (): UseInteractionsReturn => {
         }
 
         await interactionApi.bookmark(request);
+
+        // Update the status cache to reflect the change
+        updateStatus(targetType, targetId, {
+          userBookmarked: !currentlyBookmarked,
+        });
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to toggle bookmark";
@@ -136,40 +138,13 @@ export const useInteractions = (): UseInteractionsReturn => {
         setIsToggling(false);
       }
     },
-    [user]
-  );
-
-  const getCounts = useCallback(
-    async (
-      targetType: "album" | "media",
-      targetId: string
-    ): Promise<InteractionCountsResponse | null> => {
-      setIsLoadingCounts(true);
-      setError(null);
-
-      try {
-        const counts = await interactionApi.getCounts(targetType, targetId);
-        return counts;
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "Failed to get interaction counts";
-        setError(errorMessage);
-        return null;
-      } finally {
-        setIsLoadingCounts(false);
-      }
-    },
-    []
+    [user, updateStatus]
   );
 
   return {
     isToggling,
-    isLoadingCounts,
     toggleLike,
     toggleBookmark,
-    getCounts,
     error,
     clearError,
   };

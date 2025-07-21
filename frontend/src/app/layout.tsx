@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { UserProvider } from "@/contexts/UserContext";
+import { UserInteractionProvider } from "@/hooks/useUserInteractionStatus";
 import { Header } from "@/components/Header";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -94,10 +95,12 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <div className="min-h-screen bg-background">
           <UserProvider>
-            <AdminProvider>
-              <Header />
-              <main className="container mx-auto px-4 py-8">{children}</main>
-            </AdminProvider>
+            <UserInteractionProvider>
+              <AdminProvider>
+                <Header />
+                <main className="container mx-auto px-4 py-8">{children}</main>
+              </AdminProvider>
+            </UserInteractionProvider>
           </UserProvider>
 
           <footer className="border-t border-border mt-16">

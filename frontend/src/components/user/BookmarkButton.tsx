@@ -5,6 +5,7 @@ import { Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useInteractions } from "@/hooks/useInteractions";
 import { useUser } from "@/hooks/useUser";
+import { useTargetInteractionStatus } from "@/hooks/useUserInteractionStatus";
 import { cn } from "@/lib/utils";
 
 interface BookmarkButtonProps {
@@ -30,8 +31,12 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
 }) => {
   const { user } = useUser();
   const { toggleBookmark, isToggling, error } = useInteractions();
-  const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
+  const { userBookmarked, updateStatusOptimistically } =
+    useTargetInteractionStatus(targetType, targetId);
   const [bookmarkCount, setBookmarkCount] = useState<number | null>(null);
+
+  // Use the cached status instead of local state
+  const isBookmarked = user ? userBookmarked : initialBookmarked;
 
   // Size configurations
   const sizeConfig = {
@@ -60,10 +65,11 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
       return;
     }
 
+    const newBookmarkedState = !isBookmarked;
+
     try {
-      // Update state optimistically first
-      const newBookmarkedState = !isBookmarked;
-      setIsBookmarked(newBookmarkedState);
+      // Update status optimistically first
+      updateStatusOptimistically({ userBookmarked: newBookmarkedState });
 
       // Update count optimistically
       if (bookmarkCount !== null) {
@@ -75,7 +81,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
       await toggleBookmark(targetType, targetId, albumId, isBookmarked);
     } catch (err) {
       // Revert optimistic update on error
-      setIsBookmarked(!isBookmarked);
+      updateStatusOptimistically({ userBookmarked: isBookmarked });
       if (bookmarkCount !== null) {
         setBookmarkCount(isBookmarked ? bookmarkCount + 1 : bookmarkCount - 1);
       }

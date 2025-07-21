@@ -5,6 +5,7 @@ import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useInteractions } from "@/hooks/useInteractions";
 import { useUser } from "@/hooks/useUser";
+import { useTargetInteractionStatus } from "@/hooks/useUserInteractionStatus";
 import { cn } from "@/lib/utils";
 
 interface LikeButtonProps {
@@ -30,8 +31,14 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
 }) => {
   const { user } = useUser();
   const { toggleLike, isToggling, error } = useInteractions();
-  const [isLiked, setIsLiked] = useState(initialLiked);
+  const { userLiked, updateStatusOptimistically } = useTargetInteractionStatus(
+    targetType,
+    targetId
+  );
   const [likeCount, setLikeCount] = useState<number | null>(null);
+
+  // Use the cached status instead of local state
+  const isLiked = user ? userLiked : initialLiked;
 
   // Size configurations
   const sizeConfig = {
@@ -60,10 +67,11 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
       return;
     }
 
+    const newLikedState = !isLiked;
+
     try {
-      // Update state optimistically first
-      const newLikedState = !isLiked;
-      setIsLiked(newLikedState);
+      // Update status optimistically first
+      updateStatusOptimistically({ userLiked: newLikedState });
 
       // Update count optimistically
       if (likeCount !== null) {
@@ -73,7 +81,7 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
       await toggleLike(targetType, targetId, albumId, isLiked);
     } catch (err) {
       // Revert optimistic update on error
-      setIsLiked(!isLiked);
+      updateStatusOptimistically({ userLiked: isLiked });
       if (likeCount !== null) {
         setLikeCount(isLiked ? likeCount + 1 : likeCount - 1);
       }

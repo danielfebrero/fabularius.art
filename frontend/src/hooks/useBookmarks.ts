@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { interactionApi } from "@/lib/api";
 import { UserInteractionsResponse, UserInteraction } from "@/types/user";
 import { useUser } from "./useUser";
+import { useUserInteractionStatus } from "./useUserInteractionStatus";
 
 export interface UseBookmarksReturn {
   // Data
@@ -29,6 +30,7 @@ export const useBookmarks = (
   initialLoad: boolean = true
 ): UseBookmarksReturn => {
   const { user } = useUser();
+  const { preloadStatuses } = useUserInteractionStatus();
   const [bookmarks, setBookmarks] = useState<UserInteraction[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -68,6 +70,16 @@ export const useBookmarks = (
             setBookmarks((prev) => [...prev, ...interactions]);
           }
 
+          // Preload interaction statuses for better UX
+          const targets = interactions.map((interaction) => ({
+            targetType: interaction.targetType,
+            targetId: interaction.targetId,
+          }));
+
+          if (targets.length > 0) {
+            preloadStatuses(targets).catch(console.error);
+          }
+
           setTotalCount(pagination.total);
           setHasMore(pagination.hasNext);
           setLastKey(pagination.nextKey);
@@ -81,7 +93,7 @@ export const useBookmarks = (
         loading(false);
       }
     },
-    [user, lastKey]
+    [user, lastKey, preloadStatuses]
   );
 
   const loadMore = useCallback(async () => {

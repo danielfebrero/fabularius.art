@@ -6,6 +6,7 @@ import { cn } from "../lib/utils";
 import { ThumbnailContext } from "../types/index";
 import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
+import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
 
 interface AlbumGridProps {
   albums: Album[];
@@ -26,10 +27,22 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({
   hasMore = false,
   error = null,
 }) => {
+  const { preloadStatuses } = useUserInteractionStatus();
   const { ref, inView } = useInView({
     threshold: 0,
     rootMargin: "200px 0px",
   });
+
+  // Preload interaction statuses when albums change
+  useEffect(() => {
+    if (albums.length > 0) {
+      const targets = albums.map((album) => ({
+        targetType: "album" as const,
+        targetId: album.id,
+      }));
+      preloadStatuses(targets).catch(console.error);
+    }
+  }, [albums, preloadStatuses]);
 
   // Log props on render for debugging
   useEffect(() => {
