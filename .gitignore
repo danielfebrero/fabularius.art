@@ -188,3 +188,4 @@ temp/
 .vercel
 .vercel.json
 *.vercel.app
+scripts/.env.dev
