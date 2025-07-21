@@ -29,9 +29,16 @@ export function composeMediaUrl(
 
   // Ensure proper URL composition
   const cleanCdnUrl = cdnUrl.endsWith("/") ? cdnUrl.slice(0, -1) : cdnUrl;
-  const cleanPath = relativePath.startsWith("/")
+  let cleanPath = relativePath.startsWith("/")
     ? relativePath
     : `/${relativePath}`;
+
+  // For local development, prepend the bucket name
+  if (process.env.NODE_ENV === "development") {
+    const bucketName =
+      process.env.NEXT_PUBLIC_S3_BUCKET || "local-pornspot-media";
+    cleanPath = `/${bucketName}${cleanPath}`;
+  }
 
   return `${cleanCdnUrl}${cleanPath}`;
 }
