@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 interface BookmarkButtonProps {
   targetType: "album" | "media";
   targetId: string;
+  albumId?: string; // Required for media interactions
   initialBookmarked?: boolean;
   showCount?: boolean;
   size?: "sm" | "md" | "lg";
@@ -20,6 +21,7 @@ interface BookmarkButtonProps {
 export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
   targetType,
   targetId,
+  albumId,
   initialBookmarked = false,
   showCount = false,
   size = "md",
@@ -59,15 +61,22 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
     }
 
     try {
-      await toggleBookmark(targetType, targetId);
-      setIsBookmarked(!isBookmarked);
+      // Update state optimistically first
+      const newBookmarkedState = !isBookmarked;
+      setIsBookmarked(newBookmarkedState);
 
       // Update count optimistically
       if (bookmarkCount !== null) {
-        setBookmarkCount(isBookmarked ? bookmarkCount - 1 : bookmarkCount + 1);
+        setBookmarkCount(newBookmarkedState ? bookmarkCount + 1 : bookmarkCount - 1);
       }
+
+      await toggleBookmark(targetType, targetId, albumId, isBookmarked);
     } catch (err) {
       // Revert optimistic update on error
+      setIsBookmarked(!isBookmarked);
+      if (bookmarkCount !== null) {
+        setBookmarkCount(isBookmarked ? bookmarkCount + 1 : bookmarkCount - 1);
+      }
       console.error("Failed to toggle bookmark:", err);
     }
   };

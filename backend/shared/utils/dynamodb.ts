@@ -26,8 +26,7 @@ const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
 const clientConfig: any = {};
 
 if (isLocal) {
-  clientConfig.endpoint =
-    process.env["LOCAL_AWS_ENDPOINT"] || "http://localhost:4566";
+  clientConfig.endpoint = "http://pornspot-local-aws:4566";
   clientConfig.region = "us-east-1";
   clientConfig.credentials = {
     accessKeyId: "test",
@@ -731,15 +730,35 @@ export class DynamoDBService {
         NODE_ENV: process.env["NODE_ENV"],
       },
     });
+
+    const queryKey = {
+      PK: `SESSION#${sessionId}`,
+      SK: "METADATA",
+    };
+
+    console.log("🔍 DIAGNOSTIC - Exact DynamoDB query:", {
+      TableName: TABLE_NAME,
+      Key: queryKey,
+    });
+
     const result = await docClient.send(
       new GetCommand({
         TableName: TABLE_NAME,
-        Key: {
-          PK: `SESSION#${sessionId}`,
-          SK: "METADATA",
-        },
+        Key: queryKey,
       })
     );
+
+    console.log("🔍 DIAGNOSTIC - DynamoDB result:", {
+      hasItem: !!result.Item,
+      item: result.Item
+        ? {
+            PK: result.Item["PK"],
+            SK: result.Item["SK"],
+            sessionId: result.Item["sessionId"],
+            userId: result.Item["userId"],
+          }
+        : null,
+    });
 
     return (result.Item as UserSessionEntity) || null;
   }

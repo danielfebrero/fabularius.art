@@ -18,15 +18,47 @@ export class UserAuthMiddleware {
       const sessionId = this.extractSessionFromCookies(cookieHeader);
       console.log("🔑 Extracted user session ID:", sessionId);
 
+      // DIAGNOSTIC: Enhanced cookie parsing
+      console.log("🔍 DIAGNOSTIC - Raw cookie header:", cookieHeader);
+      console.log(
+        "🔍 DIAGNOSTIC - All cookies split:",
+        cookieHeader.split(";")
+      );
+      const allCookies = cookieHeader.split(";").map((c) => c.trim());
+      allCookies.forEach((cookie, index) => {
+        console.log(`🔍 DIAGNOSTIC - Cookie ${index}:`, cookie);
+        if (cookie.toLowerCase().includes("session")) {
+          console.log(
+            `🔍 DIAGNOSTIC - *** Session-related cookie found: ${cookie}`
+          );
+        }
+      });
+
       if (!sessionId) {
         console.log("❌ No user session ID found in cookies");
         return { isValid: false };
       }
 
       console.log("🔍 Attempting to get session from database...");
+      console.log("🔍 DIAGNOSTIC - Looking up session with ID:", sessionId);
+      console.log(
+        "🔍 DIAGNOSTIC - Will use DynamoDB key: PK=SESSION#" +
+          sessionId +
+          ", SK=METADATA"
+      );
+
       // Get session from database
       const session = await DynamoDBService.getUserSession(sessionId);
       console.log("📊 Session from database:", session ? "Found" : "Not found");
+
+      if (session) {
+        console.log("🔍 DIAGNOSTIC - Found session details:", {
+          PK: session.PK,
+          SK: session.SK,
+          sessionId: session.sessionId,
+          userId: session.userId,
+        });
+      }
 
       if (!session) {
         console.log("❌ Session not found in database");

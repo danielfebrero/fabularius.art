@@ -68,6 +68,7 @@ export interface InteractionRequest {
   targetType: "album" | "media";
   targetId: string;
   action: "add" | "remove";
+  albumId?: string; // Required for media interactions
 }
 
 export interface InteractionResponse {

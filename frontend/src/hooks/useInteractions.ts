@@ -17,11 +17,15 @@ export interface UseInteractionsReturn {
   // Actions
   toggleLike: (
     targetType: "album" | "media",
-    targetId: string
+    targetId: string,
+    albumId?: string,
+    currentlyLiked?: boolean
   ) => Promise<void>;
   toggleBookmark: (
     targetType: "album" | "media",
-    targetId: string
+    targetId: string,
+    albumId?: string,
+    currentlyBookmarked?: boolean
   ) => Promise<void>;
   getCounts: (
     targetType: "album" | "media",
@@ -44,9 +48,15 @@ export const useInteractions = (): UseInteractionsReturn => {
   }, []);
 
   const toggleLike = useCallback(
-    async (targetType: "album" | "media", targetId: string) => {
+    async (targetType: "album" | "media", targetId: string, albumId?: string, currentlyLiked?: boolean) => {
       if (!user) {
         setError("You must be logged in to like content");
+        return;
+      }
+
+      // Validate albumId for media interactions
+      if (targetType === "media" && !albumId) {
+        setError("Album ID is required for media interactions");
         return;
       }
 
@@ -55,10 +65,15 @@ export const useInteractions = (): UseInteractionsReturn => {
 
       try {
         const request: InteractionRequest = {
-          action: "add",
+          action: currentlyLiked ? "remove" : "add",
           targetType,
           targetId,
         };
+
+        // Add albumId for media interactions
+        if (targetType === "media" && albumId) {
+          request.albumId = albumId;
+        }
 
         await interactionApi.like(request);
       } catch (err) {
@@ -74,9 +89,15 @@ export const useInteractions = (): UseInteractionsReturn => {
   );
 
   const toggleBookmark = useCallback(
-    async (targetType: "album" | "media", targetId: string) => {
+    async (targetType: "album" | "media", targetId: string, albumId?: string, currentlyBookmarked?: boolean) => {
       if (!user) {
         setError("You must be logged in to bookmark content");
+        return;
+      }
+
+      // Validate albumId for media interactions
+      if (targetType === "media" && !albumId) {
+        setError("Album ID is required for media interactions");
         return;
       }
 
@@ -85,10 +106,15 @@ export const useInteractions = (): UseInteractionsReturn => {
 
       try {
         const request: InteractionRequest = {
-          action: "add",
+          action: currentlyBookmarked ? "remove" : "add",
           targetType,
           targetId,
         };
+
+        // Add albumId for media interactions
+        if (targetType === "media" && albumId) {
+          request.albumId = albumId;
+        }
 
         await interactionApi.bookmark(request);
       } catch (err) {

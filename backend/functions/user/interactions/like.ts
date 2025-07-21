@@ -30,7 +30,7 @@ export const handler = async (
     }
 
     const body: InteractionRequest = JSON.parse(event.body);
-    const { targetType, targetId, action } = body;
+    const { targetType, targetId, action, albumId } = body;
 
     // Validate input
     if (!targetType || !targetId || !action) {
@@ -58,19 +58,15 @@ export const handler = async (
         return ResponseUtil.notFound(event, "Album not found");
       }
     } else {
-      // For media, we need albumId to check - extract from pathParameters or validate differently
-      const pathParams = event.pathParameters;
-      if (!pathParams || !pathParams["albumId"]) {
+      // For media, we need albumId from request body
+      if (!albumId) {
         return ResponseUtil.badRequest(
           event,
           "albumId is required for media interactions"
         );
       }
 
-      const media = await DynamoDBService.getMedia(
-        pathParams["albumId"],
-        targetId
-      );
+      const media = await DynamoDBService.getMedia(albumId, targetId);
       if (!media) {
         return ResponseUtil.notFound(event, "Media not found");
       }

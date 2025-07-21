@@ -187,6 +187,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
               <LikeButton
                 targetType="media"
                 targetId={currentMedia.id}
+                albumId={currentMedia.albumId}
                 initialLiked={false}
                 size="sm"
                 variant="default"
@@ -195,6 +196,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
               <BookmarkButton
                 targetType="media"
                 targetId={currentMedia.id}
+                albumId={currentMedia.albumId}
                 initialBookmarked={false}
                 size="sm"
                 variant="default"

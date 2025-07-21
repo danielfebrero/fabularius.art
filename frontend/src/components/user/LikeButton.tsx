@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 interface LikeButtonProps {
   targetType: "album" | "media";
   targetId: string;
+  albumId?: string; // Required for media interactions
   initialLiked?: boolean;
   showCount?: boolean;
   size?: "sm" | "md" | "lg";
@@ -20,6 +21,7 @@ interface LikeButtonProps {
 export const LikeButton: React.FC<LikeButtonProps> = ({
   targetType,
   targetId,
+  albumId,
   initialLiked = false,
   showCount = false,
   size = "md",
@@ -59,15 +61,22 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
     }
 
     try {
-      await toggleLike(targetType, targetId);
-      setIsLiked(!isLiked);
+      // Update state optimistically first
+      const newLikedState = !isLiked;
+      setIsLiked(newLikedState);
 
       // Update count optimistically
       if (likeCount !== null) {
-        setLikeCount(isLiked ? likeCount - 1 : likeCount + 1);
+        setLikeCount(newLikedState ? likeCount + 1 : likeCount - 1);
       }
+
+      await toggleLike(targetType, targetId, albumId, isLiked);
     } catch (err) {
       // Revert optimistic update on error
+      setIsLiked(!isLiked);
+      if (likeCount !== null) {
+        setLikeCount(isLiked ? likeCount + 1 : likeCount - 1);
+      }
       console.error("Failed to toggle like:", err);
     }
   };
