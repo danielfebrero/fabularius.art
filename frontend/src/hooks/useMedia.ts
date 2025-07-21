@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Media } from "../types/index";
 import API_URL from "@/lib/api";
 
@@ -31,7 +31,7 @@ export function useMedia(options: UseMediaOptions): UseMediaReturn {
     cursor: string | null;
   } | null>(null);
 
-  const fetchMedia = async (cursor?: string, append = false) => {
+  const fetchMedia = useCallback(async (cursor?: string, append = false) => {
     try {
       if (append) {
         setLoadingMore(true);
@@ -88,26 +88,26 @@ export function useMedia(options: UseMediaOptions): UseMediaReturn {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [albumId, limit]);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     if (pagination?.hasNext && pagination.cursor && !loadingMore) {
       fetchMedia(pagination.cursor, true);
     }
-  };
+  }, [pagination, loadingMore, fetchMedia]);
 
   useEffect(() => {
     if (albumId) {
       fetchMedia();
     }
-  }, [albumId, limit, fetchMedia]);
+  }, [albumId, fetchMedia]);
 
   return {
     media,
     loading: loading || loadingMore,
     error,
     pagination,
-    refetch: () => fetchMedia(),
+    refetch: useCallback(() => fetchMedia(), [fetchMedia]),
     loadMore,
   };
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Album } from "../types/index";
 
 interface UseAlbumsOptions {
@@ -52,7 +52,7 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
     page?: number;
   } | null>(initialPagination);
 
-  const fetchAlbums = async (cursor?: string, append = false) => {
+  const fetchAlbums = useCallback(async (cursor?: string, append = false) => {
     try {
       console.log("[useAlbums] fetchAlbums called", {
         cursor,
@@ -129,20 +129,20 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
       setLoading(false);
       setLoadingMore(false);
     }
-  };
+  }, [effectiveIsPublic, limit, page]);
 
-  const loadMore = () => {
+  const loadMore = useCallback(() => {
     if (pagination?.hasNext && pagination.cursor && !loadingMore) {
       fetchAlbums(pagination.cursor, true);
     }
-  };
+  }, [pagination, loadingMore, fetchAlbums]);
 
   useEffect(() => {
     // Only fetch if we don't have initial data
     if (initialAlbums.length === 0) {
       fetchAlbums();
     }
-  }, [effectiveIsPublic, limit, page, initialAlbums.length]);
+  }, [initialAlbums.length, fetchAlbums]);
 
   useEffect(() => {
     console.log(
@@ -158,8 +158,8 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
     loading: loading || loadingMore,
     error,
     pagination,
-    refetch: () => fetchAlbums(),
-    refresh: () => fetchAlbums(),
+    refetch: useCallback(() => fetchAlbums(), [fetchAlbums]),
+    refresh: useCallback(() => fetchAlbums(), [fetchAlbums]),
     loadMore,
   };
 }

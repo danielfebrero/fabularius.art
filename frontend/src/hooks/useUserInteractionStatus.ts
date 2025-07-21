@@ -219,9 +219,10 @@ export function UserInteractionProvider({ children }: { children: ReactNode }) {
   // Clear cache when user changes
   useEffect(() => {
     if (!user) {
-      clearCache();
+      setStatusCache(new Map());
+      setLoadingTargets(new Set());
     }
-  }, [user, clearCache]);
+  }, [user]);
 
   const contextValue: UserInteractionContextType = {
     getStatus,
