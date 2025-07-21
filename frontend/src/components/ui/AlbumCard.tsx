@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Heart, Bookmark, Eye } from "lucide-react";
+import { Heart, Bookmark, Eye, Share2 } from "lucide-react";
 import { Album } from "../../types/index";
 import { Card, CardContent, CardHeader } from "./Card";
 import { cn, formatDateShort, ThumbnailContext } from "../../lib/utils";
@@ -8,6 +8,8 @@ import ResponsivePicture from "./ResponsivePicture";
 import { LikeButton } from "../user/LikeButton";
 import { BookmarkButton } from "../user/BookmarkButton";
 import { interactionApi } from "../../lib/api";
+import { useIsMobile } from "../../hooks/useIsMobile";
+import React, { useState, useCallback, useRef } from "react";
 
 interface AlbumCardProps {
   album: Album;
@@ -22,19 +24,69 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
   context = "homepage",
   columns,
 }) => {
-  const handleViewClick = async () => {
-    try {
-      await interactionApi.trackView({
-        targetType: "album",
-        targetId: album.id,
-      });
-    } catch (error) {
-      // Silently fail view tracking - not critical
-      console.debug("View tracking failed:", error);
+  const isMobile = useIsMobile();
+  const [actionsOpen, setActionsOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const handleViewClick = (e?: React.MouseEvent | React.TouchEvent) => {
+    if (isMobile && !actionsOpen) {
+      e?.preventDefault?.();
+      setActionsOpen(true);
+      return;
     }
+    // No backend tracking here; handled in album detail page
   };
+
+  // On mobile, close actions if user taps outside the card
+  React.useEffect(() => {
+    if (!isMobile || !actionsOpen) return;
+
+    function handleDocumentClick(event: MouseEvent | TouchEvent) {
+      if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
+        setActionsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleDocumentClick);
+    document.addEventListener("touchstart", handleDocumentClick);
+    return () => {
+      document.removeEventListener("mousedown", handleDocumentClick);
+      document.removeEventListener("touchstart", handleDocumentClick);
+    };
+  }, [isMobile, actionsOpen]);
+
+  // Prevent action buttons from triggering navigation or changing actionsOpen
+  const handleActionClick = useCallback(
+    (e: React.MouseEvent | React.TouchEvent) => {
+      e.stopPropagation();
+      // No-op: action handled by button itself
+    },
+    []
+  );
+
+  // close share dropdown on outside click
+  React.useEffect(() => {
+    if (!shareOpen) return;
+    function handler(event: Event) {
+      if (
+        cardRef.current &&
+        event.target &&
+        !cardRef.current.contains(event.target as Node)
+      ) {
+        setShareOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("touchstart", handler);
+    };
+  }, [shareOpen]);
+
   return (
     <Card
+      ref={cardRef}
       className={cn(
         "h-full transition-all duration-200 hover:shadow-lg hover:scale-[1.02] group",
         className
@@ -46,6 +98,8 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
             href={`/albums/${album.id}`}
             className="block w-full h-full"
             onClick={handleViewClick}
+            onTouchEnd={isMobile ? handleViewClick : undefined}
+            tabIndex={0}
           >
             {album.coverImageUrl ? (
               <ResponsivePicture
@@ -88,28 +142,45 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
           )}
 
           {/* Action buttons overlay */}
-          <div className="absolute top-2 left-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <LikeButton
-              targetType="album"
-              targetId={album.id}
-              size="sm"
-              variant="default"
-              className="bg-white/90 hover:bg-white shadow-lg"
-            />
-            <BookmarkButton
-              targetType="album"
-              targetId={album.id}
-              size="sm"
-              variant="default"
-              className="bg-white/90 hover:bg-white shadow-lg"
-            />
+          <div
+            className={cn(
+              "absolute top-2 left-2 flex flex-col gap-2 transition-opacity duration-200 z-20",
+              isMobile
+                ? actionsOpen
+                  ? "opacity-100"
+                  : "opacity-0 pointer-events-none"
+                : "opacity-0 group-hover:opacity-100"
+            )}
+          >
+            <span onClick={handleActionClick} onTouchEnd={handleActionClick}>
+              <LikeButton
+                targetType="album"
+                targetId={album.id}
+                size="sm"
+                variant="default"
+                className="bg-white/90 hover:bg-white shadow-lg"
+              />
+            </span>
+            <span onClick={handleActionClick} onTouchEnd={handleActionClick}>
+              <BookmarkButton
+                targetType="album"
+                targetId={album.id}
+                size="sm"
+                variant="default"
+                className="bg-white/90 hover:bg-white shadow-lg"
+              />
+            </span>
           </div>
         </div>
       </CardHeader>
 
       <CardContent className="p-4">
         <div className="space-y-3">
-          <Link href={`/albums/${album.id}`} onClick={handleViewClick}>
+          <Link
+            href={`/albums/${album.id}`}
+            onClick={handleViewClick}
+            onTouchEnd={isMobile ? handleViewClick : undefined}
+          >
             <h3 className="font-semibold text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">
               {album.title}
             </h3>
@@ -133,9 +204,8 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
             </div>
           )}
 
-          {/* Interaction stats */}
+          {/* Interaction stats + date + (future: share) */}
           <div className="flex items-center justify-between pt-2 border-t border-border/50">
-            {/* Album interaction counts from database */}
             <div className="flex items-center gap-3">
               {/* Likes */}
               <div className="flex items-center gap-1">
@@ -144,27 +214,72 @@ export const AlbumCard: React.FC<AlbumCardProps> = ({
                   {album.likeCount || 0}
                 </span>
               </div>
-
-              {/* Bookmarks */}
+              {/* Views */}
               <div className="flex items-center gap-1">
-                <Bookmark className="h-3 w-3 text-blue-500 fill-current" />
+                <Eye className="h-3 w-3 text-muted-foreground" />
                 <span className="text-xs text-muted-foreground font-medium">
-                  {album.bookmarkCount || 0}
+                  {album.viewCount || 0}
                 </span>
               </div>
             </div>
-
-            {/* Views */}
-            <div className="flex items-center gap-1">
-              <Eye className="h-3 w-3 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground font-medium">
-                {album.viewCount || 0}
-              </span>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground relative">
+              <span>{formatDateShort(album.createdAt)}</span>
+              {/* Share icon and dropdown */}
+              <div className="relative">
+                <button
+                  className="ml-1 p-1 rounded hover:bg-muted transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    setShareOpen((v) => !v);
+                  }}
+                  aria-label="Share album"
+                  tabIndex={0}
+                  type="button"
+                >
+                  <Share2 className="w-4 h-4" />
+                </button>
+                {shareOpen && (
+                  <div className="absolute right-0 mt-2 w-40 bg-popover border border-border rounded shadow-lg z-30 animate-fade-in">
+                    <button
+                      className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        navigator.clipboard.writeText(
+                          `${window.location.origin}/albums/${album.id}`
+                        );
+                        setShareOpen(false);
+                      }}
+                    >
+                      Copy link
+                    </button>
+                    <a
+                      className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                      href={`https://www.reddit.com/submit?url=${encodeURIComponent(
+                        window.location.origin + "/albums/" + album.id
+                      )}&title=${encodeURIComponent(album.title)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setShareOpen(false)}
+                    >
+                      Reddit
+                    </a>
+                    <a
+                      className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                      href={`https://x.com/intent/tweet?url=${encodeURIComponent(
+                        window.location.origin + "/albums/" + album.id
+                      )}&text=${encodeURIComponent(album.title)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setShareOpen(false)}
+                    >
+                      X
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{formatDateShort(album.createdAt)}</span>
           </div>
         </div>
       </CardContent>

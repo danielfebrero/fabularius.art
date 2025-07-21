@@ -8,11 +8,18 @@ interface ViewTrackerProps {
   targetId: string;
 }
 
+import { useRef } from "react";
+
 export const ViewTracker: React.FC<ViewTrackerProps> = ({
   targetType,
   targetId,
 }) => {
+  const hasTracked = useRef(false);
+
   useEffect(() => {
+    if (hasTracked.current) return;
+    hasTracked.current = true;
+
     const trackView = async () => {
       try {
         await interactionApi.trackView({
