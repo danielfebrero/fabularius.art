@@ -29,7 +29,7 @@ frontend/__tests__/
 ├── integration/         # API integration tests
 │   └── api.integration.test.tsx
 ├── e2e/                # End-to-end tests
-│   ├── homepage.spec.ts
+│   ├── discover.spec.ts
 │   ├── album-detail.spec.ts
 │   └── admin.spec.ts
 ├── fixtures/           # Test data and types
@@ -124,7 +124,7 @@ frontend/__tests__/
   - Dark theme application
   - Accessibility landmarks
 
-#### Homepage (`page.test.tsx`)
+#### Discover (`page.test.tsx`)
 
 - **Coverage**: Hero section, album grid, loading states
 - **Key Tests**:
@@ -163,7 +163,7 @@ frontend/__tests__/
 
 ### 5. End-to-End Tests
 
-#### Homepage E2E (`homepage.spec.ts`)
+#### Discover E2E (`discover.spec.ts`)
 
 - **Coverage**: Full user workflows, navigation, responsive design
 - **Key Tests**:

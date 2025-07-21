@@ -508,7 +508,7 @@ DELETE /media/{mediaId}
 | ---------- | ---------- | ------- | --------- | ----------------------------- |
 | **cover**  | 128×128px  | 75%     | 8-15KB    | Album covers, small previews  |
 | **small**  | 240×240px  | 80%     | 20-40KB   | Dense grids, admin interfaces |
-| **medium** | 300×300px  | 85%     | 35-70KB   | General purpose, homepage     |
+| **medium** | 300×300px  | 85%     | 35-70KB   | General purpose, discover     |
 | **large**  | 365×365px  | 85%     | 50-100KB  | High quality grids            |
 | **xlarge** | 600×600px  | 90%     | 120-250KB | Mobile/small screens          |
 

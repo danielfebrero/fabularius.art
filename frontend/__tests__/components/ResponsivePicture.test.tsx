@@ -21,7 +21,7 @@ describe("ResponsivePicture", () => {
         thumbnailUrls={mockThumbnailUrls}
         fallbackUrl={fallbackUrl}
         alt="Test image"
-        context="homepage"
+        context="discover"
       />
     );
 
@@ -33,13 +33,13 @@ describe("ResponsivePicture", () => {
     expect(img).toHaveAttribute("alt", "Test image");
   });
 
-  it("generates correct sources for homepage context", () => {
+  it("generates correct sources for discover context", () => {
     render(
       <ResponsivePicture
         thumbnailUrls={mockThumbnailUrls}
         fallbackUrl={fallbackUrl}
         alt="Test image"
-        context="homepage"
+        context="discover"
       />
     );
 
@@ -93,7 +93,7 @@ describe("ResponsivePicture", () => {
         thumbnailUrls={limitedThumbnails}
         fallbackUrl={fallbackUrl}
         alt="Limited sources"
-        context="homepage"
+        context="discover"
       />
     );
 
@@ -110,7 +110,7 @@ describe("ResponsivePicture", () => {
         thumbnailUrls={undefined}
         fallbackUrl={fallbackUrl}
         alt="Fallback image"
-        context="homepage"
+        context="discover"
       />
     );
 

@@ -41,7 +41,7 @@ export function Header() {
               href="/"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Homepage
+              Discover
             </Link>
             <Link
               href="/generate"
@@ -150,7 +150,7 @@ export function Header() {
                 onClick={closeMobileMenu}
                 className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
               >
-                Homepage
+                Discover
               </Link>
               <Link
                 href="/generate"

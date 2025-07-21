@@ -234,7 +234,7 @@ frontend/__tests__/
 ├── integration/                 # Integration tests
 │   └── api.integration.test.tsx
 ├── e2e/                        # End-to-end tests
-│   ├── homepage.spec.ts
+│   ├── discover.spec.ts
 │   ├── album-detail.spec.ts
 │   └── admin.spec.ts
 ├── mocks/                      # MSW handlers
@@ -362,7 +362,7 @@ export default defineConfig({
 ### Writing E2E Tests
 
 ```typescript
-// frontend/__tests__/e2e/homepage.spec.ts
+// frontend/__tests__/e2e/discover.spec.ts
 import { test, expect } from "@playwright/test";
 
 test.describe("Homepage", () => {

@@ -121,8 +121,8 @@ export function selectThumbnailSize(
     return "cover";
   }
 
-  // Homepage logic
-  if (context === "homepage") {
+  // Discover logic
+  if (context === "discover") {
     switch (size) {
       case "sm":
       case "md":

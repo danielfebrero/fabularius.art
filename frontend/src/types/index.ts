@@ -111,7 +111,7 @@ export interface AdminStats {
 export type ThumbnailSize = "cover" | "small" | "medium" | "large" | "xlarge";
 export type ThumbnailContext =
   | "cover-selector"
-  | "homepage"
+  | "discover"
   | "albums"
   | "admin"
   | "default";

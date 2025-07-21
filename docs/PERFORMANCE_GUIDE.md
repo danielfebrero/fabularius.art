@@ -18,7 +18,7 @@ Image optimization is a critical aspect of the application's performance. Instea
 
 ### Intelligent Responsive Image Selection
 
-- **Description**: The frontend uses a custom logic to intelligently select the optimal thumbnail size based on the screen size, context (e.g., homepage, album grid), and layout.
+- **Description**: The frontend uses a custom logic to intelligently select the optimal thumbnail size based on the screen size, context (e.g., discover, album grid), and layout.
 - **Implementation**: A `getThumbnailUrl` utility function is used in components to select the best thumbnail URL.
 
 ## Caching

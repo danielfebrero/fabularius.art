@@ -119,7 +119,7 @@ export function AuthErrorClient() {
 
         <Link href="/" className="block">
           <Button variant="ghost" className="w-full">
-            Back to Homepage
+            Back to Discover
           </Button>
         </Link>
       </div>

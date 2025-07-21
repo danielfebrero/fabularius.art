@@ -280,7 +280,7 @@ Examples:
 
 - **Cover** (128×128px, 75% quality) - Album covers, small previews
 - **Small** (240×240px, 80% quality) - Dense grids, admin interfaces
-- **Medium** (300×300px, 85% quality) - General purpose, homepage
+- **Medium** (300×300px, 85% quality) - General purpose, discover
 - **Large** (365×365px, 85% quality) - High quality grids
 - **X-Large** (600×600px, 90% quality) - Mobile/small screens
 

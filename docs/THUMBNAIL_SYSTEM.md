@@ -78,8 +78,8 @@ The thumbnail system automatically generates five optimized thumbnail sizes for 
 const THUMBNAIL_CONFIGS = {
   cover: { width: 128, height: 128, quality: 80, suffix: "_thumb_cover" }, // Cover selector component
   small: { width: 240, height: 240, quality: 85, suffix: "_thumb_small" }, // Albums large grids
-  medium: { width: 300, height: 300, quality: 90, suffix: "_thumb_medium" }, // Homepage large + Albums medium
-  large: { width: 365, height: 365, quality: 90, suffix: "_thumb_large" }, // Homepage medium/very large + Albums very large
+  medium: { width: 300, height: 300, quality: 90, suffix: "_thumb_medium" }, // Discover large + Albums medium
+  large: { width: 365, height: 365, quality: 90, suffix: "_thumb_large" }, // Discover medium/very large + Albums very large
   xlarge: { width: 600, height: 600, quality: 95, suffix: "_thumb_xlarge" }, // Small screens for both contexts
 };
 ```
@@ -94,7 +94,7 @@ The system automatically selects the optimal thumbnail size based on:
 
 - Always uses **cover** (128px) - optimized for small album cover previews
 
-**Homepage (`homepage`):**
+**Discover (`discover`):**
 
 - Small/Medium screens: **xlarge** (600px) - high quality for limited content
 - Large screens: **large** (365px) - balanced quality and loading speed
@@ -216,8 +216,8 @@ import { getThumbnailUrl, ThumbnailContext } from "../lib/utils";
 ### Context Examples
 
 ```typescript
-// Homepage display - automatically selects xlarge/large/medium based on screen
-<MediaCard media={item} context="homepage" />
+// Discover display - automatically selects xlarge/large/medium based on screen
+<MediaCard media={item} context="discover" />
 
 // Album grid - adapts to screen size and column count
 <MediaCard media={item} context="albums" columns={gridColumns} />
@@ -257,7 +257,7 @@ If the preferred size isn't available, the system automatically falls back in th
 | ------------ | ---------- | ------- | ------------ | ----------------------------- |
 | **Cover**    | 128×128px  | 80%     | 6-12KB       | Album covers, small previews  |
 | **Small**    | 240×240px  | 85%     | 15-30KB      | Dense grids, admin interfaces |
-| **Medium**   | 300×300px  | 90%     | 25-50KB      | General purpose, homepage     |
+| **Medium**   | 300×300px  | 90%     | 25-50KB      | General purpose, discover     |
 | **Large**    | 365×365px  | 90%     | 35-70KB      | High quality grids            |
 | **X-Large**  | 600×600px  | 95%     | 80-160KB     | Mobile/small screens          |
 | **Original** | Variable   | 100%    | 5-10MB       | Full resolution viewing       |

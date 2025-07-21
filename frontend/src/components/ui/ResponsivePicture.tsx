@@ -28,8 +28,8 @@ function generatePictureSources(
 
   // Context-specific responsive strategy
   switch (context) {
-    case "homepage":
-      // Homepage: Optimized for layout columns and screen size
+    case "discover":
+      // Discover: Optimized for layout columns and screen size
       // Very wide screens (2xl:1536px+ ~1500px+ layout): xlarge (600px) for high quality
       if (thumbnailUrls.large) {
         sources.push({
@@ -179,10 +179,10 @@ function getDefaultImageSrc(
         fallbackUrl
       );
 
-    case "homepage":
+    case "discover":
     case "albums":
     default:
-      // Homepage and albums use xlarge (600px) for mobile - best quality
+      // Discover and albums use xlarge (600px) for mobile - best quality
       return (
         thumbnailUrls.xlarge ||
         thumbnailUrls.large ||

@@ -57,7 +57,7 @@ export function LoginForm() {
       });
 
       if (success) {
-        // Redirect to homepage or dashboard after successful login
+        // Redirect to discover or dashboard after successful login
         router.push("/");
       } else if (!emailVerificationRequired) {
         setFormError("root", {

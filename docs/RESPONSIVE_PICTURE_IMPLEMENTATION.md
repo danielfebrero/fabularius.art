@@ -55,7 +55,7 @@ Located: [`frontend/src/components/ui/ResponsivePicture.tsx`](../frontend/src/co
   thumbnailUrls={media.thumbnailUrls}
   fallbackUrl={media.url}
   alt="Description"
-  context="homepage"
+  context="discover"
   columns={4}
   loading="lazy"
 />
@@ -122,7 +122,7 @@ const BREAKPOINTS = {
 
 ```typescript
 // SSR always assumed "lg" screen
-getThumbnailUrl(media, "homepage"); // → medium (300px) for all users
+getThumbnailUrl(media, "discover"); // → medium (300px) for all users
 ```
 
 #### After (Picture Element)

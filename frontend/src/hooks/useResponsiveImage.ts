@@ -30,7 +30,7 @@ export function useResponsiveImage(
       case "admin":
         optimalSize = "large"; // Better readability for admin
         break;
-      case "homepage":
+      case "discover":
       case "albums":
       default:
         optimalSize = "xlarge"; // 600px - optimal for mobile

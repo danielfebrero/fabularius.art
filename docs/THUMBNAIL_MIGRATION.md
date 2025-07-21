@@ -449,7 +449,7 @@ console.log(media.thumbnailUrls);
 
 // Verify intelligent selection
 import { getThumbnailUrl } from "./lib/utils";
-const selectedUrl = getThumbnailUrl(media, "homepage");
+const selectedUrl = getThumbnailUrl(media, "discover");
 console.log("Selected thumbnail:", selectedUrl);
 ```
 

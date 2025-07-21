@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { getAlbums } from "@/lib/data";
 import { Album } from "@/types";
-import { HomepageClient } from "@/components/HomepageClient";
+import { DiscoverClient } from "@/components/DiscoverClient";
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default async function HomePage() {
+export default async function DiscoverPage() {
   let albums: Album[] = [];
   let pagination: any = null;
   let error: string | null = null;
@@ -74,7 +74,7 @@ export default async function HomePage() {
           </p>
         </div>
       ) : (
-        <HomepageClient
+        <DiscoverClient
           initialAlbums={albums}
           initialPagination={pagination}
           initialError={error}

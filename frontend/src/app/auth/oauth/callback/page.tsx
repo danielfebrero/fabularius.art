@@ -245,7 +245,7 @@ function OAuthCallbackContent() {
                 onClick={() => router.push("/")}
                 className="text-sm text-muted-foreground hover:text-foreground"
               >
-                Go to Homepage
+                Go to Discover
               </button>
             </div>
           </div>

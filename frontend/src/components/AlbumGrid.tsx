@@ -21,7 +21,7 @@ interface AlbumGridProps {
 export const AlbumGrid: React.FC<AlbumGridProps> = ({
   albums,
   className,
-  context = "homepage",
+  context = "discover",
   loadMore,
   loading = false,
   hasMore = false,

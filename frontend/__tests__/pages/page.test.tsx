@@ -1,9 +1,9 @@
 import { render, screen, checkA11y } from "../utils/test-utils";
-import HomePage from "../../src/app/page";
+import DiscoverPage from "../../src/app/page";
 
-describe("HomePage", () => {
+describe("DiscoverPage", () => {
   beforeEach(() => {
-    render(<HomePage />);
+    render(<DiscoverPage />);
   });
 
   it("renders the main heading", () => {
@@ -67,7 +67,7 @@ describe("HomePage", () => {
   });
 
   it("applies correct CSS classes for layout", () => {
-    const { container } = render(<HomePage />);
+    const { container } = render(<DiscoverPage />);
     const mainContainer = container.querySelector(".space-y-8");
 
     expect(mainContainer).toBeInTheDocument();
@@ -75,7 +75,7 @@ describe("HomePage", () => {
   });
 
   it("has responsive grid layout for feature cards", () => {
-    const { container } = render(<HomePage />);
+    const { container } = render(<DiscoverPage />);
     const gridContainer = container.querySelector(".grid");
 
     expect(gridContainer).toHaveClass(
@@ -88,7 +88,7 @@ describe("HomePage", () => {
   });
 
   it("feature cards have proper structure", () => {
-    const { container } = render(<HomePage />);
+    const { container } = render(<DiscoverPage />);
     const cards = container.querySelectorAll(".card");
 
     expect(cards).toHaveLength(3);
@@ -107,7 +107,7 @@ describe("HomePage", () => {
   });
 
   it("has centered text alignment for intro and CTA sections", () => {
-    const { container } = render(<HomePage />);
+    const { container } = render(<DiscoverPage />);
     const introSection = container.querySelector(".text-center");
     const ctaSection = container.querySelector(".text-center:last-child");
 
@@ -129,7 +129,7 @@ describe("HomePage", () => {
   });
 
   it("feature card descriptions have muted text color", () => {
-    const { container } = render(<HomePage />);
+    const { container } = render(<DiscoverPage />);
     const descriptions = container.querySelectorAll(".card-content p");
 
     descriptions.forEach((description) => {
@@ -138,7 +138,7 @@ describe("HomePage", () => {
   });
 
   it("meets accessibility standards", async () => {
-    const { container } = render(<HomePage />);
+    const { container } = render(<DiscoverPage />);
     await checkA11y(container);
   });
 
@@ -160,7 +160,7 @@ describe("HomePage", () => {
   });
 
   it("has proper spacing between sections", () => {
-    const { container } = render(<HomePage />);
+    const { container } = render(<DiscoverPage />);
     const introSection = container.querySelector(".space-y-4");
 
     expect(introSection).toBeInTheDocument();
@@ -168,7 +168,7 @@ describe("HomePage", () => {
   });
 
   it("renders without crashing", () => {
-    expect(() => render(<HomePage />)).not.toThrow();
+    expect(() => render(<DiscoverPage />)).not.toThrow();
   });
 
   it("contains all expected text content", () => {
@@ -223,7 +223,7 @@ describe("HomePage", () => {
   });
 
   it("maintains layout integrity with different screen sizes", () => {
-    const { container } = render(<HomePage />);
+    const { container } = render(<DiscoverPage />);
     const gridContainer = container.querySelector(".grid");
 
     // Should have responsive classes

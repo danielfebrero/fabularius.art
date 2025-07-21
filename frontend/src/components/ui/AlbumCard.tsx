@@ -22,7 +22,7 @@ interface AlbumCardProps {
 export const AlbumCard: React.FC<AlbumCardProps> = ({
   album,
   className,
-  context = "homepage",
+  context = "discover",
   columns,
 }) => {
   const isMobile = useIsMobile();

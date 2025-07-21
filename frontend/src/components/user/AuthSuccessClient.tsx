@@ -141,7 +141,7 @@ export function AuthSuccessClient() {
         }`}
       >
         <p>
-          Automatically redirecting to homepage in{" "}
+          Automatically redirecting to discover in{" "}
           <span className="font-semibold text-foreground">{countdown}</span>{" "}
           {countdown === 1 ? "second" : "seconds"}...
         </p>
