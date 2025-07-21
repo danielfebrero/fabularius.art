@@ -60,16 +60,18 @@ export function GenerateClient() {
   const { 
     canGenerateImages,
     checkGenerationLimits,
-    getCurrentPlan
+    getCurrentPlan,
+    canUseBulkGeneration,
+    canUseLoRAModels,
+    canUseCustomParameters
   } = useUserPermissions();
 
   const { allowed, remaining } = checkGenerationLimits(settings.batchCount);
   const plan = getCurrentPlan();
   
-  const isProUser = plan === 'pro';
-  const canUseBulkGeneration = isProUser;
-  const canUseCustomSizes = isProUser;
-  const canUseLoras = isProUser;
+  const canUseBulk = canUseBulkGeneration();
+  const canUseCustomSizes = canUseCustomParameters();
+  const canUseLoras = canUseLoRAModels();
 
   const updateSettings = (key: keyof GenerationSettings, value: any) => {
     setSettings(prev => ({ ...prev, [key]: value }));
@@ -181,6 +183,7 @@ export function GenerateClient() {
             <Select 
               value={settings.imageSize} 
               onValueChange={(value: string) => {
+                if (!canUseCustomSizes) return;
                 updateSettings('imageSize', value);
                 const size = IMAGE_SIZES.find(s => s.value === value);
                 if (size) {
@@ -188,7 +191,6 @@ export function GenerateClient() {
                   updateSettings('customHeight', size.height);
                 }
               }}
-              disabled={!canUseCustomSizes}
             >
               <SelectTrigger className="h-12">
                 <SelectValue />
@@ -237,11 +239,11 @@ export function GenerateClient() {
           </div>
 
           {/* Bulk Generation */}
-          <div className={`space-y-3 ${!canUseBulkGeneration ? 'opacity-50' : ''}`}>
+          <div className={`space-y-3 ${!canUseBulk ? 'opacity-50' : ''}`}>
             <div className="flex items-center gap-2">
               <Zap className="h-5 w-5" />
               <label className="text-sm font-semibold">Batch Count</label>
-              {!canUseBulkGeneration && (
+              {!canUseBulk && (
                 <div className="flex items-center gap-1">
                   <Crown className="h-4 w-4 text-amber-500" />
                   <span className="text-xs text-amber-600 font-medium">Pro Only</span>
@@ -254,8 +256,8 @@ export function GenerateClient() {
                   key={count}
                   variant={settings.batchCount === count ? "default" : "outline"}
                   size="sm"
-                  onClick={() => canUseBulkGeneration && updateSettings('batchCount', count)}
-                  disabled={!canUseBulkGeneration || !checkGenerationLimits(count).allowed}
+                  onClick={() => canUseBulk && updateSettings('batchCount', count)}
+                  disabled={!canUseBulk || !checkGenerationLimits(count).allowed}
                   className="flex-1 h-12"
                 >
                   {count}
