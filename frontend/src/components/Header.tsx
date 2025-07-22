@@ -4,7 +4,17 @@ import { useState } from "react";
 import Link from "next/link";
 import { useUser } from "@/hooks/useUser";
 import { UserMenu } from "./user/UserMenu";
-import { Menu, X } from "lucide-react";
+import {
+  Menu,
+  X,
+  Compass,
+  Zap,
+  DollarSign,
+  ImageIcon,
+  Bookmark,
+  Heart,
+  FolderOpen,
+} from "lucide-react";
 
 export function Header() {
   const { user, loading } = useUser();
@@ -22,64 +32,87 @@ export function Header() {
     <header className="border-b border-border bg-card shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-4">
-          {/* Logo/Brand */}
+          {/* Logo/Brand - Always visible */}
           <Link href="/" className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
               <img src="/logo.svg" alt="PornSpot.ai" className="w-5 h-5" />
             </div>
-            <div className="hidden sm:block">
+            <div>
               <h1 className="text-xl font-bold text-foreground">PornSpot.ai</h1>
-              <p className="text-xs text-muted-foreground hidden sm:block">
+              <p className="text-xs text-muted-foreground">
                 AI Generated Content
               </p>
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          {/* Mobile Generate Button - Center */}
+          <Link
+            href="/generate"
+            className="sm:hidden flex items-center justify-center p-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Zap className="h-6 w-6" />
+            <span className="sr-only">Generate</span>
+          </Link>
+
+          {/* Desktop Navigation - Hidden on mobile */}
+          <nav className="hidden sm:flex items-center space-x-6">
             <Link
               href="/"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Discover
+              <Compass className="h-4 w-4 lg:hidden" />
+              <span className="hidden lg:block">Discover</span>
+              <span className="lg:hidden sr-only">Discover</span>
             </Link>
             <Link
               href="/generate"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Generate
+              <Zap className="h-4 w-4 lg:hidden" />
+              <span className="hidden lg:block">Generate</span>
+              <span className="lg:hidden sr-only">Generate</span>
             </Link>
             <Link
               href="/pricing"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Pricing
+              <DollarSign className="h-4 w-4 lg:hidden" />
+              <span className="hidden lg:block">Pricing</span>
+              <span className="lg:hidden sr-only">Pricing</span>
             </Link>
             {user && (
               <>
                 <Link
                   href="/user/images"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Images
+                  <ImageIcon className="h-4 w-4 lg:hidden" />
+                  <span className="hidden lg:block">Images</span>
+                  <span className="lg:hidden sr-only">Images</span>
                 </Link>
                 <Link
                   href="/user/bookmarks"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Bookmarks
+                  <Bookmark className="h-4 w-4 lg:hidden" />
+                  <span className="hidden lg:block">Bookmarks</span>
+                  <span className="lg:hidden sr-only">Bookmarks</span>
                 </Link>
                 <Link
                   href="/user/likes"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Likes
+                  <Heart className="h-4 w-4 lg:hidden" />
+                  <span className="hidden lg:block">Likes</span>
+                  <span className="lg:hidden sr-only">Likes</span>
                 </Link>
                 <Link
                   href="/user/albums"
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Albums
+                  <FolderOpen className="h-4 w-4 lg:hidden" />
+                  <span className="hidden lg:block">Albums</span>
+                  <span className="lg:hidden sr-only">Albums</span>
                 </Link>
               </>
             )}
@@ -94,18 +127,6 @@ export function Header() {
             ) : user ? (
               <>
                 <UserMenu user={user} />
-                {/* Mobile Menu Button - Only show for authenticated users */}
-                <button
-                  onClick={toggleMobileMenu}
-                  className="md:hidden p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                  aria-label="Open menu"
-                >
-                  {isMobileMenuOpen ? (
-                    <X className="h-5 w-5" />
-                  ) : (
-                    <Menu className="h-5 w-5" />
-                  )}
-                </button>
               </>
             ) : (
               <>
@@ -123,7 +144,7 @@ export function Header() {
                     Sign Up
                   </Link>
                 </div>
-                {/* Mobile Menu Button - Show for unauthenticated users too */}
+                {/* Mobile Menu Button - Show for unauthenticated users for login/register and navigation */}
                 <button
                   onClick={toggleMobileMenu}
                   className="sm:hidden p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
@@ -140,88 +161,53 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile Navigation Menu */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-border">
+        {/* Mobile Navigation Menu - For unauthenticated users */}
+        {isMobileMenuOpen && !user && (
+          <div className="sm:hidden border-t border-border">
             <nav className="py-4 space-y-2">
-              {/* Main Navigation */}
+              {/* Navigation Links */}
               <Link
                 href="/"
                 onClick={closeMobileMenu}
-                className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+                className="flex items-center space-x-3 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
               >
-                Discover
+                <Compass className="h-4 w-4" />
+                <span>Discover</span>
               </Link>
               <Link
                 href="/generate"
                 onClick={closeMobileMenu}
-                className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+                className="flex items-center space-x-3 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
               >
-                Generate
+                <Zap className="h-4 w-4" />
+                <span>Generate</span>
               </Link>
               <Link
                 href="/pricing"
                 onClick={closeMobileMenu}
-                className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
+                className="flex items-center space-x-3 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
               >
-                Pricing
+                <DollarSign className="h-4 w-4" />
+                <span>Pricing</span>
               </Link>
 
-              {user ? (
-                <>
-                  {/* Authenticated User Links */}
-                  <div className="border-t border-border pt-2 mt-2">
-                    <Link
-                      href="/user/images"
-                      onClick={closeMobileMenu}
-                      className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
-                    >
-                      Images
-                    </Link>
-                    <Link
-                      href="/user/bookmarks"
-                      onClick={closeMobileMenu}
-                      className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
-                    >
-                      Bookmarks
-                    </Link>
-                    <Link
-                      href="/user/likes"
-                      onClick={closeMobileMenu}
-                      className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
-                    >
-                      Likes
-                    </Link>
-                    <Link
-                      href="/user/albums"
-                      onClick={closeMobileMenu}
-                      className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
-                    >
-                      Albums
-                    </Link>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Unauthenticated User Links */}
-                  <div className="border-t border-border pt-2 mt-2">
-                    <Link
-                      href="/auth/login"
-                      onClick={closeMobileMenu}
-                      className="block px-4 py-2 text-sm font-medium text-primary hover:bg-accent rounded-md transition-colors"
-                    >
-                      Login
-                    </Link>
-                    <Link
-                      href="/auth/register"
-                      onClick={closeMobileMenu}
-                      className="block px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors"
-                    >
-                      Sign Up
-                    </Link>
-                  </div>
-                </>
-              )}
+              {/* Auth Links */}
+              <div className="border-t border-border pt-2 mt-2">
+                <Link
+                  href="/auth/login"
+                  onClick={closeMobileMenu}
+                  className="block px-4 py-2 text-sm font-medium text-primary hover:bg-accent rounded-md transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/auth/register"
+                  onClick={closeMobileMenu}
+                  className="block px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors"
+                >
+                  Sign Up
+                </Link>
+              </div>
             </nav>
           </div>
         )}

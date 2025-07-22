@@ -6,6 +6,14 @@ import { useUser } from "@/hooks/useUser";
 import { useAdminContext } from "@/contexts/AdminContext";
 import { User } from "@/types/user";
 import { UserPlanBadge } from "@/components/UserPlanBadge";
+import {
+  Compass,
+  DollarSign,
+  ImageIcon,
+  Bookmark,
+  Heart,
+  FolderOpen,
+} from "lucide-react";
 
 interface UserMenuProps {
   user: User;
@@ -118,6 +126,103 @@ export function UserMenu({ user }: UserMenuProps) {
           </div>
 
           <div className="p-2">
+            {/* Mobile Navigation Items - Only show on mobile */}
+            <div className="sm:hidden border-b border-border pb-2 mb-2">
+              <button
+                onClick={() => handleMenuItemClick(() => router.push("/"))}
+                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
+              >
+                <div className="flex items-center space-x-2">
+                  <Compass className="w-4 h-4" />
+                  <span>Discover</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() =>
+                  handleMenuItemClick(() => router.push("/generate"))
+                }
+                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
+              >
+                <div className="flex items-center space-x-2">
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 10V3L4 14h7v7l9-11h-7z"
+                    />
+                  </svg>
+                  <span>Generate</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() =>
+                  handleMenuItemClick(() => router.push("/pricing"))
+                }
+                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
+              >
+                <div className="flex items-center space-x-2">
+                  <DollarSign className="w-4 h-4" />
+                  <span>Pricing</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() =>
+                  handleMenuItemClick(() => router.push("/user/images"))
+                }
+                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
+              >
+                <div className="flex items-center space-x-2">
+                  <ImageIcon className="w-4 h-4" />
+                  <span>Images</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() =>
+                  handleMenuItemClick(() => router.push("/user/bookmarks"))
+                }
+                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
+              >
+                <div className="flex items-center space-x-2">
+                  <Bookmark className="w-4 h-4" />
+                  <span>Bookmarks</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() =>
+                  handleMenuItemClick(() => router.push("/user/likes"))
+                }
+                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
+              >
+                <div className="flex items-center space-x-2">
+                  <Heart className="w-4 h-4" />
+                  <span>Likes</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() =>
+                  handleMenuItemClick(() => router.push("/user/albums"))
+                }
+                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
+              >
+                <div className="flex items-center space-x-2">
+                  <FolderOpen className="w-4 h-4" />
+                  <span>Albums</span>
+                </div>
+              </button>
+            </div>
+
             <button
               onClick={() => handleMenuItemClick(() => router.push("/profile"))}
               className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
@@ -191,28 +296,6 @@ export function UserMenu({ user }: UserMenuProps) {
                   />
                 </svg>
                 <span>Settings</span>
-              </div>
-            </button>
-
-            <button
-              onClick={() => handleMenuItemClick(() => router.push("/pricing"))}
-              className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
-            >
-              <div className="flex items-center space-x-2">
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
-                  />
-                </svg>
-                <span>Manage Plan</span>
               </div>
             </button>
 
