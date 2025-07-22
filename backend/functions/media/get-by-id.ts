@@ -66,12 +66,29 @@ export const handler = async (
       mediaResponse.createdByType = mediaEntity.createdByType;
     }
 
-    // Optionally fetch creator username if createdBy exists
+    // Fetch creator username if createdBy exists
     if (mediaEntity.createdBy) {
       try {
-        const creator = await DynamoDBService.getUserById(
-          mediaEntity.createdBy
-        );
+        let creator = null;
+
+        // Try to get user by ID first (new unified system)
+        creator = await DynamoDBService.getUserById(mediaEntity.createdBy);
+
+        // If not found and createdByType is "admin", try the old admin lookup for backward compatibility
+        if (!creator && mediaEntity.createdByType === "admin") {
+          try {
+            const adminEntity = await DynamoDBService.getAdminById(
+              mediaEntity.createdBy
+            );
+            if (adminEntity && adminEntity.username) {
+              // Convert admin entity to user-like format for consistent handling
+              creator = { username: adminEntity.username };
+            }
+          } catch (adminError) {
+            console.warn("Failed to fetch admin info (legacy):", adminError);
+          }
+        }
+
         if (creator && creator.username) {
           // Add creator information to metadata if it doesn't exist
           if (!mediaResponse.metadata) {

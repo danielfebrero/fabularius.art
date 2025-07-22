@@ -103,8 +103,8 @@ export const handler = async (
       url: S3Service.getRelativePath(key),
       createdAt: now,
       updatedAt: now,
-      createdBy: userId, // Use actual admin user ID
-      createdByType: "admin" as const,
+      createdBy: userId, // Use actual user ID
+      createdByType: "user" as const,
       status: "pending" as const, // Will be updated to 'uploaded' after successful upload
     };
     console.log(
