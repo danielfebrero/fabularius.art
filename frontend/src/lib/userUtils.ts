@@ -1,32 +1,29 @@
 import { User, UserWithPlanInfo } from "@/types/user";
-import {
-  UserWithPlan,
-  UserPlan,
-  UserRole,
-  PLAN_DEFINITIONS,
-} from "@/types/permissions";
+import { UserWithPlan, UserPlan, UserRole } from "@/types/permissions";
+import { getAllPlanDefinitions } from "@/utils/permissions";
 
 // Utility to convert API user to permissions-compatible user
-export function createUserWithPlan(
+export async function createUserWithPlan(
   user: User | UserWithPlanInfo
-): UserWithPlan {
+): Promise<UserWithPlan> {
   const baseUser = user as UserWithPlanInfo;
 
-  // Default values for new users or users without plan info
-  const plan: UserPlan = (baseUser.plan as UserPlan) || "free";
+  // Extract plan info from the nested structure
+  const plan: UserPlan = (baseUser.planInfo?.plan as UserPlan) || "free";
   const role: UserRole = (baseUser.role as UserRole) || "user";
 
-  const permissions = PLAN_DEFINITIONS[plan];
+  const planDefinitions = await getAllPlanDefinitions();
+  const permissions = planDefinitions[plan];
 
   return {
     ...user,
     role,
     planInfo: {
       plan,
-      isActive: baseUser.subscriptionStatus === "active" || plan === "free",
-      subscriptionId: baseUser.subscriptionId,
-      startDate: baseUser.planStartDate || user.createdAt,
-      endDate: baseUser.planEndDate,
+      isActive: baseUser.planInfo?.isActive || plan === "free",
+      subscriptionId: baseUser.planInfo?.subscriptionId,
+      startDate: baseUser.planInfo?.planStartDate || user.createdAt,
+      endDate: baseUser.planInfo?.planEndDate,
       permissions,
     },
     usageStats: baseUser.usageStats || {
@@ -37,10 +34,10 @@ export function createUserWithPlan(
 }
 
 // Mock user data for development/testing
-export function createMockUser(
+export async function createMockUser(
   plan: UserPlan = "free",
   overrides?: Partial<UserWithPlan>
-): UserWithPlan {
+): Promise<UserWithPlan> {
   const baseUser: User = {
     userId: "mock-user-123",
     email: "test@example.com",
@@ -60,11 +57,15 @@ export function createMockUser(
 
   const usage = mockUsage[plan];
 
-  const userWithPlan = createUserWithPlan({
+  const userWithPlan = await createUserWithPlan({
     ...baseUser,
-    plan,
     role: "user",
-    subscriptionStatus: plan === "free" ? undefined : "active",
+    planInfo: {
+      plan,
+      isActive: true,
+      subscriptionStatus: plan === "free" ? undefined : "active",
+      planStartDate: new Date().toISOString(),
+    },
     usageStats: {
       imagesGeneratedThisMonth: usage.month,
       imagesGeneratedToday: usage.day,

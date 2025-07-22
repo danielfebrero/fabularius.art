@@ -1,0 +1,172 @@
+{
+  "planPermissions": {
+    "free": {
+      "imagesPerMonth": 30,
+      "imagesPerDay": 1,
+      "canGenerateImages": true,
+      "canUseAdvancedPrompts": false,
+      "canUseNegativePrompt": false,
+      "canUseBulkGeneration": false,
+      "canUseLoRAModels": false,
+      "canSelectImageSizes": false,
+      "canCreatePrivateContent": false,
+      "canMakeContentPublic": true,
+      "maxImageQuality": "standard",
+      "processingPriority": "standard",
+      "canDownloadOriginal": true,
+      "canExportContent": false,
+      "canBookmark": true,
+      "canLike": true,
+      "canComment": true,
+      "canShare": true,
+      "supportLevel": "community",
+      "hasApiAccess": false,
+      "apiRequestsPerMonth": 0
+    },
+    "starter": {
+      "imagesPerMonth": 300,
+      "imagesPerDay": 20,
+      "canGenerateImages": true,
+      "canUseAdvancedPrompts": true,
+      "canUseNegativePrompt": false,
+      "canUseBulkGeneration": false,
+      "canUseLoRAModels": false,
+      "canSelectImageSizes": false,
+      "canCreatePrivateContent": false,
+      "canMakeContentPublic": true,
+      "maxImageQuality": "high",
+      "processingPriority": "standard",
+      "canDownloadOriginal": true,
+      "canExportContent": true,
+      "canBookmark": true,
+      "canLike": true,
+      "canComment": true,
+      "canShare": true,
+      "supportLevel": "email",
+      "hasApiAccess": false,
+      "apiRequestsPerMonth": 0
+    },
+    "unlimited": {
+      "imagesPerMonth": "unlimited",
+      "imagesPerDay": "unlimited",
+      "canGenerateImages": true,
+      "canUseAdvancedPrompts": true,
+      "canUseNegativePrompt": false,
+      "canUseBulkGeneration": false,
+      "canUseLoRAModels": false,
+      "canSelectImageSizes": true,
+      "canCreatePrivateContent": false,
+      "canMakeContentPublic": true,
+      "maxImageQuality": "high",
+      "processingPriority": "high",
+      "canDownloadOriginal": true,
+      "canExportContent": true,
+      "canBookmark": true,
+      "canLike": true,
+      "canComment": true,
+      "canShare": true,
+      "supportLevel": "email",
+      "hasApiAccess": false,
+      "apiRequestsPerMonth": 0
+    },
+    "pro": {
+      "imagesPerMonth": "unlimited",
+      "imagesPerDay": "unlimited",
+      "canGenerateImages": true,
+      "canUseAdvancedPrompts": true,
+      "canUseNegativePrompt": true,
+      "canUseBulkGeneration": true,
+      "canUseLoRAModels": true,
+      "canSelectImageSizes": true,
+      "canCreatePrivateContent": true,
+      "canMakeContentPublic": true,
+      "maxImageQuality": "premium",
+      "processingPriority": "priority",
+      "canDownloadOriginal": true,
+      "canExportContent": true,
+      "canBookmark": true,
+      "canLike": true,
+      "canComment": true,
+      "canShare": true,
+      "supportLevel": "priority",
+      "hasApiAccess": true,
+      "apiRequestsPerMonth": 10000
+    }
+  },
+  "rolePermissions": {
+    "user": {
+      "canAccessAdmin": false,
+      "canManageUsers": false,
+      "canManageContent": false,
+      "canViewAnalytics": false,
+      "canModerateContent": false,
+      "canManageReports": false,
+      "canManageSubscriptions": false,
+      "canAccessSystemSettings": false
+    },
+    "moderator": {
+      "canAccessAdmin": true,
+      "canManageUsers": false,
+      "canManageContent": true,
+      "canViewAnalytics": false,
+      "canModerateContent": true,
+      "canManageReports": true,
+      "canManageSubscriptions": false,
+      "canAccessSystemSettings": false
+    },
+    "admin": {
+      "canAccessAdmin": true,
+      "canManageUsers": true,
+      "canManageContent": true,
+      "canViewAnalytics": true,
+      "canModerateContent": true,
+      "canManageReports": true,
+      "canManageSubscriptions": true,
+      "canAccessSystemSettings": true
+    }
+  },
+  "features": {
+    "negativePrompt": {
+      "name": "Negative Prompt",
+      "description": "Specify what you don't want to see in your generated images",
+      "requiredPlans": ["pro"],
+      "category": "generation",
+      "icon": "MinusCircle"
+    },
+    "bulkGeneration": {
+      "name": "Bulk Generation",
+      "description": "Generate multiple images at once",
+      "requiredPlans": ["pro"],
+      "category": "generation",
+      "icon": "Grid3X3"
+    },
+    "loraModels": {
+      "name": "LoRA Models",
+      "description": "Use specialized model enhancements",
+      "requiredPlans": ["pro"],
+      "category": "generation",
+      "icon": "Crown"
+    },
+    "privateContent": {
+      "name": "Private Content",
+      "description": "Create content that only you can see",
+      "requiredPlans": ["pro"],
+      "category": "content",
+      "icon": "Lock"
+    },
+    "customImageSize": {
+      "name": "Custom Image Size",
+      "description": "Choose custom dimensions for your images",
+      "requiredPlans": ["unlimited", "pro"],
+      "category": "generation",
+      "icon": "Settings"
+    },
+    "advancedPrompts": {
+      "name": "Advanced Prompts",
+      "description": "Use sophisticated prompt engineering",
+      "requiredPlans": ["starter", "unlimited", "pro"],
+      "category": "generation",
+      "icon": "Sparkles"
+    }
+  }
+}

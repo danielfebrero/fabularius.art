@@ -4,8 +4,6 @@ import React, { createContext, useContext, ReactNode } from "react";
 import {
   UserWithPlan,
   UserPlan,
-  PLAN_DEFINITIONS,
-  ROLE_PERMISSIONS,
   PlanPermissions,
   RolePermissions,
   PermissionContext,
@@ -24,6 +22,7 @@ interface PermissionsContextType {
   };
   canUseBulkGeneration: () => boolean;
   canUseLoRAModels: () => boolean;
+  canUseNegativePrompt: () => boolean;
   canCreatePrivateContent: () => boolean;
 
   // Role-based permission checks
@@ -53,8 +52,21 @@ export function PermissionsProvider({
   children,
   user,
 }: PermissionsProviderProps) {
-  const planPermissions = user ? PLAN_DEFINITIONS[user.planInfo.plan] : null;
-  const rolePermissions = user ? ROLE_PERMISSIONS[user.role] : null;
+  const planPermissions = user?.planInfo?.permissions || null;
+
+  // Basic role permissions - in the future this should be loaded from API
+  const rolePermissions: RolePermissions | null = user
+    ? {
+        canAccessAdmin: user.role === "admin",
+        canManageUsers: user.role === "admin",
+        canManageContent: user.role === "admin" || user.role === "moderator",
+        canViewAnalytics: user.role === "admin" || user.role === "moderator",
+        canModerateContent: user.role === "admin" || user.role === "moderator",
+        canManageReports: user.role === "admin" || user.role === "moderator",
+        canManageSubscriptions: user.role === "admin",
+        canAccessSystemSettings: user.role === "admin",
+      }
+    : null;
 
   // Plan-based permission checks
   const canGenerateImages = (): boolean => {
@@ -113,6 +125,11 @@ export function PermissionsProvider({
     return planPermissions.canUseLoRAModels && user.planInfo.isActive;
   };
 
+  const canUseNegativePrompt = (): boolean => {
+    if (!user || !planPermissions) return false;
+    return planPermissions.canUseNegativePrompt && user.planInfo.isActive;
+  };
+
   const canCreatePrivateContent = (): boolean => {
     if (!user || !planPermissions) return false;
     return planPermissions.canCreatePrivateContent && user.planInfo.isActive;
@@ -147,6 +164,8 @@ export function PermissionsProvider({
             return canUseBulkGeneration();
           case "lora":
             return canUseLoRAModels();
+          case "negative-prompt":
+            return canUseNegativePrompt();
           case "private":
             return canCreatePrivateContent();
           default:
@@ -220,6 +239,7 @@ export function PermissionsProvider({
     canGenerateImagesCount,
     canUseBulkGeneration,
     canUseLoRAModels,
+    canUseNegativePrompt,
     canCreatePrivateContent,
     canAccessAdmin,
     canManageUsers,

@@ -3,9 +3,11 @@ import { ResponseUtil } from "@shared/utils/response";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { PlanUtil } from "@shared/utils/plan";
 import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { getGenerationPermissions } from "@shared/utils/permissions";
 
 interface GenerationRequest {
   prompt: string;
+  negativePrompt?: string;
   imageSize?: string;
   customWidth?: number;
   customHeight?: number;
@@ -73,6 +75,7 @@ export const handler = async (
 
     const {
       prompt,
+      negativePrompt = "",
       imageSize = "1024x1024",
       customWidth = 1024,
       customHeight = 1024,
@@ -92,16 +95,17 @@ export const handler = async (
       );
     }
 
-    // Check user permissions based on their plan
-    const planPermissions = {
-      free: { maxBatch: 1, canUseLoRA: false, canUseCustomSize: false },
-      starter: { maxBatch: 1, canUseLoRA: false, canUseCustomSize: false },
-      unlimited: { maxBatch: 1, canUseLoRA: false, canUseCustomSize: true },
-      pro: { maxBatch: 8, canUseLoRA: true, canUseCustomSize: true },
-    };
+    // Validate negative prompt if provided
+    if (negativePrompt && negativePrompt.length > 500) {
+      return ResponseUtil.badRequest(
+        event,
+        "Negative prompt is too long (max 500 characters)"
+      );
+    }
 
+    // Check user permissions based on their plan
     const userPlan = enhancedUser.planInfo.plan;
-    const permissions = planPermissions[userPlan];
+    const permissions = getGenerationPermissions(userPlan);
 
     // Validate batch count
     if (batchCount > permissions.maxBatch) {
@@ -116,6 +120,18 @@ export const handler = async (
     // Validate LoRA usage
     if (selectedLoras.length > 0 && !permissions.canUseLoRA) {
       return ResponseUtil.forbidden(event, "LoRA models require a Pro plan");
+    }
+
+    // Validate negative prompt usage
+    if (
+      negativePrompt &&
+      negativePrompt.trim().length > 0 &&
+      !permissions.canUseNegativePrompt
+    ) {
+      return ResponseUtil.forbidden(
+        event,
+        "Negative prompts require a Pro plan"
+      );
     }
 
     // Validate custom image size

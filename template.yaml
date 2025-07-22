@@ -488,6 +488,33 @@ Resources:
       - MediaBucket
       - ProcessUploadFunctionS3Permission
 
+  # Configuration API Functions
+  GetPermissionsConfigFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-get-permissions-config"
+      CodeUri: backend/dist/functions/config/
+      Handler: permissions.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        GetPermissions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /config/permissions
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        OptionsPermissions:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /config/permissions
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+
   # Admin Authentication Functions
   AdminLoginFunction:
     Type: AWS::Serverless::Function

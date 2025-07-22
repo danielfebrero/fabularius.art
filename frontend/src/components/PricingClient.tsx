@@ -50,7 +50,7 @@ const plans: PricingPlan[] = [
     features: [
       "Unlimited image generation",
       "Private content creation",
-      "Custom image parameters",
+      "Negative prompts for better control",
       "Bulk image generation",
       "Custom image sizes",
       "Turn on and off LoRA models",
@@ -267,6 +267,18 @@ export function PricingClient() {
             </div>
 
             <div className="space-y-6">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  What advanced features does the Pro plan offer?
+                </h3>
+                <p className="text-muted-foreground">
+                  Pro users get access to negative prompts for better image
+                  control, LoRA model customization, bulk generation, private
+                  content creation, and custom image sizes - all the tools you
+                  need for professional-grade content.
+                </p>
+              </div>
+
               <div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">
                   What happens to my content if I cancel?

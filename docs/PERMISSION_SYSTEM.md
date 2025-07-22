@@ -82,6 +82,7 @@ function AdvancedFeatures() {
 - Unlimited image generation
 - Private content creation
 - LoRA models
+- Negative prompts
 - Bulk generation
 - Custom image size
 
@@ -167,6 +168,7 @@ Shows feature availability for current plan.
 ```tsx
 <FeatureAvailability feature="bulk-generation" />
 <FeatureAvailability feature="lora-models" />
+<FeatureAvailability feature="negative-prompt" />
 <FeatureAvailability feature="private-content" />
 ```
 
@@ -197,6 +199,10 @@ if (allowed) {
 ```tsx
 if (hasPermission({ feature: "generation", action: "bulk" })) {
   // Show bulk generation options
+}
+
+if (hasPermission({ feature: "generation", action: "negative-prompt" })) {
+  // Show negative prompt input
 }
 ```
 

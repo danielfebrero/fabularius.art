@@ -258,15 +258,19 @@ export interface ApiResponse<T = any> {
 
 // Extended user with plan information - this will be returned from the API
 export interface UserWithPlanInfo extends User {
-  plan?: string; // 'free', 'starter', 'unlimited', 'pro'
   role?: string; // 'user', 'admin', 'moderator'
-  subscriptionId?: string;
-  subscriptionStatus?: "active" | "canceled" | "expired";
-  planStartDate?: string;
-  planEndDate?: string;
+  planInfo?: {
+    plan: string; // 'free', 'starter', 'unlimited', 'pro'
+    isActive: boolean;
+    subscriptionId?: string;
+    subscriptionStatus?: "active" | "canceled" | "expired";
+    planStartDate?: string;
+    planEndDate?: string;
+  };
   usageStats?: {
     imagesGeneratedThisMonth: number;
     imagesGeneratedToday: number;
+    storageUsedGB?: number;
     lastGenerationAt?: string;
   };
 }

@@ -24,23 +24,55 @@ export function useUserPermissions() {
   const getUpgradeRecommendation = (
     requestedFeature: string
   ): UserPlan | null => {
-    const currentPlan = permissions.getCurrentPlan();
+    const planLimits = permissions.getPlanLimits();
 
+    if (!planLimits) return null;
+
+    // Use actual permissions from the configuration
+    // Based on actual pricing page features
     switch (requestedFeature) {
       case "unlimited-images":
-        return currentPlan === "free" || currentPlan === "starter"
-          ? "unlimited"
-          : null;
+        // Check if current plan has limited images
+        if (typeof planLimits.imagesPerMonth === "number") {
+          return "unlimited"; // First plan with unlimited images
+        }
+        return null;
+
+      case "negative-prompts":
+        // Check if current plan can use negative prompts
+        if (!planLimits.canUseNegativePrompt) {
+          return "pro"; // Only Pro plan supports negative prompts
+        }
+        return null;
 
       case "bulk-generation":
-      case "lora-models":
-      case "private-content":
-        return currentPlan !== "pro" ? "pro" : null;
+        // Check if current plan supports bulk generation
+        if (!planLimits.canUseBulkGeneration) {
+          return "pro"; // Only Pro plan supports bulk generation
+        }
+        return null;
 
-      case "custom-image-size":
-        return currentPlan === "free" || currentPlan === "starter"
-          ? "unlimited"
-          : null;
+      case "lora-models":
+        // Check if current plan supports LoRA models
+        if (!planLimits.canUseLoRAModels) {
+          return "pro"; // Only Pro plan supports LoRA models
+        }
+        return null;
+
+      case "private-content":
+        // Check if current plan supports private content
+        if (!planLimits.canCreatePrivateContent) {
+          return "pro"; // Only Pro plan supports private content
+        }
+        return null;
+
+      case "custom-image-sizes":
+        // Check if current plan supports custom image sizes
+        if (!planLimits.canSelectImageSizes) {
+          // Return the first plan that supports it (Pro only based on pricing)
+          return "pro";
+        }
+        return null;
 
       default:
         return null;
@@ -68,6 +100,7 @@ export function useUserPermissions() {
           "Unlimited images",
           "Private content",
           "LoRA models",
+          "Negative prompts",
           "Bulk generation",
           "Custom image size"
         );

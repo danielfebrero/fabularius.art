@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { UserPlan } from "@/types/permissions";
+import { UserPlan, UserWithPlan } from "@/types/permissions";
 import { createMockUser } from "@/lib/userUtils";
 import { PermissionsProvider } from "@/contexts/PermissionsContext";
 import {
@@ -20,6 +20,7 @@ function PermissionDemo() {
     canGenerateImages,
     canUseBulkGeneration,
     canUseLoRAModels,
+    canUseNegativePrompt,
     canCreatePrivateContent,
     getCurrentPlan,
     checkGenerationLimits,
@@ -69,6 +70,7 @@ function PermissionDemo() {
         <CardContent className="space-y-4">
           <FeatureAvailability feature="bulk-generation" />
           <FeatureAvailability feature="lora-models" />
+          <FeatureAvailability feature="negative-prompt" />
           <FeatureAvailability feature="private-content" />
           <FeatureAvailability feature="custom-parameters" />
         </CardContent>
@@ -107,6 +109,17 @@ function PermissionDemo() {
           <PermissionGate feature="generation" action="lora" showUpgrade={true}>
             <Button variant="secondary" className="w-full">
               Use LoRA Models
+            </Button>
+          </PermissionGate>
+
+          {/* Negative Prompt */}
+          <PermissionGate
+            feature="generation"
+            action="negative-prompt"
+            showUpgrade={true}
+          >
+            <Button variant="secondary" className="w-full">
+              Use Negative Prompts
             </Button>
           </PermissionGate>
 
@@ -170,6 +183,9 @@ function PermissionDemo() {
           <div>Can Generate: {canGenerateImages().toString()}</div>
           <div>Can Bulk Generate: {canUseBulkGeneration().toString()}</div>
           <div>Can Use LoRA: {canUseLoRAModels().toString()}</div>
+          <div>
+            Can Use Negative Prompt: {canUseNegativePrompt().toString()}
+          </div>
           <div>Can Create Private: {canCreatePrivateContent().toString()}</div>
           <div>Remaining Generations: {remaining.toString()}</div>
         </CardContent>
@@ -181,9 +197,25 @@ function PermissionDemo() {
 // Main demo page with plan switching
 export default function PermissionSystemDemo() {
   const [currentPlan, setCurrentPlan] = useState<UserPlan>("free");
+  const [mockUser, setMockUser] = useState<UserWithPlan | null>(null);
 
-  // Create a mock user with the selected plan
-  const mockUser = createMockUser(currentPlan);
+  // Load mock user when plan changes
+  useEffect(() => {
+    createMockUser(currentPlan).then(setMockUser);
+  }, [currentPlan]);
+
+  // Show loading state while user is being created
+  if (!mockUser) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <div className="flex items-center justify-center min-h-[200px]">
+          <div className="text-center">
+            <div className="text-lg">Loading permissions...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <PermissionsProvider user={mockUser}>

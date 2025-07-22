@@ -22,10 +22,12 @@ import {
   Lock,
   Sparkles,
   Download,
+  MinusCircle,
 } from "lucide-react";
 
 interface GenerationSettings {
   prompt: string;
+  negativePrompt: string;
   imageSize: string;
   customWidth: number;
   customHeight: number;
@@ -88,6 +90,7 @@ const LORA_MODELS = [
 export function GenerateClient() {
   const [settings, setSettings] = useState<GenerationSettings>({
     prompt: "",
+    negativePrompt: "",
     imageSize: "1024x1024",
     customWidth: 1024,
     customHeight: 1024,
@@ -104,6 +107,7 @@ export function GenerateClient() {
     getCurrentPlan,
     canUseBulkGeneration,
     canUseLoRAModels,
+    canUseNegativePrompt,
   } = useUserPermissions();
 
   const { allowed, remaining } = checkGenerationLimits(settings.batchCount);
@@ -112,6 +116,7 @@ export function GenerateClient() {
   const canUseBulk = canUseBulkGeneration();
   const canUseCustomSizes = plan === "unlimited" || plan === "pro"; // Based on canSelectImageSizes from plan
   const canUseLoras = canUseLoRAModels();
+  const canUseNegativePrompts = canUseNegativePrompt();
 
   const updateSettings = (key: keyof GenerationSettings, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
@@ -193,6 +198,30 @@ export function GenerateClient() {
             className="w-full h-32 text-lg p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 resize-none"
           />
         </div>
+
+        {/* Negative Prompt Input - Pro Only */}
+        {canUseNegativePrompts && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <MinusCircle className="h-5 w-5" />
+              <label className="text-sm font-semibold">Negative Prompt</label>
+              <div className="flex items-center gap-1">
+                <Crown className="h-4 w-4 text-amber-500" />
+                <span className="text-xs text-amber-600 font-medium">
+                  Pro Only
+                </span>
+              </div>
+            </div>
+            <Textarea
+              placeholder="Describe what you don't want to see in your images..."
+              value={settings.negativePrompt}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                updateSettings("negativePrompt", e.target.value)
+              }
+              className="w-full h-24 text-base p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 resize-none"
+            />
+          </div>
+        )}
 
         {/* Generate Button */}
         <Button

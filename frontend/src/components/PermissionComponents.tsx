@@ -142,6 +142,8 @@ export function FeatureAvailability({ feature }: { feature: string }) {
         return limits.canUseBulkGeneration;
       case "lora-models":
         return limits.canUseLoRAModels;
+      case "negative-prompt":
+        return limits.canUseNegativePrompt;
       case "private-content":
         return limits.canCreatePrivateContent;
       default:

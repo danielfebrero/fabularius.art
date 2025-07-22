@@ -12,12 +12,31 @@ A premium adult content gallery platform for creators and enthusiasts. Built wit
 
 ## Features
 
+### Content Management
+
 - 🎨 **Album Management**: Create and organize artwork into beautiful albums
 - 📸 **Media Upload**: High-quality image uploads with automatic optimization
 - 🌐 **CDN Delivery**: Fast global content delivery via CloudFront
 - 🔒 **Privacy Controls**: Public and private album settings
-- 👤 **Admin Panel**: Secure admin interface for content management
-- 🔐 **User Authentication**: Secure admin login with bcrypt password hashing
+
+### AI Image Generation
+
+- 🤖 **AI-Powered Generation**: Advanced AI image generation with prompt support
+- ⭐ **Negative Prompts**: Pro users can specify what to exclude from generated images
+- 🔧 **LoRA Models**: Customizable AI models for specialized content (Pro)
+- � **Bulk Generation**: Generate multiple variations at once (Pro)
+- 📐 **Custom Sizes**: Control exact image dimensions (Unlimited/Pro)
+- 🎚️ **Plan-Based Limits**: Tiered usage limits based on subscription plan
+
+### Administration & Authentication
+
+- �👤 **Admin Panel**: Secure admin interface for content management
+- 🔐 **User Authentication**: Secure authentication with plan-based permissions
+- 📊 **Usage Tracking**: Monitor generation limits and subscription status
+- 🏷️ **Role Management**: User, admin, and moderator role system
+
+### Technical Features
+
 - 📱 **Responsive Design**: Beautiful dark theme that works on all devices
 - ⚡ **Serverless**: Scalable and cost-effective serverless architecture
 
@@ -477,6 +496,7 @@ PornSpot.ai/
 - [`docs/ADMIN_AUTH.md`](docs/ADMIN_AUTH.md) - Admin authentication system
 - [`docs/USER_AUTHENTICATION.md`](docs/USER_AUTHENTICATION.md) - User authentication flows
 - [`docs/USER_INTERACTIONS.md`](docs/USER_INTERACTIONS.md) - User interaction patterns
+- [`docs/PERMISSION_SYSTEM.md`](docs/PERMISSION_SYSTEM.md) - Centralized permission system and plan management
 
 ### Frontend & UI
 

@@ -123,6 +123,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const response = await userApi.me();
 
       if (response.success && response.data?.user) {
+        // Store the raw user data for now
+        // The PermissionsWrapper will handle adding permissions
         setUser(response.data.user);
       } else {
         setUser(null);
