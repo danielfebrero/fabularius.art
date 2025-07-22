@@ -14,24 +14,15 @@ export interface PlanPermissions {
   imagesPerMonth: number | "unlimited";
   imagesPerDay: number | "unlimited";
   canGenerateImages: boolean;
-  canUseAdvancedPrompts: boolean;
   canUseNegativePrompt: boolean;
   canUseBulkGeneration: boolean;
   canUseLoRAModels: boolean;
   canSelectImageSizes: boolean;
   canCreatePrivateContent: boolean;
-  canMakeContentPublic: boolean;
-  maxImageQuality: "standard" | "high" | "premium";
-  processingPriority: "standard" | "high" | "priority";
-  canDownloadOriginal: boolean;
-  canExportContent: boolean;
   canBookmark: boolean;
   canLike: boolean;
   canComment: boolean;
   canShare: boolean;
-  supportLevel: "community" | "email" | "priority";
-  hasApiAccess: boolean;
-  apiRequestsPerMonth: number;
 }
 
 export interface RolePermissions {
@@ -87,93 +78,57 @@ function loadPermissionsConfig(): PermissionsConfig {
           imagesPerMonth: 30,
           imagesPerDay: 1,
           canGenerateImages: true,
-          canUseAdvancedPrompts: false,
           canUseNegativePrompt: false,
           canUseBulkGeneration: false,
           canUseLoRAModels: false,
           canSelectImageSizes: false,
           canCreatePrivateContent: false,
-          canMakeContentPublic: true,
-          maxImageQuality: "standard",
-          processingPriority: "standard",
-          canDownloadOriginal: true,
-          canExportContent: false,
           canBookmark: true,
           canLike: true,
           canComment: true,
           canShare: true,
-          supportLevel: "community",
-          hasApiAccess: false,
-          apiRequestsPerMonth: 0,
         },
         starter: {
           imagesPerMonth: 300,
           imagesPerDay: 20,
           canGenerateImages: true,
-          canUseAdvancedPrompts: true,
           canUseNegativePrompt: false,
           canUseBulkGeneration: false,
           canUseLoRAModels: false,
           canSelectImageSizes: false,
           canCreatePrivateContent: false,
-          canMakeContentPublic: true,
-          maxImageQuality: "high",
-          processingPriority: "standard",
-          canDownloadOriginal: true,
-          canExportContent: true,
           canBookmark: true,
           canLike: true,
           canComment: true,
           canShare: true,
-          supportLevel: "email",
-          hasApiAccess: false,
-          apiRequestsPerMonth: 0,
         },
         unlimited: {
           imagesPerMonth: "unlimited",
           imagesPerDay: "unlimited",
           canGenerateImages: true,
-          canUseAdvancedPrompts: true,
           canUseNegativePrompt: false,
           canUseBulkGeneration: false,
           canUseLoRAModels: false,
-          canSelectImageSizes: true,
+          canSelectImageSizes: false,
           canCreatePrivateContent: false,
-          canMakeContentPublic: true,
-          maxImageQuality: "high",
-          processingPriority: "high",
-          canDownloadOriginal: true,
-          canExportContent: true,
           canBookmark: true,
           canLike: true,
           canComment: true,
           canShare: true,
-          supportLevel: "email",
-          hasApiAccess: true,
-          apiRequestsPerMonth: 1000,
         },
         pro: {
           imagesPerMonth: "unlimited",
           imagesPerDay: "unlimited",
           canGenerateImages: true,
-          canUseAdvancedPrompts: true,
           canUseNegativePrompt: true,
           canUseBulkGeneration: true,
           canUseLoRAModels: true,
           canSelectImageSizes: true,
           canCreatePrivateContent: true,
-          canMakeContentPublic: true,
-          maxImageQuality: "premium",
-          processingPriority: "priority",
-          canDownloadOriginal: true,
-          canExportContent: true,
           canBookmark: true,
           canLike: true,
           canComment: true,
           canShare: true,
-          supportLevel: "priority",
-          hasApiAccess: true,
-          apiRequestsPerMonth: 10000,
         },
       },
       rolePermissions: {

@@ -28,7 +28,7 @@ const SelectContext = React.createContext<{
   value: string;
   onValueChange: (newValue: string) => void;
   isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
+  setIsOpen: (open: boolean) => void;
 } | null>(null);
 
 const Select: React.FC<SelectProps> = ({ value, onValueChange, children }) => {
@@ -61,14 +61,14 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(
         ref={ref}
         type="button"
         className={cn(
-          "flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50",
+          "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           className
         )}
         onClick={() => setIsOpen(!isOpen)}
         {...props}
       >
         {children}
-        <ChevronDown className="h-4 w-4 opacity-50" />
+        <ChevronDown className="h-4 w-4 opacity-50 text-muted-foreground" />
       </button>
     );
   }
@@ -89,7 +89,7 @@ const SelectContent: React.FC<SelectContentProps> = ({ children }) => {
   if (!context || !context.isOpen) return null;
 
   return (
-    <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-md border bg-white shadow-lg">
+    <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-md border border-border bg-popover shadow-lg">
       <div className="max-h-60 overflow-auto p-1">{children}</div>
     </div>
   );
@@ -109,8 +109,8 @@ const SelectItem: React.FC<SelectItemProps> = ({ value, children }) => {
   return (
     <div
       className={cn(
-        "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-gray-100",
-        selectedValue === value && "bg-blue-100 text-blue-600"
+        "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground text-popover-foreground",
+        selectedValue === value && "bg-accent text-accent-foreground"
       )}
       onClick={handleSelect}
     >

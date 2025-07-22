@@ -138,7 +138,7 @@ export const handler = async (
     if (imageSize === "custom" && !permissions.canUseCustomSize) {
       return ResponseUtil.forbidden(
         event,
-        "Custom image sizes require Unlimited or Pro plan"
+        "Custom image sizes require Pro plan"
       );
     }
 

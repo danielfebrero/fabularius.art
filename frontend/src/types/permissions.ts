@@ -12,7 +12,6 @@ export interface PlanPermissions {
 
   // Core features
   canGenerateImages: boolean;
-  canUseAdvancedPrompts: boolean;
   canUseNegativePrompt: boolean;
   canUseBulkGeneration: boolean;
   canUseLoRAModels: boolean;
@@ -20,26 +19,12 @@ export interface PlanPermissions {
 
   // Content management
   canCreatePrivateContent: boolean;
-  canMakeContentPublic: boolean;
-
-  // Quality & Processing
-  maxImageQuality: "standard" | "high" | "premium";
-  processingPriority: "standard" | "high" | "priority";
-
-  // Export & Downloads
-  canDownloadOriginal: boolean;
-  canExportContent: boolean;
 
   // Community features
   canBookmark: boolean;
   canLike: boolean;
   canComment: boolean;
   canShare: boolean;
-
-  // Support & API
-  supportLevel: "community" | "email" | "priority";
-  hasApiAccess: boolean;
-  apiRequestsPerMonth: number;
 }
 export interface UserPlanInfo {
   plan: UserPlan;
@@ -61,14 +46,6 @@ export interface UserWithPlan extends User {
     imagesGeneratedToday: number;
     lastGenerationAt?: string;
   };
-}
-
-import { loadPermissionsConfig } from "@/utils/permissions";
-
-// Load permissions from centralized API instead of static config
-// This is now a dynamic function that loads from backend API
-async function getPermissionsConfig() {
-  return await loadPermissionsConfig();
 }
 
 // Plan definitions - these will be loaded dynamically now

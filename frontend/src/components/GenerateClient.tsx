@@ -114,7 +114,7 @@ export function GenerateClient() {
   const plan = getCurrentPlan();
 
   const canUseBulk = canUseBulkGeneration();
-  const canUseCustomSizes = plan === "unlimited" || plan === "pro"; // Based on canSelectImageSizes from plan
+  const canUseCustomSizes = plan === "pro"; // Only Pro plan has access to image size selection
   const canUseLoras = canUseLoRAModels();
   const canUseNegativePrompts = canUseNegativePrompt();
 
@@ -291,7 +291,7 @@ export function GenerateClient() {
             {settings.imageSize === "custom" && canUseCustomSizes && (
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-gray-500">Width</label>
+                  <label className="text-xs text-muted-foreground">Width</label>
                   <Input
                     type="number"
                     min="512"
@@ -308,7 +308,9 @@ export function GenerateClient() {
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-gray-500">Height</label>
+                  <label className="text-xs text-muted-foreground">
+                    Height
+                  </label>
                   <Input
                     type="number"
                     min="512"

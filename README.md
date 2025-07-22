@@ -25,7 +25,7 @@ A premium adult content gallery platform for creators and enthusiasts. Built wit
 - ⭐ **Negative Prompts**: Pro users can specify what to exclude from generated images
 - 🔧 **LoRA Models**: Customizable AI models for specialized content (Pro)
 - � **Bulk Generation**: Generate multiple variations at once (Pro)
-- 📐 **Custom Sizes**: Control exact image dimensions (Unlimited/Pro)
+- 📐 **Custom Sizes**: Control exact image dimensions (Pro only)
 - 🎚️ **Plan-Based Limits**: Tiered usage limits based on subscription plan
 
 ### Administration & Authentication
