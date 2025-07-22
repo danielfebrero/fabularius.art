@@ -33,6 +33,13 @@ export const handler = async (
       await DynamoDBService.listAlbumMedia(albumId, limit, lastEvaluatedKey);
 
     const mediaResponse: Media[] = media.map((item) => {
+      console.log(`🔍 DEBUG - Processing media item ${item.id}:`, {
+        id: item.id,
+        hasThumbnailUrls: !!item.thumbnailUrls,
+        thumbnailUrls: item.thumbnailUrls,
+        thumbnailUrl: item.thumbnailUrl,
+      });
+
       const response: Media = {
         id: item.id,
         filename: item.filename,
@@ -58,6 +65,11 @@ export const handler = async (
 
       if (item.thumbnailUrls !== undefined) {
         response.thumbnailUrls = item.thumbnailUrls;
+        console.log(
+          `✅ DEBUG - Added thumbnailUrls to response for ${item.id}`
+        );
+      } else {
+        console.log(`❌ DEBUG - No thumbnailUrls found for ${item.id}`);
       }
 
       if (item.metadata !== undefined) {

@@ -78,7 +78,7 @@ export function composeThumbnailUrls(
 export function getBestThumbnailUrl(
   thumbnailUrls: { [size: string]: string } | null | undefined,
   fallbackUrl: string | null | undefined,
-  preferredSize: string = "medium"
+  preferredSize: string
 ): string {
   const composedThumbnails = composeThumbnailUrls(thumbnailUrls);
 

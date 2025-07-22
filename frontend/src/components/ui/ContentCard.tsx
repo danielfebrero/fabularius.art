@@ -71,7 +71,7 @@ export function ContentCard({
   onDelete,
   context = "default",
   columns,
-  preferredThumbnailSize = "medium",
+  preferredThumbnailSize,
   mediaList,
   currentIndex = 0,
 }: ContentCardProps) {
@@ -201,12 +201,17 @@ export function ContentCard({
               />
             ) : (
               <ResponsivePicture
-                thumbnailUrls={composeThumbnailUrls(media.thumbnailUrls)}
-                fallbackUrl={getBestThumbnailUrl(
-                  media.thumbnailUrls,
-                  media.thumbnailUrl || media.url,
+                thumbnailUrls={
                   preferredThumbnailSize
-                )}
+                    ? undefined
+                    : composeThumbnailUrls(media.thumbnailUrls)
+                }
+                fallbackUrl={
+                  preferredThumbnailSize
+                    ? media.thumbnailUrls?.[preferredThumbnailSize] ??
+                      (media.thumbnailUrl || media.url)
+                    : media.thumbnailUrl || media.url
+                }
                 alt={title || media.originalFilename || media.filename}
                 className={cn(
                   "w-full h-full object-cover transition-transform duration-200 group-hover:scale-105",
