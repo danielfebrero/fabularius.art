@@ -1,4 +1,7 @@
-import { APIGatewayRequestAuthorizerEvent, APIGatewayAuthorizerResult } from "aws-lambda";
+import {
+  APIGatewayRequestAuthorizerEvent,
+  APIGatewayAuthorizerResult,
+} from "aws-lambda";
 import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 import { PlanUtil } from "@shared/utils/plan";
 
@@ -75,13 +78,13 @@ export const handler = async (
 
     if (userValidation.isValid && userValidation.user) {
       console.log("✅ User session is valid. Checking role...");
-      
+
       // Get user role
       const userRole = await PlanUtil.getUserRole(
         userValidation.user.userId,
         userValidation.user.email
       );
-      
+
       console.log("👤 User role:", userRole);
 
       // Check if user has admin role ONLY
@@ -95,12 +98,32 @@ export const handler = async (
           sessionId: userValidation.session?.sessionId || "",
         };
 
-        return generatePolicy(
+        // Reconstruct the ARN to grant access to all admin endpoints
+        const { methodArn } = event;
+        const parts = methodArn.split(":");
+        const region = parts[3];
+        const accountId = parts[4];
+        const apiGatewayArnPart = parts[5];
+
+        if (!apiGatewayArnPart) {
+          console.error("Could not parse method ARN, denying access.");
+          return generatePolicy("user", "Deny", event.methodArn);
+        }
+
+        const [apiId, stage] = apiGatewayArnPart.split("/");
+
+        // Grant access to all admin endpoints
+        const wildcardResource = `arn:aws:execute-api:${region}:${accountId}:${apiId}/${stage}/*`;
+        console.log("🎯 Granting access to admin resource:", wildcardResource);
+
+        const policy = generatePolicy(
           userValidation.user.userId,
           "Allow",
-          event.methodArn,
+          wildcardResource,
           userContext
         );
+        console.log("📋 Generated policy:", JSON.stringify(policy, null, 2));
+        return policy;
       } else {
         console.log("❌ User does not have admin role:", userRole);
         throw new Error("Admin access required");
@@ -111,7 +134,7 @@ export const handler = async (
     }
   } catch (error) {
     console.error("AdminOnlyAuthorizer: Authorization failed", error);
-    
+
     // Return explicit deny policy
     return generatePolicy("unauthorized", "Deny", event.methodArn);
   }

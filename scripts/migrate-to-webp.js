@@ -264,7 +264,9 @@ class AWSService {
     // Note: In the new schema, media doesn't have albumId field
     // If albumId filter is needed, we'd need to query album-media relationships first
     if (options.albumId) {
-      console.warn("Warning: albumId filter not supported in new schema. Ignoring filter.");
+      console.warn(
+        "Warning: albumId filter not supported in new schema. Ignoring filter."
+      );
     }
 
     // Add resume capability
@@ -706,9 +708,7 @@ class WebPMigrator {
       }
 
       if (entityType === "Media") {
-        this.logger.info(
-          `Processing media record ${entity.id}`
-        );
+        this.logger.info(`Processing media record ${entity.id}`);
       } else {
         this.logger.info(`Processing album record ${entity.id} (Album cover)`);
       }
