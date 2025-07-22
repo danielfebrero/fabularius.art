@@ -63,18 +63,21 @@ Represents a collection of media items.
 
 ### Media Entity
 
-Represents a single media item (e.g., an image).
+**NEW DESIGN (v2.0)**: Media entities are now independent of albums and support many-to-many relationships through a separate AlbumMedia entity.
 
-- **PK**: `ALBUM#<albumId>`
-- **SK**: `MEDIA#<mediaId>`
-- **GSI1PK**: `MEDIA#<albumId>`
-- **GSI1SK**: `<createdAt>#<mediaId>`
+Represents a single media item (e.g., an image) that can belong to multiple albums.
+
+- **PK**: `MEDIA#<mediaId>`
+- **SK**: `METADATA`
+- **GSI1PK**: `MEDIA_BY_CREATOR` 
+- **GSI1SK**: `<createdBy>#<createdAt>#<mediaId>`
+- **GSI2PK**: `MEDIA_ID`
+- **GSI2SK**: `<mediaId>`
 - **EntityType**: `Media`
 
 | Attribute          | Type     | Description                                |
 | ------------------ | -------- | ------------------------------------------ |
 | `id`               | `string` | The unique ID of the media item.           |
-| `albumId`          | `string` | The ID of the album it belongs to.         |
 | `filename`         | `string` | The name of the file in S3.                |
 | `originalFilename` | `string` | The original name of the uploaded file.    |
 | `mimeType`         | `string` | The MIME type of the file.                 |
@@ -86,7 +89,61 @@ Represents a single media item (e.g., an image).
 | `status`           | `string` | The processing status of the media item.   |
 | `createdAt`        | `string` | The ISO 8601 timestamp of creation.        |
 | `updatedAt`        | `string` | The ISO 8601 timestamp of the last update. |
+| `createdBy`        | `string` | User ID or admin ID who uploaded this media. |
+| `createdByType`    | `string` | Type of creator: "user" or "admin".        |
 | `metadata`         | `object` | Additional metadata for the media item.    |
+
+### Album-Media Relationship Entity
+
+**NEW**: Junction table entity for many-to-many relationships between albums and media.
+
+Represents the relationship between an album and a media item, allowing one media item to belong to multiple albums.
+
+- **PK**: `ALBUM#<albumId>`
+- **SK**: `MEDIA#<mediaId>`
+- **GSI1PK**: `MEDIA#<mediaId>`
+- **GSI1SK**: `ALBUM#<albumId>#<addedAt>`
+- **GSI2PK**: `ALBUM_MEDIA_BY_DATE`
+- **GSI2SK**: `<addedAt>#<albumId>#<mediaId>`
+- **EntityType**: `AlbumMedia`
+
+| Attribute  | Type     | Description                                    |
+| ---------- | -------- | ---------------------------------------------- |
+| `albumId`  | `string` | The ID of the album.                           |
+| `mediaId`  | `string` | The ID of the media item.                      |
+| `addedAt`  | `string` | The ISO 8601 timestamp when media was added.  |
+| `addedBy`  | `string` | Optional: who added the media to this album.  |
+
+## Access Patterns
+
+### Media Access Patterns
+
+1. **Get media by ID**: Use GSI2 with `GSI2PK = "MEDIA_ID"` and `GSI2SK = <mediaId>`
+2. **Get all media for an album**: Query main table with `PK = "ALBUM#<albumId>"` and `SK begins_with "MEDIA#"`
+3. **Get all albums for a media**: Use GSI1 with `GSI1PK = "MEDIA#<mediaId>"`
+4. **Get all media by creator**: Use GSI1 with `GSI1PK = "MEDIA_BY_CREATOR"` and `GSI1SK begins_with "<createdBy>#"`
+5. **Get all public media**: 
+   - First: Query albums with `isPublic-createdAt-index` where `isPublic = "true"`
+   - Then: For each album, query media relationships
+   - Finally: Fetch unique media records
+
+### Migration from v1.0
+
+The old schema stored media with:
+- **PK**: `ALBUM#<albumId>`
+- **SK**: `MEDIA#<mediaId>` 
+- **albumId**: Direct reference
+
+The new schema separates concerns:
+- Media entities are independent (no albumId field)
+- Album-Media relationships are separate entities
+- One media can belong to multiple albums
+- Better scalability and flexibility
+
+**Breaking Changes**:
+- `albumId` field removed from Media entity
+- Media endpoints no longer require albumId parameter
+- Album-media relationships managed separately
 
 ### Admin User Entity
 
@@ -148,6 +205,7 @@ Represents a regular user.
 | `username`      | `string`  | The unique username of the user.      |
 | `passwordHash`  | `string`  | The hashed password.                  |
 | `googleId`      | `string`  | The user's Google ID for OAuth.       |
+| `role`          | `string`  | User role: "user", "admin", or "moderator". |
 | `createdAt`     | `string`  | The ISO 8601 timestamp of creation.   |
 | `emailVerified` | `boolean` | Whether the user's email is verified. |
 
@@ -269,3 +327,40 @@ erDiagram
         string GSI1SK "<type>#<userId>"
     }
 ```
+
+## Troubleshooting
+
+### Admin Authorization Issues
+
+**Problem**: Getting "User is not authorized to access this resource" when accessing admin endpoints despite being logged in.
+
+**Cause**: The user account doesn't have the `role` field set to "admin" in the database.
+
+**Solution**: Use the admin role script to set the role:
+
+```bash
+# Find your session ID from browser cookies (user_session value)
+cd backend
+node scripts/set-admin-role.js <your-session-id> admin
+```
+
+Example:
+```bash
+node scripts/set-admin-role.js dcf48ce9-d13b-46d0-a6c1-bcd6ffa08edc admin
+```
+
+**Manual Fix**: Update the user record directly in DynamoDB:
+1. Find the user record: `PK = "USER#<userId>"`, `SK = "METADATA"`
+2. Add/update the `role` attribute to `"admin"`
+3. Update the `updatedAt` timestamp
+
+### Media Upload Issues
+
+**Problem**: Media upload fails after schema migration.
+
+**Cause**: The upload function still uses old schema patterns.
+
+**Solution**: Update media upload functions to:
+1. Create media entity with new PK pattern: `MEDIA#<mediaId>`
+2. Create album-media relationship separately
+3. Use `addMediaToAlbum()` method for linking

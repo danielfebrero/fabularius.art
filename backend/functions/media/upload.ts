@@ -13,6 +13,12 @@ export const handler = async (
   }
 
   try {
+    // Get user ID from request context (set by the admin authorizer)
+    const userId = event.requestContext.authorizer?.['userId'];
+    
+    if (!userId) {
+      return ResponseUtil.unauthorized(event, "User ID not found in request context");
+    }
     const albumId = event.pathParameters?.["albumId"];
 
     if (!albumId) {
@@ -48,17 +54,16 @@ export const handler = async (
     const mediaId = uuidv4();
     const now = new Date().toISOString();
 
-    // Create media record (will be updated after successful upload)
+    // Create media record using new schema (independent of album)
     const mediaEntity = {
-      PK: `ALBUM#${albumId}`,
-      SK: `MEDIA#${mediaId}`,
-      GSI1PK: `MEDIA#${albumId}`,
-      GSI1SK: `${now}#${mediaId}`,
+      PK: `MEDIA#${mediaId}`,
+      SK: "METADATA",
+      GSI1PK: "MEDIA_BY_CREATOR",
+      GSI1SK: `${userId}#${now}#${mediaId}`, // Use actual user ID
       GSI2PK: "MEDIA_ID",
       GSI2SK: mediaId,
       EntityType: "Media" as const,
       id: mediaId,
-      albumId,
       filename: key,
       originalFilename: request.filename,
       mimeType: request.mimeType,
@@ -66,6 +71,8 @@ export const handler = async (
       url: S3Service.getRelativePath(key),
       createdAt: now,
       updatedAt: now,
+      createdBy: userId, // Use actual admin user ID
+      createdByType: "admin" as const,
       status: "pending" as const, // Will be updated to 'uploaded' after successful upload
     };
     console.log(
@@ -73,10 +80,11 @@ export const handler = async (
       S3Service.getRelativePath(key)
     );
 
+    // Create the media entity
     await DynamoDBService.createMedia(mediaEntity);
 
-    // Increment album media count
-    await DynamoDBService.incrementAlbumMediaCount(albumId);
+    // Link media to album using new many-to-many relationship
+    await DynamoDBService.addMediaToAlbum(albumId, mediaId, userId);
 
     const response = {
       mediaId,
