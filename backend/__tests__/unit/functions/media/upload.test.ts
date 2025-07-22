@@ -1,6 +1,8 @@
 import { handler } from "../../../../functions/media/upload";
 import { DynamoDBService } from "../../../../shared/utils/dynamodb";
 import { S3Service } from "../../../../shared/utils/s3";
+import { UserAuthMiddleware } from "../../../../shared/auth/user-middleware";
+import { PlanUtil } from "../../../../shared/utils/plan";
 import {
   createUploadMediaEvent,
   expectSuccessResponse,
@@ -18,6 +20,8 @@ import { mockUploadMediaRequest, mockS3Key } from "../../../fixtures/media";
 // Mock the services and uuid
 jest.mock("../../../../shared/utils/dynamodb");
 jest.mock("../../../../shared/utils/s3");
+jest.mock("../../../../shared/auth/user-middleware");
+jest.mock("../../../../shared/utils/plan");
 jest.mock("uuid");
 
 const mockGetAlbum = DynamoDBService.getAlbum as jest.MockedFunction<
@@ -30,6 +34,10 @@ const mockIncrementAlbumMediaCount =
   DynamoDBService.incrementAlbumMediaCount as jest.MockedFunction<
     typeof DynamoDBService.incrementAlbumMediaCount
   >;
+const mockAddMediaToAlbum =
+  DynamoDBService.addMediaToAlbum as jest.MockedFunction<
+    typeof DynamoDBService.addMediaToAlbum
+  >;
 const mockGeneratePresignedUploadUrl =
   S3Service.generatePresignedUploadUrl as jest.MockedFunction<
     typeof S3Service.generatePresignedUploadUrl
@@ -37,26 +45,63 @@ const mockGeneratePresignedUploadUrl =
 const mockGetPublicUrl = S3Service.getPublicUrl as jest.MockedFunction<
   typeof S3Service.getPublicUrl
 >;
+const mockGetRelativePath = S3Service.getRelativePath as jest.MockedFunction<
+  typeof S3Service.getRelativePath
+>;
+const mockValidateSession =
+  UserAuthMiddleware.validateSession as jest.MockedFunction<
+    typeof UserAuthMiddleware.validateSession
+  >;
+const mockGetUserRole = PlanUtil.getUserRole as jest.MockedFunction<
+  typeof PlanUtil.getUserRole
+>;
 
 describe("Media Upload Handler", () => {
   beforeEach(() => {
     mockGetAlbum.mockClear();
     mockCreateMedia.mockClear();
     mockIncrementAlbumMediaCount.mockClear();
+    mockAddMediaToAlbum.mockClear();
     mockGeneratePresignedUploadUrl.mockClear();
     mockGetPublicUrl.mockClear();
+    mockGetRelativePath.mockClear();
+    mockValidateSession.mockClear();
+    mockGetUserRole.mockClear();
 
     // Mock Date.prototype.toISOString to return consistent timestamp
     jest.spyOn(Date.prototype, "toISOString").mockReturnValue(mockTimestamp);
 
-    // Mock UUID generation
-    const { v4: uuidv4 } = require("uuid");
-    (uuidv4 as jest.Mock).mockReturnValue("mock-media-uuid-456");
+    // Mock uuid.v4 to return consistent values
+    (require("uuid").v4 as jest.Mock)
+      .mockReturnValueOnce("mock-media-uuid-456")
+      .mockReturnValueOnce("mock-media-uuid-789");
 
-    // Set up default mocks
-    mockGetPublicUrl.mockReturnValue(
-      `https://test.cloudfront.net/${mockS3Key}`
+    // Mock S3Service.getRelativePath to return the key with leading slash
+    mockGetRelativePath.mockImplementation((key: string) =>
+      key.startsWith("/") ? key : `/${key}`
     );
+
+    // Mock session validation for fallback (local development)
+    mockValidateSession.mockResolvedValue({
+      isValid: true,
+      user: {
+        userId: "mock-admin-user-id",
+        email: "admin@test.com",
+        createdAt: "2023-01-01T00:00:00.000Z",
+        isActive: true,
+        isEmailVerified: true,
+      },
+      session: {
+        sessionId: "mock-session-id",
+        userId: "mock-admin-user-id",
+        createdAt: "2023-01-01T00:00:00.000Z",
+        expiresAt: "2024-01-01T00:00:00.000Z",
+        lastAccessedAt: "2023-01-01T00:00:00.000Z",
+      },
+    });
+
+    // Mock user role check to return admin
+    mockGetUserRole.mockResolvedValue("admin");
   });
 
   afterEach(() => {
@@ -71,7 +116,7 @@ describe("Media Upload Handler", () => {
         key: mockS3Key,
       });
       mockCreateMedia.mockResolvedValue();
-      mockIncrementAlbumMediaCount.mockResolvedValue();
+      mockAddMediaToAlbum.mockResolvedValue();
 
       const event = createUploadMediaEvent(mockAlbumId, mockUploadMediaRequest);
       const result = await handler(event);
@@ -91,23 +136,30 @@ describe("Media Upload Handler", () => {
         mockUploadMediaRequest.mimeType
       );
       expect(mockCreateMedia).toHaveBeenCalledWith({
-        PK: `ALBUM#${mockAlbumId}`,
-        SK: "MEDIA#mock-media-uuid-456",
-        GSI1PK: `MEDIA#${mockAlbumId}`,
-        GSI1SK: `${mockTimestamp}#mock-media-uuid-456`,
+        PK: `MEDIA#mock-media-uuid-456`,
+        SK: "METADATA",
+        GSI1PK: "MEDIA_BY_CREATOR",
+        GSI1SK: `mock-admin-user-id#${mockTimestamp}#mock-media-uuid-456`,
+        GSI2PK: "MEDIA_ID",
+        GSI2SK: "mock-media-uuid-456",
         EntityType: "Media",
         id: "mock-media-uuid-456",
-        albumId: mockAlbumId,
         filename: mockS3Key,
         originalFilename: mockUploadMediaRequest.filename,
         mimeType: mockUploadMediaRequest.mimeType,
         size: mockUploadMediaRequest.size,
-        url: `https://test.cloudfront.net/${mockS3Key}`,
+        url: `/${mockS3Key}`,
         createdAt: mockTimestamp,
         updatedAt: mockTimestamp,
+        createdBy: "mock-admin-user-id",
+        createdByType: "admin",
         status: "pending",
       });
-      expect(mockIncrementAlbumMediaCount).toHaveBeenCalledWith(mockAlbumId);
+      expect(mockAddMediaToAlbum).toHaveBeenCalledWith(
+        mockAlbumId,
+        "mock-media-uuid-456",
+        "mock-admin-user-id"
+      );
     });
 
     it("should handle request without size", async () => {
@@ -117,7 +169,7 @@ describe("Media Upload Handler", () => {
         key: mockS3Key,
       });
       mockCreateMedia.mockResolvedValue();
-      mockIncrementAlbumMediaCount.mockResolvedValue();
+      mockAddMediaToAlbum.mockResolvedValue();
 
       const requestWithoutSize = {
         filename: "test-image.jpg",
@@ -144,7 +196,7 @@ describe("Media Upload Handler", () => {
         key: "albums/test-album-123/media/mock-media-uuid-456.png",
       });
       mockCreateMedia.mockResolvedValue();
-      mockIncrementAlbumMediaCount.mockResolvedValue();
+      mockAddMediaToAlbum.mockResolvedValue();
 
       const pngRequest = {
         filename: "test-image.png",
@@ -283,7 +335,7 @@ describe("Media Upload Handler", () => {
       expect(mockGetAlbum).toHaveBeenCalledWith("non-existent-album");
       expect(mockGeneratePresignedUploadUrl).not.toHaveBeenCalled();
       expect(mockCreateMedia).not.toHaveBeenCalled();
-      expect(mockIncrementAlbumMediaCount).not.toHaveBeenCalled();
+      expect(mockAddMediaToAlbum).not.toHaveBeenCalled();
     });
   });
 

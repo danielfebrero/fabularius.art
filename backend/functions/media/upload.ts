@@ -4,6 +4,8 @@ import { DynamoDBService } from "@shared/utils/dynamodb";
 import { S3Service } from "@shared/utils/s3";
 import { ResponseUtil } from "@shared/utils/response";
 import { UploadMediaRequest } from "@shared/types";
+import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { PlanUtil } from "@shared/utils/plan";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -14,13 +16,40 @@ export const handler = async (
 
   try {
     // Get user ID from request context (set by the admin authorizer)
-    const userId = event.requestContext.authorizer?.["userId"];
+    let userId = event.requestContext.authorizer?.["userId"];
 
+    console.log("👤 UserId from authorizer:", userId);
+
+    // Fallback for local development or when authorizer context is missing
     if (!userId) {
-      return ResponseUtil.unauthorized(
-        event,
-        "User ID not found in request context"
+      console.log(
+        "⚠️ No userId from authorizer, falling back to session validation"
       );
+      const validation = await UserAuthMiddleware.validateSession(event);
+
+      if (!validation.isValid || !validation.user) {
+        console.log("❌ Session validation failed");
+        return ResponseUtil.unauthorized(event, "No user session found");
+      }
+
+      userId = validation.user.userId;
+      console.log("✅ Got userId from session validation:", userId);
+
+      // Verify user has admin privileges when using fallback
+      const userRole = await PlanUtil.getUserRole(
+        validation.user.userId,
+        validation.user.email
+      );
+
+      if (userRole !== "admin") {
+        console.log("❌ User does not have admin privileges:", userRole);
+        return ResponseUtil.forbidden(
+          event,
+          "Access denied: insufficient privileges"
+        );
+      }
+
+      console.log("✅ User has admin/moderator privileges:", userRole);
     }
     const albumId = event.pathParameters?.["albumId"];
 

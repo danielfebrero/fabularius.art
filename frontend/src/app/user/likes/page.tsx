@@ -127,6 +127,7 @@ const UserLikesPage: React.FC = () => {
               />
             ) : (
               <div className="w-full h-full bg-muted/50 flex items-center justify-center">
+                {/* eslint-disable-next-line jsx-a11y/alt-text */}
                 <Image className="h-12 w-12 text-muted-foreground" />
               </div>
             )}
@@ -137,44 +138,40 @@ const UserLikesPage: React.FC = () => {
           </div>
         );
       } else {
-        // Album cards: show image and title only (square)
+        // Album cards: show image and title in a square format with title overlaid
         return (
           <div
-            className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 overflow-hidden hover:shadow-xl hover:border-admin-primary/30 transition-all duration-300 cursor-pointer"
+            className="group relative cursor-pointer overflow-hidden rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02] aspect-square"
             onClick={() => handleCardClick(interaction)}
           >
             {interaction.target?.thumbnailUrls ||
             interaction.target?.coverImageUrl ? (
-              <div className="aspect-square relative">
-                <ResponsivePicture
-                  thumbnailUrls={composeThumbnailUrls(
-                    interaction.target.thumbnailUrls
-                  )}
-                  fallbackUrl={composeAlbumCoverUrl(
-                    interaction.target.coverImageUrl
-                  )}
-                  alt={interaction.target.title || "Content"}
-                  className="w-full h-full object-cover"
-                  context="albums"
-                  loading="lazy"
-                />
-                <div className="absolute top-2 right-2">
-                  <Heart className="h-5 w-5 text-red-500 fill-current drop-shadow-lg" />
-                </div>
-              </div>
+              <ResponsivePicture
+                thumbnailUrls={composeThumbnailUrls(
+                  interaction.target.thumbnailUrls
+                )}
+                fallbackUrl={composeAlbumCoverUrl(
+                  interaction.target.coverImageUrl
+                )}
+                alt={interaction.target.title || "Content"}
+                className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
+                context="albums"
+                loading="lazy"
+              />
             ) : (
-              <div className="aspect-square bg-muted/50 flex items-center justify-center relative">
+              <div className="w-full h-full bg-muted/50 flex items-center justify-center">
+                {/* eslint-disable-next-line jsx-a11y/alt-text */}
                 <Image className="h-12 w-12 text-muted-foreground" />
-                <div className="absolute top-2 right-2">
-                  <Heart className="h-5 w-5 text-red-500 fill-current drop-shadow-lg" />
-                </div>
               </div>
             )}
-
-            <div className="p-4">
-              <h3 className="font-medium text-foreground line-clamp-2 text-center">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-4">
+              <h3 className="font-medium text-white line-clamp-2 text-center text-sm drop-shadow-lg">
                 {interaction.target?.title || `Album ${interaction.targetId}`}
               </h3>
+            </div>
+            <div className="absolute top-2 right-2">
+              <Heart className="h-5 w-5 text-red-500 fill-current drop-shadow-lg" />
             </div>
           </div>
         );
@@ -209,6 +206,7 @@ const UserLikesPage: React.FC = () => {
               className="w-16 h-16 bg-muted/50 rounded-lg flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => handleCardClick(interaction)}
             >
+              {/* eslint-disable-next-line jsx-a11y/alt-text */}
               <Image className="h-6 w-6 text-muted-foreground" />
             </div>
           )}
