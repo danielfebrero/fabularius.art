@@ -1,20 +1,22 @@
-import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
+import sgMail from "@sendgrid/mail";
 import { ParameterStoreService } from "./parameters";
 
-const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
+// Initialize SendGrid
+let isInitialized = false;
 
-const clientConfig: any = {};
-
-if (isLocal) {
-  clientConfig.endpoint = "http://pornspot-local-aws:4566";
-  clientConfig.region = "us-east-1";
-  clientConfig.credentials = {
-    accessKeyId: "test",
-    secretAccessKey: "test",
-  };
+async function initializeSendGrid() {
+  if (!isInitialized) {
+    try {
+      const apiKey = await ParameterStoreService.getSendGridApiKey();
+      sgMail.setApiKey(apiKey);
+      isInitialized = true;
+      console.log("SendGrid initialized successfully");
+    } catch (error) {
+      console.error("Failed to initialize SendGrid:", error);
+      throw error;
+    }
+  }
 }
-
-const sesClient = new SESClient(clientConfig);
 
 export interface EmailTemplate {
   subject: string;
@@ -42,52 +44,43 @@ export class EmailService {
     process.env["FROM_NAME"] || "PornSpot.ai";
 
   /**
-   * Send an email using Amazon SES
+   * Send an email using SendGrid
    */
   static async sendEmail(options: EmailSendOptions): Promise<EmailSendResult> {
     try {
+      // Initialize SendGrid if not already done
+      await initializeSendGrid();
+
       const fromEmail = options.fromEmail || this.DEFAULT_FROM_EMAIL;
       const fromName = options.fromName || this.DEFAULT_FROM_NAME;
-      const source = `${fromName} <${fromEmail}>`;
 
-      const command = new SendEmailCommand({
-        Source: source,
-        Destination: {
-          ToAddresses: [options.to],
+      const msg = {
+        to: options.to,
+        from: {
+          email: fromEmail,
+          name: fromName,
         },
-        Message: {
-          Subject: {
-            Data: options.template.subject,
-            Charset: "UTF-8",
-          },
-          Body: {
-            Html: {
-              Data: options.template.htmlBody,
-              Charset: "UTF-8",
-            },
-            Text: {
-              Data: options.template.textBody,
-              Charset: "UTF-8",
-            },
-          },
-        },
-      });
+        subject: options.template.subject,
+        text: options.template.textBody,
+        html: options.template.htmlBody,
+      };
 
-      const result = await sesClient.send(command);
+      const response = await sgMail.send(msg);
 
       console.log("Email sent successfully:", {
-        messageId: result.MessageId,
+        messageId: response[0].headers["x-message-id"],
         to: options.to,
         subject: options.template.subject,
       });
 
       return {
         success: true,
-        ...(result.MessageId && { messageId: result.MessageId }),
+        messageId: response[0].headers["x-message-id"] as string,
       };
     } catch (error: any) {
       console.error("Failed to send email:", {
         error: error.message,
+        response: error.response?.body,
         to: options.to,
         subject: options.template.subject,
       });
@@ -450,11 +443,20 @@ This is an automated email. Please do not reply to this message.
   /**
    * Validate email configuration
    */
-  static validateConfiguration(): { isValid: boolean; errors: string[] } {
+  static async validateConfiguration(): Promise<{
+    isValid: boolean;
+    errors: string[];
+  }> {
     const errors: string[] = [];
 
     if (!this.DEFAULT_FROM_EMAIL) {
       errors.push("FROM_EMAIL environment variable is not set");
+    }
+
+    try {
+      await ParameterStoreService.getSendGridApiKey();
+    } catch (error) {
+      errors.push("SendGrid API key is not configured properly");
     }
 
     return {

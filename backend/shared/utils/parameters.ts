@@ -149,4 +149,25 @@ export class ParameterStoreService {
       true
     );
   }
+
+  /**
+   * Get the SendGrid API Key from Parameter Store or environment variable
+   */
+  static async getSendGridApiKey(): Promise<string> {
+    // In local development, use environment variable directly
+    if (isLocal) {
+      const apiKey = process.env["SENDGRID_API_KEY"];
+      if (!apiKey) {
+        throw new Error(
+          "SENDGRID_API_KEY environment variable is required in local development"
+        );
+      }
+      console.log("Using local SENDGRID_API_KEY from environment variable");
+      return apiKey;
+    }
+
+    // In production, use Parameter Store
+    const environment = process.env["ENVIRONMENT"] || "dev";
+    return await this.getParameter(`/${environment}/sendgrid-api-key`, true);
+  }
 }
