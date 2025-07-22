@@ -23,7 +23,7 @@ const VALID_STATUSES = ["active", "canceled", "expired"];
 // Load environment variables from .env file
 function loadEnvironmentConfig(environment) {
   const envFile = path.join(__dirname, `.env.${environment}`);
-  
+
   if (fs.existsSync(envFile)) {
     console.log(`📄 Loading environment config from: .env.${environment}`);
     require("dotenv").config({ path: envFile });
@@ -72,7 +72,7 @@ function validateDate(dateString) {
 function parseArguments() {
   const args = process.argv.slice(2);
   const parsed = {};
-  
+
   for (const arg of args) {
     const match = arg.match(/^--(\w+(?:-\w+)*)=(.+)$/);
     if (match) {
@@ -80,7 +80,7 @@ function parseArguments() {
       parsed[key] = match[2];
     }
   }
-  
+
   return parsed;
 }
 
@@ -89,7 +89,7 @@ async function updateUserPlan(environment, email, plan, options = {}) {
   try {
     // Load environment configuration
     loadEnvironmentConfig(environment);
-    
+
     const clientConfig = getClientConfig(environment);
     const tableName = getTableName(environment);
 
@@ -181,16 +181,20 @@ async function updateUserPlan(environment, email, plan, options = {}) {
     console.log(`   User: ${email} (${user.userId})`);
     console.log(`   Plan: ${plan}`);
     if (options.status) console.log(`   Status: ${options.status}`);
-    if (options.subscription_id) console.log(`   Subscription ID: ${options.subscription_id}`);
+    if (options.subscription_id)
+      console.log(`   Subscription ID: ${options.subscription_id}`);
     console.log(`   Plan Start Date: ${now}`);
     if (options.end_date) console.log(`   Plan End Date: ${options.end_date}`);
-
   } catch (error) {
     console.error(`❌ Error updating user plan:`, error.message);
 
     if (error.name === "ResourceNotFoundException") {
-      console.error(`❌ DynamoDB table '${getTableName(environment)}' not found.`);
-      console.error(`   Make sure the infrastructure is deployed for environment: ${environment}`);
+      console.error(
+        `❌ DynamoDB table '${getTableName(environment)}' not found.`
+      );
+      console.error(
+        `   Make sure the infrastructure is deployed for environment: ${environment}`
+      );
     } else if (
       error.name === "CredentialsError" ||
       error.name === "UnauthorizedOperation"
@@ -218,10 +222,10 @@ Usage:
 Required Arguments:
   --env=<environment>     Environment (local, dev, staging, prod)
   --email=<email>         User's email address
-  --plan=<plan>          New plan (${VALID_PLANS.join(', ')})
+  --plan=<plan>          New plan (${VALID_PLANS.join(", ")})
 
 Optional Arguments:
-  --status=<status>       Subscription status (${VALID_STATUSES.join(', ')})
+  --status=<status>       Subscription status (${VALID_STATUSES.join(", ")})
   --subscription-id=<id>  Stripe subscription ID
   --end-date=<date>       Plan end date (ISO 8601 format, e.g., 2024-12-31T23:59:59.000Z)
 
@@ -285,21 +289,23 @@ async function main() {
   // Validate plan
   if (!VALID_PLANS.includes(args.plan)) {
     console.error(`❌ Invalid plan: ${args.plan}`);
-    console.error(`   Valid plans: ${VALID_PLANS.join(', ')}`);
+    console.error(`   Valid plans: ${VALID_PLANS.join(", ")}`);
     process.exit(1);
   }
 
   // Validate status if provided
   if (args.status && !VALID_STATUSES.includes(args.status)) {
     console.error(`❌ Invalid status: ${args.status}`);
-    console.error(`   Valid statuses: ${VALID_STATUSES.join(', ')}`);
+    console.error(`   Valid statuses: ${VALID_STATUSES.join(", ")}`);
     process.exit(1);
   }
 
   // Validate end date if provided
   if (args.end_date && !validateDate(args.end_date)) {
     console.error(`❌ Invalid end date format: ${args.end_date}`);
-    console.error(`   Expected ISO 8601 format, e.g., 2024-12-31T23:59:59.000Z`);
+    console.error(
+      `   Expected ISO 8601 format, e.g., 2024-12-31T23:59:59.000Z`
+    );
     process.exit(1);
   }
 
