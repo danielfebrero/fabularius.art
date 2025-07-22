@@ -20,7 +20,6 @@ import {
   Zap,
   Grid3X3,
   Lock,
-  Sparkles,
   Download,
   MinusCircle,
 } from "lucide-react";
@@ -168,8 +167,8 @@ export function GenerateClient() {
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold flex items-center justify-center gap-3">
-            <Sparkles className="h-10 w-10 text-blue-600" />
-            AI Generator
+            <Zap className="h-10 w-10 text-blue-600" />
+            AI Image Generator
           </h1>
           <p className="text-gray-600">Create stunning AI-generated images</p>
           <div className="flex items-center justify-center gap-2 mt-4">
@@ -198,30 +197,6 @@ export function GenerateClient() {
             className="w-full h-32 text-lg p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 resize-none"
           />
         </div>
-
-        {/* Negative Prompt Input - Pro Only */}
-        {canUseNegativePrompts && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <MinusCircle className="h-5 w-5" />
-              <label className="text-sm font-semibold">Negative Prompt</label>
-              <div className="flex items-center gap-1">
-                <Crown className="h-4 w-4 text-amber-500" />
-                <span className="text-xs text-amber-600 font-medium">
-                  Pro Only
-                </span>
-              </div>
-            </div>
-            <Textarea
-              placeholder="Describe what you don't want to see in your images..."
-              value={settings.negativePrompt}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                updateSettings("negativePrompt", e.target.value)
-              }
-              className="w-full h-24 text-base p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 resize-none"
-            />
-          </div>
-        )}
 
         {/* Generate Button */}
         <Button
@@ -266,6 +241,7 @@ export function GenerateClient() {
             </div>
             <Select
               value={settings.imageSize}
+              disabled={!canUseCustomSizes}
               onValueChange={(value: string) => {
                 if (!canUseCustomSizes) return;
                 updateSettings("imageSize", value);
@@ -420,6 +396,38 @@ export function GenerateClient() {
                 {settings.selectedLoras.length !== 1 ? "s" : ""} selected
               </p>
             )}
+          </div>
+
+          {/* Negative Prompt Input - Pro Only */}
+          <div
+            className={`space-y-3 ${
+              !canUseNegativePrompts ? "opacity-50" : ""
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <MinusCircle className="h-5 w-5" />
+              <label className="text-sm font-semibold">Negative Prompt</label>
+              {!canUseNegativePrompts && (
+                <div className="flex items-center gap-1">
+                  <Crown className="h-4 w-4 text-amber-500" />
+                  <span className="text-xs text-amber-600 font-medium">
+                    Pro Only
+                  </span>
+                </div>
+              )}
+            </div>
+            <Textarea
+              placeholder="Describe what you don't want to see in your images..."
+              value={settings.negativePrompt}
+              disabled={!canUseNegativePrompts}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                if (!canUseNegativePrompts) return;
+                updateSettings("negativePrompt", e.target.value);
+              }}
+              className={`w-full h-24 text-base p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-0 resize-none ${
+                !canUseNegativePrompts ? "cursor-not-allowed" : ""
+              }`}
+            />
           </div>
         </div>
 

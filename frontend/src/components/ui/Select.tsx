@@ -8,6 +8,7 @@ interface SelectProps {
   value: string;
   onValueChange: (value: string) => void;
   children: React.ReactNode;
+  disabled?: boolean;
 }
 
 interface SelectItemProps {
@@ -29,13 +30,21 @@ const SelectContext = React.createContext<{
   onValueChange: (newValue: string) => void;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  disabled?: boolean;
 } | null>(null);
 
-const Select: React.FC<SelectProps> = ({ value, onValueChange, children }) => {
+const Select: React.FC<SelectProps> = ({
+  value,
+  onValueChange,
+  children,
+  disabled = false,
+}) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
   return (
-    <SelectContext.Provider value={{ value, onValueChange, isOpen, setIsOpen }}>
+    <SelectContext.Provider
+      value={{ value, onValueChange, isOpen, setIsOpen, disabled }}
+    >
       <div className="relative">{children}</div>
     </SelectContext.Provider>
   );
@@ -54,17 +63,18 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(
     const context = React.useContext(SelectContext);
     if (!context) return null;
 
-    const { setIsOpen, isOpen } = context;
+    const { setIsOpen, isOpen, disabled } = context;
 
     return (
       <button
         ref={ref}
         type="button"
+        disabled={disabled}
         className={cn(
           "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
           className
         )}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
         {...props}
       >
         {children}
@@ -79,14 +89,14 @@ const SelectContent: React.FC<SelectContentProps> = ({ children }) => {
   const context = React.useContext(SelectContext);
 
   React.useEffect(() => {
-    if (!context || !context.isOpen) return;
+    if (!context || !context.isOpen || context.disabled) return;
 
     const handleClickOutside = () => context.setIsOpen(false);
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, [context]);
 
-  if (!context || !context.isOpen) return null;
+  if (!context || !context.isOpen || context.disabled) return null;
 
   return (
     <div className="absolute z-50 mt-1 w-full overflow-hidden rounded-md border border-border bg-popover shadow-lg">
@@ -99,9 +109,10 @@ const SelectItem: React.FC<SelectItemProps> = ({ value, children }) => {
   const context = React.useContext(SelectContext);
   if (!context) return null;
 
-  const { onValueChange, value: selectedValue, setIsOpen } = context;
+  const { onValueChange, value: selectedValue, setIsOpen, disabled } = context;
 
   const handleSelect = () => {
+    if (disabled) return;
     onValueChange(value);
     setIsOpen(false);
   };
