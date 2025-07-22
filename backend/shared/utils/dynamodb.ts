@@ -497,7 +497,9 @@ export class DynamoDBService {
     }
   }
 
-  static async getAlbumMediaRelations(mediaId: string): Promise<AlbumMediaEntity[]> {
+  static async getAlbumMediaRelations(
+    mediaId: string
+  ): Promise<AlbumMediaEntity[]> {
     // Find all albums this media belongs to
     const result = await docClient.send(
       new QueryCommand({

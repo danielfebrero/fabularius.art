@@ -78,7 +78,7 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
             Back
           </button>
 
-                    <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <LikeButton
               targetType="media"
               targetId={media.id}
