@@ -50,14 +50,18 @@ export const Lightbox: React.FC<LightboxProps> = ({
           onClose();
           break;
         case "ArrowLeft":
-          onPrevious();
+          if (currentIndex > 0) {
+            onPrevious();
+          }
           break;
         case "ArrowRight":
-          onNext();
+          if (currentIndex < media.length - 1) {
+            onNext();
+          }
           break;
       }
     },
-    [isOpen, onClose, onNext, onPrevious]
+    [isOpen, onClose, onNext, onPrevious, currentIndex, media.length]
   );
 
   useEffect(() => {
@@ -313,7 +317,9 @@ export const Lightbox: React.FC<LightboxProps> = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onPrevious();
+                if (currentIndex > 0) {
+                  onPrevious();
+                }
               }}
               className={cn(
                 "absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors",
@@ -321,7 +327,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
                   ? "opacity-50 cursor-not-allowed"
                   : "cursor-pointer"
               )}
-              disabled={currentIndex === 0}
               aria-label="Previous image"
             >
               <svg
@@ -342,7 +347,9 @@ export const Lightbox: React.FC<LightboxProps> = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onNext();
+                if (currentIndex < media.length - 1) {
+                  onNext();
+                }
               }}
               className={cn(
                 "absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors",
@@ -350,7 +357,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
                   ? "opacity-50 cursor-not-allowed"
                   : "cursor-pointer"
               )}
-              disabled={currentIndex === media.length - 1}
               aria-label="Next image"
             >
               <svg

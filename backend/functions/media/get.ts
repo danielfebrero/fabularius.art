@@ -49,6 +49,7 @@ export const handler = async (
         url: item.url,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
+        ...{ thumbnailUrls: item.thumbnailUrls },
       };
 
       if (item.width !== undefined) {
@@ -61,15 +62,6 @@ export const handler = async (
 
       if (item.thumbnailUrl !== undefined) {
         response.thumbnailUrl = item.thumbnailUrl;
-      }
-
-      if (item.thumbnailUrls !== undefined) {
-        response.thumbnailUrls = item.thumbnailUrls;
-        console.log(
-          `✅ DEBUG - Added thumbnailUrls to response for ${item.id}`
-        );
-      } else {
-        console.log(`❌ DEBUG - No thumbnailUrls found for ${item.id}`);
       }
 
       if (item.metadata !== undefined) {

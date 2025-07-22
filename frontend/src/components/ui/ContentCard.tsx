@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { Media, Album, ThumbnailContext, ThumbnailSize } from "@/types";
 import { LikeButton } from "@/components/user/LikeButton";
 import { BookmarkButton } from "@/components/user/BookmarkButton";
@@ -10,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { composeMediaUrl } from "@/lib/urlUtils";
 import { Maximize2, Plus, Download, Trash2, PlayCircle } from "lucide-react";
 import ResponsivePicture from "./ResponsivePicture";
-import { composeThumbnailUrls, getBestThumbnailUrl } from "@/lib/urlUtils";
+import { composeThumbnailUrls } from "@/lib/urlUtils";
 
 interface ContentCardProps {
   item: Media | Album;
@@ -77,7 +76,10 @@ export function ContentCard({
 }: ContentCardProps) {
   const router = useRouter();
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [actionsOpen, setActionsOpen] = useState(false);
+
+  console.log({ item });
 
   const isMedia = type === "media";
   const media = isMedia ? (item as Media) : null;
@@ -106,7 +108,14 @@ export function ContentCard({
     if (onFullscreen) {
       onFullscreen();
     } else if (isMedia && media) {
-      // Default behavior: open lightbox
+      // Default behavior: open lightbox with proper index
+      const lightboxMedia = getLightboxMedia();
+      let index = 0;
+      if (lightboxMedia.length > 1) {
+        const foundIndex = lightboxMedia.findIndex((m) => m.id === media.id);
+        index = foundIndex >= 0 ? foundIndex : currentIndex;
+      }
+      setLightboxIndex(index);
       setLightboxOpen(true);
     }
   };
@@ -169,14 +178,6 @@ export function ContentCard({
     return [];
   };
 
-  const getLightboxCurrentIndex = (): number => {
-    if (mediaList && mediaList.length > 0 && isMedia && media) {
-      const index = mediaList.findIndex((m) => m.id === media.id);
-      return index >= 0 ? index : currentIndex;
-    }
-    return 0;
-  };
-
   return (
     <>
       <div
@@ -206,12 +207,12 @@ export function ContentCard({
                     ? undefined
                     : composeThumbnailUrls(media.thumbnailUrls)
                 }
-                fallbackUrl={
+                fallbackUrl={composeMediaUrl(
                   preferredThumbnailSize
                     ? media.thumbnailUrls?.[preferredThumbnailSize] ??
-                      (media.thumbnailUrl || media.url)
+                        (media.thumbnailUrl || media.url)
                     : media.thumbnailUrl || media.url
-                }
+                )}
                 alt={title || media.originalFilename || media.filename}
                 className={cn(
                   "w-full h-full object-cover transition-transform duration-200 group-hover:scale-105",
@@ -235,19 +236,26 @@ export function ContentCard({
           </>
         ) : album ? (
           <>
-            <Image
-              src={
-                album.coverImageUrl
-                  ? composeMediaUrl(album.coverImageUrl)
-                  : "/placeholder-album.jpg"
+            <ResponsivePicture
+              thumbnailUrls={
+                preferredThumbnailSize
+                  ? undefined
+                  : composeThumbnailUrls(album.thumbnailUrls)
               }
+              fallbackUrl={composeMediaUrl(
+                preferredThumbnailSize
+                  ? album.thumbnailUrls?.[preferredThumbnailSize] ??
+                      album.coverImageUrl
+                  : album.coverImageUrl
+              )}
               alt={title || album.title}
-              width={500}
-              height={500}
               className={cn(
                 "w-full h-full object-cover transition-transform duration-200 group-hover:scale-105",
                 imageClassName
               )}
+              context={context}
+              columns={columns}
+              loading="lazy"
             />
 
             {/* Album overlay with title */}
@@ -405,11 +413,20 @@ export function ContentCard({
       {lightboxOpen && isMedia && media && (
         <Lightbox
           media={getLightboxMedia()}
-          currentIndex={getLightboxCurrentIndex()}
+          currentIndex={lightboxIndex}
           isOpen={lightboxOpen}
           onClose={() => setLightboxOpen(false)}
-          onNext={() => {}}
-          onPrevious={() => {}}
+          onNext={() => {
+            const lightboxMedia = getLightboxMedia();
+            if (lightboxIndex < lightboxMedia.length - 1) {
+              setLightboxIndex(lightboxIndex + 1);
+            }
+          }}
+          onPrevious={() => {
+            if (lightboxIndex > 0) {
+              setLightboxIndex(lightboxIndex - 1);
+            }
+          }}
         />
       )}
     </>
