@@ -78,10 +78,10 @@ const formatDate = (dateString: string): string => {
 const useMediaMetadata = (media: Media) => {
   return useMemo(() => {
     const metadata = media.metadata || {};
-    
+
     // Determine creator from multiple sources
     let creator = "Unknown";
-    
+
     // Priority order:
     // 1. creatorUsername from metadata (fetched from backend)
     // 2. creator/artist from metadata (fallback for older entries)
@@ -95,7 +95,7 @@ const useMediaMetadata = (media: Media) => {
     } else if (media.createdBy && media.createdByType === "admin") {
       creator = "Admin";
     }
-    
+
     return {
       creator,
       prompt: metadata.prompt || metadata.description,
@@ -284,6 +284,7 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
               aspectRatio="auto"
               className="bg-card shadow-lg w-full"
               imageClassName="w-full h-auto max-h-[80vh] object-contain"
+              preferredThumbnailSize="originalSize"
               canLike={true}
               canBookmark={true}
               canFullscreen={true}

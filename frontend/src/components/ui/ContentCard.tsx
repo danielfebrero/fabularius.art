@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Media, Album, ThumbnailContext } from "@/types";
+import { Media, Album, ThumbnailContext, ThumbnailSize } from "@/types";
 import { LikeButton } from "@/components/user/LikeButton";
 import { BookmarkButton } from "@/components/user/BookmarkButton";
 import { Lightbox } from "@/components/ui/Lightbox";
@@ -43,6 +43,9 @@ interface ContentCardProps {
   context?: ThumbnailContext;
   columns?: number;
 
+  // Thumbnail size control
+  preferredThumbnailSize?: ThumbnailSize;
+
   // Lightbox support - pass array of media for navigation
   mediaList?: Media[];
   currentIndex?: number;
@@ -68,6 +71,7 @@ export function ContentCard({
   onDelete,
   context = "default",
   columns,
+  preferredThumbnailSize = "medium",
   mediaList,
   currentIndex = 0,
 }: ContentCardProps) {
@@ -201,7 +205,7 @@ export function ContentCard({
                 fallbackUrl={getBestThumbnailUrl(
                   media.thumbnailUrls,
                   media.thumbnailUrl || media.url,
-                  "medium"
+                  preferredThumbnailSize
                 )}
                 alt={title || media.originalFilename || media.filename}
                 className={cn(
