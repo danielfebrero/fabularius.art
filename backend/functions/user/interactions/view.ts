@@ -47,15 +47,7 @@ export const handler = async (
       // Increment view count for album
       await DynamoDBService.incrementAlbumViewCount(targetId, 1);
     } else {
-      // For media, we'd need albumId to check - extract from pathParameters
-      const pathParams = event.pathParameters;
-      if (!pathParams || !pathParams["albumId"]) {
-        return ResponseUtil.badRequest(
-          event,
-          "albumId is required for media views"
-        );
-      }
-
+      // For media, verify it exists - no album context needed in new schema
       const media = await DynamoDBService.getMedia(targetId);
       if (!media) {
         return ResponseUtil.notFound(event, "Media not found");

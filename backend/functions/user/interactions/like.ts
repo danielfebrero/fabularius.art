@@ -30,7 +30,7 @@ export const handler = async (
     }
 
     const body: InteractionRequest = JSON.parse(event.body);
-    const { targetType, targetId, action, albumId } = body;
+    const { targetType, targetId, action } = body;
 
     // Validate input
     if (!targetType || !targetId || !action) {
@@ -58,14 +58,7 @@ export const handler = async (
         return ResponseUtil.notFound(event, "Album not found");
       }
     } else {
-      // For media, we need albumId from request body
-      if (!albumId) {
-        return ResponseUtil.badRequest(
-          event,
-          "albumId is required for media interactions"
-        );
-      }
-
+      // For media, verify it exists - no albumId needed in new schema
       const media = await DynamoDBService.getMedia(targetId);
       if (!media) {
         return ResponseUtil.notFound(event, "Media not found");
@@ -97,7 +90,6 @@ export const handler = async (
         interactionType: "like",
         targetType,
         targetId,
-        ...(targetType === "media" && albumId ? { albumId } : {}),
         createdAt: now,
       };
 

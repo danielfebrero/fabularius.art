@@ -63,7 +63,6 @@ export const handler = async (
       interactionType: item.interactionType,
       targetType: item.targetType,
       targetId: item.targetId,
-      ...(item.albumId && { albumId: item.albumId }),
       createdAt: item.createdAt,
     }));
 

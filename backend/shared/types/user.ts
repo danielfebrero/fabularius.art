@@ -61,7 +61,6 @@ export interface UserInteraction {
   interactionType: "like" | "bookmark";
   targetType: "album" | "media";
   targetId: string;
-  albumId?: string;
   createdAt: string;
 }
 
@@ -69,7 +68,6 @@ export interface InteractionRequest {
   targetType: "album" | "media";
   targetId: string;
   action: "add" | "remove";
-  albumId?: string; // Required for media interactions
 }
 
 export interface InteractionResponse {
@@ -170,7 +168,6 @@ export interface UserInteractionEntity {
   interactionType: "like" | "bookmark";
   targetType: "album" | "media";
   targetId: string;
-  albumId?: string; // Required for media interactions to identify the parent album
   createdAt: string;
 }
 
