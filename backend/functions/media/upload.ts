@@ -14,10 +14,13 @@ export const handler = async (
 
   try {
     // Get user ID from request context (set by the admin authorizer)
-    const userId = event.requestContext.authorizer?.['userId'];
-    
+    const userId = event.requestContext.authorizer?.["userId"];
+
     if (!userId) {
-      return ResponseUtil.unauthorized(event, "User ID not found in request context");
+      return ResponseUtil.unauthorized(
+        event,
+        "User ID not found in request context"
+      );
     }
     const albumId = event.pathParameters?.["albumId"];
 

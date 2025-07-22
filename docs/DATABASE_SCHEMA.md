@@ -69,29 +69,29 @@ Represents a single media item (e.g., an image) that can belong to multiple albu
 
 - **PK**: `MEDIA#<mediaId>`
 - **SK**: `METADATA`
-- **GSI1PK**: `MEDIA_BY_CREATOR` 
+- **GSI1PK**: `MEDIA_BY_CREATOR`
 - **GSI1SK**: `<createdBy>#<createdAt>#<mediaId>`
 - **GSI2PK**: `MEDIA_ID`
 - **GSI2SK**: `<mediaId>`
 - **EntityType**: `Media`
 
-| Attribute          | Type     | Description                                |
-| ------------------ | -------- | ------------------------------------------ |
-| `id`               | `string` | The unique ID of the media item.           |
-| `filename`         | `string` | The name of the file in S3.                |
-| `originalFilename` | `string` | The original name of the uploaded file.    |
-| `mimeType`         | `string` | The MIME type of the file.                 |
-| `size`             | `number` | The size of the file in bytes.             |
-| `width`            | `number` | The width of the image in pixels.          |
-| `height`           | `number` | The height of the image in pixels.         |
-| `url`              | `string` | The URL of the original file.              |
-| `thumbnailUrls`    | `object` | URLs for different thumbnail sizes.        |
-| `status`           | `string` | The processing status of the media item.   |
-| `createdAt`        | `string` | The ISO 8601 timestamp of creation.        |
-| `updatedAt`        | `string` | The ISO 8601 timestamp of the last update. |
+| Attribute          | Type     | Description                                  |
+| ------------------ | -------- | -------------------------------------------- |
+| `id`               | `string` | The unique ID of the media item.             |
+| `filename`         | `string` | The name of the file in S3.                  |
+| `originalFilename` | `string` | The original name of the uploaded file.      |
+| `mimeType`         | `string` | The MIME type of the file.                   |
+| `size`             | `number` | The size of the file in bytes.               |
+| `width`            | `number` | The width of the image in pixels.            |
+| `height`           | `number` | The height of the image in pixels.           |
+| `url`              | `string` | The URL of the original file.                |
+| `thumbnailUrls`    | `object` | URLs for different thumbnail sizes.          |
+| `status`           | `string` | The processing status of the media item.     |
+| `createdAt`        | `string` | The ISO 8601 timestamp of creation.          |
+| `updatedAt`        | `string` | The ISO 8601 timestamp of the last update.   |
 | `createdBy`        | `string` | User ID or admin ID who uploaded this media. |
-| `createdByType`    | `string` | Type of creator: "user" or "admin".        |
-| `metadata`         | `object` | Additional metadata for the media item.    |
+| `createdByType`    | `string` | Type of creator: "user" or "admin".          |
+| `metadata`         | `object` | Additional metadata for the media item.      |
 
 ### Album-Media Relationship Entity
 
@@ -107,12 +107,12 @@ Represents the relationship between an album and a media item, allowing one medi
 - **GSI2SK**: `<addedAt>#<albumId>#<mediaId>`
 - **EntityType**: `AlbumMedia`
 
-| Attribute  | Type     | Description                                    |
-| ---------- | -------- | ---------------------------------------------- |
-| `albumId`  | `string` | The ID of the album.                           |
-| `mediaId`  | `string` | The ID of the media item.                      |
-| `addedAt`  | `string` | The ISO 8601 timestamp when media was added.  |
-| `addedBy`  | `string` | Optional: who added the media to this album.  |
+| Attribute | Type     | Description                                  |
+| --------- | -------- | -------------------------------------------- |
+| `albumId` | `string` | The ID of the album.                         |
+| `mediaId` | `string` | The ID of the media item.                    |
+| `addedAt` | `string` | The ISO 8601 timestamp when media was added. |
+| `addedBy` | `string` | Optional: who added the media to this album. |
 
 ## Access Patterns
 
@@ -122,7 +122,7 @@ Represents the relationship between an album and a media item, allowing one medi
 2. **Get all media for an album**: Query main table with `PK = "ALBUM#<albumId>"` and `SK begins_with "MEDIA#"`
 3. **Get all albums for a media**: Use GSI1 with `GSI1PK = "MEDIA#<mediaId>"`
 4. **Get all media by creator**: Use GSI1 with `GSI1PK = "MEDIA_BY_CREATOR"` and `GSI1SK begins_with "<createdBy>#"`
-5. **Get all public media**: 
+5. **Get all public media**:
    - First: Query albums with `isPublic-createdAt-index` where `isPublic = "true"`
    - Then: For each album, query media relationships
    - Finally: Fetch unique media records
@@ -130,17 +130,20 @@ Represents the relationship between an album and a media item, allowing one medi
 ### Migration from v1.0
 
 The old schema stored media with:
+
 - **PK**: `ALBUM#<albumId>`
-- **SK**: `MEDIA#<mediaId>` 
+- **SK**: `MEDIA#<mediaId>`
 - **albumId**: Direct reference
 
 The new schema separates concerns:
+
 - Media entities are independent (no albumId field)
 - Album-Media relationships are separate entities
 - One media can belong to multiple albums
 - Better scalability and flexibility
 
 **Breaking Changes**:
+
 - `albumId` field removed from Media entity
 - Media endpoints no longer require albumId parameter
 - Album-media relationships managed separately
@@ -198,16 +201,16 @@ Represents a regular user.
 - **GSI3SK**: `<username>`
 - **EntityType**: `User`
 
-| Attribute       | Type      | Description                           |
-| --------------- | --------- | ------------------------------------- |
-| `userId`        | `string`  | The unique ID of the user.            |
-| `email`         | `string`  | The email of the user.                |
-| `username`      | `string`  | The unique username of the user.      |
-| `passwordHash`  | `string`  | The hashed password.                  |
-| `googleId`      | `string`  | The user's Google ID for OAuth.       |
+| Attribute       | Type      | Description                                 |
+| --------------- | --------- | ------------------------------------------- |
+| `userId`        | `string`  | The unique ID of the user.                  |
+| `email`         | `string`  | The email of the user.                      |
+| `username`      | `string`  | The unique username of the user.            |
+| `passwordHash`  | `string`  | The hashed password.                        |
+| `googleId`      | `string`  | The user's Google ID for OAuth.             |
 | `role`          | `string`  | User role: "user", "admin", or "moderator". |
-| `createdAt`     | `string`  | The ISO 8601 timestamp of creation.   |
-| `emailVerified` | `boolean` | Whether the user's email is verified. |
+| `createdAt`     | `string`  | The ISO 8601 timestamp of creation.         |
+| `emailVerified` | `boolean` | Whether the user's email is verified.       |
 
 ### User Session Entity
 
@@ -345,11 +348,13 @@ node scripts/set-admin-role.js <your-session-id> admin
 ```
 
 Example:
+
 ```bash
 node scripts/set-admin-role.js dcf48ce9-d13b-46d0-a6c1-bcd6ffa08edc admin
 ```
 
 **Manual Fix**: Update the user record directly in DynamoDB:
+
 1. Find the user record: `PK = "USER#<userId>"`, `SK = "METADATA"`
 2. Add/update the `role` attribute to `"admin"`
 3. Update the `updatedAt` timestamp
@@ -361,6 +366,7 @@ node scripts/set-admin-role.js dcf48ce9-d13b-46d0-a6c1-bcd6ffa08edc admin
 **Cause**: The upload function still uses old schema patterns.
 
 **Solution**: Update media upload functions to:
+
 1. Create media entity with new PK pattern: `MEDIA#<mediaId>`
 2. Create album-media relationship separately
 3. Use `addMediaToAlbum()` method for linking
