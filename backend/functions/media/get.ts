@@ -32,12 +32,6 @@ export const handler = async (
     const { media, lastEvaluatedKey: nextKey } =
       await DynamoDBService.listAlbumMedia(albumId, limit, lastEvaluatedKey);
 
-    console.log(`🔍 DEBUG - listAlbumMedia returned ${media.length} items`);
-    console.log(
-      `🔍 DEBUG - First media item raw:`,
-      JSON.stringify(media[0], null, 2)
-    );
-
     const mediaResponse: Media[] = media.map((item) => {
       console.log(`🔍 DEBUG - Processing media item ${item.id}:`, {
         id: item.id,
