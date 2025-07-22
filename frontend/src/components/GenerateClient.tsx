@@ -156,8 +156,9 @@ export function GenerateClient() {
 
   // Open lightbox for current generated images
   const openLightbox = (imageUrl: string) => {
-    const allImages = generatedImages.length > 0 ? generatedImages : allGeneratedImages;
-    const index = allImages.findIndex(url => url === imageUrl);
+    const allImages =
+      generatedImages.length > 0 ? generatedImages : allGeneratedImages;
+    const index = allImages.findIndex((url) => url === imageUrl);
     if (index !== -1) {
       setLightboxIndex(index);
       setLightboxOpen(true);
@@ -166,7 +167,7 @@ export function GenerateClient() {
 
   // Open lightbox for thumbnail (from all generated images)
   const openThumbnailLightbox = (imageUrl: string) => {
-    const index = allGeneratedImages.findIndex(url => url === imageUrl);
+    const index = allGeneratedImages.findIndex((url) => url === imageUrl);
     if (index !== -1) {
       setLightboxIndex(index);
       setLightboxOpen(true);
@@ -364,7 +365,9 @@ export function GenerateClient() {
         {/* Previously Generated Images Thumbnails */}
         {allGeneratedImages.length > 0 && (
           <div className="space-y-3">
-            <h3 className="text-sm font-medium text-gray-700 text-center">Previously Generated</h3>
+            <h3 className="text-sm font-medium text-gray-700 text-center">
+              Previously Generated
+            </h3>
             <div className="flex gap-2 overflow-x-auto pb-2">
               {allGeneratedImages.slice(0, 10).map((image, index) => (
                 <div key={index} className="flex-shrink-0">
@@ -601,8 +604,12 @@ export function GenerateClient() {
           currentIndex={lightboxIndex}
           isOpen={lightboxOpen}
           onClose={() => setLightboxOpen(false)}
-          onNext={() => setLightboxIndex(prev => Math.min(prev + 1, allGeneratedImages.length - 1))}
-          onPrevious={() => setLightboxIndex(prev => Math.max(prev - 1, 0))}
+          onNext={() =>
+            setLightboxIndex((prev) =>
+              Math.min(prev + 1, allGeneratedImages.length - 1)
+            )
+          }
+          onPrevious={() => setLightboxIndex((prev) => Math.max(prev - 1, 0))}
         />
       </div>
     </div>
