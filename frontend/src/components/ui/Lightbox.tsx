@@ -187,7 +187,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
               <LikeButton
                 targetType="media"
                 targetId={currentMedia.id}
-                albumId={currentMedia.albumId}
                 size="sm"
                 variant="default"
                 className="p-2 hover:bg-white/10 rounded-full transition-colors mr-2 cursor-pointer"
@@ -195,7 +194,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
               <BookmarkButton
                 targetType="media"
                 targetId={currentMedia.id}
-                albumId={currentMedia.albumId}
                 size="sm"
                 variant="default"
                 className="p-2 hover:bg-white/10 rounded-full transition-colors mr-2 cursor-pointer"

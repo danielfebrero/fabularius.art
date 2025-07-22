@@ -22,7 +22,6 @@ export interface Album {
 
 export interface Media {
   id: string;
-  albumId: string;
   filename: string;
   originalName?: string;
   originalFilename?: string;

@@ -114,7 +114,6 @@ export const MediaCard: React.FC<MediaCardProps> = ({
               <LikeButton
                 targetType="media"
                 targetId={media.id}
-                albumId={albumId}
                 size="sm"
                 variant="default"
                 className="bg-white/90 hover:bg-white shadow-lg"
@@ -125,7 +124,6 @@ export const MediaCard: React.FC<MediaCardProps> = ({
               <BookmarkButton
                 targetType="media"
                 targetId={media.id}
-                albumId={albumId}
                 size="sm"
                 variant="default"
                 className="bg-white/90 hover:bg-white shadow-lg"

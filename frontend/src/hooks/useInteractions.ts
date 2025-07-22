@@ -51,12 +51,6 @@ export const useInteractions = (): UseInteractionsReturn => {
         return;
       }
 
-      // Validate albumId for media interactions
-      if (targetType === "media" && !albumId) {
-        setError("Album ID is required for media interactions");
-        return;
-      }
-
       setIsToggling(true);
       setError(null);
 
@@ -67,7 +61,7 @@ export const useInteractions = (): UseInteractionsReturn => {
           targetId,
         };
 
-        // Add albumId for media interactions
+        // Add albumId for media interactions only if provided (for backward compatibility)
         if (targetType === "media" && albumId) {
           request.albumId = albumId;
         }
@@ -100,12 +94,6 @@ export const useInteractions = (): UseInteractionsReturn => {
         return;
       }
 
-      // Validate albumId for media interactions
-      if (targetType === "media" && !albumId) {
-        setError("Album ID is required for media interactions");
-        return;
-      }
-
       setIsToggling(true);
       setError(null);
 
@@ -116,7 +104,7 @@ export const useInteractions = (): UseInteractionsReturn => {
           targetId,
         };
 
-        // Add albumId for media interactions
+        // Add albumId for media interactions only if provided (for backward compatibility)
         if (targetType === "media" && albumId) {
           request.albumId = albumId;
         }

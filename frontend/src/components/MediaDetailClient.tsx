@@ -78,18 +78,16 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
             Back
           </button>
 
-          <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
             <LikeButton
               targetType="media"
               targetId={media.id}
-              albumId={media.albumId}
               size="sm"
               className="bg-white/10 hover:bg-white/20 backdrop-blur-sm"
             />
             <BookmarkButton
               targetType="media"
               targetId={media.id}
-              albumId={media.albumId}
               size="sm"
               className="bg-white/10 hover:bg-white/20 backdrop-blur-sm"
             />

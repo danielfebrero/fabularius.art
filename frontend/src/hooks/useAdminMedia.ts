@@ -98,7 +98,6 @@ export function useAdminMedia() {
         // Step 3: Create the media object to return and add to state
         const newMedia: Media = {
           id: mediaId,
-          albumId,
           filename: key,
           originalFilename: file.name,
           mimeType: file.type,

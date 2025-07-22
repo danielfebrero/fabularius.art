@@ -497,6 +497,22 @@ export class DynamoDBService {
     }
   }
 
+  static async getAlbumMediaRelations(mediaId: string): Promise<AlbumMediaEntity[]> {
+    // Find all albums this media belongs to
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :gsi1pk",
+        ExpressionAttributeValues: {
+          ":gsi1pk": `MEDIA#${mediaId}`,
+        },
+      })
+    );
+
+    return (result.Items as AlbumMediaEntity[]) || [];
+  }
+
   static async listAlbumMedia(
     albumId: string,
     limit: number = 50,

@@ -34,9 +34,7 @@ export function Header() {
         <div className="flex items-center justify-between py-4">
           {/* Logo/Brand - Always visible */}
           <Link href="/" className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <img src="/logo.svg" alt="PornSpot.ai" className="w-5 h-5" />
-            </div>
+            <img src="/logo.svg" alt="PornSpot.ai" className="w-8 h-8" />
             <div>
               <h1 className="text-xl font-bold text-foreground">PornSpot.ai</h1>
               <p className="text-xs text-muted-foreground">
