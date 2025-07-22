@@ -274,12 +274,13 @@ async function getAllAlbums() {
  * Update media item with thumbnail URLs
  */
 async function updateMediaThumbnails(albumId, mediaId, thumbnailUrls) {
+  // In the new schema, media is stored independently
   await docClient.send(
     new UpdateCommand({
       TableName: DYNAMODB_TABLE,
       Key: {
-        PK: "ALBUM#" + albumId,
-        SK: "MEDIA#" + mediaId,
+        PK: "MEDIA#" + mediaId,
+        SK: "METADATA",
       },
       UpdateExpression:
         "SET thumbnailUrl = :thumbnailUrl, thumbnailUrls = :thumbnailUrls, #status = :status, updatedAt = :updatedAt",
