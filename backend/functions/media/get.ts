@@ -32,12 +32,19 @@ export const handler = async (
     const { media, lastEvaluatedKey: nextKey } =
       await DynamoDBService.listAlbumMedia(albumId, limit, lastEvaluatedKey);
 
+    console.log(`🔍 DEBUG - listAlbumMedia returned ${media.length} items`);
+    console.log(
+      `🔍 DEBUG - First media item raw:`,
+      JSON.stringify(media[0], null, 2)
+    );
+
     const mediaResponse: Media[] = media.map((item) => {
       console.log(`🔍 DEBUG - Processing media item ${item.id}:`, {
         id: item.id,
         hasThumbnailUrls: !!item.thumbnailUrls,
         thumbnailUrls: item.thumbnailUrls,
         thumbnailUrl: item.thumbnailUrl,
+        allKeys: Object.keys(item),
       });
 
       const response: Media = {
@@ -49,7 +56,6 @@ export const handler = async (
         url: item.url,
         createdAt: item.createdAt,
         updatedAt: item.updatedAt,
-        ...{ thumbnailUrls: item.thumbnailUrls },
       };
 
       if (item.width !== undefined) {
@@ -62,6 +68,10 @@ export const handler = async (
 
       if (item.thumbnailUrl !== undefined) {
         response.thumbnailUrl = item.thumbnailUrl;
+      }
+
+      if (item.thumbnailUrls !== undefined) {
+        response.thumbnailUrls = item.thumbnailUrls;
       }
 
       if (item.metadata !== undefined) {

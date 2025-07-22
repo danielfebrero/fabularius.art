@@ -328,13 +328,12 @@ export class DynamoDBService {
           PK: `MEDIA#${mediaId}`,
           SK: "METADATA",
         },
-        ProjectionExpression: "id, filename, originalFilename, mimeType, #size, width, height, #url, thumbnailUrl, thumbnailUrls, #status, createdAt, updatedAt, metadata, createdBy, createdByType",
-        ExpressionAttributeNames: {
-          "#size": "size",
-          "#url": "url",
-          "#status": "status"
-        }
       })
+    );
+
+    console.log(
+      `🔍 DEBUG - getMedia(${mediaId}) raw result:`,
+      JSON.stringify(result.Item, null, 2)
     );
 
     return (result.Item as MediaEntity) || null;
