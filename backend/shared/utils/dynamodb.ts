@@ -12,6 +12,7 @@ import {
   Album,
   AlbumEntity,
   MediaEntity,
+  AlbumMediaEntity,
   AdminUserEntity,
   AdminSessionEntity,
 } from "../types";
@@ -309,7 +310,7 @@ export class DynamoDBService {
     );
   }
 
-  // Media operations
+  // Media operations - NEW DESIGN: Media can belong to multiple albums
   static async createMedia(media: MediaEntity): Promise<void> {
     await docClient.send(
       new PutCommand({
@@ -319,57 +320,18 @@ export class DynamoDBService {
     );
   }
 
-  static async getMedia(
-    albumId: string,
-    mediaId: string
-  ): Promise<MediaEntity | null> {
+  static async getMedia(mediaId: string): Promise<MediaEntity | null> {
     const result = await docClient.send(
       new GetCommand({
         TableName: TABLE_NAME,
         Key: {
-          PK: `ALBUM#${albumId}`,
-          SK: `MEDIA#${mediaId}`,
+          PK: `MEDIA#${mediaId}`,
+          SK: "METADATA",
         },
       })
     );
 
     return (result.Item as MediaEntity) || null;
-  }
-
-  static async listAlbumMedia(
-    albumId: string,
-    limit: number = 50,
-    lastEvaluatedKey?: Record<string, any>
-  ): Promise<{
-    media: MediaEntity[];
-    lastEvaluatedKey?: Record<string, any>;
-  }> {
-    const result = await docClient.send(
-      new QueryCommand({
-        TableName: TABLE_NAME,
-        IndexName: "GSI1",
-        KeyConditionExpression: "GSI1PK = :gsi1pk",
-        ExpressionAttributeValues: {
-          ":gsi1pk": `MEDIA#${albumId}`,
-        },
-        ScanIndexForward: false, // Most recent first
-        Limit: limit,
-        ExclusiveStartKey: lastEvaluatedKey,
-      })
-    );
-
-    const response: {
-      media: MediaEntity[];
-      lastEvaluatedKey?: Record<string, any>;
-    } = {
-      media: (result.Items as MediaEntity[]) || [],
-    };
-
-    if (result.LastEvaluatedKey) {
-      response.lastEvaluatedKey = result.LastEvaluatedKey;
-    }
-
-    return response;
   }
 
   static async findMediaById(mediaId: string): Promise<MediaEntity | null> {
@@ -384,7 +346,7 @@ export class DynamoDBService {
             ":gsi2pk": "MEDIA_ID",
             ":gsi2sk": mediaId,
           },
-          Limit: 1, // We expect only one result
+          Limit: 1,
         })
       );
 
@@ -396,20 +358,23 @@ export class DynamoDBService {
     }
   }
 
-  static async deleteMedia(albumId: string, mediaId: string): Promise<void> {
+  static async deleteMedia(mediaId: string): Promise<void> {
+    // Delete the media record
     await docClient.send(
       new DeleteCommand({
         TableName: TABLE_NAME,
         Key: {
-          PK: `ALBUM#${albumId}`,
-          SK: `MEDIA#${mediaId}`,
+          PK: `MEDIA#${mediaId}`,
+          SK: "METADATA",
         },
       })
     );
+
+    // Also delete all album-media relationships for this media
+    await this.removeMediaFromAllAlbums(mediaId);
   }
 
   static async updateMedia(
-    albumId: string,
     mediaId: string,
     updates: Partial<MediaEntity>
   ): Promise<void> {
@@ -419,7 +384,7 @@ export class DynamoDBService {
 
     // Build dynamic update expression
     Object.entries(updates).forEach(([key, value]) => {
-      if (key !== "PK" && key !== "SK" && key !== "id" && key !== "albumId") {
+      if (key !== "PK" && key !== "SK" && key !== "id") {
         const attrName = `#${key}`;
         const attrValue = `:${key}`;
         updateExpressions.push(`${attrName} = ${attrValue}`);
@@ -436,14 +401,220 @@ export class DynamoDBService {
       new UpdateCommand({
         TableName: TABLE_NAME,
         Key: {
-          PK: `ALBUM#${albumId}`,
-          SK: `MEDIA#${mediaId}`,
+          PK: `MEDIA#${mediaId}`,
+          SK: "METADATA",
         },
         UpdateExpression: `SET ${updateExpressions.join(", ")}`,
         ExpressionAttributeNames: expressionAttributeNames,
         ExpressionAttributeValues: expressionAttributeValues,
       })
     );
+  }
+
+  // Album-Media relationship operations
+  static async addMediaToAlbum(
+    albumId: string,
+    mediaId: string,
+    addedBy?: string
+  ): Promise<void> {
+    const now = new Date().toISOString();
+    
+    // Verify both album and media exist
+    const [album, media] = await Promise.all([
+      this.getAlbum(albumId),
+      this.getMedia(mediaId),
+    ]);
+
+    if (!album) {
+      throw new Error(`Album ${albumId} not found`);
+    }
+    if (!media) {
+      throw new Error(`Media ${mediaId} not found`);
+    }
+
+    const albumMediaEntity: AlbumMediaEntity = {
+      PK: `ALBUM#${albumId}`,
+      SK: `MEDIA#${mediaId}`,
+      GSI1PK: `MEDIA#${mediaId}`,
+      GSI1SK: `ALBUM#${albumId}#${now}`,
+      GSI2PK: "ALBUM_MEDIA_BY_DATE",
+      GSI2SK: `${now}#${albumId}#${mediaId}`,
+      EntityType: "AlbumMedia",
+      albumId,
+      mediaId,
+      addedAt: now,
+      addedBy,
+    };
+
+    await docClient.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: albumMediaEntity,
+        ConditionExpression: "attribute_not_exists(PK)",
+      })
+    );
+
+    // Update album media count
+    await this.incrementAlbumMediaCount(albumId);
+  }
+
+  static async removeMediaFromAlbum(
+    albumId: string,
+    mediaId: string
+  ): Promise<void> {
+    await docClient.send(
+      new DeleteCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `ALBUM#${albumId}`,
+          SK: `MEDIA#${mediaId}`,
+        },
+      })
+    );
+
+    // Update album media count
+    await this.decrementAlbumMediaCount(albumId);
+  }
+
+  static async removeMediaFromAllAlbums(mediaId: string): Promise<void> {
+    // Find all albums this media belongs to
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :gsi1pk",
+        ExpressionAttributeValues: {
+          ":gsi1pk": `MEDIA#${mediaId}`,
+        },
+      })
+    );
+
+    const albumMediaRelationships = (result.Items as AlbumMediaEntity[]) || [];
+
+    // Delete all relationships and update counts
+    for (const relationship of albumMediaRelationships) {
+      await this.removeMediaFromAlbum(relationship.albumId, mediaId);
+    }
+  }
+
+  static async listAlbumMedia(
+    albumId: string,
+    limit: number = 50,
+    lastEvaluatedKey?: Record<string, any>
+  ): Promise<{
+    media: MediaEntity[];
+    lastEvaluatedKey?: Record<string, any>;
+  }> {
+    // First, get album-media relationships
+    const relationshipsResult = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk_prefix)",
+        ExpressionAttributeValues: {
+          ":pk": `ALBUM#${albumId}`,
+          ":sk_prefix": "MEDIA#",
+        },
+        Limit: limit,
+        ExclusiveStartKey: lastEvaluatedKey,
+      })
+    );
+
+    const relationships = (relationshipsResult.Items as AlbumMediaEntity[]) || [];
+    
+    // Get the actual media records
+    const mediaPromises = relationships.map(rel => 
+      this.getMedia(rel.mediaId)
+    );
+    
+    const mediaResults = await Promise.all(mediaPromises);
+    const media = mediaResults.filter(m => m !== null) as MediaEntity[];
+
+    const response: {
+      media: MediaEntity[];
+      lastEvaluatedKey?: Record<string, any>;
+    } = { media };
+
+    if (relationshipsResult.LastEvaluatedKey) {
+      response.lastEvaluatedKey = relationshipsResult.LastEvaluatedKey;
+    }
+
+    return response;
+  }
+
+  static async getMediaAlbums(mediaId: string): Promise<string[]> {
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :gsi1pk",
+        ExpressionAttributeValues: {
+          ":gsi1pk": `MEDIA#${mediaId}`,
+        },
+      })
+    );
+
+    const relationships = (result.Items as AlbumMediaEntity[]) || [];
+    return relationships.map(rel => rel.albumId);
+  }
+
+  static async getAllPublicMedia(): Promise<MediaEntity[]> {
+    // Get all public albums first
+    const allMediaIds = new Set<string>();
+    let lastEvaluatedKey: Record<string, any> | undefined = undefined;
+
+    do {
+      const result: any = await docClient.send(
+        new QueryCommand({
+          TableName: TABLE_NAME,
+          IndexName: "isPublic-createdAt-index",
+          KeyConditionExpression: "#isPublic = :isPublic",
+          ExpressionAttributeNames: {
+            "#isPublic": "isPublic",
+          },
+          ExpressionAttributeValues: {
+            ":isPublic": "true",
+          },
+          ScanIndexForward: false, // Most recent first
+          ExclusiveStartKey: lastEvaluatedKey,
+        })
+      );
+
+      const publicAlbums = (result.Items as AlbumEntity[]) || [];
+
+      // For each public album, get all its media IDs
+      for (const album of publicAlbums) {
+        let mediaLastKey: Record<string, any> | undefined = undefined;
+
+        do {
+          const mediaResult: any = await docClient.send(
+            new QueryCommand({
+              TableName: TABLE_NAME,
+              KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk_prefix)",
+              ExpressionAttributeValues: {
+                ":pk": `ALBUM#${album.id}`,
+                ":sk_prefix": "MEDIA#",
+              },
+              ExclusiveStartKey: mediaLastKey,
+            })
+          );
+
+          const albumMediaRelationships = (mediaResult.Items as AlbumMediaEntity[]) || [];
+          albumMediaRelationships.forEach(rel => allMediaIds.add(rel.mediaId));
+
+          mediaLastKey = mediaResult.LastEvaluatedKey;
+        } while (mediaLastKey);
+      }
+
+      lastEvaluatedKey = result.LastEvaluatedKey;
+    } while (lastEvaluatedKey);
+
+    // Now fetch all unique media records
+    const mediaPromises = Array.from(allMediaIds).map(mediaId => 
+      this.getMedia(mediaId)
+    );
+    
+    const mediaResults = await Promise.all(mediaPromises);
+    return mediaResults.filter(media => media !== null) as MediaEntity[];
   }
 
   static async incrementAlbumMediaCount(albumId: string): Promise<void> {

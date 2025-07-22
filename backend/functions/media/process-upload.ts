@@ -232,7 +232,7 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
           };
         }
 
-        await DynamoDBService.updateMedia(albumId, mediaItem.id!, updateData);
+        await DynamoDBService.updateMedia(mediaItem.id!, updateData);
 
         console.log(
           "Updated media record with thumbnail URLs:",
@@ -256,7 +256,7 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
           };
         }
 
-        await DynamoDBService.updateMedia(albumId, mediaItem.id!, updateData);
+        await DynamoDBService.updateMedia(mediaItem.id!, updateData);
 
         console.log("Thumbnail generation failed, updated status only");
         if (webpUrl) {
@@ -267,7 +267,7 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
       console.error("Error processing image:", error);
 
       // Update status even if processing failed
-      await DynamoDBService.updateMedia(albumId, mediaItem.id!, {
+      await DynamoDBService.updateMedia(mediaItem.id!, {
         status: "uploaded" as const,
         updatedAt: new Date().toISOString(),
       });
@@ -276,7 +276,7 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
     console.log("Not an image file, updating status only");
 
     // For non-image files, just update the status
-    await DynamoDBService.updateMedia(albumId, mediaItem.id!, {
+    await DynamoDBService.updateMedia(mediaItem.id!, {
       status: "uploaded" as const,
       updatedAt: new Date().toISOString(),
     });

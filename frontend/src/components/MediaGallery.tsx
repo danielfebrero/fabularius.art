@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Media } from "../types/index";
 import { MediaCard } from "./ui/MediaCard";
 import { Lightbox } from "./ui/Lightbox";
@@ -25,6 +26,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   initialPagination,
   className,
 }) => {
+  const router = useRouter();
   const [media, setMedia] = useState<Media[]>(initialMedia);
   const [pagination, setPagination] = useState(initialPagination);
   const [loading, setLoading] = useState(false);
@@ -72,8 +74,9 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   };
 
   const handleMediaClick = (index: number) => {
-    setCurrentMediaIndex(index);
-    setLightboxOpen(true);
+    const mediaItem = media[index];
+    // Navigate to the media detail page instead of opening lightbox
+    router.push(`/media/${mediaItem.id}`);
   };
 
   const handleLightboxClose = () => {

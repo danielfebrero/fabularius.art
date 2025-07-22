@@ -28,7 +28,7 @@ export const handler = async (
     // Delete all media in the album
     if (media.length > 0) {
       const deleteMediaPromises = media.map((mediaItem) =>
-        DynamoDBService.deleteMedia(albumId, mediaItem.id)
+        DynamoDBService.deleteMedia(mediaItem.id)
       );
       await Promise.all(deleteMediaPromises);
 

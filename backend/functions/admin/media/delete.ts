@@ -30,7 +30,7 @@ export const handler = async (
     }
 
     // Check if media exists
-    const existingMedia = await DynamoDBService.getMedia(albumId, mediaId);
+    const existingMedia = await DynamoDBService.getMedia(mediaId);
     if (!existingMedia) {
       return ResponseUtil.notFound(event, "Media not found");
     }
@@ -42,11 +42,10 @@ export const handler = async (
     // Clean up interactions for this media
     await DynamoDBService.deleteAllInteractionsForTarget(mediaId);
 
-    // Delete the media record from DynamoDB
-    await DynamoDBService.deleteMedia(albumId, mediaId);
+    // Delete the media record from DynamoDB (this also removes from all albums)
+    await DynamoDBService.deleteMedia(mediaId);
 
-    // Decrement album media count
-    await DynamoDBService.decrementAlbumMediaCount(albumId);
+    // Note: Album media counts are automatically updated in deleteMedia method
 
     // Trigger revalidation
     await RevalidationService.revalidateAlbumMedia(albumId);

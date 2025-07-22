@@ -1,71 +1,40 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 import { ResponseUtil } from "@shared/utils/response";
-import { UserInteraction } from "@shared/types/user";
 
 export const handler = async (
   event: APIGatewayProxyEvent
 ): Promise<APIGatewayProxyResult> => {
-  console.log("🔄 Get user likes function called");
-  console.log("📝 Event:", JSON.stringify(event, null, 2));
+  if (event.httpMethod === "OPTIONS") {
+    return ResponseUtil.noContent(event);
+  }
 
   try {
-    // Handle preflight requests
-    if (event.httpMethod === "OPTIONS") {
-      return ResponseUtil.noContent(event);
+    // Extract user ID from JWT token or session
+    const userId = event.requestContext.authorizer?.["userId"];
+    if (!userId) {
+      return ResponseUtil.unauthorized(event, "Authentication required");
     }
 
-    // Validate user session
-    const authResult = await UserAuthMiddleware.validateSession(event);
-    if (!authResult.isValid || !authResult.user) {
-      return ResponseUtil.unauthorized(event, "Unauthorized");
-    }
-
-    const user = authResult.user;
-
-    // Parse query parameters
+    // Get pagination parameters
     const queryParams = event.queryStringParameters || {};
-    const page = parseInt(queryParams["page"] || "1", 10);
-    const limit = Math.min(parseInt(queryParams["limit"] || "20", 10), 100); // Max 100 items per page
+    const page = parseInt(queryParams["page"] || "1");
+    const limit = Math.min(parseInt(queryParams["limit"] || "20"), 100);
+    
+    // Calculate offset for pagination
+    const lastEvaluatedKey = queryParams["lastKey"]
+      ? JSON.parse(decodeURIComponent(queryParams["lastKey"]))
+      : undefined;
 
-    if (page < 1) {
-      return ResponseUtil.badRequest(event, "Page must be >= 1");
-    }
-
-    if (limit < 1) {
-      return ResponseUtil.badRequest(event, "Limit must be >= 1");
-    }
-
-    // Handle pagination with lastEvaluatedKey
-    let lastEvaluatedKey: Record<string, any> | undefined;
-    if (queryParams["lastKey"]) {
-      try {
-        lastEvaluatedKey = JSON.parse(
-          decodeURIComponent(queryParams["lastKey"])
-        );
-      } catch (error) {
-        return ResponseUtil.badRequest(event, "Invalid lastKey parameter");
-      }
-    }
-
-    // Get user likes
+    // Get user's likes from DynamoDB
     const result = await DynamoDBService.getUserInteractions(
-      user.userId,
+      userId,
       "like",
       limit,
       lastEvaluatedKey
     );
 
-    // Transform to response format
-    const interactions: UserInteraction[] = result.interactions.map((item) => ({
-      userId: item.userId,
-      interactionType: item.interactionType,
-      targetType: item.targetType,
-      targetId: item.targetId,
-      ...(item.albumId && { albumId: item.albumId }),
-      createdAt: item.createdAt,
-    }));
+    const { interactions } = result;
 
     // Get target details for each interaction
     const enrichedInteractions = await Promise.all(
@@ -87,58 +56,27 @@ export const handler = async (
             };
           }
         } else if (interaction.targetType === "media") {
-          // For media, we can now use the stored albumId to get proper media details
-          if (interaction.albumId) {
-            const media = await DynamoDBService.getMedia(
-              interaction.albumId,
-              interaction.targetId
-            );
-            if (media) {
-              // Also get the album to provide context
-              const album = await DynamoDBService.getAlbum(interaction.albumId);
-              targetDetails = {
-                id: media.id,
-                title: media.originalFilename,
-                type: "media",
-                mimeType: media.mimeType,
-                size: media.size,
-                thumbnailUrls: media.thumbnailUrls,
-                url: media.url,
-                albumId: interaction.albumId,
-                albumTitle: album?.title || "Unknown Album",
-                createdAt: media.createdAt,
-                updatedAt: media.updatedAt,
-              };
-            }
+          // For media, get the media details directly
+          const media = await DynamoDBService.getMedia(interaction.targetId);
+          if (media) {
+            targetDetails = {
+              id: media.id,
+              title: media.originalFilename,
+              type: "media",
+              mimeType: media.mimeType,
+              size: media.size,
+              thumbnailUrls: media.thumbnailUrls,
+              url: media.url,
+              createdAt: media.createdAt,
+              updatedAt: media.updatedAt,
+            };
           } else {
-            // Fallback for old interactions without albumId - try to find media by scanning
-            const media = await DynamoDBService.findMediaById(
-              interaction.targetId
-            );
-            if (media) {
-              // Also get the album to provide context
-              const album = await DynamoDBService.getAlbum(media.albumId);
-              targetDetails = {
-                id: media.id,
-                title: media.originalFilename,
-                type: "media",
-                mimeType: media.mimeType,
-                size: media.size,
-                thumbnailUrls: media.thumbnailUrls,
-                url: media.url,
-                albumId: media.albumId,
-                albumTitle: album?.title || "Unknown Album",
-                createdAt: media.createdAt,
-                updatedAt: media.updatedAt,
-              };
-            } else {
-              // If we still can't find the media, use basic fallback
-              targetDetails = {
-                id: interaction.targetId,
-                type: "media",
-                title: `Media ${interaction.targetId}`,
-              };
-            }
+            // If we can't find the media, use basic fallback
+            targetDetails = {
+              id: interaction.targetId,
+              type: "media",
+              title: "Unknown Media",
+            };
           }
         }
 

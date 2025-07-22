@@ -98,3 +98,20 @@ export async function getMediaForAlbum(
   });
   return handleResponse<{ media: Media[]; pagination: any }>(response);
 }
+
+// Fetch a single media item by ID
+export async function getMediaById(mediaId: string) {
+  const response = await fetch(`${API_URL}/media/${mediaId}`, {
+    next: { revalidate: 3600, tags: ["media"] },
+  });
+  return handleResponse<Media>(response);
+}
+
+// Fetch all public media items
+export async function fetchAllPublicMedia(): Promise<Media[]> {
+  const response = await fetch(`${API_URL}/media`, {
+    next: { revalidate: 3600, tags: ["media"] },
+  });
+  const result = await handleResponse<Media[]>(response);
+  return result.data || [];
+}

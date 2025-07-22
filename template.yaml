@@ -430,6 +430,50 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
 
+  GetMediaByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-get-media-by-id"
+      CodeUri: backend/dist/functions/media/
+      Handler: get-by-id.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /media/{mediaId}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
+  GetAllMediaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-get-all-media"
+      CodeUri: backend/dist/functions/media/
+      Handler: get-all.handler
+      Layers:
+        - !Ref SharedLayer
+      Timeout: 60
+      MemorySize: 512
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /media
+            Method: GET
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
   ProcessUploadFunction:
     Type: AWS::Serverless::Function
     Properties:

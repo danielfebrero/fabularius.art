@@ -35,7 +35,6 @@ export const handler = async (
     const mediaResponse: Media[] = media.map((item) => {
       const response: Media = {
         id: item.id,
-        albumId: item.albumId,
         filename: item.filename,
         originalFilename: item.originalFilename,
         mimeType: item.mimeType,

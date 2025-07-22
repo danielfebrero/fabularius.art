@@ -56,10 +56,7 @@ export const handler = async (
         );
       }
 
-      const media = await DynamoDBService.getMedia(
-        pathParams["albumId"],
-        targetId
-      );
+      const media = await DynamoDBService.getMedia(targetId);
       if (!media) {
         return ResponseUtil.notFound(event, "Media not found");
       }

@@ -12,15 +12,14 @@ export const mockUploadMediaRequest: UploadMediaRequest = {
 };
 
 export const mockMediaEntity: MediaEntity = {
-  PK: `ALBUM#${mockAlbumId}`,
-  SK: `MEDIA#${mockMediaId}`,
-  GSI1PK: `MEDIA#${mockAlbumId}`,
-  GSI1SK: `${mockTimestamp}#${mockMediaId}`,
+  PK: `MEDIA#${mockMediaId}`,
+  SK: "METADATA",
+  GSI1PK: "MEDIA_BY_CREATOR",
+  GSI1SK: `admin-user-123#${mockTimestamp}#${mockMediaId}`,
   GSI2PK: "MEDIA_ID",
   GSI2SK: mockMediaId,
   EntityType: "Media",
   id: mockMediaId,
-  albumId: mockAlbumId,
   filename: mockS3Key,
   originalFilename: "test-image.jpg",
   mimeType: "image/jpeg",
@@ -31,6 +30,8 @@ export const mockMediaEntity: MediaEntity = {
   thumbnailUrl: `https://test.cloudfront.net/${mockThumbnailKey}`,
   createdAt: mockTimestamp,
   updatedAt: mockTimestamp,
+  createdBy: "admin-user-123",
+  createdByType: "admin",
   metadata: {
     camera: "Canon EOS R5",
     iso: 100,
@@ -41,7 +42,6 @@ export const mockMediaEntity: MediaEntity = {
 
 export const mockMedia: Media = {
   id: mockMediaId,
-  albumId: mockAlbumId,
   filename: mockS3Key,
   originalFilename: "test-image.jpg",
   mimeType: "image/jpeg",
@@ -61,15 +61,14 @@ export const mockMedia: Media = {
 };
 
 export const mockMediaEntityMinimal: MediaEntity = {
-  PK: `ALBUM#${mockAlbumId}`,
-  SK: `MEDIA#${mockMediaId}`,
-  GSI1PK: `MEDIA#${mockAlbumId}`,
-  GSI1SK: `${mockTimestamp}#${mockMediaId}`,
+  PK: `MEDIA#${mockMediaId}`,
+  SK: "METADATA",
+  GSI1PK: "MEDIA_BY_CREATOR",
+  GSI1SK: `admin-user-123#${mockTimestamp}#${mockMediaId}`,
   GSI2PK: "MEDIA_ID",
   GSI2SK: mockMediaId,
   EntityType: "Media",
   id: mockMediaId,
-  albumId: mockAlbumId,
   filename: mockS3Key,
   originalFilename: "simple.jpg",
   mimeType: "image/jpeg",
@@ -81,7 +80,6 @@ export const mockMediaEntityMinimal: MediaEntity = {
 
 export const mockMediaMinimal: Media = {
   id: mockMediaId,
-  albumId: mockAlbumId,
   filename: mockS3Key,
   originalFilename: "simple.jpg",
   mimeType: "image/jpeg",

@@ -361,10 +361,7 @@ export function MediaManager({
                           size="sm"
                           variant="outline"
                           onClick={() =>
-                            window.open(
-                              composeMediaUrl(mediaItem.url),
-                              "_blank"
-                            )
+                            window.open(`/media/${mediaItem.id}`, "_blank")
                           }
                           className="flex-1 border-admin-primary/30 text-admin-primary hover:bg-admin-primary hover:text-admin-primary-foreground"
                         >

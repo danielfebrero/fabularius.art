@@ -23,7 +23,6 @@ export interface Album {
 
 export interface Media {
   id: string;
-  albumId: string;
   filename: string;
   originalFilename: string;
   mimeType: string;
@@ -39,6 +38,11 @@ export interface Media {
   createdAt: string;
   updatedAt: string;
   metadata?: Record<string, any> | undefined;
+  // User tracking fields
+  createdBy?: string | undefined;
+  createdByType?: "user" | "admin" | undefined;
+  // Album relationships (populated when needed)
+  albums?: string[] | undefined; // array of album IDs this media belongs to
 }
 
 export interface CreateAlbumRequest {
@@ -107,15 +111,14 @@ export interface AlbumEntity {
 }
 
 export interface MediaEntity {
-  PK: string; // ALBUM#{albumId}
-  SK: string; // MEDIA#{mediaId}
-  GSI1PK: string; // MEDIA#{albumId}
-  GSI1SK: string; // {createdAt}#{mediaId}
+  PK: string; // MEDIA#{mediaId}
+  SK: string; // METADATA
+  GSI1PK: string; // MEDIA_BY_CREATOR
+  GSI1SK: string; // {createdBy}#{createdAt}#{mediaId}
   GSI2PK: string; // MEDIA_ID
   GSI2SK: string; // {mediaId}
   EntityType: "Media";
   id: string;
-  albumId: string;
   filename: string;
   originalFilename: string;
   mimeType: string;
@@ -131,6 +134,24 @@ export interface MediaEntity {
   createdAt: string;
   updatedAt: string;
   metadata?: Record<string, any> | undefined;
+  // User tracking fields
+  createdBy?: string | undefined; // userId or adminId who uploaded this media
+  createdByType?: "user" | "admin" | undefined; // type of creator
+}
+
+// New entity for album-media relationships (many-to-many)
+export interface AlbumMediaEntity {
+  PK: string; // ALBUM#{albumId}
+  SK: string; // MEDIA#{mediaId}
+  GSI1PK: string; // MEDIA#{mediaId}
+  GSI1SK: string; // ALBUM#{albumId}#{addedAt}
+  GSI2PK: string; // ALBUM_MEDIA_BY_DATE
+  GSI2SK: string; // {addedAt}#{albumId}#{mediaId}
+  EntityType: "AlbumMedia";
+  albumId: string;
+  mediaId: string;
+  addedAt: string; // when media was added to this album
+  addedBy?: string | undefined; // who added it to this album
 }
 
 // Admin Authentication Types
