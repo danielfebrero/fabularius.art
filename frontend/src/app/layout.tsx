@@ -6,6 +6,7 @@ import { UserProvider } from "@/contexts/UserContext";
 import { UserInteractionProvider } from "@/hooks/useUserInteractionStatus";
 import { Header } from "@/components/Header";
 import { PermissionsWrapper } from "@/components/PermissionsWrapper";
+import { MainContentWrapper } from "@/components/MainContentWrapper";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -100,9 +101,9 @@ export default function RootLayout({
               <AdminProvider>
                 <div className="min-h-screen bg-background flex flex-col">
                   <Header />
-                  <main className="container mx-auto px-4 py-8 flex-1">
+                  <MainContentWrapper>
                     {children}
-                  </main>
+                  </MainContentWrapper>
                   <footer className="border-t border-border mt-16">
                     <div className="container mx-auto px-4 py-8">
                       <div className="text-center">
