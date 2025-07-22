@@ -58,7 +58,7 @@ export async function loadPermissionsConfig(): Promise<PermissionsConfig> {
  * Fetch permissions configuration from backend API
  */
 async function fetchPermissionsFromAPI(): Promise<PermissionsConfig> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
   try {
     const response = await fetch(`${apiUrl}/config/permissions`, {

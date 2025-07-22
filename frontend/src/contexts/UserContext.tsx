@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import {
   User,
   UserContextType,
@@ -19,58 +25,93 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     useState(false);
   const [initializing, setInitializing] = useState(true);
 
+  const checkAuth = useCallback(async (): Promise<void> => {
+    console.log("[UserContext] checkAuth called", {
+      user: !!user,
+      loading,
+      initializing,
+    });
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await userApi.me();
+
+      if (response.success && response.data?.user) {
+        console.log("[UserContext] checkAuth success, setting user");
+        // Store the raw user data for now
+        // The PermissionsWrapper will handle adding permissions
+        setUser(response.data.user);
+      } else {
+        console.log("[UserContext] checkAuth failed, clearing user");
+        setUser(null);
+      }
+    } catch (err) {
+      console.log("[UserContext] checkAuth error, clearing user", err);
+      // Silent fail for auth check - user is simply not authenticated
+      setUser(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // Check authentication on mount
   useEffect(() => {
+    console.log("[UserContext] Initial auth effect triggered");
     const initAuth = async () => {
       await checkAuth();
       setInitializing(false);
     };
 
     initAuth();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
-  const login = async (credentials: UserLoginRequest): Promise<boolean> => {
-    try {
-      setLoading(true);
-      setError(null);
-      setEmailVerificationRequired(false); // Always reset before login
-
-      const response = await userApi.login(credentials);
-
-      // If backend signals email not verified in a normal response
-      if (!response.success && response.error === "EMAIL_NOT_VERIFIED") {
-        setEmailVerificationRequired(true);
+  const login = useCallback(
+    async (credentials: UserLoginRequest): Promise<boolean> => {
+      try {
+        setLoading(true);
         setError(null);
-        return false;
-      }
+        setEmailVerificationRequired(false); // Always reset before login
 
-      if (response.success && response.data?.user) {
-        setUser(response.data.user);
-        return true;
-      } else {
-        // Show detailed backend error if present
-        setError(response.error || "Login failed");
+        const response = await userApi.login(credentials);
+
+        // If backend signals email not verified in a normal response
+        if (!response.success && response.error === "EMAIL_NOT_VERIFIED") {
+          setEmailVerificationRequired(true);
+          setError(null);
+          return false;
+        }
+
+        if (response.success && response.data?.user) {
+          setUser(response.data.user);
+          return true;
+        } else {
+          // Show detailed backend error if present
+          setError(response.error || "Login failed");
+          return false;
+        }
+      } catch (err: any) {
+        // If error thrown by API contains response JSON with backend error
+        if (err.response?.error === "EMAIL_NOT_VERIFIED") {
+          setEmailVerificationRequired(true);
+          setError(null);
+          return false;
+        }
+        // Prefer backend-provided error message, then error.message, then fallback
+        const errorMessage =
+          err.response?.error ||
+          err.response?.message ||
+          err.message ||
+          "Login failed";
+        setError(errorMessage);
         return false;
+      } finally {
+        setLoading(false);
       }
-    } catch (err: any) {
-      // If error thrown by API contains response JSON with backend error
-      if (err.response?.error === "EMAIL_NOT_VERIFIED") {
-        setEmailVerificationRequired(true);
-        setError(null);
-        return false;
-      }
-      // Prefer backend-provided error message, then error.message, then fallback
-      const errorMessage =
-        err.response?.error ||
-        err.response?.message ||
-        err.message ||
-        "Login failed";
-      setError(errorMessage);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    []
+  );
 
   const register = async (
     userData: UserRegistrationRequest
@@ -100,7 +141,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = async (): Promise<void> => {
+  const logout = useCallback(async (): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
@@ -113,29 +154,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
-
-  const checkAuth = async (): Promise<void> => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await userApi.me();
-
-      if (response.success && response.data?.user) {
-        // Store the raw user data for now
-        // The PermissionsWrapper will handle adding permissions
-        setUser(response.data.user);
-      } else {
-        setUser(null);
-      }
-    } catch (err) {
-      // Silent fail for auth check - user is simply not authenticated
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, []);
 
   const verifyEmail = async (token: string): Promise<boolean> => {
     try {

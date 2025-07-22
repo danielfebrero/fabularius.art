@@ -1,4 +1,7 @@
-import { APIGatewayRequestAuthorizerEvent, APIGatewayAuthorizerResult } from "aws-lambda";
+import {
+  APIGatewayRequestAuthorizerEvent,
+  APIGatewayAuthorizerResult,
+} from "aws-lambda";
 import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 import { PlanUtil } from "@shared/utils/plan";
 
@@ -75,13 +78,13 @@ export const handler = async (
 
     if (userValidation.isValid && userValidation.user) {
       console.log("✅ User session is valid. Checking role...");
-      
+
       // Get user role
       const userRole = await PlanUtil.getUserRole(
         userValidation.user.userId,
         userValidation.user.email
       );
-      
+
       console.log("👤 User role:", userRole);
 
       // Check if user has admin role ONLY
@@ -111,7 +114,7 @@ export const handler = async (
     }
   } catch (error) {
     console.error("AdminOnlyAuthorizer: Authorization failed", error);
-    
+
     // Return explicit deny policy
     return generatePolicy("unauthorized", "Deny", event.methodArn);
   }

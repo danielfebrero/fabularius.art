@@ -40,13 +40,15 @@ export function AdminHeader() {
             <div className="flex items-center space-x-3">
               <div className="text-right">
                 <p className="text-sm font-medium text-foreground">
-                  {user.username}
+                  {user.username || user.email}
                 </p>
-                <p className="text-xs text-muted-foreground">Administrator</p>
+                <p className="text-xs text-muted-foreground">
+                  {user.role === "admin" ? "Administrator" : "Moderator"}
+                </p>
               </div>
               <div className="w-8 h-8 bg-gradient-to-br from-admin-accent to-admin-primary rounded-full flex items-center justify-center">
                 <span className="text-xs font-bold text-white">
-                  {user.username.charAt(0).toUpperCase()}
+                  {(user.username || user.email).charAt(0).toUpperCase()}
                 </span>
               </div>
             </div>

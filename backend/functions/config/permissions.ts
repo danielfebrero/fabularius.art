@@ -15,6 +15,11 @@ export const handler: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
   console.log("📋 Serving permissions configuration");
 
+  // Handle CORS preflight requests
+  if (event.httpMethod === "OPTIONS") {
+    return ResponseUtil.noContent(event);
+  }
+
   try {
     // Get permissions from shared utility
     const permissions = getPermissionsConfig();

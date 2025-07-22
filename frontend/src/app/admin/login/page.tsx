@@ -1,124 +1,41 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminContext } from "../../../contexts/AdminContext";
-import { Button } from "../../../components/ui/Button";
-import { Input } from "../../../components/ui/Input";
 import { Card } from "../../../components/ui/Card";
 
 export default function AdminLoginPage() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, user, loading, error } = useAdminContext();
+  const { user, loading, isAdmin, isModerator } = useAdminContext();
   const router = useRouter();
 
-  // Redirect if already logged in
+  // Redirect logic
   useEffect(() => {
-    if (user && !loading) {
+    if (loading) return; // Wait for loading to complete
+
+    if (user && (isAdmin || isModerator)) {
+      // User is logged in and has admin access
       router.push("/admin");
+    } else {
+      // Redirect to regular login with admin return path
+      router.push("/auth/login?returnTo=/admin");
     }
-  }, [user, loading, router]);
+  }, [user, loading, isAdmin, isModerator, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!username.trim() || !password.trim()) {
-      return;
-    }
-
-    setIsSubmitting(true);
-
-    try {
-      const success = await login({ username: username.trim(), password });
-
-      if (success) {
-        router.push("/admin");
-      }
-    } catch (err) {
-      // Error is handled by the context
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const isFormValid = username.trim() && password.trim();
-
-  // Show loading while checking initial auth
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't show login form if already authenticated
-  if (user) {
-    return null;
-  }
-
+  // Show loading while checking auth or redirecting
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
         <Card className="p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-foreground mb-2">
-              Admin Login
-            </h1>
-            <p className="text-muted-foreground">
-              Sign in to access the admin panel
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">
+              {loading
+                ? "Checking authentication..."
+                : "Redirecting to login..."}
             </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <Input
-              label="Username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
-              required
-              autoComplete="username"
-              disabled={isSubmitting}
-            />
-
-            <Input
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-              autoComplete="current-password"
-              disabled={isSubmitting}
-            />
-
-            {error && (
-              <div className="p-3 rounded-md bg-red-50 border border-red-200">
-                <p className="text-sm text-red-600">{error}</p>
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              variant="primary"
-              size="lg"
-              className="w-full"
-              loading={isSubmitting}
-              disabled={!isFormValid || isSubmitting}
-            >
-              Sign In
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-xs text-muted-foreground">
-              Authorized personnel only
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+              Please log in with your admin account to access the admin panel.
             </p>
           </div>
         </Card>

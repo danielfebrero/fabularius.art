@@ -251,6 +251,21 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
 
+  # Moderator authorizer - allows admin and moderator roles
+  ModeratorAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-moderator-authorizer"
+      CodeUri: backend/dist/functions/moderator/auth/
+      Handler: authorizer.handler
+      Layers:
+        - !Ref SharedLayer
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
   # API Gateway
   ApiGateway:
     Type: AWS::Serverless::Api
@@ -262,6 +277,13 @@ Resources:
         Authorizers:
           AdminAuthorizer:
             FunctionArn: !GetAtt AdminAuthorizerFunction.Arn
+            FunctionPayloadType: REQUEST
+            Identity:
+              Headers:
+                - Cookie
+            ReauthorizeEvery: 0
+          ModeratorAuthorizer:
+            FunctionArn: !GetAtt ModeratorAuthorizerFunction.Arn
             FunctionPayloadType: REQUEST
             Identity:
               Headers:

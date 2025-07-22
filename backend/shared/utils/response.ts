@@ -3,6 +3,7 @@ import { ApiResponse } from "../types";
 
 const allowedOrigins = [
   "http://localhost:3000",
+  "http://localhost:3001",
   "https://pornspot.ai",
   "https://www.pornspot.ai",
   "https://staging.pornspot.ai",

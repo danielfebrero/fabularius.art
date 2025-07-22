@@ -94,30 +94,29 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <div className="min-h-screen bg-background">
-          <UserProvider>
-            <UserInteractionProvider>
-              <PermissionsWrapper>
-                <AdminProvider>
+        <UserProvider>
+          <UserInteractionProvider>
+            <PermissionsWrapper>
+              <AdminProvider>
+                <div className="min-h-screen bg-background flex flex-col">
                   <Header />
-                  <main className="container mx-auto px-4 py-8">
+                  <main className="container mx-auto px-4 py-8 flex-1">
                     {children}
                   </main>
-                </AdminProvider>
-              </PermissionsWrapper>
-            </UserInteractionProvider>
-          </UserProvider>
-
-          <footer className="border-t border-border mt-16">
-            <div className="container mx-auto px-4 py-8">
-              <div className="text-center">
-                <p className="text-muted-foreground">
-                  &copy; 2024 PornSpot.ai. All rights reserved.
-                </p>
-              </div>
-            </div>
-          </footer>
-        </div>
+                  <footer className="border-t border-border mt-16">
+                    <div className="container mx-auto px-4 py-8">
+                      <div className="text-center">
+                        <p className="text-muted-foreground">
+                          &copy; 2024 PornSpot.ai. All rights reserved.
+                        </p>
+                      </div>
+                    </div>
+                  </footer>
+                </div>
+              </AdminProvider>
+            </PermissionsWrapper>
+          </UserInteractionProvider>
+        </UserProvider>
       </body>
     </html>
   );

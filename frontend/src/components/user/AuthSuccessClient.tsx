@@ -9,16 +9,31 @@ import Link from "next/link";
 export function AuthSuccessClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { checkAuth } = useUserContext();
+  const { checkAuth, user } = useUserContext();
   const [isAnimated, setIsAnimated] = useState(false);
   const [countdown, setCountdown] = useState(5);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   const isNewUser = searchParams.get("new_user") === "true";
 
+  // Call checkAuth only once on mount, and only if user is not already authenticated
   useEffect(() => {
-    // Refresh user context after successful OAuth
-    checkAuth();
+    if (!hasInitialized) {
+      setHasInitialized(true);
+      if (!user) {
+        console.log("[AuthSuccessClient] Component mounted, calling checkAuth");
+        checkAuth();
+      } else {
+        console.log(
+          "[AuthSuccessClient] User already authenticated, skipping checkAuth"
+        );
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - only run once on mount
 
+  // Handle animation and countdown separately
+  useEffect(() => {
     // Trigger animation after component mounts
     const animationTimer = setTimeout(() => {
       setIsAnimated(true);
@@ -28,6 +43,7 @@ export function AuthSuccessClient() {
     const countdownTimer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
+          console.log("[AuthSuccessClient] Redirecting to home");
           router.push("/");
           return 0;
         }
@@ -39,7 +55,8 @@ export function AuthSuccessClient() {
       clearTimeout(animationTimer);
       clearInterval(countdownTimer);
     };
-  }, [router]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array - only run once on mount
 
   return (
     <div className="space-y-8">

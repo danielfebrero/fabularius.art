@@ -1,8 +1,8 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "@shared/utils/response";
 import { DynamoDBService } from "@shared/utils/dynamodb";
-import { AdminUser } from "@shared/types";
-import { AuthMiddleware } from "@shared/auth/admin-middleware";
+import { PlanUtil } from "@shared/utils/plan";
+import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -18,37 +18,55 @@ export const handler = async (
   }
 
   try {
-    let adminId = event.requestContext.authorizer?.["adminId"] as string;
+    // Get user ID from authorizer context (role-based authorizer)
+    let userId = event.requestContext.authorizer?.["userId"] as string;
+    const userRole = event.requestContext.authorizer?.["role"] as string;
 
-    console.log("👤 AdminId from authorizer:", adminId);
+    console.log("👤 UserId from authorizer:", userId);
+    console.log("🎭 Role from authorizer:", userRole);
 
     // Fallback for local development or when authorizer context is missing
-    if (!adminId) {
+    if (!userId) {
       console.log(
-        "⚠️ No adminId from authorizer, falling back to session validation"
+        "⚠️ No userId from authorizer, falling back to session validation"
       );
-      const validation = await AuthMiddleware.validateSession(event);
+      const validation = await UserAuthMiddleware.validateSession(event);
 
-      if (!validation.isValid || !validation.admin) {
+      if (!validation.isValid || !validation.user) {
         console.log("❌ Session validation failed");
-        return ResponseUtil.unauthorized(event, "No admin session found");
+        return ResponseUtil.unauthorized(event, "No user session found");
       }
 
-      adminId = validation.admin.adminId;
-      console.log("✅ Got adminId from session validation:", adminId);
+      userId = validation.user.userId;
+      console.log("✅ Got userId from session validation:", userId);
     }
 
-    const adminEntity = await DynamoDBService.getAdminById(adminId);
-    if (!adminEntity) {
-      return ResponseUtil.notFound(event, "Admin user not found");
+    const userEntity = await DynamoDBService.getUserById(userId);
+    if (!userEntity) {
+      return ResponseUtil.notFound(event, "User not found");
     }
 
-    // Return admin info (without sensitive data)
-    const admin: AdminUser = {
-      adminId: adminEntity.adminId,
-      username: adminEntity.username,
-      createdAt: adminEntity.createdAt,
-      isActive: adminEntity.isActive,
+    // Get user role (admin or moderator)
+    const role =
+      userRole || (await PlanUtil.getUserRole(userId, userEntity.email));
+
+    // Verify user has admin privileges
+    if (role !== "admin" && role !== "moderator") {
+      console.log("❌ User does not have admin privileges:", role);
+      return ResponseUtil.forbidden(
+        event,
+        "Access denied: insufficient privileges"
+      );
+    }
+
+    // Return user info formatted as admin (without sensitive data)
+    const admin = {
+      adminId: userEntity.userId, // Use userId as adminId for compatibility
+      username: userEntity.username || userEntity.email,
+      email: userEntity.email,
+      role: role,
+      createdAt: userEntity.createdAt,
+      isActive: userEntity.isActive,
     };
 
     return ResponseUtil.success(event, { admin });

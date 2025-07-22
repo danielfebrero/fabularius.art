@@ -14,7 +14,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/admin/login");
+      router.push("/auth/login?returnTo=/admin");
     }
   }, [user, loading, router]);
 
