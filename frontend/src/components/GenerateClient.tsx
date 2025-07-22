@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
+import { Lightbox } from "@/components/ui/Lightbox";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import Image from "next/image";
 import {
@@ -22,6 +23,10 @@ import {
   Lock,
   Download,
   MinusCircle,
+  Plus,
+  Trash2,
+  Heart,
+  Bookmark,
 } from "lucide-react";
 
 interface GenerationSettings {
@@ -99,6 +104,9 @@ export function GenerateClient() {
 
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [allGeneratedImages, setAllGeneratedImages] = useState<string[]>([]);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const {
     canGenerateImages,
@@ -130,6 +138,41 @@ export function GenerateClient() {
     }));
   };
 
+  // Convert image URLs to Media objects for the Lightbox component
+  const createMediaFromUrl = (url: string, index: number) => ({
+    id: `generated-${Date.now()}-${index}`,
+    filename: `generated-image-${index + 1}.jpg`,
+    originalName: `Generated Image ${index + 1}`,
+    url: url,
+    mimeType: "image/jpeg",
+    size: 0,
+    albumId: "generated",
+    userId: "current-user",
+    uploadedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    isPublic: false,
+  });
+
+  // Open lightbox for current generated images
+  const openLightbox = (imageUrl: string) => {
+    const allImages = generatedImages.length > 0 ? generatedImages : allGeneratedImages;
+    const index = allImages.findIndex(url => url === imageUrl);
+    if (index !== -1) {
+      setLightboxIndex(index);
+      setLightboxOpen(true);
+    }
+  };
+
+  // Open lightbox for thumbnail (from all generated images)
+  const openThumbnailLightbox = (imageUrl: string) => {
+    const index = allGeneratedImages.findIndex(url => url === imageUrl);
+    if (index !== -1) {
+      setLightboxIndex(index);
+      setLightboxOpen(true);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!canGenerateImages() || !allowed || !settings.prompt.trim()) return;
 
@@ -154,6 +197,7 @@ export function GenerateClient() {
     try {
       const images = await Promise.all(promises);
       setGeneratedImages(images);
+      setAllGeneratedImages((prev) => [...images, ...prev]);
     } catch (error) {
       console.error("Generation failed:", error);
     } finally {
@@ -162,29 +206,125 @@ export function GenerateClient() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8">
-      <div className="w-full max-w-2xl space-y-8">
+    <div className="min-h-screen flex flex-col px-4 py-8">
+      <div className="w-full max-w-2xl mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold flex items-center justify-center gap-3">
-            <Zap className="h-10 w-10 text-blue-600" />
-            AI Image Generator
-          </h1>
-          <p className="text-gray-600">Create stunning AI-generated images</p>
-          <div className="flex items-center justify-center gap-2 mt-4">
-            <Badge
-              variant={plan === "pro" ? "default" : "secondary"}
-              className="capitalize"
-            >
-              {plan} Plan
-            </Badge>
-            {remaining !== "unlimited" && (
-              <span className="text-sm text-gray-500">
-                {remaining} generations remaining
-              </span>
+        {!isGenerating && generatedImages.length === 0 && (
+          <div className="text-center space-y-2">
+            <h1 className="text-4xl font-bold flex items-center justify-center gap-3">
+              <Zap className="h-10 w-10 text-blue-600" />
+              AI Image Generator
+            </h1>
+            <p className="text-gray-600">Create stunning AI-generated images</p>
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <Badge
+                variant={plan === "pro" ? "default" : "secondary"}
+                className="capitalize"
+              >
+                {plan} Plan
+              </Badge>
+              {remaining !== "unlimited" && (
+                <span className="text-sm text-gray-500">
+                  {remaining} generations remaining
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Generation Placeholder / Generated Images */}
+        {(isGenerating || generatedImages.length > 0) && (
+          <div className="text-center space-y-4">
+            {isGenerating ? (
+              // Loading placeholder - Dark themed
+              <div className="w-full max-w-sm sm:max-w-md mx-auto aspect-square bg-gray-800 border-2 border-dashed border-gray-600 rounded-xl flex flex-col items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-blue-400 mb-4"></div>
+                <div className="text-lg font-semibold text-white mb-2">
+                  Generating Your Image
+                </div>
+                <div className="text-sm text-gray-300">
+                  This may take a few moments...
+                </div>
+              </div>
+            ) : settings.batchCount === 1 ? (
+              // Single image - replace the placeholder
+              <div className="w-full max-w-sm sm:max-w-md mx-auto relative group">
+                <Image
+                  src={generatedImages[0]}
+                  alt="Generated image"
+                  width={settings.customWidth}
+                  height={settings.customHeight}
+                  className="w-full aspect-square object-cover rounded-xl shadow-lg cursor-pointer"
+                  onClick={() => openLightbox(generatedImages[0])}
+                />
+                {/* Left column - Like and Bookmark */}
+                <div className="absolute top-3 left-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <button className="bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
+                    <Heart className="h-4 w-4" />
+                  </button>
+                  <button className="bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
+                    <Bookmark className="h-4 w-4" />
+                  </button>
+                </div>
+                {/* Right column - Download, Plus, and Trash */}
+                <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <button className="bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
+                    <Download className="h-4 w-4" />
+                  </button>
+                  <button className="bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
+                    <Plus className="h-4 w-4" />
+                  </button>
+                  <button className="bg-white/90 hover:bg-white text-red-600 p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // Multiple images - grid layout
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2 justify-center">
+                  <ImageIcon className="h-5 w-5" />
+                  Generated Images
+                </h3>
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-lg mx-auto">
+                  {generatedImages.map((image, index) => (
+                    <div key={index} className="relative group">
+                      <Image
+                        src={image}
+                        alt={`Generated ${index + 1}`}
+                        width={settings.customWidth}
+                        height={settings.customHeight}
+                        className="w-full aspect-square object-cover rounded-lg shadow-lg cursor-pointer"
+                        onClick={() => openLightbox(image)}
+                      />
+                      {/* Left column - Like and Bookmark */}
+                      <div className="absolute top-2 left-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <button className="bg-white/90 hover:bg-white text-gray-800 p-1.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
+                          <Heart className="h-3 w-3" />
+                        </button>
+                        <button className="bg-white/90 hover:bg-white text-gray-800 p-1.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
+                          <Bookmark className="h-3 w-3" />
+                        </button>
+                      </div>
+                      {/* Right column - Download, Plus, and Trash */}
+                      <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <button className="bg-white/90 hover:bg-white text-gray-800 p-1.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
+                          <Download className="h-3 w-3" />
+                        </button>
+                        <button className="bg-white/90 hover:bg-white text-gray-800 p-1.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
+                          <Plus className="h-3 w-3" />
+                        </button>
+                        <button className="bg-white/90 hover:bg-white text-red-600 p-1.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
-        </div>
+        )}
 
         {/* Main Prompt Input */}
         <div className="space-y-3">
@@ -198,7 +338,7 @@ export function GenerateClient() {
           />
         </div>
 
-        {/* Generate Button */}
+        {/* Generate Button - Always Visible */}
         <Button
           onClick={handleGenerate}
           disabled={!allowed || !settings.prompt.trim() || isGenerating}
@@ -220,6 +360,30 @@ export function GenerateClient() {
             </div>
           )}
         </Button>
+
+        {/* Previously Generated Images Thumbnails */}
+        {allGeneratedImages.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium text-gray-700 text-center">Previously Generated</h3>
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {allGeneratedImages.slice(0, 10).map((image, index) => (
+                <div key={index} className="flex-shrink-0">
+                  <Image
+                    src={image}
+                    alt={`Previous ${index + 1}`}
+                    width={80}
+                    height={80}
+                    className="w-20 h-20 object-cover rounded-lg shadow cursor-pointer hover:shadow-md transition-shadow"
+                    onClick={() => openThumbnailLightbox(image)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Spacer to maintain consistent spacing */}
+        <div></div>
 
         {/* Pro Features */}
         <div className="space-y-6 pt-4 border-t border-gray-200">
@@ -431,38 +595,15 @@ export function GenerateClient() {
           </div>
         </div>
 
-        {/* Generated Images */}
-        {generatedImages.length > 0 && (
-          <div className="space-y-4 pt-6 border-t border-gray-200">
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Download className="h-5 w-5" />
-              Generated Images
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              {generatedImages.map((image, index) => (
-                <div key={index} className="relative group">
-                  <Image
-                    src={image}
-                    alt={`Generated ${index + 1}`}
-                    width={settings.customWidth}
-                    height={settings.customHeight}
-                    className="w-full aspect-square object-cover rounded-lg shadow-lg"
-                  />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="bg-white text-black"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Lightbox */}
+        <Lightbox
+          media={allGeneratedImages.map(createMediaFromUrl)}
+          currentIndex={lightboxIndex}
+          isOpen={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+          onNext={() => setLightboxIndex(prev => Math.min(prev + 1, allGeneratedImages.length - 1))}
+          onPrevious={() => setLightboxIndex(prev => Math.max(prev - 1, 0))}
+        />
       </div>
     </div>
   );
