@@ -1,328 +1,431 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, FC, ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Media } from "@/types";
+import {
+  Share2,
+  ArrowLeft,
+  FolderOpen,
+  MessageCircle,
+  Calendar,
+  FileText,
+  Eye,
+  Download,
+  User,
+  ChevronDown,
+  Info,
+  Layers,
+  Palette,
+  Bot,
+  Hash,
+} from "lucide-react";
+import { Media, Album } from "@/types";
 import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
-import { LikeButton } from "@/components/user/LikeButton";
-import { BookmarkButton } from "@/components/user/BookmarkButton";
 import { ShareDropdown } from "@/components/ui/ShareDropdown";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { ViewTracker } from "@/components/ui/ViewTracker";
-import { composeMediaUrl } from "@/lib/urlUtils";
-import { getMediaDisplayUrl } from "@/lib/utils";
-import { Share2, ArrowLeft, Maximize2 } from "lucide-react";
-import Image from "next/image";
+import { ContentCard } from "@/components/ui/ContentCard";
+import { cn } from "@/lib/utils";
+
+// --- PROPS INTERFACES ---
 
 interface MediaDetailClientProps {
   media: Media;
 }
 
+interface MetaSectionProps {
+  icon: ReactNode;
+  title: string;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}
+
+interface InfoPillProps {
+  icon: ReactNode;
+  label: string;
+  value: string | ReactNode;
+  isTag?: boolean;
+}
+
+interface GenerationPromptProps {
+  title: string;
+  prompt: string;
+}
+
+// --- HELPER FUNCTIONS ---
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+};
+
+const formatDate = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+// --- DATA EXTRACTORS ---
+
+const useMediaMetadata = (media: Media) => {
+  return useMemo(() => {
+    const metadata = media.metadata || {};
+    
+    // Determine creator from multiple sources
+    let creator = "Unknown";
+    
+    // Priority order:
+    // 1. creatorUsername from metadata (fetched from backend)
+    // 2. creator/artist from metadata (fallback for older entries)
+    // 3. Check if we have createdBy info
+    if (metadata.creatorUsername) {
+      creator = metadata.creatorUsername;
+    } else if (metadata.creator || metadata.artist) {
+      creator = metadata.creator || metadata.artist;
+    } else if (media.createdBy && media.createdByType === "user") {
+      creator = `User ${media.createdBy.slice(-8)}`; // Show last 8 chars of userId as fallback
+    } else if (media.createdBy && media.createdByType === "admin") {
+      creator = "Admin";
+    }
+    
+    return {
+      creator,
+      prompt: metadata.prompt || metadata.description,
+      negativePrompt: metadata.negativePrompt,
+      loraModels: metadata.loraModels || metadata.loras || [],
+      loraStrengths: metadata.loraStrengths || {},
+      bulkSiblings: metadata.bulkSiblings || [],
+      imageSize:
+        media.width && media.height ? `${media.width} × ${media.height}` : null,
+    };
+  }, [media]);
+};
+
+// --- UI COMPONENTS ---
+
+const MetaSection: FC<MetaSectionProps> = ({
+  icon,
+  title,
+  defaultOpen = false,
+  children,
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="border border-border/10 rounded-lg bg-background/20 backdrop-blur-sm">
+      <button
+        className="flex items-center justify-between w-full p-4"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="flex items-center gap-3">
+          <div className="text-primary">{icon}</div>
+          <h3 className="font-semibold text-foreground">{title}</h3>
+        </div>
+        <ChevronDown
+          className={cn(
+            "w-5 h-5 text-muted-foreground transition-transform",
+            isOpen && "rotate-180"
+          )}
+        />
+      </button>
+      {isOpen && <div className="p-4 pt-0 space-y-4">{children}</div>}
+    </div>
+  );
+};
+
+const InfoPill: FC<InfoPillProps> = ({ icon, label, value, isTag = false }) => (
+  <div
+    className={cn(
+      "flex items-center justify-between py-2 px-3 rounded-md",
+      isTag ? "bg-primary/10 text-primary" : "bg-muted/50 text-muted-foreground"
+    )}
+  >
+    <div className="flex items-center gap-2 text-sm">
+      {icon}
+      <span>{label}</span>
+    </div>
+    <span className={cn("font-medium text-sm", !isTag && "text-foreground")}>
+      {value}
+    </span>
+  </div>
+);
+
+const GenerationPrompt: FC<GenerationPromptProps> = ({ title, prompt }) => (
+  <div>
+    <h4 className="mb-2 text-sm font-medium text-muted-foreground">{title}</h4>
+    <div className="p-3 text-sm rounded-lg bg-muted/50 max-h-40 overflow-y-auto">
+      {prompt}
+    </div>
+  </div>
+);
+
+const AlbumCard: FC<{ album: Album; router: any }> = ({ album, router }) => (
+  <div
+    key={album.id}
+    onClick={() => router.push(`/albums/${album.id}`)}
+    className="overflow-hidden transition-all duration-200 rounded-lg cursor-pointer group bg-muted/30 hover:shadow-md hover:scale-[1.02]"
+  >
+    <div className="relative aspect-square">
+      <img
+        src={album.coverImageUrl || "/placeholder-album.jpg"}
+        alt={album.title}
+        className="object-cover w-full h-full transition-opacity group-hover:opacity-90"
+      />
+      <div className="absolute inset-0 transition-colors bg-black/0 group-hover:bg-black/10" />
+    </div>
+    <div className="p-3">
+      <h3 className="font-medium text-sm text-foreground group-hover:text-primary transition-colors line-clamp-2">
+        {album.title}
+      </h3>
+      <p className="mt-1 text-xs text-muted-foreground">
+        {album.mediaCount} {album.mediaCount === 1 ? "item" : "items"}
+      </p>
+    </div>
+  </div>
+);
+
+// --- MAIN COMPONENT ---
+
 export function MediaDetailClient({ media }: MediaDetailClientProps) {
   const router = useRouter();
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const metadata = useMediaMetadata(media);
 
   useUserInteractionStatus();
 
-  const handleBack = () => {
-    router.back();
-  };
-
-  const handleFullscreen = () => {
-    setLightboxOpen(true);
-  };
-
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
-  const formatDate = (dateString: string): string => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
-  const isVideo = media.mimeType.startsWith("video/");
-  const isImage = media.mimeType.startsWith("image/");
-
-  // Extract metadata fields
-  const creator =
-    media.metadata?.creator || media.metadata?.artist || "Unknown";
-  const prompt = media.metadata?.prompt || media.metadata?.description;
-  const negativePrompt = media.metadata?.negativePrompt;
-  const loraModels = media.metadata?.loraModels || media.metadata?.loras || [];
-  const loraStrengths = media.metadata?.loraStrengths || {};
-  const bulkSiblings = media.metadata?.bulkSiblings || [];
-  const imageSize =
-    media.width && media.height ? `${media.width} × ${media.height}` : null;
-
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       <ViewTracker targetType="media" targetId={media.id} />
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+      {/* Header */}
+      <header className="sticky top-0 z-20 flex items-center h-16 gap-4 px-4 border-b bg-background/80 backdrop-blur-sm border-border">
+        <Tooltip content="Go Back" side="bottom">
           <button
-            onClick={handleBack}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => router.back()}
+            className="p-2 transition-colors rounded-full hover:bg-muted"
           >
             <ArrowLeft className="w-5 h-5" />
-            Back
           </button>
-
-          <div className="flex items-center gap-2">
-            <LikeButton
-              targetType="media"
-              targetId={media.id}
-              size="sm"
-              className="bg-white/10 hover:bg-white/20 backdrop-blur-sm"
-            />
-            <BookmarkButton
-              targetType="media"
-              targetId={media.id}
-              size="sm"
-              className="bg-white/10 hover:bg-white/20 backdrop-blur-sm"
-            />
-            <ShareDropdown
-              trigger={({ toggle }: { toggle: () => void }) => (
-                <button
-                  onClick={toggle}
-                  className="p-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-colors"
-                >
-                  <Share2 className="w-5 h-5" />
-                </button>
-              )}
-            >
-              {({ close }: { close: () => void }) => (
-                <>
-                  <button
-                    className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
-                    onClick={() => {
-                      navigator.clipboard.writeText(window.location.href);
-                      close();
-                    }}
-                  >
-                    Copy link
-                  </button>
-                  <a
-                    className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
-                    href={`https://www.reddit.com/submit?url=${encodeURIComponent(
-                      window.location.href
-                    )}&title=${encodeURIComponent(
-                      media.originalFilename || media.filename
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={close}
-                  >
-                    Reddit
-                  </a>
-                  <a
-                    className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
-                    href={`https://x.com/intent/tweet?url=${encodeURIComponent(
-                      window.location.href
-                    )}&text=${encodeURIComponent(
-                      media.originalFilename || media.filename
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={close}
-                  >
-                    X (Twitter)
-                  </a>
-                </>
-              )}
-            </ShareDropdown>
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-8">
-          {/* Media Display */}
-          <div className="lg:col-span-2">
-            <div className="relative bg-card rounded-xl overflow-hidden shadow-lg">
-              {/* Fullscreen Button */}
+        </Tooltip>
+        <h1 className="text-lg font-semibold truncate">
+          {media.originalFilename || media.filename}
+        </h1>
+        <div className="flex-grow" />
+        <ShareDropdown
+          trigger={({ toggle }: { toggle: () => void }) => (
+            <Tooltip content="Share" side="bottom">
               <button
-                onClick={handleFullscreen}
-                className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-lg transition-colors"
-                aria-label="View fullscreen"
+                onClick={toggle}
+                className="p-2 transition-colors rounded-full hover:bg-muted"
               >
-                <Maximize2 className="w-5 h-5" />
+                <Share2 className="w-5 h-5" />
               </button>
+            </Tooltip>
+          )}
+        >
+          {({ close }: { close: () => void }) => (
+            <>
+              <button
+                className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  close();
+                }}
+              >
+                Copy link
+              </button>
+              <a
+                className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                href={`https://www.reddit.com/submit?url=${encodeURIComponent(
+                  window.location.href
+                )}&title=${encodeURIComponent(
+                  media.originalFilename || media.filename
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={close}
+              >
+                Reddit
+              </a>
+              <a
+                className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+                href={`https://x.com/intent/tweet?url=${encodeURIComponent(
+                  window.location.href
+                )}&text=${encodeURIComponent(
+                  media.originalFilename || media.filename
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={close}
+              >
+                X (Twitter)
+              </a>
+            </>
+          )}
+        </ShareDropdown>
+      </header>
 
-              {isImage ? (
-                <Image
-                  src={composeMediaUrl(getMediaDisplayUrl(media))}
-                  alt={media.originalFilename || media.filename}
-                  width={media.width || 1024}
-                  height={media.height || 1024}
-                  className="w-full h-auto max-h-[70vh] object-contain"
-                  priority
-                />
-              ) : isVideo ? (
-                <video
-                  src={composeMediaUrl(media.url)}
-                  controls
-                  className="w-full h-auto max-h-[70vh]"
-                  poster={
-                    media.thumbnailUrl
-                      ? composeMediaUrl(media.thumbnailUrl)
-                      : undefined
-                  }
-                >
-                  Your browser does not support the video tag.
-                </video>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-32 text-muted-foreground">
-                  <div className="text-6xl mb-4">📄</div>
-                  <p className="text-lg">Unsupported file type</p>
-                  <a
-                    href={composeMediaUrl(media.url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
-                  >
-                    Download File
-                  </a>
-                </div>
-              )}
-            </div>
+      {/* Main Content */}
+      <main className="container mx-auto p-4 md:p-6 lg:p-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column: Media Display */}
+          <div className="lg:col-span-2">
+            <ContentCard
+              item={media}
+              type="media"
+              aspectRatio="auto"
+              className="bg-card shadow-lg w-full"
+              imageClassName="w-full h-auto max-h-[80vh] object-contain"
+              canLike={true}
+              canBookmark={true}
+              canFullscreen={true}
+              canAddToAlbum={true}
+              canDownload={true}
+              canDelete={false}
+              onClick={() => {}}
+              onFullscreen={() => setLightboxOpen(true)}
+            />
           </div>
 
-          {/* Media Information */}
-          <div className="space-y-6">
-            {/* Basic Info */}
-            <div className="bg-card rounded-xl p-6 shadow-lg">
-              <h1 className="text-2xl font-bold mb-4">
-                {media.originalFilename || media.filename}
-              </h1>
-
+          {/* Right Column: Information & Details */}
+          <aside className="space-y-6">
+            <MetaSection
+              icon={<Info className="w-5 h-5" />}
+              title="Media Details"
+              defaultOpen
+            >
               <div className="space-y-3">
-                <div className="flex items-center justify-between py-2 border-b border-border/50">
-                  <span className="text-muted-foreground">Creator</span>
-                  <span className="font-medium">{creator}</span>
-                </div>
-
-                <div className="flex items-center justify-between py-2 border-b border-border/50">
-                  <span className="text-muted-foreground">Created</span>
-                  <span className="font-medium">
-                    {formatDate(media.createdAt)}
-                  </span>
-                </div>
-
-                {imageSize && (
-                  <div className="flex items-center justify-between py-2 border-b border-border/50">
-                    <span className="text-muted-foreground">Dimensions</span>
-                    <span className="font-medium">{imageSize}</span>
-                  </div>
+                <InfoPill
+                  icon={<User className="w-4 h-4" />}
+                  label="Creator"
+                  value={metadata.creator}
+                />
+                <InfoPill
+                  icon={<Calendar className="w-4 h-4" />}
+                  label="Created"
+                  value={formatDate(media.createdAt)}
+                />
+                {metadata.imageSize && (
+                  <InfoPill
+                    icon={<Eye className="w-4 h-4" />}
+                    label="Dimensions"
+                    value={metadata.imageSize}
+                  />
                 )}
-
-                <div className="flex items-center justify-between py-2 border-b border-border/50">
-                  <span className="text-muted-foreground">File Size</span>
-                  <span className="font-medium">
-                    {formatFileSize(media.size)}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-muted-foreground">Type</span>
-                  <span className="font-medium font-mono text-sm">
-                    {media.mimeType}
-                  </span>
-                </div>
+                <InfoPill
+                  icon={<Download className="w-4 h-4" />}
+                  label="File Size"
+                  value={formatFileSize(media.size)}
+                />
+                <InfoPill
+                  icon={<FileText className="w-4 h-4" />}
+                  label="File Type"
+                  value={
+                    <span className="font-mono text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                      {media.mimeType}
+                    </span>
+                  }
+                />
               </div>
-            </div>
+            </MetaSection>
 
-            {/* Generation Parameters */}
-            {prompt && (
-              <div className="bg-card rounded-xl p-6 shadow-lg">
-                <h2 className="text-lg font-semibold mb-4">
-                  Generation Parameters
-                </h2>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-muted-foreground mb-2">
-                      Prompt
-                    </label>
-                    <div className="p-3 bg-muted/50 rounded-lg text-sm">
-                      {prompt}
-                    </div>
-                  </div>
-
-                  {negativePrompt && (
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">
-                        Negative Prompt
-                      </label>
-                      <div className="p-3 bg-muted/50 rounded-lg text-sm">
-                        {negativePrompt}
-                      </div>
-                    </div>
-                  )}
-
-                  {loraModels.length > 0 && (
-                    <div>
-                      <label className="block text-sm font-medium text-muted-foreground mb-2">
-                        LoRA Models
-                      </label>
-                      <div className="space-y-2">
-                        {loraModels.map((lora: any, index: number) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between p-2 bg-muted/50 rounded-lg"
-                          >
-                            <span className="text-sm font-medium">
-                              {typeof lora === "string"
-                                ? lora
-                                : lora.name || lora}
-                            </span>
-                            {loraStrengths[lora] && (
-                              <span className="text-xs text-muted-foreground">
-                                Strength: {loraStrengths[lora]}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+            {metadata.prompt && (
+              <MetaSection
+                icon={<Bot className="w-5 h-5" />}
+                title="Generation Parameters"
+              >
+                <GenerationPrompt title="Prompt" prompt={metadata.prompt} />
+                {metadata.negativePrompt && (
+                  <GenerationPrompt
+                    title="Negative Prompt"
+                    prompt={metadata.negativePrompt}
+                  />
+                )}
+              </MetaSection>
             )}
 
-            {/* Bulk Generation Siblings */}
-            {bulkSiblings.length > 0 && (
-              <div className="bg-card rounded-xl p-6 shadow-lg">
-                <h2 className="text-lg font-semibold mb-4">
-                  Other Generated Images
-                </h2>
-                <div className="grid grid-cols-2 gap-2">
-                  {bulkSiblings.map((siblingId: string, index: number) => (
-                    <button
-                      key={siblingId}
-                      onClick={() => router.push(`/media/${siblingId}`)}
-                      className="aspect-square bg-muted/50 rounded-lg overflow-hidden hover:ring-2 hover:ring-primary transition-all"
-                    >
-                      <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
-                        Image {index + 1}
-                      </div>
-                    </button>
+            {metadata.loraModels.length > 0 && (
+              <MetaSection
+                icon={<Palette className="w-5 h-5" />}
+                title="LoRA Models"
+              >
+                <div className="space-y-2">
+                  {metadata.loraModels.map((lora: any, index: number) => (
+                    <InfoPill
+                      key={index}
+                      icon={<Hash className="w-4 h-4" />}
+                      label={
+                        typeof lora === "string" ? lora : lora.name || lora
+                      }
+                      value={metadata.loraStrengths[lora] || "N/A"}
+                      isTag
+                    />
                   ))}
                 </div>
-              </div>
+              </MetaSection>
             )}
-          </div>
+
+            {metadata.bulkSiblings.length > 0 && (
+              <MetaSection
+                icon={<Layers className="w-5 h-5" />}
+                title="Related Images"
+              >
+                <div className="grid grid-cols-2 gap-3">
+                  {metadata.bulkSiblings.map(
+                    (siblingId: string, index: number) => (
+                      <button
+                        key={siblingId}
+                        onClick={() => router.push(`/media/${siblingId}`)}
+                        className="aspect-square bg-muted/50 rounded-lg overflow-hidden hover:ring-2 hover:ring-primary transition-all hover:scale-[1.02]"
+                      >
+                        <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
+                          Image {index + 1}
+                        </div>
+                      </button>
+                    )
+                  )}
+                </div>
+              </MetaSection>
+            )}
+
+            <MetaSection
+              icon={<FolderOpen className="w-5 h-5" />}
+              title="In Albums"
+            >
+              {media.albums && media.albums.length > 0 ? (
+                <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
+                  {media.albums.map((album) => (
+                    <AlbumCard key={album.id} album={album} router={router} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-muted-foreground">
+                  <FolderOpen className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                  <p>Not in any albums yet.</p>
+                </div>
+              )}
+            </MetaSection>
+
+            <MetaSection
+              icon={<MessageCircle className="w-5 h-5" />}
+              title="Comments"
+            >
+              <div className="text-center py-6 text-muted-foreground">
+                <MessageCircle className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                <p>Comments are coming soon!</p>
+              </div>
+            </MetaSection>
+          </aside>
         </div>
-      </div>
+      </main>
 
       {/* Lightbox for fullscreen view */}
       {lightboxOpen && (

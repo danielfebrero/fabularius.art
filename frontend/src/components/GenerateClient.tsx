@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/Select";
 import { Badge } from "@/components/ui/Badge";
 import { Lightbox } from "@/components/ui/Lightbox";
+import { ContentCard } from "@/components/ui/ContentCard";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import Image from "next/image";
 import {
@@ -21,12 +22,7 @@ import {
   Zap,
   Grid3X3,
   Lock,
-  Download,
   MinusCircle,
-  Plus,
-  Trash2,
-  Heart,
-  Bookmark,
 } from "lucide-react";
 
 interface GenerationSettings {
@@ -249,36 +245,24 @@ export function GenerateClient() {
               </div>
             ) : settings.batchCount === 1 ? (
               // Single image - replace the placeholder
-              <div className="w-full max-w-sm sm:max-w-md mx-auto relative group">
-                <Image
-                  src={generatedImages[0]}
-                  alt="Generated image"
-                  width={settings.customWidth}
-                  height={settings.customHeight}
-                  className="w-full aspect-square object-cover rounded-xl shadow-lg cursor-pointer"
+              <div className="w-full max-w-sm sm:max-w-md mx-auto">
+                <ContentCard
+                  item={createMediaFromUrl(generatedImages[0], 0)}
+                  type="media"
+                  aspectRatio="square"
+                  canLike={false}
+                  canBookmark={false}
+                  canFullscreen={true}
+                  canAddToAlbum={true}
+                  canDownload={true}
+                  canDelete={true}
                   onClick={() => openLightbox(generatedImages[0])}
+                  onFullscreen={() => openLightbox(generatedImages[0])}
+                  mediaList={generatedImages.map((url, index) =>
+                    createMediaFromUrl(url, index)
+                  )}
+                  currentIndex={0}
                 />
-                {/* Left column - Like and Bookmark */}
-                <div className="absolute top-3 left-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <button className="bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
-                    <Heart className="h-4 w-4" />
-                  </button>
-                  <button className="bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
-                    <Bookmark className="h-4 w-4" />
-                  </button>
-                </div>
-                {/* Right column - Download, Plus, and Trash */}
-                <div className="absolute top-3 right-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <button className="bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
-                    <Download className="h-4 w-4" />
-                  </button>
-                  <button className="bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
-                    <Plus className="h-4 w-4" />
-                  </button>
-                  <button className="bg-white/90 hover:bg-white text-red-600 p-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
               </div>
             ) : (
               // Multiple images - grid layout
@@ -289,37 +273,24 @@ export function GenerateClient() {
                 </h3>
                 <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-lg mx-auto">
                   {generatedImages.map((image, index) => (
-                    <div key={index} className="relative group">
-                      <Image
-                        src={image}
-                        alt={`Generated ${index + 1}`}
-                        width={settings.customWidth}
-                        height={settings.customHeight}
-                        className="w-full aspect-square object-cover rounded-lg shadow-lg cursor-pointer"
-                        onClick={() => openLightbox(image)}
-                      />
-                      {/* Left column - Like and Bookmark */}
-                      <div className="absolute top-2 left-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <button className="bg-white/90 hover:bg-white text-gray-800 p-1.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
-                          <Heart className="h-3 w-3" />
-                        </button>
-                        <button className="bg-white/90 hover:bg-white text-gray-800 p-1.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
-                          <Bookmark className="h-3 w-3" />
-                        </button>
-                      </div>
-                      {/* Right column - Download, Plus, and Trash */}
-                      <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <button className="bg-white/90 hover:bg-white text-gray-800 p-1.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
-                          <Download className="h-3 w-3" />
-                        </button>
-                        <button className="bg-white/90 hover:bg-white text-gray-800 p-1.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
-                          <Plus className="h-3 w-3" />
-                        </button>
-                        <button className="bg-white/90 hover:bg-white text-red-600 p-1.5 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110">
-                          <Trash2 className="h-3 w-3" />
-                        </button>
-                      </div>
-                    </div>
+                    <ContentCard
+                      key={index}
+                      item={createMediaFromUrl(image, index)}
+                      type="media"
+                      aspectRatio="square"
+                      canLike={false}
+                      canBookmark={false}
+                      canFullscreen={true}
+                      canAddToAlbum={true}
+                      canDownload={true}
+                      canDelete={true}
+                      onClick={() => openLightbox(image)}
+                      onFullscreen={() => openLightbox(image)}
+                      mediaList={generatedImages.map((url, idx) =>
+                        createMediaFromUrl(url, idx)
+                      )}
+                      currentIndex={index}
+                    />
                   ))}
                 </div>
               </div>

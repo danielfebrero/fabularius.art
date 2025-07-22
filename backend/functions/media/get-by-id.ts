@@ -57,6 +57,34 @@ export const handler = async (
       mediaResponse.metadata = mediaEntity.metadata;
     }
 
+    // Add creator information if available
+    if (mediaEntity.createdBy !== undefined) {
+      mediaResponse.createdBy = mediaEntity.createdBy;
+    }
+
+    if (mediaEntity.createdByType !== undefined) {
+      mediaResponse.createdByType = mediaEntity.createdByType;
+    }
+
+    // Optionally fetch creator username if createdBy exists
+    if (mediaEntity.createdBy) {
+      try {
+        const creator = await DynamoDBService.getUserById(
+          mediaEntity.createdBy
+        );
+        if (creator && creator.username) {
+          // Add creator information to metadata if it doesn't exist
+          if (!mediaResponse.metadata) {
+            mediaResponse.metadata = {};
+          }
+          mediaResponse.metadata["creatorUsername"] = creator.username;
+        }
+      } catch (error) {
+        console.error("Failed to fetch creator info:", error);
+        // Don't fail the request if creator info can't be fetched
+      }
+    }
+
     return ResponseUtil.success(event, mediaResponse);
   } catch (error) {
     console.error("Error fetching media by ID:", error);

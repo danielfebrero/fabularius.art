@@ -1,7 +1,5 @@
-"use client";
-
 import { Album } from "../types/index";
-import { AlbumCard } from "./ui/AlbumCard";
+import { ContentCard } from "./ui/ContentCard";
 import { cn } from "../lib/utils";
 import { ThumbnailContext } from "../types/index";
 import { useInView } from "react-intersection-observer";
@@ -107,9 +105,17 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({
     <div className={cn("space-y-6", className)}>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {albums.map((album) => (
-          <AlbumCard
+          <ContentCard
             key={album.id}
-            album={album}
+            item={album}
+            type="album"
+            aspectRatio="square"
+            canLike={true}
+            canBookmark={true}
+            canFullscreen={false}
+            canAddToAlbum={false}
+            canDownload={false}
+            canDelete={false}
             context={context}
             columns={getColumnCount()}
           />

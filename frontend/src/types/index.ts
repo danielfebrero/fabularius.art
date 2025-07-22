@@ -43,6 +43,10 @@ export interface Media {
   createdAt: string;
   updatedAt: string;
   metadata?: Record<string, any>;
+  // User tracking fields
+  createdBy?: string; // userId or adminId who uploaded this media
+  createdByType?: "user" | "admin"; // type of creator
+  albums?: Album[]; // For storing full album information when populated
 }
 
 export interface ApiResponse<T = any> {
@@ -89,15 +93,6 @@ export interface LoginResponse {
     user: AdminUser;
   };
   error?: string;
-}
-
-export interface AdminContextType {
-  user: AdminUser | null;
-  loading: boolean;
-  error: string | null;
-  login: (_credentials: LoginRequest) => Promise<boolean>;
-  logout: () => Promise<void>;
-  checkAuth: () => Promise<void>;
 }
 
 export interface AdminStats {

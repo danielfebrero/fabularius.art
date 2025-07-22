@@ -64,6 +64,15 @@ export const handler = async (
         response.metadata = item.metadata;
       }
 
+      // Add creator information if available
+      if (item.createdBy !== undefined) {
+        response.createdBy = item.createdBy;
+      }
+
+      if (item.createdByType !== undefined) {
+        response.createdByType = item.createdByType;
+      }
+
       return response;
     });
 

@@ -1,0 +1,408 @@
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Image from "next/image";
+import { Media, Album, ThumbnailContext } from "@/types";
+import { LikeButton } from "@/components/user/LikeButton";
+import { BookmarkButton } from "@/components/user/BookmarkButton";
+import { Lightbox } from "@/components/ui/Lightbox";
+import { Tooltip } from "@/components/ui/Tooltip";
+import { cn } from "@/lib/utils";
+import { composeMediaUrl } from "@/lib/urlUtils";
+import { Maximize2, Plus, Download, Trash2, PlayCircle } from "lucide-react";
+import ResponsivePicture from "./ResponsivePicture";
+import { composeThumbnailUrls, getBestThumbnailUrl } from "@/lib/urlUtils";
+
+interface ContentCardProps {
+  item: Media | Album;
+  type: "media" | "album";
+  title?: string;
+  className?: string;
+  imageClassName?: string;
+  aspectRatio?: "square" | "auto";
+
+  // Button visibility controls
+  canLike?: boolean;
+  canBookmark?: boolean;
+  canFullscreen?: boolean;
+  canAddToAlbum?: boolean;
+  canDownload?: boolean;
+  canDelete?: boolean;
+
+  // Show counts
+  showLikeCount?: boolean;
+  showBookmarkCount?: boolean;
+
+  // Event handlers (optional - if not provided, default behavior will be used)
+  onClick?: () => void;
+  onFullscreen?: () => void;
+  onAddToAlbum?: () => void;
+  onDownload?: () => void;
+  onDelete?: () => void;
+
+  // Additional props for media
+  context?: ThumbnailContext;
+  columns?: number;
+
+  // Lightbox support - pass array of media for navigation
+  mediaList?: Media[];
+  currentIndex?: number;
+}
+
+export function ContentCard({
+  item,
+  type,
+  title,
+  className = "",
+  imageClassName = "",
+  aspectRatio = "square",
+  canLike = true,
+  canBookmark = true,
+  canFullscreen = true,
+  canAddToAlbum = true,
+  canDownload = false,
+  canDelete = false,
+  onClick,
+  onFullscreen,
+  onAddToAlbum,
+  onDownload,
+  onDelete,
+  context = "default",
+  columns,
+  mediaList,
+  currentIndex = 0,
+}: ContentCardProps) {
+  const router = useRouter();
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [actionsOpen, setActionsOpen] = useState(false);
+
+  const isMedia = type === "media";
+  const media = isMedia ? (item as Media) : null;
+  const album = !isMedia ? (item as Album) : null;
+
+  // Detect if user is on a mobile device
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
+  const isVideo = isMedia && media?.mimeType.startsWith("video/");
+
+  // Handle click events based on content type
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      // Default behavior: navigate to content page
+      if (isMedia && media) {
+        router.push(`/media/${media.id}`);
+      } else if (album) {
+        router.push(`/albums/${album.id}`);
+      }
+    }
+  };
+
+  const handleFullscreen = () => {
+    if (onFullscreen) {
+      onFullscreen();
+    } else if (isMedia && media) {
+      // Default behavior: open lightbox
+      setLightboxOpen(true);
+    }
+  };
+
+  const handleAddToAlbum = () => {
+    if (onAddToAlbum) {
+      onAddToAlbum();
+    } else {
+      // Default behavior: show add to album modal/functionality
+      console.log("Add to album:", item.id);
+      // TODO: Implement default add to album functionality
+    }
+  };
+
+  const handleDownload = () => {
+    if (onDownload) {
+      onDownload();
+    } else if (isMedia && media) {
+      // Default behavior: download the media file
+      const link = document.createElement("a");
+      link.href = composeMediaUrl(media.url);
+      link.download = media.originalFilename || media.filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handleDelete = () => {
+    if (onDelete) {
+      onDelete();
+    } else {
+      // Default behavior: show confirmation and delete
+      const confirmed = window.confirm(
+        `Are you sure you want to delete this ${type}?`
+      );
+      if (confirmed) {
+        console.log("Delete:", item.id);
+        // TODO: Implement default delete functionality
+      }
+    }
+  };
+
+  const handleActionClick = (event: React.MouseEvent | React.TouchEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+
+    if (isMobile) {
+      setActionsOpen(!actionsOpen);
+    }
+  };
+
+  // Get the appropriate media list for lightbox
+  const getLightboxMedia = (): Media[] => {
+    if (mediaList && mediaList.length > 0) {
+      return mediaList;
+    } else if (isMedia && media) {
+      return [media];
+    }
+    return [];
+  };
+
+  const getLightboxCurrentIndex = (): number => {
+    if (mediaList && mediaList.length > 0 && isMedia && media) {
+      const index = mediaList.findIndex((m) => m.id === media.id);
+      return index >= 0 ? index : currentIndex;
+    }
+    return 0;
+  };
+
+  return (
+    <>
+      <div
+        className={cn(
+          "group relative cursor-pointer overflow-hidden shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02] rounded-lg sm:rounded-xl",
+          aspectRatio === "square" ? "aspect-square" : "",
+          className
+        )}
+        onClick={handleClick}
+      >
+        {/* Content based on type */}
+        {isMedia && media ? (
+          <>
+            {isVideo ? (
+              <video
+                src={composeMediaUrl(media.url)}
+                poster={composeMediaUrl(media.thumbnailUrl)}
+                className={cn("w-full h-full object-cover", imageClassName)}
+                preload="metadata"
+                muted
+                playsInline
+              />
+            ) : (
+              <ResponsivePicture
+                thumbnailUrls={composeThumbnailUrls(media.thumbnailUrls)}
+                fallbackUrl={getBestThumbnailUrl(
+                  media.thumbnailUrls,
+                  media.thumbnailUrl || media.url,
+                  "medium"
+                )}
+                alt={title || media.originalFilename || media.filename}
+                className={cn(
+                  "w-full h-full object-cover transition-transform duration-200 group-hover:scale-105",
+                  imageClassName
+                )}
+                context={context}
+                columns={columns}
+                loading="lazy"
+              />
+            )}
+
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+
+            {/* Play button for videos */}
+            {isVideo && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <PlayCircle className="w-16 h-16 text-white/80 opacity-50 group-hover:opacity-100 transition-opacity duration-300 transform group-hover:scale-110" />
+              </div>
+            )}
+          </>
+        ) : album ? (
+          <>
+            <Image
+              src={
+                album.coverImageUrl
+                  ? composeMediaUrl(album.coverImageUrl)
+                  : "/placeholder-album.jpg"
+              }
+              alt={title || album.title}
+              width={500}
+              height={500}
+              className={cn(
+                "w-full h-full object-cover transition-transform duration-200 group-hover:scale-105",
+                imageClassName
+              )}
+            />
+
+            {/* Album overlay with title */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-4">
+              <h3 className="text-white font-semibold text-sm line-clamp-2">
+                {title || album.title}
+              </h3>
+              {album.mediaCount && (
+                <p className="text-white/80 text-xs mt-1">
+                  {album.mediaCount} {album.mediaCount === 1 ? "item" : "items"}
+                </p>
+              )}
+            </div>
+          </>
+        ) : null}
+
+        {/* Mobile touch area for actions */}
+        {isMobile &&
+          (canLike ||
+            canBookmark ||
+            canFullscreen ||
+            canAddToAlbum ||
+            canDownload ||
+            canDelete) && (
+            <button
+              className="absolute top-2 right-2 w-6 h-6 sm:w-8 sm:h-8 bg-black/50 rounded-full flex items-center justify-center md:hidden"
+              onClick={handleActionClick}
+              onTouchEnd={handleActionClick}
+            >
+              <span className="text-white text-xs">⋯</span>
+            </button>
+          )}
+
+        {/* Left column - Like and Bookmark over image */}
+        {(canLike || canBookmark) && (
+          <div
+            className={cn(
+              "absolute top-2 left-2 sm:top-3 sm:left-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
+              isMobile
+                ? actionsOpen
+                  ? "opacity-100"
+                  : "opacity-0 pointer-events-none"
+                : "opacity-0 group-hover:opacity-100"
+            )}
+          >
+            {canLike && (
+              <Tooltip content="Like" side="right">
+                <span
+                  onClick={handleActionClick}
+                  onTouchEnd={handleActionClick}
+                >
+                  <LikeButton
+                    targetType={type}
+                    targetId={item.id}
+                    size="sm"
+                    className="bg-white/90 hover:bg-white text-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
+                    useCache={true}
+                  />
+                </span>
+              </Tooltip>
+            )}
+            {canBookmark && (
+              <Tooltip content="Bookmark" side="right">
+                <span
+                  onClick={handleActionClick}
+                  onTouchEnd={handleActionClick}
+                >
+                  <BookmarkButton
+                    targetType={type}
+                    targetId={item.id}
+                    size="sm"
+                    className="bg-white/90 hover:bg-white text-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
+                    useCache={true}
+                  />
+                </span>
+              </Tooltip>
+            )}
+          </div>
+        )}
+
+        {/* Right column - Action buttons over image */}
+        {(canFullscreen || canAddToAlbum || canDownload || canDelete) && (
+          <div
+            className={cn(
+              "absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
+              isMobile
+                ? actionsOpen
+                  ? "opacity-100"
+                  : "opacity-0 pointer-events-none"
+                : "opacity-0 group-hover:opacity-100"
+            )}
+          >
+            {canFullscreen && (
+              <Tooltip content="View fullscreen" side="left">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleFullscreen();
+                  }}
+                  className="p-1.5 sm:p-2 rounded-lg bg-black/50 hover:bg-black/70 text-white transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                  aria-label="View fullscreen"
+                >
+                  <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                </button>
+              </Tooltip>
+            )}
+            {canAddToAlbum && (
+              <Tooltip content="Add to album" side="left">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAddToAlbum();
+                  }}
+                  className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                  aria-label="Add to album"
+                >
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                </button>
+              </Tooltip>
+            )}
+            {canDownload && (
+              <Tooltip content="Download" side="left">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDownload();
+                  }}
+                  className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                  aria-label="Download"
+                >
+                  <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                </button>
+              </Tooltip>
+            )}
+            {canDelete && (
+              <Tooltip content="Delete" side="left">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete();
+                  }}
+                  className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-red-600 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                  aria-label="Delete"
+                >
+                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                </button>
+              </Tooltip>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Lightbox for fullscreen view */}
+      {lightboxOpen && isMedia && media && (
+        <Lightbox
+          media={getLightboxMedia()}
+          currentIndex={getLightboxCurrentIndex()}
+          isOpen={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+          onNext={() => {}}
+          onPrevious={() => {}}
+        />
+      )}
+    </>
+  );
+}

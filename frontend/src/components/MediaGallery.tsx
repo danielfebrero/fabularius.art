@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Media } from "../types/index";
-import { MediaCard } from "./ui/MediaCard";
+import { ContentCard } from "./ui/ContentCard";
 import { Lightbox } from "./ui/Lightbox";
 import { Button } from "./ui/Button";
 import { cn } from "../lib/utils";
@@ -145,13 +145,22 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
             };
 
             return (
-              <MediaCard
+              <ContentCard
                 key={mediaItem.id}
-                media={mediaItem}
+                item={mediaItem}
+                type="media"
+                aspectRatio="square"
+                canLike={true}
+                canBookmark={true}
+                canFullscreen={true}
+                canAddToAlbum={true}
+                canDownload={true}
+                canDelete={false}
                 onClick={() => handleMediaClick(index)}
                 context="albums"
                 columns={getColumns()}
-                albumId={albumId}
+                mediaList={media}
+                currentIndex={index}
               />
             );
           })}

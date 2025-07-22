@@ -1,21 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Bookmark,
-  Search,
-  Grid,
-  List,
-  Calendar,
-  Image,
-  FolderOpen,
-} from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Bookmark, Search, Grid, List } from "lucide-react";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import { composeAlbumCoverUrl, composeThumbnailUrls } from "@/lib/urlUtils";
-import ResponsivePicture from "@/components/ui/ResponsivePicture";
+import { ContentCard } from "@/components/ui/ContentCard";
 import { Lightbox } from "@/components/ui/Lightbox";
 
 const UserBookmarksPage: React.FC = () => {
@@ -34,7 +24,6 @@ const UserBookmarksPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-  const router = useRouter();
 
   // Filter bookmarks based on search term
   const filteredBookmarks = bookmarks.filter(
@@ -62,22 +51,6 @@ const UserBookmarksPage: React.FC = () => {
       updatedAt: bookmark.createdAt,
     }));
 
-  const handleCardClick = (interaction: any) => {
-    if (interaction.targetType === "media") {
-      // Show lightbox for media
-      const mediaIndex = mediaItems.findIndex(
-        (item) => item.id === interaction.targetId
-      );
-      if (mediaIndex !== -1) {
-        setCurrentMediaIndex(mediaIndex);
-        setLightboxOpen(true);
-      }
-    } else {
-      // Navigate to album for albums
-      router.push(`/albums/${interaction.targetId}`);
-    }
-  };
-
   const handleLightboxClose = () => {
     setLightboxOpen(false);
   };
@@ -94,175 +67,43 @@ const UserBookmarksPage: React.FC = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  // Create media items for ContentCard from bookmarks
+  const createMediaFromBookmark = (bookmark: any) => {
+    if (bookmark.targetType === "media") {
+      return {
+        id: bookmark.targetId,
+        albumId: bookmark.target?.albumId || bookmark.albumId || "",
+        filename: bookmark.target?.title || "",
+        originalFilename: bookmark.target?.title || "",
+        mimeType: bookmark.target?.mimeType || "image/jpeg",
+        size: bookmark.target?.size || 0,
+        url: bookmark.target?.url || "",
+        thumbnailUrl: bookmark.target?.thumbnailUrls?.medium || "",
+        thumbnailUrls: bookmark.target?.thumbnailUrls,
+        createdAt: bookmark.createdAt,
+        updatedAt: bookmark.createdAt,
+      };
+    }
+    return null;
   };
 
-  const ContentCard = ({ interaction }: { interaction: any }) => {
-    if (viewMode === "grid") {
-      // Square cards for user bookmarks page
-      if (interaction.targetType === "media") {
-        // Media cards: show only image (square)
-        return (
-          <div
-            className="group relative cursor-pointer overflow-hidden rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02] aspect-square"
-            onClick={() => handleCardClick(interaction)}
-          >
-            {interaction.target?.thumbnailUrls ? (
-              <ResponsivePicture
-                thumbnailUrls={composeThumbnailUrls(
-                  interaction.target.thumbnailUrls
-                )}
-                fallbackUrl={composeAlbumCoverUrl(
-                  interaction.target.coverImageUrl
-                )}
-                alt={interaction.target.title || "Content"}
-                className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-                context="albums"
-                loading="lazy"
-              />
-            ) : (
-              <div className="w-full h-full bg-muted/50 flex items-center justify-center">
-                {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                <Image className="h-12 w-12 text-muted-foreground" />
-              </div>
-            )}
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
-            <div className="absolute top-2 right-2">
-              <Bookmark className="h-5 w-5 text-blue-500 fill-current drop-shadow-lg" />
-            </div>
-          </div>
-        );
-      } else {
-        // Album cards: show image and title in a square format with title overlaid
-        return (
-          <div
-            className="group relative cursor-pointer overflow-hidden rounded-xl shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02] aspect-square"
-            onClick={() => handleCardClick(interaction)}
-          >
-            {interaction.target?.thumbnailUrls ||
-            interaction.target?.coverImageUrl ? (
-              <ResponsivePicture
-                thumbnailUrls={composeThumbnailUrls(
-                  interaction.target.thumbnailUrls
-                )}
-                fallbackUrl={composeAlbumCoverUrl(
-                  interaction.target.coverImageUrl
-                )}
-                alt={interaction.target.title || "Content"}
-                className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-                context="albums"
-                loading="lazy"
-              />
-            ) : (
-              <div className="w-full h-full bg-muted/50 flex items-center justify-center">
-                {/* eslint-disable-next-line jsx-a11y/alt-text */}
-                <Image className="h-12 w-12 text-muted-foreground" />
-              </div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-4">
-              <h3 className="font-medium text-white line-clamp-2 text-center text-sm drop-shadow-lg">
-                {interaction.target?.title || `Album ${interaction.targetId}`}
-              </h3>
-            </div>
-            <div className="absolute top-2 right-2">
-              <Bookmark className="h-5 w-5 text-blue-500 fill-current drop-shadow-lg" />
-            </div>
-          </div>
-        );
-      }
+  // Create album items for ContentCard from bookmarks
+  const createAlbumFromBookmark = (bookmark: any) => {
+    if (bookmark.targetType === "album") {
+      return {
+        id: bookmark.targetId,
+        title: bookmark.target?.title || `Album ${bookmark.targetId}`,
+        description: "",
+        coverImageUrl: bookmark.target?.coverImageUrl || "",
+        thumbnailUrls: bookmark.target?.thumbnailUrls,
+        mediaCount: bookmark.target?.mediaCount || 0,
+        tags: [],
+        isPublic: bookmark.target?.isPublic || false,
+        createdAt: bookmark.createdAt,
+        updatedAt: bookmark.createdAt,
+      };
     }
-
-    // List view
-    return (
-      <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-4 hover:shadow-xl hover:border-admin-primary/20 transition-all duration-300">
-        <div className="flex items-center space-x-4">
-          {interaction.target?.thumbnailUrls ||
-          interaction.target?.coverImageUrl ? (
-            <div
-              className="cursor-pointer"
-              onClick={() => handleCardClick(interaction)}
-            >
-              <ResponsivePicture
-                thumbnailUrls={composeThumbnailUrls(
-                  interaction.target.thumbnailUrls
-                )}
-                fallbackUrl={composeAlbumCoverUrl(
-                  interaction.target.coverImageUrl
-                )}
-                alt={interaction.target.title || "Content"}
-                className="w-16 h-16 object-cover rounded-lg flex-shrink-0 hover:opacity-80 transition-opacity"
-                context="admin"
-                loading="lazy"
-              />
-            </div>
-          ) : (
-            <div
-              className="w-16 h-16 bg-muted/50 rounded-lg flex items-center justify-center flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => handleCardClick(interaction)}
-            >
-              {/* eslint-disable-next-line jsx-a11y/alt-text */}
-              <Image className="h-6 w-6 text-muted-foreground" />
-            </div>
-          )}
-
-          <div className="flex-1 min-w-0">
-            {interaction.targetType === "album" ? (
-              <>
-                <h3 className="font-medium text-foreground truncate mb-1">
-                  {interaction.target?.title || `Album ${interaction.targetId}`}
-                </h3>
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center space-x-1 text-blue-600">
-                      <FolderOpen className="h-3 w-3" />
-                      <span className="font-medium">Album</span>
-                    </div>
-                    {interaction.target?.mediaCount && (
-                      <span>{interaction.target.mediaCount} items</span>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center text-xs text-muted-foreground mt-1">
-                  <Calendar className="h-3 w-3 mr-1" />
-                  {formatDate(interaction.createdAt)}
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center text-xs text-muted-foreground">
-                <Calendar className="h-3 w-3 mr-1" />
-                {formatDate(interaction.createdAt)}
-                {interaction.target?.albumTitle && (
-                  <span className="ml-2 text-xs">
-                    from{" "}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        router.push(`/albums/${interaction.target?.albumId}`);
-                      }}
-                      className="text-blue-600 hover:text-blue-800 underline hover:no-underline transition-colors"
-                    >
-                      {interaction.target.albumTitle}
-                    </button>
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-
-          <div className="flex-shrink-0">
-            <Bookmark className="h-5 w-5 text-blue-500 fill-current" />
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   };
 
   if (error) {
@@ -378,12 +219,23 @@ const UserBookmarksPage: React.FC = () => {
                   : "space-y-4"
               )}
             >
-              {filteredBookmarks.map((bookmark, index) => (
-                <ContentCard
-                  key={`${bookmark.targetId}-${index}`}
-                  interaction={bookmark}
-                />
-              ))}
+              {filteredBookmarks.map((bookmark, index) => {
+                const media = createMediaFromBookmark(bookmark);
+                const album = createAlbumFromBookmark(bookmark);
+
+                return (
+                  <ContentCard
+                    key={`${bookmark.targetId}-${index}`}
+                    item={media || album!}
+                    type={bookmark.targetType as "media" | "album"}
+                    mediaList={mediaItems}
+                    canBookmark={false} // Don't show bookmark button since these are already bookmarked
+                    className={
+                      viewMode === "grid" ? "aspect-square" : undefined
+                    }
+                  />
+                );
+              })}
             </div>
 
             {/* Load More */}
