@@ -12,6 +12,11 @@ import {
   FolderOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  Skeleton,
+  HeaderSkeleton,
+  GridSkeleton,
+} from "@/components/ui/Skeleton";
 
 interface UserLayoutProps {
   children: React.ReactNode;
@@ -31,8 +36,34 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-admin-primary"></div>
+      <div className="min-h-screen bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Sidebar Skeleton */}
+            <aside className="lg:w-64 flex-shrink-0">
+              <nav className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-4">
+                <ul className="space-y-2">
+                  {[...Array(5)].map((_, i) => (
+                    <li key={i}>
+                      <div className="flex items-center space-x-3 px-3 py-2 rounded-lg">
+                        <Skeleton className="h-5 w-5" />
+                        <Skeleton className="h-4 w-20" />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </nav>
+            </aside>
+
+            {/* Main Content Skeleton */}
+            <main className="flex-1">
+              <div className="space-y-6">
+                <HeaderSkeleton />
+                <GridSkeleton itemCount={8} itemType="card" />
+              </div>
+            </main>
+          </div>
+        </div>
       </div>
     );
   }

@@ -5,6 +5,11 @@ import { useUser } from "@/hooks/useUser";
 import { PermissionsProvider } from "@/contexts/PermissionsContext";
 import { createUserWithPlan, createMockUser } from "@/lib/userUtils";
 import { UserWithPlan } from "@/types/permissions";
+import {
+  Skeleton,
+  HeaderSkeleton,
+  GridSkeleton,
+} from "@/components/ui/Skeleton";
 
 interface PermissionsWrapperProps {
   children: ReactNode;
@@ -63,14 +68,55 @@ export function PermissionsWrapper({ children }: PermissionsWrapperProps) {
     loadUserPermissions();
   }, [user, loading, lastProcessedUserId, userWithPermissions]);
 
-  // Show loading state while user context is initializing or permissions are being loaded
+  // Show skeleton placeholders while user context is initializing or permissions are being loaded
   if (loading || !userWithPermissions) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <div className="text-lg text-foreground">Loading...</div>
+      <div className="min-h-screen bg-background">
+        {/* Header Skeleton */}
+        <header className="border-b border-border bg-card shadow-sm">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between py-4">
+              {/* Logo skeleton */}
+              <div className="flex items-center space-x-3">
+                <Skeleton className="w-8 h-8" />
+                <div>
+                  <Skeleton className="h-5 w-24 mb-1" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </div>
+
+              {/* Navigation skeleton */}
+              <div className="hidden sm:flex items-center space-x-6">
+                {[...Array(4)].map((_, i) => (
+                  <Skeleton key={i} className="h-4 w-16" />
+                ))}
+              </div>
+
+              {/* Auth section skeleton */}
+              <div className="flex items-center space-x-3">
+                <Skeleton className="h-9 w-16" />
+                <Skeleton className="h-9 w-20" />
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main content skeleton */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="space-y-6">
+            <HeaderSkeleton />
+            <GridSkeleton itemCount={8} itemType="card" />
+          </div>
         </div>
+
+        {/* Footer skeleton */}
+        <footer className="border-t border-border mt-16">
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center">
+              <Skeleton className="h-4 w-48 mx-auto" />
+            </div>
+          </div>
+        </footer>
       </div>
     );
   }

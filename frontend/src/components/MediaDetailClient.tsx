@@ -291,7 +291,7 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
               canAddToAlbum={true}
               canDownload={true}
               canDelete={false}
-              onClick={() => {}}
+              onClick={() => setLightboxOpen(true)}
               onFullscreen={() => setLightboxOpen(true)}
             />
           </div>

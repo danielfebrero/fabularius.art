@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAdminContext } from "../../../contexts/AdminContext";
-import { Card } from "../../../components/ui/Card";
+import { useAdminContext } from "@/contexts/AdminContext";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function AdminLoginPage() {
   const { user, loading, isAdmin, isModerator } = useAdminContext();
@@ -22,23 +22,36 @@ export default function AdminLoginPage() {
     }
   }, [user, loading, isAdmin, isModerator, router]);
 
-  // Show loading while checking auth or redirecting
+  // Show skeleton placeholder while checking auth or redirecting
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <Card className="p-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">
-              {loading
-                ? "Checking authentication..."
-                : "Redirecting to login..."}
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-              Please log in with your admin account to access the admin panel.
-            </p>
+    <div className="min-h-screen bg-background">
+      {/* Header skeleton */}
+      <header className="border-b border-border bg-card shadow-sm">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between py-4">
+            <div className="flex items-center space-x-3">
+              <Skeleton className="w-8 h-8" />
+              <div>
+                <Skeleton className="h-5 w-24 mb-1" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </div>
           </div>
-        </Card>
+        </div>
+      </header>
+
+      {/* Main content skeleton */}
+      <div className="flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-80px)]">
+        <div className="max-w-md w-full space-y-8">
+          <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-8">
+            <div className="text-center space-y-4">
+              <Skeleton className="w-16 h-16 rounded-full mx-auto" />
+              <Skeleton className="h-6 w-48 mx-auto" />
+              <Skeleton className="h-4 w-40 mx-auto" />
+              <Skeleton className="h-3 w-56 mx-auto" />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

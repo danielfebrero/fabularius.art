@@ -69,10 +69,42 @@ export default function MediaManagementPage({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="w-8 h-8 border-4 border-admin-primary border-t-transparent rounded-full animate-spin"></div>
-          <div className="text-muted-foreground">Loading album media...</div>
+      <div className="space-y-6">
+        {/* Back Button Skeleton */}
+        <div className="flex items-center gap-4">
+          <div className="h-6 w-32 bg-muted/50 rounded animate-pulse"></div>
+        </div>
+
+        {/* Header Skeleton */}
+        <div className="bg-gradient-to-r from-admin-primary/10 to-admin-secondary/10 rounded-xl p-6 border border-admin-primary/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-muted/50 rounded-lg animate-pulse"></div>
+              <div>
+                <div className="h-6 bg-muted/50 rounded w-40 mb-2 animate-pulse"></div>
+                <div className="h-4 bg-muted/50 rounded w-60 animate-pulse"></div>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <div className="h-9 w-24 bg-muted/50 rounded animate-pulse"></div>
+              <div className="h-9 w-32 bg-muted/50 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Media Grid Skeleton */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          {[...Array(12)].map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 overflow-hidden">
+                <div className="aspect-square bg-muted/50"></div>
+                <div className="p-2">
+                  <div className="h-3 bg-muted/50 rounded w-3/4 mb-1"></div>
+                  <div className="h-3 bg-muted/50 rounded w-1/2"></div>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
