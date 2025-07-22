@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Media } from "../../types/index";
-import { cn } from "../../lib/utils";
+import { cn, getMediaDisplayUrl } from "../../lib/utils";
 import { composeMediaUrl } from "../../lib/urlUtils";
 import { LikeButton } from "../user/LikeButton";
 import { BookmarkButton } from "../user/BookmarkButton";
@@ -97,16 +97,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
   const isImage = currentMedia.mimeType.startsWith("image/");
   const isVideo = currentMedia.mimeType.startsWith("video/");
 
-  // Get display URL - use WebP version for viewing if available, otherwise original
-  const getDisplayUrl = (media: Media): string => {
-    // For images, prefer WebP display version for better performance
-    if (isImage && media.metadata?.webpDisplayUrl) {
-      return media.metadata.webpDisplayUrl;
-    }
-    // Fall back to original URL
-    return media.url;
-  };
-
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black" onClick={handleClose}>
       {/* Content wrapper: stop propagation to prevent closing when clicking on content */}
@@ -118,7 +108,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
         <div className="w-full h-full">
           {isImage ? (
             <img
-              src={composeMediaUrl(getDisplayUrl(currentMedia))}
+              src={composeMediaUrl(getMediaDisplayUrl(currentMedia))}
               alt={currentMedia.originalName || currentMedia.filename}
               className="w-full h-full object-contain"
             />

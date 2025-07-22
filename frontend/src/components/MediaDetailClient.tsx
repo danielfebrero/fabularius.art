@@ -10,6 +10,7 @@ import { ShareDropdown } from "@/components/ui/ShareDropdown";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { ViewTracker } from "@/components/ui/ViewTracker";
 import { composeMediaUrl } from "@/lib/urlUtils";
+import { getMediaDisplayUrl } from "@/lib/utils";
 import { Share2, ArrowLeft, Maximize2 } from "lucide-react";
 import Image from "next/image";
 
@@ -159,7 +160,7 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
 
               {isImage ? (
                 <Image
-                  src={composeMediaUrl(media.url)}
+                  src={composeMediaUrl(getMediaDisplayUrl(media))}
                   alt={media.originalFilename || media.filename}
                   width={media.width || 1024}
                   height={media.height || 1024}

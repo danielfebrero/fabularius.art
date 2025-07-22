@@ -9,6 +9,7 @@ export interface Album {
     medium?: string;
     large?: string;
     xlarge?: string;
+    originalSize?: string;
   };
   isPublic: boolean;
   mediaCount: number;
@@ -37,6 +38,7 @@ export interface Media {
     medium?: string;
     large?: string;
     xlarge?: string;
+    originalSize?: string;
   };
   createdAt: string;
   updatedAt: string;
@@ -107,7 +109,13 @@ export interface AdminStats {
 }
 
 // Thumbnail system types
-export type ThumbnailSize = "cover" | "small" | "medium" | "large" | "xlarge";
+export type ThumbnailSize =
+  | "cover"
+  | "small"
+  | "medium"
+  | "large"
+  | "xlarge"
+  | "originalSize";
 export type ThumbnailContext =
   | "cover-selector"
   | "discover"
@@ -121,6 +129,7 @@ export interface ThumbnailUrls {
   medium?: string;
   large?: string;
   xlarge?: string;
+  originalSize?: string;
 }
 
 // User authentication types

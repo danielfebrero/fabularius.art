@@ -245,8 +245,10 @@ If the preferred size isn't available, the system automatically falls back in th
 ### Lightbox/Full View
 
 ```typescript
-// Lightbox shows original full-resolution image
-<img src={media.url} alt={media.originalFilename} />
+// Lightbox shows optimized WebP version if available, otherwise original image
+import { getMediaDisplayUrl } from "../lib/utils";
+
+<img src={getMediaDisplayUrl(media)} alt={media.originalFilename} />;
 ```
 
 ## Performance Benefits

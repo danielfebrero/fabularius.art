@@ -1,12 +1,33 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { ThumbnailSize, ThumbnailContext, ThumbnailUrls } from "../types/index";
+import {
+  ThumbnailSize,
+  ThumbnailContext,
+  ThumbnailUrls,
+  Media,
+} from "../types/index";
 
 // Re-export types for convenience
 export type { ThumbnailSize, ThumbnailContext };
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+/**
+ * Get the optimal display URL for a media item
+ * Prefers WebP optimized version for images, falls back to original URL
+ */
+export function getMediaDisplayUrl(media: Media): string {
+  const isImage = media.mimeType.startsWith("image/");
+
+  // For images, prefer WebP display version (stored as originalSize thumbnail) for better performance
+  if (isImage && media.thumbnailUrls?.originalSize) {
+    return media.thumbnailUrls.originalSize;
+  }
+
+  // Fall back to original URL
+  return media.url;
 }
 
 const MONTH_NAMES = [
@@ -259,6 +280,7 @@ export function getThumbnailSizeName(
     medium: "Medium (300px)",
     large: "Large (365px)",
     xlarge: "X-Large (600px)",
+    originalSize: "Original Size (WebP optimized)",
   };
 
   return sizeNames[size];

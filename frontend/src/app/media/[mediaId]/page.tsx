@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getMediaById, fetchAllPublicMedia } from "@/lib/data";
 import { composeMediaUrl } from "@/lib/urlUtils";
+import { getMediaDisplayUrl } from "@/lib/utils";
 import type { Metadata } from "next";
 import { MediaDetailClient } from "@/components/MediaDetailClient";
 import { Media } from "@/types";
@@ -26,6 +27,8 @@ export async function generateMetadata({
   const mediaDescription =
     media.metadata?.prompt || `View ${mediaTitle} on PornSpot.ai`;
 
+  const displayImageUrl = composeMediaUrl(getMediaDisplayUrl(media));
+
   return {
     title: `${mediaTitle} - PornSpot.ai`,
     description: `${mediaDescription}. AI-generated adult content on PornSpot.ai.`,
@@ -43,7 +46,7 @@ export async function generateMetadata({
       type: "article",
       images: [
         {
-          url: composeMediaUrl(media.url),
+          url: displayImageUrl,
           width: media.width || 1024,
           height: media.height || 1024,
           alt: mediaTitle,
@@ -54,7 +57,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: `${mediaTitle} - PornSpot.ai`,
       description: `${mediaDescription}. AI-generated adult content on PornSpot.ai.`,
-      images: [composeMediaUrl(media.url)],
+      images: [displayImageUrl],
     },
   };
 }

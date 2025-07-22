@@ -219,18 +219,14 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
         const updateData: Partial<import("@shared/types").MediaEntity> = {
           thumbnailUrl:
             thumbnailUrls["small"] || Object.values(thumbnailUrls)[0], // Default to small (240px) or first available
-          thumbnailUrls,
+          thumbnailUrls: {
+            ...thumbnailUrls,
+            // Add WebP display URL as originalSize if created
+            ...(webpUrl && { originalSize: webpUrl }),
+          },
           status: "uploaded" as const,
           updatedAt: new Date().toISOString(),
         };
-
-        // Add WebP display URL if created
-        if (webpUrl) {
-          updateData.metadata = {
-            ...mediaItem.metadata,
-            webpDisplayUrl: webpUrl,
-          };
-        }
 
         await DynamoDBService.updateMedia(mediaItem.id!, updateData);
 
@@ -248,11 +244,11 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
           updatedAt: new Date().toISOString(),
         };
 
-        // Add WebP display URL if created
+        // Add WebP display URL as originalSize if created
         if (webpUrl) {
-          updateData.metadata = {
-            ...mediaItem.metadata,
-            webpDisplayUrl: webpUrl,
+          updateData.thumbnailUrls = {
+            ...mediaItem.thumbnailUrls,
+            originalSize: webpUrl,
           };
         }
 
@@ -260,7 +256,7 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
 
         console.log("Thumbnail generation failed, updated status only");
         if (webpUrl) {
-          console.log("Added WebP display URL for lightbox");
+          console.log("Added WebP display URL as originalSize thumbnail");
         }
       }
     } catch (error) {

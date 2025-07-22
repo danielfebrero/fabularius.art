@@ -32,7 +32,14 @@ export interface Media {
   url: string;
   thumbnailUrl?: string | undefined;
   thumbnailUrls?:
-    | { small?: string; medium?: string; large?: string }
+    | {
+        cover?: string;
+        small?: string;
+        medium?: string;
+        large?: string;
+        xlarge?: string;
+        originalSize?: string;
+      }
     | undefined;
   status?: "pending" | "uploaded" | "failed" | undefined;
   createdAt: string;
@@ -128,7 +135,14 @@ export interface MediaEntity {
   url: string;
   thumbnailUrl?: string | undefined;
   thumbnailUrls?:
-    | { small?: string; medium?: string; large?: string }
+    | {
+        cover?: string;
+        small?: string;
+        medium?: string;
+        large?: string;
+        xlarge?: string;
+        originalSize?: string;
+      }
     | undefined;
   status?: "pending" | "uploaded" | "failed" | undefined;
   createdAt: string;
