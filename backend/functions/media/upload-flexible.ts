@@ -33,9 +33,8 @@ export const handler = async (
     }
 
     // Use albumId from request body or path parameter, default to NO_ALBUM
-    const albumId = request.albumId || 
-                   event.pathParameters?.["albumId"] || 
-                   "NO_ALBUM";
+    const albumId =
+      request.albumId || event.pathParameters?.["albumId"] || "NO_ALBUM";
 
     // If targeting a real album, verify it exists
     if (albumId !== "NO_ALBUM") {
@@ -79,7 +78,10 @@ export const handler = async (
       createdByType: request.createdByType,
     };
 
-    console.log("Generated media relative path:", S3Service.getRelativePath(key));
+    console.log(
+      "Generated media relative path:",
+      S3Service.getRelativePath(key)
+    );
 
     await DynamoDBService.createMedia(mediaEntity);
 

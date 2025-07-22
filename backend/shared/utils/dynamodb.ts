@@ -418,7 +418,7 @@ export class DynamoDBService {
     addedBy?: string
   ): Promise<void> {
     const now = new Date().toISOString();
-    
+
     // Verify both album and media exist
     const [album, media] = await Promise.all([
       this.getAlbum(albumId),
@@ -519,15 +519,16 @@ export class DynamoDBService {
       })
     );
 
-    const relationships = (relationshipsResult.Items as AlbumMediaEntity[]) || [];
-    
+    const relationships =
+      (relationshipsResult.Items as AlbumMediaEntity[]) || [];
+
     // Get the actual media records
-    const mediaPromises = relationships.map(rel => 
+    const mediaPromises = relationships.map((rel) =>
       this.getMedia(rel.mediaId)
     );
-    
+
     const mediaResults = await Promise.all(mediaPromises);
-    const media = mediaResults.filter(m => m !== null) as MediaEntity[];
+    const media = mediaResults.filter((m) => m !== null) as MediaEntity[];
 
     const response: {
       media: MediaEntity[];
@@ -554,7 +555,7 @@ export class DynamoDBService {
     );
 
     const relationships = (result.Items as AlbumMediaEntity[]) || [];
-    return relationships.map(rel => rel.albumId);
+    return relationships.map((rel) => rel.albumId);
   }
 
   static async getAllPublicMedia(): Promise<MediaEntity[]> {
@@ -589,7 +590,8 @@ export class DynamoDBService {
           const mediaResult: any = await docClient.send(
             new QueryCommand({
               TableName: TABLE_NAME,
-              KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk_prefix)",
+              KeyConditionExpression:
+                "PK = :pk AND begins_with(SK, :sk_prefix)",
               ExpressionAttributeValues: {
                 ":pk": `ALBUM#${album.id}`,
                 ":sk_prefix": "MEDIA#",
@@ -598,8 +600,11 @@ export class DynamoDBService {
             })
           );
 
-          const albumMediaRelationships = (mediaResult.Items as AlbumMediaEntity[]) || [];
-          albumMediaRelationships.forEach(rel => allMediaIds.add(rel.mediaId));
+          const albumMediaRelationships =
+            (mediaResult.Items as AlbumMediaEntity[]) || [];
+          albumMediaRelationships.forEach((rel) =>
+            allMediaIds.add(rel.mediaId)
+          );
 
           mediaLastKey = mediaResult.LastEvaluatedKey;
         } while (mediaLastKey);
@@ -609,12 +614,12 @@ export class DynamoDBService {
     } while (lastEvaluatedKey);
 
     // Now fetch all unique media records
-    const mediaPromises = Array.from(allMediaIds).map(mediaId => 
+    const mediaPromises = Array.from(allMediaIds).map((mediaId) =>
       this.getMedia(mediaId)
     );
-    
+
     const mediaResults = await Promise.all(mediaPromises);
-    return mediaResults.filter(media => media !== null) as MediaEntity[];
+    return mediaResults.filter((media) => media !== null) as MediaEntity[];
   }
 
   static async incrementAlbumMediaCount(albumId: string): Promise<void> {

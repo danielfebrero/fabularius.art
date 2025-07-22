@@ -11,7 +11,7 @@ export const handler = async (
 
   try {
     // Extract user ID from JWT token or session
-    const userId = event.requestContext.authorizer?.["userId"];
+    const userId = event.requestContext.authorizer?.userId;
     if (!userId) {
       return ResponseUtil.unauthorized(event, "Authentication required");
     }
@@ -59,6 +59,14 @@ export const handler = async (
           // For media, get the media details directly
           const media = await DynamoDBService.getMedia(interaction.targetId);
           if (media) {
+            // Get the albums this media belongs to
+            const albumIds = await DynamoDBService.getMediaAlbums(media.id);
+            const firstAlbumId = albumIds[0]; // For backward compatibility, use first album
+            let album = null;
+            if (firstAlbumId) {
+              album = await DynamoDBService.getAlbum(firstAlbumId);
+            }
+
             targetDetails = {
               id: media.id,
               title: media.originalFilename,
@@ -67,6 +75,8 @@ export const handler = async (
               size: media.size,
               thumbnailUrls: media.thumbnailUrls,
               url: media.url,
+              albumId: firstAlbumId || "unknown",
+              albumTitle: album?.title || "Unknown Album",
               createdAt: media.createdAt,
               updatedAt: media.updatedAt,
             };
