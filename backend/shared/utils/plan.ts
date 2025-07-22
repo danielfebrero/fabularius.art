@@ -86,30 +86,14 @@ export class PlanUtil {
   }
 
   /**
-   * Get user role from database or determine based on user data
+   * Get user role from database
    */
-  static async getUserRole(userId: string, email: string): Promise<UserRole> {
+  static async getUserRole(userId: string, _email: string): Promise<UserRole> {
     try {
       const userEntity = await DynamoDBService.getUserById(userId);
 
       if (userEntity && userEntity.role) {
         return userEntity.role;
-      }
-
-      // Fallback to email-based role assignment for admin users
-      const adminEmails = [
-        "admin@pornspot.ai",
-        "daniel@pornspot.ai",
-        "support@pornspot.ai",
-      ];
-
-      if (adminEmails.includes(email.toLowerCase())) {
-        return "admin";
-      }
-
-      // Moderator users (could be based on userId patterns or other criteria)
-      if (userId.includes("mod") || email.includes("moderator")) {
-        return "moderator";
       }
 
       return "user";

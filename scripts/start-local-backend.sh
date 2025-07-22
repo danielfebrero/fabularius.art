@@ -204,22 +204,27 @@ else
     exit 1
 fi
 
-# Step 4: Create Admin User
-print_status "Creating admin user..."
+# Step 4: Create Admin User (Legacy - removing this)
+print_status "Setting up user-based admin system..."
 
-ADMIN_USERNAME="dani"
-ADMIN_PASSWORD="Aa001903!"
+OAUTH_ADMIN_EMAIL="febrero.daniel@gmail.com"
 
-if node create-admin.js local "$ADMIN_USERNAME" "$ADMIN_PASSWORD"; then
-    print_success "Admin user setup completed"
+# Step 4a: Prepare OAuth User
+print_status "Preparing OAuth user for Google Login..."
+
+if node prepare-oauth-user.js local "$OAUTH_ADMIN_EMAIL"; then
+    print_success "OAuth user prepared successfully"
 else
-    # Check if it failed because user already exists
-    if node create-admin.js local "$ADMIN_USERNAME" "$ADMIN_PASSWORD" 2>&1 | grep -q "Username already exists"; then
-        print_warning "Admin user already exists - skipping creation"
-    else
-        print_error "Failed to create admin user"
-        exit 1
-    fi
+    print_warning "OAuth user preparation failed or user already exists"
+fi
+
+# Step 4b: Assign Admin Role
+print_status "Assigning admin role to OAuth user..."
+
+if node update-user-role.js local admin "$OAUTH_ADMIN_EMAIL"; then
+    print_success "Admin role assigned successfully"
+else
+    print_warning "Admin role assignment failed or already assigned"
 fi
 
 # Go back to root directory
@@ -232,7 +237,7 @@ echo "📋 Environment Details:"
 echo "  • LocalStack: http://localhost:4566"
 echo "  • DynamoDB: http://localhost:4566"
 echo "  • S3: http://localhost:4566"
-echo "  • Admin Username: $ADMIN_USERNAME"
+echo "  • OAuth Admin Email: $OAUTH_ADMIN_EMAIL (login with Google)"
 echo "  • Database Table: local-pornspot-media"
 echo ""
 
