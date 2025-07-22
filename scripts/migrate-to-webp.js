@@ -261,10 +261,10 @@ class AWSService {
       },
     };
 
-    // Add album filter if specified
+    // Note: In the new schema, media doesn't have albumId field
+    // If albumId filter is needed, we'd need to query album-media relationships first
     if (options.albumId) {
-      params.FilterExpression += " AND albumId = :albumId";
-      params.ExpressionAttributeValues[":albumId"] = options.albumId;
+      console.warn("Warning: albumId filter not supported in new schema. Ignoring filter.");
     }
 
     // Add resume capability
@@ -366,11 +366,12 @@ class AWSService {
 
     if (updateExpressions.length === 0) return;
 
+    // In the new schema, media is stored independently
     const command = new UpdateCommand({
       TableName: this.tableName,
       Key: {
-        PK: `ALBUM#${albumId}`,
-        SK: `MEDIA#${mediaId}`,
+        PK: `MEDIA#${mediaId}`,
+        SK: "METADATA",
       },
       UpdateExpression: `SET ${updateExpressions.join(", ")}`,
       ExpressionAttributeNames: expressionAttributeNames,
@@ -706,7 +707,7 @@ class WebPMigrator {
 
       if (entityType === "Media") {
         this.logger.info(
-          `Processing media record ${entity.id} (Album: ${entity.albumId})`
+          `Processing media record ${entity.id}`
         );
       } else {
         this.logger.info(`Processing album record ${entity.id} (Album cover)`);
@@ -836,7 +837,7 @@ class WebPMigrator {
     // Update database record if there were changes
     if (hasChanges) {
       updates.updatedAt = new Date().toISOString();
-      await this.awsService.updateMediaRecord(media.albumId, media.id, updates);
+      await this.awsService.updateMediaRecord(null, media.id, updates);
       this.logger.success(
         `Updated database record for ${media.id} (display version and/or thumbnails)`
       );

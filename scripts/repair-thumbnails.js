@@ -273,7 +273,7 @@ async function getAllAlbums() {
 /**
  * Update media item with thumbnail URLs
  */
-async function updateMediaThumbnails(albumId, mediaId, thumbnailUrls) {
+async function updateMediaThumbnails(unused_albumId, mediaId, thumbnailUrls) {
   // In the new schema, media is stored independently
   await docClient.send(
     new UpdateCommand({
@@ -352,7 +352,7 @@ async function downloadFromS3(key) {
  * Process a single media item
  */
 async function processMediaItem(mediaItem) {
-  const { id, albumId, url, mimeType, thumbnailUrl, filename } = mediaItem;
+  const { id, url, mimeType, thumbnailUrl, filename } = mediaItem;
 
   // Skip if thumbnail already exists
   if (thumbnailUrl) {
@@ -390,8 +390,8 @@ async function processMediaItem(mediaItem) {
       return { status: "error", reason: "thumbnail_generation_failed" };
     }
 
-    // Update database
-    await updateMediaThumbnails(albumId, id, thumbnailUrls);
+    // Update database - no albumId needed in new schema
+    await updateMediaThumbnails(null, id, thumbnailUrls);
 
     console.log(
       "✅ Generated thumbnails for media " + id + ":",
