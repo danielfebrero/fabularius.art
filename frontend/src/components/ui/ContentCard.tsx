@@ -82,8 +82,6 @@ export function ContentCard({
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [actionsOpen, setActionsOpen] = useState(false);
 
-  console.log({ item });
-
   const isMedia = type === "media";
   const media = isMedia ? (item as Media) : null;
   const album = !isMedia ? (item as Album) : null;
