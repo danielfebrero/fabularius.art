@@ -470,12 +470,19 @@ export function ContentCard({
               {album.tags && album.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2 -ml-2">
                   {album.tags.slice(0, 3).map((tag, index) => (
-                    <span
+                    <button
                       key={index}
-                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white/20 text-white border border-white/30 backdrop-blur-sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const url = `/?tag=${encodeURIComponent(tag)}`;
+                        window.location.href = url;
+                      }}
+                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white/20 text-white border border-white/30 backdrop-blur-sm hover:bg-white/30 hover:border-white/50 transition-all duration-200 cursor-pointer"
+                      title={`Filter by tag: ${tag}`}
                     >
                       {tag}
-                    </span>
+                    </button>
                   ))}
                   {album.tags.length > 3 && (
                     <span className="text-xs text-white/70 font-medium px-2 py-1">

@@ -3,40 +3,57 @@ import { getAlbums } from "@/lib/data";
 import { Album } from "@/types";
 import { DiscoverClient } from "@/components/DiscoverClient";
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: { tag?: string };
+}): Promise<Metadata> {
+  const tag = searchParams.tag;
+  const baseTitle = "PornSpot.ai - Discover AI Generated Porn";
+  const title = tag ? `${baseTitle} - ${tag}` : baseTitle;
+  const baseDescription = "Browse and generate AI-powered porn images and videos. Free to start, with premium plans for unlimited creation. Explore AI-generated adult content: images, videos, and more.";
+  const description = tag ? `${baseDescription} Filtered by: ${tag}` : baseDescription;
+
   return {
-    title: "PornSpot.ai - Discover AI Generated Porn",
-    description:
-      "Browse and generate AI-powered porn images and videos. Free to start, with premium plans for unlimited creation. Explore AI-generated adult content: images, videos, and more.",
+    title,
+    description,
     openGraph: {
-      title: "PornSpot.ai - Discover AI Generated Porn",
-      description:
-        "Browse and generate AI-powered porn images and videos. Free to start, with premium plans for unlimited creation.",
+      title,
+      description,
       siteName: "PornSpot.ai",
     },
     twitter: {
-      title: "PornSpot.ai - Discover AI Generated Porn",
-      description:
-        "Browse and generate AI-powered porn images and videos. Free to start, with premium plans for unlimited creation.",
+      title,
+      description,
     },
     keywords: [
       "AI porn",
-      "AI generated content",
+      "AI generated content", 
       "adult content",
       "AI videos",
       "AI images",
       "generated porn",
+      ...(tag ? [tag] : []),
     ],
   };
 }
 
-export default async function DiscoverPage() {
+export default async function DiscoverPage({
+  searchParams,
+}: {
+  searchParams: { tag?: string };
+}) {
+  const tag = searchParams.tag;
   let albums: Album[] = [];
   let pagination: any = null;
   let error: string | null = null;
 
   try {
-    const result = await getAlbums({ isPublic: true, limit: 12 });
+    const result = await getAlbums({ 
+      isPublic: true, 
+      limit: 12,
+      ...(tag && { tag }) // Include tag if provided
+    });
 
     if (result.error) {
       console.error("Error fetching albums:", result.error);
@@ -78,6 +95,7 @@ export default async function DiscoverPage() {
           initialAlbums={albums}
           initialPagination={pagination}
           initialError={error}
+          initialTag={tag}
         />
       )}
     </>

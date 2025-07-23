@@ -102,12 +102,14 @@ export default async function AlbumDetailPage({
         {album.tags && album.tags.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {album.tags.map((tag, index) => (
-              <span
+              <Link
                 key={index}
-                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-black/20 text-gray-500 border border-gray-300/60 backdrop-blur-sm hover:bg-black/30 hover:text-gray-600 hover:border-gray-400/70 hover:scale-105 transition-all duration-200 cursor-default"
+                href={`/?tag=${encodeURIComponent(tag)}`}
+                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-black/20 text-gray-500 border border-gray-300/60 backdrop-blur-sm hover:bg-black/30 hover:text-gray-600 hover:border-gray-400/70 hover:scale-105 transition-all duration-200 cursor-pointer"
+                title={`Filter albums by tag: ${tag}`}
               >
                 {tag}
-              </span>
+              </Link>
             ))}
           </div>
         )}

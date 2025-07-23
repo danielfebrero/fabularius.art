@@ -18,6 +18,7 @@ export const handler = async (
     const limit = parseInt(event.queryStringParameters?.["limit"] || "20");
     const isPublicParam = event.queryStringParameters?.["isPublic"];
     const rawCursor = event.queryStringParameters?.["cursor"];
+    const tag = event.queryStringParameters?.["tag"]; // New tag filter parameter
 
     // Enforce 'isPublic' parameter: required for GSI
     if (typeof isPublicParam === "undefined") {
@@ -44,7 +45,8 @@ export const handler = async (
     const result = await DynamoDBService.listAlbumsByPublicStatus(
       isPublicBool,
       limit,
-      lastEvaluatedKey
+      lastEvaluatedKey,
+      tag // Pass tag filter to service
     );
 
     const nextCursor = result.lastEvaluatedKey

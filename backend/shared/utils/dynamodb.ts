@@ -207,29 +207,38 @@ export class DynamoDBService {
   static async listAlbumsByPublicStatus(
     isPublic: boolean,
     limit: number = 20,
-    lastEvaluatedKey?: Record<string, any>
+    lastEvaluatedKey?: Record<string, any>,
+    tag?: string
   ): Promise<{
     albums: Album[];
     lastEvaluatedKey?: Record<string, any>;
   }> {
     const isPublicString = isPublic.toString();
 
-    const result = await docClient.send(
-      new QueryCommand({
-        TableName: TABLE_NAME,
-        IndexName: "isPublic-createdAt-index",
-        KeyConditionExpression: "#isPublic = :isPublic",
-        ExpressionAttributeNames: {
-          "#isPublic": "isPublic",
-        },
-        ExpressionAttributeValues: {
-          ":isPublic": isPublicString,
-        },
-        ScanIndexForward: false, // Most recent first
-        Limit: limit,
-        ExclusiveStartKey: lastEvaluatedKey,
-      })
-    );
+    // Build query parameters
+    const queryParams: any = {
+      TableName: TABLE_NAME,
+      IndexName: "isPublic-createdAt-index",
+      KeyConditionExpression: "#isPublic = :isPublic",
+      ExpressionAttributeNames: {
+        "#isPublic": "isPublic",
+      },
+      ExpressionAttributeValues: {
+        ":isPublic": isPublicString,
+      },
+      ScanIndexForward: false, // Most recent first
+      Limit: limit,
+      ExclusiveStartKey: lastEvaluatedKey,
+    };
+
+    // Add tag filtering if specified
+    if (tag) {
+      queryParams.FilterExpression = "contains(#tags, :tag)";
+      queryParams.ExpressionAttributeNames["#tags"] = "tags";
+      queryParams.ExpressionAttributeValues[":tag"] = tag;
+    }
+
+    const result = await docClient.send(new QueryCommand(queryParams));
 
     const albumEntities = (result.Items as AlbumEntity[]) || [];
 

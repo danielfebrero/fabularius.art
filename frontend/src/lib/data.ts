@@ -21,15 +21,18 @@ async function handleResponse<T>(
 
 // Fetch a list of albums
 export async function getAlbums(
-  options: { isPublic?: boolean; limit?: number; cursor?: string } = {}
+  options: { isPublic?: boolean; limit?: number; cursor?: string; tag?: string } = {}
 ) {
-  const { isPublic = true, limit = 12, cursor } = options;
+  const { isPublic = true, limit = 12, cursor, tag } = options;
   const params = new URLSearchParams({
     isPublic: String(isPublic),
     limit: String(limit),
   });
   if (cursor) {
     params.append("cursor", cursor);
+  }
+  if (tag) {
+    params.append("tag", tag);
   }
 
   const response = await fetch(`${API_URL}/albums?${params}`, {

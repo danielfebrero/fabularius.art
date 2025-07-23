@@ -7,6 +7,7 @@ interface UseAlbumsOptions {
   limit?: number;
   cursor?: string;
   page?: number;
+  tag?: string; // New tag filter option
   initialAlbums?: Album[];
   initialPagination?: {
     hasNext: boolean;
@@ -37,6 +38,7 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
     publicOnly,
     limit = 12,
     page,
+    tag, // Extract tag option
     initialAlbums = [],
     initialPagination = null,
   } = options;
@@ -61,6 +63,7 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
           limit,
           isPublic: effectiveIsPublic,
           page,
+          tag,
         });
         if (append) {
           setLoadingMore(true);
@@ -83,6 +86,10 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
 
         if (cursor) {
           params.append("cursor", cursor);
+        }
+
+        if (tag) {
+          params.append("tag", tag);
         }
 
         const apiUrl =
@@ -131,7 +138,7 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
         setLoadingMore(false);
       }
     },
-    [effectiveIsPublic, limit, page]
+    [effectiveIsPublic, limit, page, tag]
   );
 
   const loadMore = useCallback(() => {
