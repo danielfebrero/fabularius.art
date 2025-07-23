@@ -33,6 +33,9 @@ interface ContentCardProps {
   showBookmarkCount?: boolean;
   showCounts?: boolean;
 
+  // Disable hover effects
+  disableHoverEffects?: boolean;
+
   // Event handlers (optional - if not provided, default behavior will be used)
   onClick?: () => void;
   onFullscreen?: () => void;
@@ -66,6 +69,7 @@ export function ContentCard({
   canDownload = false,
   canDelete = false,
   showCounts = true,
+  disableHoverEffects = false,
   onClick,
   onFullscreen,
   onAddToAlbum,
@@ -226,7 +230,8 @@ export function ContentCard({
     <>
       <div
         className={cn(
-          "group relative cursor-pointer overflow-hidden shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02] rounded-lg sm:rounded-xl",
+          "group relative cursor-pointer overflow-hidden shadow-lg transition-all duration-200 rounded-lg sm:rounded-xl",
+          !disableHoverEffects && "hover:shadow-xl hover:scale-[1.02]",
           aspectRatio === "square" ? "aspect-square" : "",
           className
         )}
@@ -259,7 +264,8 @@ export function ContentCard({
                 )}
                 alt={title || media.originalFilename || media.filename}
                 className={cn(
-                  "w-full h-full object-cover transition-transform duration-200 group-hover:scale-105",
+                  "w-full h-full object-cover transition-transform duration-200",
+                  !disableHoverEffects && "group-hover:scale-105",
                   imageClassName
                 )}
                 context={context}
@@ -444,7 +450,8 @@ export function ContentCard({
               )}
               alt={title || album.title}
               className={cn(
-                "w-full h-full object-cover transition-transform duration-200 group-hover:scale-105",
+                "w-full h-full object-cover transition-transform duration-200",
+                !disableHoverEffects && "group-hover:scale-105",
                 imageClassName
               )}
               context={context}

@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Media } from "../../types/index";
-import { cn, getMediaDisplayUrl } from "../../lib/utils";
-import { composeMediaUrl } from "../../lib/urlUtils";
-import { LikeButton } from "../user/LikeButton";
-import { BookmarkButton } from "../user/BookmarkButton";
-import { ShareDropdown } from "./ShareDropdown";
-import { Share2 } from "lucide-react";
+import { cn } from "../../lib/utils";
+import { ContentCard } from "./ContentCard";
 
 interface LightboxProps {
   media: Media[];
@@ -26,7 +22,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
   onPrevious,
 }) => {
   const [isMounted, setIsMounted] = useState(false);
-  const [showHeader, setShowHeader] = useState(false);
   const currentMedia = media[currentIndex];
 
   const handleClose = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -84,23 +79,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
 
   if (!isOpen || !currentMedia || !isMounted) return null;
 
-  const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
-  const handleDownload = () => {
-    if (!currentMedia) return;
-    // Always use original URL for downloads to preserve original format
-    window.open(composeMediaUrl(currentMedia.url), "_blank");
-  };
-
-  const isImage = currentMedia.mimeType.startsWith("image/");
-  const isVideo = currentMedia.mimeType.startsWith("video/");
-
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black" onClick={handleClose}>
       {/* Content wrapper: stop propagation to prevent closing when clicking on content */}
@@ -109,207 +87,57 @@ export const Lightbox: React.FC<LightboxProps> = ({
         // No longer need to stop propagation here since handleClose is more specific
       >
         {/* Media Content */}
-        <div className="w-full h-full">
-          {isImage ? (
-            <img
-              src={composeMediaUrl(getMediaDisplayUrl(currentMedia))}
-              alt={currentMedia.originalName || currentMedia.filename}
-              className="w-full h-full object-contain"
+        <div className="w-full h-full flex items-center justify-center">
+          <div className="max-w-[100vw] max-h-[100vh] w-fit h-fit">
+            <ContentCard
+              item={currentMedia}
+              type="media"
+              aspectRatio="auto"
+              className="bg-transparent shadow-none border-none w-fit h-fit"
+              imageClassName="max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] w-auto h-auto object-contain"
+              canLike={true}
+              canBookmark={true}
+              canFullscreen={false}
+              canAddToAlbum={true}
+              canDownload={true}
+              canDelete={false}
+              showCounts={false}
+              disableHoverEffects={true}
+              onClick={() => {}}
             />
-          ) : isVideo ? (
-            <video
-              src={composeMediaUrl(currentMedia.url)}
-              controls
-              className="w-full h-full object-contain"
-              onClick={(e) => e.stopPropagation()}
-            >
-              Your browser does not support the video tag.
-            </video>
-          ) : (
-            <div className="flex flex-col items-center justify-center text-white h-full">
-              <svg
-                className="w-24 h-24 mb-4 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.5}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <p className="text-xl mb-2">
-                {currentMedia.originalName || currentMedia.filename}
-              </p>
-              <p className="text-gray-400">
-                {currentMedia.mimeType} • {formatFileSize(currentMedia.size)}
-              </p>
-              <a
-                href={composeMediaUrl(currentMedia.url)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors cursor-pointer"
-                download
-                onClick={(e) => e.stopPropagation()}
-              >
-                Download Original File
-              </a>
-            </div>
-          )}
-        </div>
-
-        {/* Header */}
-        <div
-          className={cn(
-            "absolute top-0 left-0 right-0 bg-gradient-to-b from-black/50 to-transparent transition-opacity duration-300 z-10",
-            showHeader
-              ? "opacity-100 pointer-events-auto"
-              : "opacity-0 pointer-events-none"
-          )}
-          onMouseEnter={() => setShowHeader(true)}
-          onMouseLeave={() => setShowHeader(false)}
-        >
-          <div className="flex items-center justify-between text-white p-4">
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-300">
-                {currentIndex + 1} of {media.length}
-              </span>
-            </div>
-            <div className="flex items-center">
-              <LikeButton
-                targetType="media"
-                targetId={currentMedia.id}
-                size="sm"
-                variant="default"
-                className="p-2 hover:bg-white/10 rounded-full transition-colors mr-2 cursor-pointer"
-              />
-              <BookmarkButton
-                targetType="media"
-                targetId={currentMedia.id}
-                size="sm"
-                variant="default"
-                className="p-2 hover:bg-white/10 rounded-full transition-colors mr-2 cursor-pointer"
-              />
-              <ShareDropdown
-                trigger={({ toggle }: { toggle: () => void }) => (
-                  <button
-                    className="p-2 hover:bg-white/10 rounded-full transition-colors mr-2 cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      toggle();
-                    }}
-                    aria-label="Share media"
-                    tabIndex={0}
-                    type="button"
-                  >
-                    <Share2 className="w-6 h-6" />
-                  </button>
-                )}
-              >
-                {({ close }: { close: () => void }) => (
-                  <>
-                    <button
-                      className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        e.preventDefault();
-                        navigator.clipboard.writeText(
-                          `${window.location.origin}/media/${currentMedia.id}`
-                        );
-                        close();
-                      }}
-                    >
-                      Copy link
-                    </button>
-                    <a
-                      className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
-                      href={`https://www.reddit.com/submit?url=${encodeURIComponent(
-                        window.location.origin + "/media/" + currentMedia.id
-                      )}&title=${encodeURIComponent(
-                        currentMedia.originalName || currentMedia.filename
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={close}
-                    >
-                      Reddit
-                    </a>
-                    <a
-                      className="flex items-center w-full px-3 py-2 text-sm text-foreground hover:bg-accent transition-colors"
-                      href={`https://x.com/intent/tweet?url=${encodeURIComponent(
-                        window.location.origin + "/media/" + currentMedia.id
-                      )}&text=${encodeURIComponent(
-                        currentMedia.originalName || currentMedia.filename
-                      )}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={close}
-                    >
-                      X
-                    </a>
-                  </>
-                )}
-              </ShareDropdown>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDownload();
-                }}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors mr-2 cursor-pointer"
-                aria-label="Download"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                  />
-                </svg>
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onClose();
-                }}
-                className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
-                aria-label="Close"
-              >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
 
-        {/* Header hover zone - only active when header is hidden */}
-        <div
-          className={cn(
-            "absolute top-0 left-0 right-0 h-20",
-            showHeader ? "pointer-events-none" : "pointer-events-auto"
-          )}
-          onMouseEnter={() => setShowHeader(true)}
-        />
+        {/* Media Counter */}
+        {media.length > 1 && (
+          <div className="absolute top-4 left-4 bg-black/70 text-white px-3 py-2 rounded-lg text-sm font-medium z-30 backdrop-blur-sm border border-white/20">
+            {currentIndex + 1} of {media.length}
+          </div>
+        )}
+
+        {/* Close Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer text-white z-20"
+          aria-label="Close"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
 
         {/* Navigation Arrows */}
         {media.length > 1 && (
