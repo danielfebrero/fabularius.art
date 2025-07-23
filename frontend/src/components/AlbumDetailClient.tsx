@@ -7,7 +7,7 @@ import { ShareDropdown } from "@/components/ui/ShareDropdown";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { ViewTracker } from "@/components/ui/ViewTracker";
 import { MediaGallery } from "@/components/MediaGallery";
-import Link from "next/link";
+import LocaleLink from "@/components/ui/LocaleLink";
 
 interface AlbumDetailClientProps {
   album: Album;
@@ -39,9 +39,7 @@ export function AlbumDetailClient({
             <ArrowLeft className="w-5 h-5" />
           </button>
         </Tooltip>
-        <h1 className="text-lg font-semibold truncate">
-          {album.title}
-        </h1>
+        <h1 className="text-lg font-semibold truncate">{album.title}</h1>
         <div className="flex-grow" />
         <ShareDropdown
           trigger={({ toggle }: { toggle: () => void }) => (
@@ -99,14 +97,13 @@ export function AlbumDetailClient({
           {album.tags && album.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {album.tags.map((tag, index) => (
-                <Link
+                <LocaleLink
                   key={index}
                   href={`/?tag=${encodeURIComponent(tag)}`}
                   className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-black/20 text-gray-500 border border-gray-300/60 backdrop-blur-sm hover:bg-black/30 hover:text-gray-600 hover:border-gray-400/70 hover:scale-105 transition-all duration-200 cursor-pointer"
-                  title={`Filter albums by tag: ${tag}`}
                 >
                   {tag}
-                </Link>
+                </LocaleLink>
               ))}
             </div>
           )}

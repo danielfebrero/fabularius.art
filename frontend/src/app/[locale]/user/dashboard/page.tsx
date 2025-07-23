@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import LocaleLink from "@/components/ui/LocaleLink";
 import { useState } from "react";
 import { Heart, Bookmark } from "lucide-react";
 import { useLikes } from "@/hooks/useLikes";
@@ -163,11 +163,11 @@ const UserDashboard: React.FC = () => {
                 </p>
               </div>
             </div>
-            <Link href="/user/likes">
+            <LocaleLink href="/user/likes">
               <Button variant="outline" size="sm">
                 View All
               </Button>
-            </Link>
+            </LocaleLink>
           </div>
 
           <div className="min-h-[200px]">
@@ -229,11 +229,11 @@ const UserDashboard: React.FC = () => {
                 </p>
               </div>
             </div>
-            <Link href="/user/bookmarks">
+            <LocaleLink href="/user/bookmarks">
               <Button variant="outline" size="sm">
                 View All
               </Button>
-            </Link>
+            </LocaleLink>
           </div>
 
           <div className="min-h-[200px]">

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
-import Link from "next/link";
+import LocaleLink from "@/components/ui/LocaleLink";
 
 export function AuthErrorClient() {
   const searchParams = useSearchParams();
@@ -102,26 +102,26 @@ export function AuthErrorClient() {
           isAnimated ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
         }`}
       >
-        <Link href="/auth/login" className="block">
+        <LocaleLink href="/auth/login" className="block">
           <Button
             variant="primary"
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
           >
             Try Again
           </Button>
-        </Link>
+        </LocaleLink>
 
-        <Link href="/auth/register" className="block">
+        <LocaleLink href="/auth/register" className="block">
           <Button variant="outline" className="w-full">
             Create New Account
           </Button>
-        </Link>
+        </LocaleLink>
 
-        <Link href="/" className="block">
+        <LocaleLink href="/" className="block">
           <Button variant="ghost" className="w-full">
             Back to Discover
           </Button>
-        </Link>
+        </LocaleLink>
       </div>
 
       {/* Support Info */}
@@ -132,12 +132,12 @@ export function AuthErrorClient() {
       >
         <p>
           Still having trouble?{" "}
-          <Link
+          <LocaleLink
             href="/contact"
             className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
           >
             Contact Support
-          </Link>
+          </LocaleLink>
         </p>
       </div>
     </div>

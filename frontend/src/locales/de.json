@@ -1,0 +1,62 @@
+{
+  "common": {
+    "discover": "Entdecken",
+    "generate": "Generieren",
+    "pricing": "Preise",
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "logout": "Abmelden",
+    "home": "Startseite",
+    "admin": "Admin",
+    "user": "Benutzer",
+    "loading": "Laden...",
+    "error": "Fehler",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "back": "Zurück",
+    "next": "Weiter",
+    "previous": "Vorherige",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "sort": "Sortieren"
+  },
+  "navigation": {
+    "images": "Bilder",
+    "bookmarks": "Lesezeichen",
+    "likes": "Likes",
+    "albums": "Alben",
+    "dashboard": "Dashboard",
+    "profile": "Profil"
+  },
+  "auth": {
+    "signIn": "Anmelden",
+    "signUp": "Registrieren",
+    "forgotPassword": "Passwort vergessen?",
+    "alreadyHaveAccount": "Haben Sie bereits ein Konto?",
+    "dontHaveAccount": "Haben Sie noch kein Konto?",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen"
+  },
+  "site": {
+    "title": "PornSpot.ai - KI-generierte Pornobilder und Videos",
+    "description": "Entdecken und erstellen Sie KI-generierte pornographische Inhalte. Generieren Sie individuelle Bilder und Videos mit Prompts, LoRA-Auswahlen und mehr.",
+    "tagline": "KI-generierte Inhalte"
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "manageAlbums": "Alben verwalten",
+    "manageMedia": "Medien verwalten",
+    "createAlbum": "Album erstellen",
+    "users": "Benutzer",
+    "settings": "Einstellungen"
+  },
+  "placeholders": {
+    "noResults": "Keine Ergebnisse gefunden",
+    "noAlbums": "Keine Alben gefunden",
+    "noImages": "Keine Bilder gefunden",
+    "createFirstAlbum": "Erstellen Sie Ihr erstes Album, um zu beginnen!"
+  }
+}

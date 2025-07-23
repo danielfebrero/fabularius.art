@@ -1,19 +1,16 @@
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Authentication - PornSpot.ai",
-  description: "Sign in or create an account for PornSpot.ai",
-  robots: {
-    index: false,
-    follow: false,
-  },
-};
+import { getTranslations } from "next-intl/server";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
+  params: { locale: string };
 }
 
-export default function AuthLayout({ children }: AuthLayoutProps) {
+export default async function AuthLayout({
+  children,
+  params: { locale },
+}: AuthLayoutProps) {
+  const t = await getTranslations("site");
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -23,9 +20,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
               <h1 className="text-2xl font-bold text-foreground">
                 PornSpot.ai
               </h1>
-              <p className="text-muted-foreground mt-2">
-                AI Generated Porn Images & Videos
-              </p>
+              <p className="text-muted-foreground mt-2">{t("tagline")}</p>
             </div>
 
             <div className="bg-card border border-border rounded-lg shadow-lg p-6">

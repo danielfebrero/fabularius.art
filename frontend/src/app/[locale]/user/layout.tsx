@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
+import LocaleLink from "@/components/ui/LocaleLink";
+import { useTranslations } from "next-intl";
 import { useUser } from "@/hooks/useUser";
 import {
   Heart,
@@ -20,19 +21,24 @@ import {
 
 interface UserLayoutProps {
   children: React.ReactNode;
+  params: { locale: string };
 }
 
-const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
+const UserLayout: React.FC<UserLayoutProps> = ({
+  children,
+  params: { locale },
+}) => {
   const { user, loading } = useUser();
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations("navigation");
 
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !user) {
-      router.push("/auth/login");
+      router.push(`/${locale}/auth/login`);
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, locale]);
 
   if (loading) {
     return (
@@ -74,28 +80,28 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
 
   const navigationItems = [
     {
-      href: "/user/dashboard",
-      label: "Dashboard",
+      href: `/${locale}/user/dashboard`,
+      label: t("dashboard"),
       icon: LayoutDashboard,
     },
     {
-      href: "/user/likes",
-      label: "Liked Content",
+      href: `/${locale}/user/likes`,
+      label: t("likes"),
       icon: Heart,
     },
     {
-      href: "/user/bookmarks",
-      label: "Bookmarks",
+      href: `/${locale}/user/bookmarks`,
+      label: t("bookmarks"),
       icon: Bookmark,
     },
     {
-      href: "/user/images",
-      label: "Images",
+      href: `/${locale}/user/images`,
+      label: t("images"),
       icon: Image,
     },
     {
-      href: "/user/albums",
-      label: "Albums",
+      href: `/${locale}/user/albums`,
+      label: t("albums"),
       icon: FolderOpen,
     },
   ];
@@ -113,7 +119,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
 
                   return (
                     <li key={item.href}>
-                      <Link
+                      <LocaleLink
                         href={item.href}
                         className={cn(
                           "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200",
@@ -124,7 +130,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({ children }) => {
                       >
                         <item.icon className="h-5 w-5" />
                         <span>{item.label}</span>
-                      </Link>
+                      </LocaleLink>
                     </li>
                   );
                 })}

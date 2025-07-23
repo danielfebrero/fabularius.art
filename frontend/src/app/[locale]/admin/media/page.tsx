@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAdminMedia } from "../../../hooks/useAdminMedia";
-import { useAdminAlbums } from "../../../hooks/useAdminAlbums";
-import { ConfirmDialog } from "../../../components/admin/ConfirmDialog";
-import { Media, Album } from "../../../types";
-import { getThumbnailUrl } from "../../../lib/utils";
+import { useAdminMedia } from "@/hooks/useAdminMedia";
+import { useAdminAlbums } from "@/hooks/useAdminAlbums";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { Media, Album } from "@/types";
+import { getThumbnailUrl } from "@/lib/utils";
 
 export default function AdminMediaPage() {
   const { albums, loading: albumsLoading, fetchAlbums } = useAdminAlbums();

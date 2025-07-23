@@ -1,8 +1,8 @@
 "use client";
 
-import { useAdminContext } from "../../contexts/AdminContext";
-import { useAdminStats } from "../../hooks/useAdminStats";
-import { Card } from "../../components/ui/Card";
+import { useAdminContext } from "@/contexts/AdminContext";
+import { useAdminStats } from "@/hooks/useAdminStats";
+import { Card } from "@/components/ui/Card";
 
 export default function AdminDashboard() {
   const { user } = useAdminContext();

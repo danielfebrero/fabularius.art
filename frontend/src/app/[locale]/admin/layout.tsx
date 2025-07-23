@@ -1,27 +1,37 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { AdminProvider } from "../../contexts/AdminContext";
-import { ProtectedRoute } from "../../components/admin/ProtectedRoute";
-import { AdminNav } from "../../components/admin/AdminNav";
+import { AdminProvider } from "@/contexts/AdminContext";
+import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
+import { AdminNav } from "@/components/admin/AdminNav";
+
+interface AdminLayoutProps {
+  children: React.ReactNode;
+  params: { locale: string };
+}
 
 export default function AdminLayout({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+  params: { locale },
+}: AdminLayoutProps) {
   return (
     <AdminProvider>
       <div className="min-h-screen bg-muted/30">
-        <AdminLayoutContent>{children}</AdminLayoutContent>
+        <AdminLayoutContent locale={locale}>{children}</AdminLayoutContent>
       </div>
     </AdminProvider>
   );
 }
 
-function AdminLayoutContent({ children }: { children: React.ReactNode }) {
+function AdminLayoutContent({
+  children,
+  locale,
+}: {
+  children: React.ReactNode;
+  locale: string;
+}) {
   const pathname = usePathname();
-  const isLoginPage = pathname === "/admin/login";
+  const isLoginPage = pathname === `/${locale}/admin/login`;
 
   // Render login page without protection
   if (isLoginPage) {

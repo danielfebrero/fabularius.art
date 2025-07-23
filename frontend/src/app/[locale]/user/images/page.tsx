@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ImageIcon, Search, Grid, List, Calendar, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
+import LocaleLink from "@/components/ui/LocaleLink";
 
 const UserImagesPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -163,12 +163,12 @@ const UserImagesPage: React.FC = () => {
                 Clear Search
               </Button>
             )}
-            <Link href="/generate">
+            <LocaleLink href="/generate">
               <Button className="flex items-center space-x-2">
                 <Plus className="h-4 w-4" />
                 <span>Generate Images</span>
               </Button>
-            </Link>
+            </LocaleLink>
           </div>
         </div>
       )}

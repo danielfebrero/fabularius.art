@@ -1,0 +1,62 @@
+{
+  "common": {
+    "discover": "Discover",
+    "generate": "Generate",
+    "pricing": "Pricing",
+    "login": "Login",
+    "register": "Sign Up",
+    "logout": "Logout",
+    "home": "Home",
+    "admin": "Admin",
+    "user": "User",
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort"
+  },
+  "navigation": {
+    "images": "Images",
+    "bookmarks": "Bookmarks",
+    "likes": "Likes",
+    "albums": "Albums",
+    "dashboard": "Dashboard",
+    "profile": "Profile"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signUp": "Sign up",
+    "forgotPassword": "Forgot your password?",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password"
+  },
+  "site": {
+    "title": "PornSpot.ai - AI Generated Porn Images & Videos",
+    "description": "Discover and create AI-generated porn content. Generate custom images and videos with prompts, LoRA selections, and more.",
+    "tagline": "AI Generated Content"
+  },
+  "admin": {
+    "title": "Admin Dashboard",
+    "manageAlbums": "Manage Albums",
+    "manageMedia": "Manage Media",
+    "createAlbum": "Create Album",
+    "users": "Users",
+    "settings": "Settings"
+  },
+  "placeholders": {
+    "noResults": "No results found",
+    "noAlbums": "No albums found",
+    "noImages": "No images found",
+    "createFirstAlbum": "Create your first album to get started!"
+  }
+}

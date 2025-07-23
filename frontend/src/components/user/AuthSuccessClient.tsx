@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { useUserContext } from "@/contexts/UserContext";
-import Link from "next/link";
+import LocaleLink from "@/components/ui/LocaleLink";
 
 export function AuthSuccessClient() {
   const router = useRouter();
@@ -133,21 +133,21 @@ export function AuthSuccessClient() {
           isAnimated ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
         }`}
       >
-        <Link href="/" className="block">
+        <LocaleLink href="/" className="block">
           <Button
             variant="primary"
             className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
           >
             Explore PornSpot.ai
           </Button>
-        </Link>
+        </LocaleLink>
 
         {isNewUser && (
-          <Link href="/user/profile" className="block">
+          <LocaleLink href="/user/profile" className="block">
             <Button variant="outline" className="w-full">
               Complete Your Profile
             </Button>
-          </Link>
+          </LocaleLink>
         )}
       </div>
 

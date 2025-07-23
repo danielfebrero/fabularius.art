@@ -1,3 +1,8 @@
+const withNextIntl = require("next-intl/plugin")(
+  // This is the default path to your i18n config file
+  "./src/i18n.ts"
+);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Image optimization - DISABLED to avoid Vercel costs
@@ -100,4 +105,4 @@ const nextConfig = {
   poweredByHeader: false,
 };
 
-module.exports = nextConfig;
+module.exports = withNextIntl(nextConfig);

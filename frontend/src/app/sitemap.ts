@@ -1,35 +1,65 @@
 import { MetadataRoute } from "next";
 import { fetchAllPublicAlbums } from "@/lib/data";
+import { locales } from "@/i18n";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env["NEXT_PUBLIC_SITE_URL"] || "https://pornspot.ai";
 
-  // Static routes that should be included in the sitemap
-  const staticRoutes: MetadataRoute.Sitemap = [
+  // Define static routes that should be included in the sitemap (excluding admin and auth routes)
+  const staticRoutes = [
     {
-      url: baseUrl,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
+      path: "",
       priority: 1.0,
+      changeFrequency: "weekly" as const,
+    },
+    {
+      path: "/pricing",
+      priority: 0.8,
+      changeFrequency: "monthly" as const,
+    },
+    {
+      path: "/generate",
+      priority: 0.7,
+      changeFrequency: "weekly" as const,
     },
   ];
+
+  // Generate locale-specific static routes
+  const localeStaticRoutes: MetadataRoute.Sitemap = [];
+  staticRoutes.forEach((route) => {
+    locales.forEach((locale) => {
+      localeStaticRoutes.push({
+        url: `${baseUrl}/${locale}${route.path}`,
+        lastModified: new Date(),
+        changeFrequency: route.changeFrequency,
+        priority: route.priority,
+      });
+    });
+  });
 
   // Fetch all public albums to generate dynamic routes
   try {
     const albums = await fetchAllPublicAlbums();
 
-    // Generate album-specific routes
-    const albumRoutes: MetadataRoute.Sitemap = albums.map((album) => ({
-      url: `${baseUrl}/albums/${album.id}`,
-      lastModified: album.updatedAt ? new Date(album.updatedAt) : new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.6,
-    }));
+    // Generate locale-specific album routes
+    const albumRoutes: MetadataRoute.Sitemap = [];
+    albums.forEach((album) => {
+      locales.forEach((locale) => {
+        albumRoutes.push({
+          url: `${baseUrl}/${locale}/albums/${album.id}`,
+          lastModified: album.updatedAt
+            ? new Date(album.updatedAt)
+            : new Date(),
+          changeFrequency: "monthly" as const,
+          priority: 0.6,
+        });
+      });
+    });
 
-    return [...staticRoutes, ...albumRoutes];
+    return [...localeStaticRoutes, ...albumRoutes];
   } catch (error) {
     console.error("Error fetching albums for sitemap:", error);
     // Return static routes only if album fetching fails
-    return staticRoutes;
+    return localeStaticRoutes;
   }
 }

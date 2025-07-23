@@ -3,9 +3,9 @@ import {
   getAlbumById,
   getMediaForAlbum,
   fetchAllPublicAlbums,
-} from "../../../lib/data";
-import { composeAlbumCoverUrl } from "../../../lib/urlUtils";
-import { AlbumDetailClient } from "../../../components/AlbumDetailClient";
+} from "@/lib/data";
+import { composeAlbumCoverUrl } from "@/lib/urlUtils";
+import { AlbumDetailClient } from "@/components/AlbumDetailClient";
 import type { Metadata } from "next";
 
 type AlbumDetailPageProps = {

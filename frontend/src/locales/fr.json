@@ -1,0 +1,62 @@
+{
+  "common": {
+    "discover": "Découvrir",
+    "generate": "Générer",
+    "pricing": "Tarification",
+    "login": "Connexion",
+    "register": "S'inscrire",
+    "logout": "Déconnexion",
+    "home": "Accueil",
+    "admin": "Admin",
+    "user": "Utilisateur",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "sort": "Trier"
+  },
+  "navigation": {
+    "images": "Images",
+    "bookmarks": "Favoris",
+    "likes": "J'aime",
+    "albums": "Albums",
+    "dashboard": "Tableau de bord",
+    "profile": "Profil"
+  },
+  "auth": {
+    "signIn": "Se connecter",
+    "signUp": "S'inscrire",
+    "forgotPassword": "Mot de passe oublié ?",
+    "alreadyHaveAccount": "Vous avez déjà un compte ?",
+    "dontHaveAccount": "Vous n'avez pas de compte ?",
+    "email": "Email",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe"
+  },
+  "site": {
+    "title": "PornSpot.ai - Images et Vidéos Pornographiques générées par IA",
+    "description": "Découvrez et créez du contenu pornographique généré par IA. Générez des images et vidéos personnalisées avec des prompts, des sélections LoRA, et plus encore.",
+    "tagline": "Contenu Généré par IA"
+  },
+  "admin": {
+    "title": "Tableau de Bord Admin",
+    "manageAlbums": "Gérer les Albums",
+    "manageMedia": "Gérer les Médias",
+    "createAlbum": "Créer un Album",
+    "users": "Utilisateurs",
+    "settings": "Paramètres"
+  },
+  "placeholders": {
+    "noResults": "Aucun résultat trouvé",
+    "noAlbums": "Aucun album trouvé",
+    "noImages": "Aucune image trouvée",
+    "createFirstAlbum": "Créez votre premier album pour commencer !"
+  }
+}

@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/Input";
 import { GoogleLoginButton } from "./GoogleLoginButton";
 import { useUser } from "@/hooks/useUser";
 import { UserLoginFormData } from "@/types/user";
-import Link from "next/link";
+import LocaleLink from "@/components/ui/LocaleLink";
 import { EmailVerificationForm } from "./EmailVerificationForm";
 
 // Validation schema
@@ -191,21 +191,21 @@ export function LoginForm() {
         <span className="text-muted-foreground">
           Don&apos;t have an account?{" "}
         </span>
-        <Link
+        <LocaleLink
           href="/auth/register"
           className="text-primary hover:text-primary/90 font-medium"
         >
           Sign up
-        </Link>
+        </LocaleLink>
       </div>
 
       <div className="text-center">
-        <Link
+        <LocaleLink
           href="/auth/forgot-password"
           className="text-sm text-muted-foreground hover:text-foreground"
         >
           Forgot your password?
-        </Link>
+        </LocaleLink>
       </div>
     </div>
   );

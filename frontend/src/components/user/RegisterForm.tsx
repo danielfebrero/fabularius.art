@@ -11,7 +11,7 @@ import { GoogleLoginButton } from "./GoogleLoginButton";
 import { useUser } from "@/hooks/useUser";
 import { UserRegistrationFormData } from "@/types/user";
 import { userApi } from "@/lib/api";
-import Link from "next/link";
+import LocaleLink from "@/components/ui/LocaleLink";
 
 // Validation schema
 const registerSchema = z
@@ -487,23 +487,29 @@ export function RegisterForm() {
 
       <div className="text-center text-sm">
         <span className="text-muted-foreground">Already have an account? </span>
-        <Link
+        <LocaleLink
           href="/auth/login"
           className="text-primary hover:text-primary/90 font-medium"
         >
           Sign in
-        </Link>
+        </LocaleLink>
       </div>
 
       <div className="text-xs text-center text-muted-foreground">
         By creating an account, you agree to our{" "}
-        <Link href="/terms" className="text-primary hover:text-primary/90">
+        <LocaleLink
+          href="/terms"
+          className="text-primary hover:text-primary/90"
+        >
           Terms of Service
-        </Link>{" "}
+        </LocaleLink>{" "}
         and{" "}
-        <Link href="/privacy" className="text-primary hover:text-primary/90">
+        <LocaleLink
+          href="/privacy"
+          className="text-primary hover:text-primary/90"
+        >
           Privacy Policy
-        </Link>
+        </LocaleLink>
         .
       </div>
     </div>

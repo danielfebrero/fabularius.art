@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import LocaleLink from "@/components/ui/LocaleLink";
 import { usePathname } from "next/navigation";
 import { cn } from "../../lib/utils";
 
@@ -70,7 +70,7 @@ export function AdminNav() {
             const isActive = pathname === item.href;
 
             return (
-              <Link
+              <LocaleLink
                 key={item.href}
                 href={item.href}
                 className={cn(
@@ -82,7 +82,7 @@ export function AdminNav() {
               >
                 {item.icon}
                 <span>{item.label}</span>
-              </Link>
+              </LocaleLink>
             );
           })}
         </div>
