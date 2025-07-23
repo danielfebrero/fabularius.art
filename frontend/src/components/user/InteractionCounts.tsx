@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Heart, Bookmark } from "lucide-react";
+import { Heart, Bookmark, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
 
@@ -10,6 +10,7 @@ interface InteractionCountsProps {
   targetId: string;
   likeCount?: number;
   bookmarkCount?: number;
+  viewCount?: number;
   showIcons?: boolean;
   size?: "sm" | "md" | "lg";
   className?: string;
@@ -20,6 +21,7 @@ export const InteractionCounts: React.FC<InteractionCountsProps> = ({
   targetId,
   likeCount = 0,
   bookmarkCount = 0,
+  viewCount = 0,
   showIcons = true,
   size = "md",
   className,
@@ -99,6 +101,25 @@ export const InteractionCounts: React.FC<InteractionCountsProps> = ({
           </span>
         )}
       </div>
+
+      {/* Views - only show for albums */}
+      {targetType === "album" && (
+        <div className="flex items-center gap-1">
+          {showIcons && (
+            <Eye
+              className={cn(config.icon, "text-gray-400")}
+            />
+          )}
+          <span className={cn("font-medium text-gray-600", config.text)}>
+            {viewCount.toLocaleString()}
+          </span>
+          {!showIcons && (
+            <span className={cn("text-gray-500", config.text)}>
+              view{viewCount !== 1 ? "s" : ""}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 };

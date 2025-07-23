@@ -93,10 +93,6 @@ export async function getMediaForAlbum(
     params.append("cursor", cursor);
   }
 
-  console.log(
-    `🔍 FRONTEND DEBUG - Making API call to: /albums/${albumId}/media?${params}`
-  );
-
   const response = await fetch(`${API_URL}/albums/${albumId}/media?${params}`, {
     next: { revalidate: 3600, tags: ["media"] },
   });
@@ -104,12 +100,6 @@ export async function getMediaForAlbum(
   const result = await handleResponse<{ media: Media[]; pagination: any }>(
     response
   );
-
-  console.log(`🔍 FRONTEND DEBUG - API response for album ${albumId}:`, {
-    success: !!result.data,
-    mediaCount: result.data?.media?.length || 0,
-    firstMediaSample: result.data?.media?.[0] ?? null,
-  });
 
   return result;
 }

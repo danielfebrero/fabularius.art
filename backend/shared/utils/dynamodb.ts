@@ -272,6 +272,25 @@ export class DynamoDBService {
     );
   }
 
+  static async incrementMediaLikeCount(
+    mediaId: string,
+    increment: number = 1
+  ): Promise<void> {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `MEDIA#${mediaId}`,
+          SK: "METADATA",
+        },
+        UpdateExpression: "ADD likeCount :inc",
+        ExpressionAttributeValues: {
+          ":inc": increment,
+        },
+      })
+    );
+  }
+
   static async incrementAlbumBookmarkCount(
     albumId: string,
     increment: number = 1
@@ -291,6 +310,25 @@ export class DynamoDBService {
     );
   }
 
+  static async incrementMediaBookmarkCount(
+    mediaId: string,
+    increment: number = 1
+  ): Promise<void> {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `MEDIA#${mediaId}`,
+          SK: "METADATA",
+        },
+        UpdateExpression: "ADD bookmarkCount :inc",
+        ExpressionAttributeValues: {
+          ":inc": increment,
+        },
+      })
+    );
+  }
+
   static async incrementAlbumViewCount(
     albumId: string,
     increment: number = 1
@@ -300,6 +338,25 @@ export class DynamoDBService {
         TableName: TABLE_NAME,
         Key: {
           PK: `ALBUM#${albumId}`,
+          SK: "METADATA",
+        },
+        UpdateExpression: "ADD viewCount :inc",
+        ExpressionAttributeValues: {
+          ":inc": increment,
+        },
+      })
+    );
+  }
+
+  static async incrementMediaViewCount(
+    mediaId: string,
+    increment: number = 1
+  ): Promise<void> {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `MEDIA#${mediaId}`,
           SK: "METADATA",
         },
         UpdateExpression: "ADD viewCount :inc",
@@ -1395,12 +1452,11 @@ export class DynamoDBService {
       "bookmark"
     );
 
-    // If this is an album, decrement the counts on the album itself
-    // Note: For media, we don't currently store individual media interaction counts
+    // Check if this is an album or media and decrement the appropriate counts
     try {
       const album = await this.getAlbum(targetId);
       if (album) {
-        // This is an album, decrement the counts
+        // This is an album, decrement the album counts
         if (likeCount > 0) {
           await this.incrementAlbumLikeCount(targetId, -likeCount);
         }
@@ -1410,11 +1466,26 @@ export class DynamoDBService {
         console.log(
           `📉 Decremented album counts: ${likeCount} likes, ${bookmarkCount} bookmarks`
         );
+      } else {
+        // Try to get media to see if this is a media target
+        const media = await this.getMedia(targetId);
+        if (media) {
+          // This is media, decrement the media counts
+          if (likeCount > 0) {
+            await this.incrementMediaLikeCount(targetId, -likeCount);
+          }
+          if (bookmarkCount > 0) {
+            await this.incrementMediaBookmarkCount(targetId, -bookmarkCount);
+          }
+          console.log(
+            `📉 Decremented media counts: ${likeCount} likes, ${bookmarkCount} bookmarks`
+          );
+        }
       }
     } catch (error) {
-      // Target is not an album or doesn't exist, which is expected for media or deleted items
+      // Target doesn't exist or other error, which is expected for deleted items
       console.log(
-        `📝 Target ${targetId} is not an album or doesn't exist (expected for media)`
+        `📝 Target ${targetId} is not found or error occurred (expected for deleted items)`
       );
     }
   }
@@ -1437,18 +1508,11 @@ export class DynamoDBService {
       );
 
       if (!result.Items || result.Items.length === 0) {
-        console.log(
-          `📭 No ${interactionType} interactions found for target: ${targetId}`
-        );
         return 0;
       }
 
-      console.log(
-        `🗑️  Deleting ${result.Items.length} ${interactionType} interactions for target: ${targetId}`
-      );
-
-      // Delete each interaction in batches
-      const batchSize = 25; // DynamoDB batch write limit
+      // Delete interactions in batches
+      const batchSize = 25;
       for (let i = 0; i < result.Items.length; i += batchSize) {
         const batch = result.Items.slice(i, i + batchSize);
 

@@ -84,8 +84,6 @@ export default async function AlbumDetailPage({
   const album = albumResult.data;
   const media = mediaResult.data?.media || [];
 
-  console.log({ album, media });
-
   return (
     <div className="space-y-6">
       <ViewTracker targetType="album" targetId={albumId} />

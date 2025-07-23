@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { Media, Album, ThumbnailContext, ThumbnailSize } from "@/types";
 import { LikeButton } from "@/components/user/LikeButton";
 import { BookmarkButton } from "@/components/user/BookmarkButton";
+import { InteractionCounts } from "@/components/user/InteractionCounts";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,7 @@ interface ContentCardProps {
   // Show counts
   showLikeCount?: boolean;
   showBookmarkCount?: boolean;
+  showCounts?: boolean;
 
   // Event handlers (optional - if not provided, default behavior will be used)
   onClick?: () => void;
@@ -63,6 +65,7 @@ export function ContentCard({
   canAddToAlbum = true,
   canDownload = false,
   canDelete = false,
+  showCounts = true,
   onClick,
   onFullscreen,
   onAddToAlbum,
@@ -233,6 +236,21 @@ export function ContentCard({
                 <PlayCircle className="w-16 h-16 text-white/80 opacity-50 group-hover:opacity-100 transition-opacity duration-300 transform group-hover:scale-110" />
               </div>
             )}
+
+            {/* Media interaction counts */}
+            {showCounts && media && (
+              <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <InteractionCounts
+                  targetType="media"
+                  targetId={media.id}
+                  likeCount={media.likeCount}
+                  bookmarkCount={media.bookmarkCount}
+                  showIcons={true}
+                  size="sm"
+                  className="text-white bg-black/50 rounded-md px-2 py-1"
+                />
+              </div>
+            )}
           </>
         ) : album ? (
           <>
@@ -264,11 +282,26 @@ export function ContentCard({
               <h3 className="text-white font-semibold text-sm line-clamp-2">
                 {title || album.title}
               </h3>
-              {album.mediaCount && (
-                <p className="text-white/80 text-xs mt-1">
-                  {album.mediaCount} {album.mediaCount === 1 ? "item" : "items"}
-                </p>
-              )}
+              <div className="flex items-center justify-between mt-1">
+                {album.mediaCount && (
+                  <p className="text-white/80 text-xs">
+                    {album.mediaCount}{" "}
+                    {album.mediaCount === 1 ? "item" : "items"}
+                  </p>
+                )}
+                {showCounts && (
+                  <InteractionCounts
+                    targetType="album"
+                    targetId={album.id}
+                    likeCount={album.likeCount}
+                    bookmarkCount={album.bookmarkCount}
+                    viewCount={album.viewCount}
+                    showIcons={true}
+                    size="sm"
+                    className="text-white"
+                  />
+                )}
+              </div>
             </div>
           </>
         ) : null}

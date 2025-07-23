@@ -44,6 +44,9 @@ export interface Media {
   status?: "pending" | "uploaded" | "failed" | undefined;
   createdAt: string;
   updatedAt: string;
+  likeCount?: number;
+  bookmarkCount?: number;
+  viewCount?: number;
   metadata?: Record<string, any> | undefined;
   // User tracking fields
   createdBy?: string | undefined;
@@ -147,6 +150,9 @@ export interface MediaEntity {
   status?: "pending" | "uploaded" | "failed" | undefined;
   createdAt: string;
   updatedAt: string;
+  likeCount?: number;
+  bookmarkCount?: number;
+  viewCount?: number;
   metadata?: Record<string, any> | undefined;
   // User tracking fields
   createdBy?: string | undefined; // userId or adminId who uploaded this media

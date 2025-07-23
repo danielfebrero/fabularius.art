@@ -43,6 +43,8 @@ export interface Media {
   createdAt: string;
   updatedAt: string;
   metadata?: Record<string, any>;
+  likeCount?: number;
+  bookmarkCount?: number;
   // User tracking fields
   createdBy?: string; // userId or adminId who uploaded this media
   createdByType?: "user" | "admin"; // type of creator

@@ -72,6 +72,14 @@ export const handler = async (
         response.metadata = item.metadata;
       }
 
+      if (item.likeCount !== undefined) {
+        response.likeCount = item.likeCount;
+      }
+
+      if (item.bookmarkCount !== undefined) {
+        response.bookmarkCount = item.bookmarkCount;
+      }
+
       // Add creator information if available
       if (item.createdBy !== undefined) {
         response.createdBy = item.createdBy;

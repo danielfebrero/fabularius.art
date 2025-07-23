@@ -98,36 +98,32 @@ export const handler = async (
       // Increment like count for the target
       if (targetType === "album") {
         await DynamoDBService.incrementAlbumLikeCount(targetId, 1);
+      } else {
+        await DynamoDBService.incrementMediaLikeCount(targetId, 1);
       }
 
-      return ResponseUtil.created(event, {
-        userId: user.userId,
-        interactionType: "like",
-        targetType,
-        targetId,
-        createdAt: now,
-      });
+      console.log(`✅ Like added for ${targetType} ${targetId}`);
     } else {
       // Remove like
-      await DynamoDBService.deleteUserInteraction(
-        user.userId,
-        "like",
-        targetId
-      );
+      await DynamoDBService.deleteUserInteraction(user.userId, "like", targetId);
 
       // Decrement like count for the target
       if (targetType === "album") {
         await DynamoDBService.incrementAlbumLikeCount(targetId, -1);
+      } else {
+        await DynamoDBService.incrementMediaLikeCount(targetId, -1);
       }
 
-      return ResponseUtil.success(event, {
-        userId: user.userId,
-        interactionType: "like",
-        targetType,
-        targetId,
-        action: "removed",
-      });
+      console.log(`✅ Like removed for ${targetType} ${targetId}`);
     }
+
+    return ResponseUtil.success(event, {
+      userId: user.userId,
+      interactionType: "like",
+      targetType,
+      targetId,
+      action: action === "add" ? "added" : "removed",
+    });
   } catch (error) {
     console.error("❌ Error in like function:", error);
     return ResponseUtil.internalError(event, "Internal server error");

@@ -53,8 +53,8 @@ export const handler = async (
         return ResponseUtil.notFound(event, "Media not found");
       }
 
-      // For now, we only track album views
-      // TODO: Add media view tracking if needed
+      // Increment view count for media
+      await DynamoDBService.incrementMediaViewCount(targetId, 1);
     }
 
     return ResponseUtil.success(event, {
