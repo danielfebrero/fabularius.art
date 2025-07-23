@@ -131,17 +131,60 @@ export function ContentCard({
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (onDownload) {
       onDownload();
     } else if (isMedia && media) {
       // Default behavior: download the media file
-      const link = document.createElement("a");
-      link.href = composeMediaUrl(media.url);
-      link.download = media.originalFilename || media.filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const mediaUrl = composeMediaUrl(media.url);
+      const filename = media.originalFilename || media.filename;
+
+      try {
+        // Try using fetch + blob approach for better cross-browser compatibility
+        const response = await fetch(mediaUrl);
+
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+
+        const blob = await response.blob();
+
+        // Create object URL for the blob
+        const blobUrl = URL.createObjectURL(blob);
+
+        // Create temporary link and trigger download
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = filename;
+        link.style.display = "none";
+
+        // Add to DOM, click, and clean up
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Clean up the blob URL
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+        }, 100);
+      } catch (error) {
+        console.error(
+          "Download failed with fetch, falling back to direct link:",
+          error
+        );
+
+        // Fallback to direct link method
+        const link = document.createElement("a");
+        link.href = mediaUrl;
+        link.download = filename;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.style.display = "none";
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     }
   };
 
