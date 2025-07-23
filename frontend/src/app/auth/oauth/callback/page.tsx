@@ -12,12 +12,22 @@ type CallbackState = "loading" | "success" | "error";
 function OAuthCallbackContent() {
   const [state, setState] = useState<CallbackState>("loading");
   const [message, setMessage] = useState("");
+  const [isAnimated, setIsAnimated] = useState(false);
   const { checkAuth } = useUser();
   const { validateOAuthState, clearOAuthState } = useGoogleAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const isProcessingRef = useRef(false);
   const hasProcessedRef = useRef(false);
+
+  // Trigger animation after component mounts
+  useEffect(() => {
+    const animationTimer = setTimeout(() => {
+      setIsAnimated(true);
+    }, 100);
+
+    return () => clearTimeout(animationTimer);
+  }, []);
 
   useEffect(() => {
     const handleOAuthCallback = async () => {
@@ -68,7 +78,9 @@ function OAuthCallbackContent() {
         // Check for required parameters
         if (!code) {
           setState("error");
-          setMessage("Missing authorization code from OAuth provider.");
+          setMessage(
+            "Missing authorization code from OAuth provider. Please try signing in again."
+          );
           hasProcessedRef.current = true;
 
           // Mark as processed with error
@@ -153,12 +165,32 @@ function OAuthCallbackContent() {
     switch (state) {
       case "loading":
         return (
-          <div className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-            <h2 className="text-xl font-semibold text-foreground">
+          <div className="text-center">
+            <div
+              className={`inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-100 dark:bg-blue-900/20 mb-6 transition-all duration-700 transform ${
+                isAnimated ? "scale-100 opacity-100" : "scale-50 opacity-0"
+              }`}
+            >
+              <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+
+            <h2
+              className={`text-2xl font-bold text-foreground mb-2 transition-all duration-700 delay-200 transform ${
+                isAnimated
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-4 opacity-0"
+              }`}
+            >
               Completing sign in...
             </h2>
-            <p className="text-muted-foreground">
+
+            <p
+              className={`text-muted-foreground text-lg transition-all duration-700 delay-300 transform ${
+                isAnimated
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-4 opacity-0"
+              }`}
+            >
               Please wait while we complete your Google sign in.
             </p>
           </div>
@@ -166,10 +198,14 @@ function OAuthCallbackContent() {
 
       case "success":
         return (
-          <div className="text-center space-y-6">
-            <div className="mx-auto w-16 h-16 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
+          <div className="text-center">
+            <div
+              className={`inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/20 mb-6 transition-all duration-700 transform ${
+                isAnimated ? "scale-100 opacity-100" : "scale-50 opacity-0"
+              }`}
+            >
               <svg
-                className="w-8 h-8 text-green-600 dark:text-green-400"
+                className="w-10 h-10 text-green-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -183,17 +219,43 @@ function OAuthCallbackContent() {
               </svg>
             </div>
 
-            <div>
-              <h2 className="text-xl font-semibold text-foreground">
-                Welcome to PornSpot.ai!
-              </h2>
-              <p className="text-muted-foreground mt-2">{message}</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Redirecting you to the dashboard...
-              </p>
-            </div>
+            <h2
+              className={`text-2xl font-bold text-foreground mb-2 transition-all duration-700 delay-200 transform ${
+                isAnimated
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-4 opacity-0"
+              }`}
+            >
+              🎉 Welcome back!
+            </h2>
 
-            <div className="flex items-center justify-center space-x-2">
+            <p
+              className={`text-muted-foreground text-lg mb-4 transition-all duration-700 delay-300 transform ${
+                isAnimated
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-4 opacity-0"
+              }`}
+            >
+              {message}
+            </p>
+
+            <p
+              className={`text-sm text-muted-foreground transition-all duration-700 delay-400 transform ${
+                isAnimated
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-4 opacity-0"
+              }`}
+            >
+              Redirecting you to the dashboard...
+            </p>
+
+            <div
+              className={`flex items-center justify-center space-x-2 mt-4 transition-all duration-700 delay-500 transform ${
+                isAnimated
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-4 opacity-0"
+              }`}
+            >
               <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
               <div
                 className="w-2 h-2 bg-primary rounded-full animate-bounce"
@@ -209,10 +271,14 @@ function OAuthCallbackContent() {
 
       case "error":
         return (
-          <div className="text-center space-y-6">
-            <div className="mx-auto w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center">
+          <div className="text-center">
+            <div
+              className={`inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-100 dark:bg-red-900/20 mb-6 transition-all duration-700 transform ${
+                isAnimated ? "scale-100 opacity-100" : "scale-50 opacity-0"
+              }`}
+            >
               <svg
-                className="w-8 h-8 text-red-600 dark:text-red-400"
+                className="w-10 h-10 text-red-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -226,24 +292,69 @@ function OAuthCallbackContent() {
               </svg>
             </div>
 
-            <div>
-              <h2 className="text-xl font-semibold text-foreground">
-                Authentication Failed
-              </h2>
-              <p className="text-muted-foreground mt-2">{message}</p>
+            <h2
+              className={`text-2xl font-bold text-foreground mb-2 transition-all duration-700 delay-200 transform ${
+                isAnimated
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-4 opacity-0"
+              }`}
+            >
+              Authentication Failed
+            </h2>
+
+            <p
+              className={`text-muted-foreground text-lg mb-4 transition-all duration-700 delay-300 transform ${
+                isAnimated
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-4 opacity-0"
+              }`}
+            >
+              {message}
+            </p>
+
+            {/* Error Details Card */}
+            <div
+              className={`bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6 transition-all duration-700 delay-400 transform ${
+                isAnimated
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-4 opacity-0"
+              }`}
+            >
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0">
+                  <span className="text-xl">💡</span>
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold text-foreground text-sm mb-1">
+                    What can you do?
+                  </h3>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Try signing in again with Google</li>
+                    <li>• Make sure you allow permissions when prompted</li>
+                    <li>• Check if your browser is blocking pop-ups</li>
+                    <li>• Clear your browser cookies and try again</li>
+                  </ul>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-3">
+            <div
+              className={`space-y-3 transition-all duration-700 delay-500 transform ${
+                isAnimated
+                  ? "translate-y-0 opacity-100"
+                  : "translate-y-4 opacity-0"
+              }`}
+            >
               <Button
                 onClick={() => router.push("/auth/login")}
-                className="w-full max-w-sm"
+                className="w-full max-w-sm bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
               >
                 Try Again
               </Button>
 
               <button
                 onClick={() => router.push("/")}
-                className="text-sm text-muted-foreground hover:text-foreground"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 Go to Discover
               </button>
@@ -256,41 +367,25 @@ function OAuthCallbackContent() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex min-h-[calc(100vh-8rem)] items-center justify-center">
-          <div className="w-full max-w-md">
-            <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-foreground">
-                PornSpot.ai
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                Google Authentication
-              </p>
-            </div>
-
-            <div className="bg-card border border-border rounded-lg shadow-lg p-6">
-              {renderContent()}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return renderContent();
 }
 
 export default function OAuthCallbackPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className="text-muted-foreground">
-              Processing authentication...
-            </p>
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-100 dark:bg-blue-900/20 mb-6">
+            <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
+
+          <h2 className="text-2xl font-bold text-foreground mb-2">
+            Processing authentication...
+          </h2>
+
+          <p className="text-muted-foreground text-lg">
+            Please wait while we process your request.
+          </p>
         </div>
       }
     >

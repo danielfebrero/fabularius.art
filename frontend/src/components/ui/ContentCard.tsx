@@ -573,7 +573,6 @@ export function ContentCard({
               )}
           </div>
         ) : null}
-
       </div>
 
       {/* Lightbox for fullscreen view */}
