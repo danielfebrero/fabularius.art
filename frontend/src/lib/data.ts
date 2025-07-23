@@ -21,7 +21,12 @@ async function handleResponse<T>(
 
 // Fetch a list of albums
 export async function getAlbums(
-  options: { isPublic?: boolean; limit?: number; cursor?: string; tag?: string } = {}
+  options: {
+    isPublic?: boolean;
+    limit?: number;
+    cursor?: string;
+    tag?: string;
+  } = {}
 ) {
   const { isPublic = true, limit = 12, cursor, tag } = options;
   const params = new URLSearchParams({

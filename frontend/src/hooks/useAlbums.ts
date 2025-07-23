@@ -90,6 +90,7 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
 
         if (tag) {
           params.append("tag", tag);
+          console.log("[useAlbums] Adding tag to request:", tag);
         }
 
         const apiUrl =
@@ -102,6 +103,15 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
 
         const data = await response.json();
         console.log("[useAlbums] fetch result", data);
+
+        if (tag) {
+          console.log(
+            "[useAlbums] Filtered by tag:",
+            tag,
+            "Results:",
+            data.data?.albums?.length || 0
+          );
+        }
 
         if (data.success) {
           // Backend returns {success: true, data: {albums: Album[], pagination: {...}}}
@@ -148,9 +158,16 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
   }, [pagination, loadingMore, fetchAlbums]);
 
   useEffect(() => {
+    console.log(
+      "[useAlbums] Effect triggered - initialAlbums.length:",
+      initialAlbums.length
+    );
     // Only fetch if we don't have initial data
     if (initialAlbums.length === 0) {
+      console.log("[useAlbums] Fetching albums because no initial data");
       fetchAlbums();
+    } else {
+      console.log("[useAlbums] Skipping fetch because we have initial data");
     }
   }, [initialAlbums.length, fetchAlbums]);
 

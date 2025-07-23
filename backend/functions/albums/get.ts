@@ -20,6 +20,13 @@ export const handler = async (
     const rawCursor = event.queryStringParameters?.["cursor"];
     const tag = event.queryStringParameters?.["tag"]; // New tag filter parameter
 
+    console.log("[Albums API] Request params:", {
+      limit,
+      isPublicParam,
+      tag,
+      cursor: rawCursor ? "present" : "none",
+    });
+
     // Enforce 'isPublic' parameter: required for GSI
     if (typeof isPublicParam === "undefined") {
       return ResponseUtil.error(

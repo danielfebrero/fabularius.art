@@ -11,8 +11,11 @@ export async function generateMetadata({
   const tag = searchParams.tag;
   const baseTitle = "PornSpot.ai - Discover AI Generated Porn";
   const title = tag ? `${baseTitle} - ${tag}` : baseTitle;
-  const baseDescription = "Browse and generate AI-powered porn images and videos. Free to start, with premium plans for unlimited creation. Explore AI-generated adult content: images, videos, and more.";
-  const description = tag ? `${baseDescription} Filtered by: ${tag}` : baseDescription;
+  const baseDescription =
+    "Browse and generate AI-powered porn images and videos. Free to start, with premium plans for unlimited creation. Explore AI-generated adult content: images, videos, and more.";
+  const description = tag
+    ? `${baseDescription} Filtered by: ${tag}`
+    : baseDescription;
 
   return {
     title,
@@ -28,7 +31,7 @@ export async function generateMetadata({
     },
     keywords: [
       "AI porn",
-      "AI generated content", 
+      "AI generated content",
       "adult content",
       "AI videos",
       "AI images",
@@ -49,10 +52,10 @@ export default async function DiscoverPage({
   let error: string | null = null;
 
   try {
-    const result = await getAlbums({ 
-      isPublic: true, 
+    const result = await getAlbums({
+      isPublic: true,
       limit: 12,
-      ...(tag && { tag }) // Include tag if provided
+      ...(tag && { tag }), // Include tag if provided
     });
 
     if (result.error) {

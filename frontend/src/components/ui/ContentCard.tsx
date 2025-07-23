@@ -476,7 +476,7 @@ export function ContentCard({
                         e.preventDefault();
                         e.stopPropagation();
                         const url = `/?tag=${encodeURIComponent(tag)}`;
-                        window.location.href = url;
+                        router.push(url);
                       }}
                       className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white/20 text-white border border-white/30 backdrop-blur-sm hover:bg-white/30 hover:border-white/50 transition-all duration-200 cursor-pointer"
                       title={`Filter by tag: ${tag}`}
