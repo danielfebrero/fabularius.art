@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { AdminProvider } from "@/contexts/AdminContext";
@@ -8,18 +7,11 @@ import { UserInteractionProvider } from "@/hooks/useUserInteractionStatus";
 import { Header } from "@/components/Header";
 import { PermissionsWrapper } from "@/components/PermissionsWrapper";
 import { MainContentWrapper } from "@/components/MainContentWrapper";
-import { locales } from "@/i18n";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 type Props = {
   children: React.ReactNode;
   params: { locale: string };
 };
-
-export async function generateStaticParams() {
-  return locales.map((locale) => ({ locale }));
-}
 
 export async function generateMetadata({
   params: { locale },

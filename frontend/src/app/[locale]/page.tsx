@@ -4,8 +4,10 @@ import { Album } from "@/types";
 import { DiscoverClient } from "@/components/DiscoverClient";
 
 export async function generateMetadata({
+  params,
   searchParams,
 }: {
+  params: { locale: string };
   searchParams: { tag?: string };
 }): Promise<Metadata> {
   const tag = searchParams.tag;
@@ -42,8 +44,10 @@ export async function generateMetadata({
 }
 
 export default async function DiscoverPage({
+  params,
   searchParams,
 }: {
+  params: { locale: string };
   searchParams: { tag?: string };
 }) {
   const tag = searchParams.tag;
