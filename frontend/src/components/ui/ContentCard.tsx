@@ -465,6 +465,26 @@ export function ContentCard({
               <h3 className="text-white font-semibold text-sm line-clamp-2">
                 {title || album.title}
               </h3>
+
+              {/* Tags */}
+              {album.tags && album.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2 -ml-2">
+                  {album.tags.slice(0, 3).map((tag, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white/20 text-white border border-white/30 backdrop-blur-sm"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                  {album.tags.length > 3 && (
+                    <span className="text-xs text-white/70 font-medium px-2 py-1">
+                      +{album.tags.length - 3} more
+                    </span>
+                  )}
+                </div>
+              )}
+
               <div className="flex items-center justify-between mt-1">
                 {album.mediaCount && (
                   <p className="text-white/80 text-xs">
