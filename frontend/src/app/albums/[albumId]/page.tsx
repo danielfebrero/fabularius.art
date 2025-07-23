@@ -4,11 +4,9 @@ import {
   getMediaForAlbum,
   fetchAllPublicAlbums,
 } from "../../../lib/data";
-import { MediaGallery } from "../../../components/MediaGallery";
 import { composeAlbumCoverUrl } from "../../../lib/urlUtils";
-import { ViewTracker } from "../../../components/ui/ViewTracker";
+import { AlbumDetailClient } from "../../../components/AlbumDetailClient";
 import type { Metadata } from "next";
-import Link from "next/link";
 
 type AlbumDetailPageProps = {
   params: { albumId: string };
@@ -85,41 +83,10 @@ export default async function AlbumDetailPage({
   const media = mediaResult.data?.media || [];
 
   return (
-    <div className="space-y-6">
-      <ViewTracker targetType="album" targetId={albumId} />
-
-      <nav className="flex items-center space-x-2 text-sm text-muted-foreground">
-        <Link href="/" className="hover:text-foreground transition-colors">
-          Albums
-        </Link>
-        <span>/</span>
-        <span className="text-foreground font-medium truncate max-w-xs">
-          {album.title}
-        </span>
-      </nav>
-
-      <div className="space-y-4">
-        {album.tags && album.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {album.tags.map((tag, index) => (
-              <Link
-                key={index}
-                href={`/?tag=${encodeURIComponent(tag)}`}
-                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-black/20 text-gray-500 border border-gray-300/60 backdrop-blur-sm hover:bg-black/30 hover:text-gray-600 hover:border-gray-400/70 hover:scale-105 transition-all duration-200 cursor-pointer"
-                title={`Filter albums by tag: ${tag}`}
-              >
-                {tag}
-              </Link>
-            ))}
-          </div>
-        )}
-
-        <MediaGallery
-          albumId={albumId}
-          initialMedia={media}
-          initialPagination={mediaResult.data?.pagination}
-        />
-      </div>
-    </div>
+    <AlbumDetailClient
+      album={album}
+      initialMedia={media}
+      initialPagination={mediaResult.data?.pagination || null}
+    />
   );
 }
