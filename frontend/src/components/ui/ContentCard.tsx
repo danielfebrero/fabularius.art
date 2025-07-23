@@ -191,7 +191,7 @@ export function ContentCard({
       >
         {/* Content based on type */}
         {isMedia && media ? (
-          <>
+          <div className="relative w-full h-full">
             {isVideo ? (
               <video
                 src={composeMediaUrl(media.url)}
@@ -235,6 +235,124 @@ export function ContentCard({
               </div>
             )}
 
+            {/* Left column - Like and Bookmark over image */}
+            {(canLike || canBookmark) && (
+              <div
+                className={cn(
+                  "absolute top-2 left-2 sm:top-3 sm:left-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
+                  isMobile
+                    ? actionsOpen
+                      ? "opacity-100"
+                      : "opacity-0 pointer-events-none"
+                    : "opacity-0 group-hover:opacity-100"
+                )}
+              >
+                {canLike && (
+                  <Tooltip content="Like" side="right">
+                    <span
+                      onClick={handleActionClick}
+                      onTouchEnd={handleActionClick}
+                    >
+                      <LikeButton
+                        targetType={type}
+                        targetId={item.id}
+                        size="sm"
+                        className="bg-white/90 hover:bg-white text-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
+                        useCache={true}
+                      />
+                    </span>
+                  </Tooltip>
+                )}
+                {canBookmark && (
+                  <Tooltip content="Bookmark" side="right">
+                    <span
+                      onClick={handleActionClick}
+                      onTouchEnd={handleActionClick}
+                    >
+                      <BookmarkButton
+                        targetType={type}
+                        targetId={item.id}
+                        size="sm"
+                        className="bg-white/90 hover:bg-white text-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
+                        useCache={true}
+                      />
+                    </span>
+                  </Tooltip>
+                )}
+              </div>
+            )}
+
+            {/* Right column - Action buttons over image */}
+            {(canFullscreen || canAddToAlbum || canDownload || canDelete) && (
+              <div
+                className={cn(
+                  "absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
+                  isMobile
+                    ? actionsOpen
+                      ? "opacity-100"
+                      : "opacity-0 pointer-events-none"
+                    : "opacity-0 group-hover:opacity-100"
+                )}
+              >
+                {canFullscreen && (
+                  <Tooltip content="View fullscreen" side="left">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFullscreen();
+                      }}
+                      className="p-1.5 sm:p-2 rounded-lg bg-black/50 hover:bg-black/70 text-white transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      aria-label="View fullscreen"
+                    >
+                      <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </button>
+                  </Tooltip>
+                )}
+                {canAddToAlbum && (
+                  <Tooltip content="Add to album" side="left">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToAlbum();
+                      }}
+                      className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      aria-label="Add to album"
+                    >
+                      <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </button>
+                  </Tooltip>
+                )}
+                {canDownload && (
+                  <Tooltip content="Download" side="left">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload();
+                      }}
+                      className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      aria-label="Download"
+                    >
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </button>
+                  </Tooltip>
+                )}
+                {canDelete && (
+                  <Tooltip content="Delete" side="left">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete();
+                      }}
+                      className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-red-600 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      aria-label="Delete"
+                    >
+                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </button>
+                  </Tooltip>
+                )}
+              </div>
+            )}
+
             {/* Media interaction counts */}
             {showCounts && media && (
               <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -249,9 +367,26 @@ export function ContentCard({
                 />
               </div>
             )}
-          </>
+
+            {/* Mobile touch area for actions */}
+            {isMobile &&
+              (canLike ||
+                canBookmark ||
+                canFullscreen ||
+                canAddToAlbum ||
+                canDownload ||
+                canDelete) && (
+                <button
+                  className="absolute top-2 right-2 w-6 h-6 sm:w-8 sm:h-8 bg-black/50 rounded-full flex items-center justify-center md:hidden z-20"
+                  onClick={handleActionClick}
+                  onTouchEnd={handleActionClick}
+                >
+                  <span className="text-white text-xs">⋯</span>
+                </button>
+              )}
+          </div>
         ) : album ? (
-          <>
+          <div className="relative w-full h-full">
             <ResponsivePicture
               thumbnailUrls={
                 preferredThumbnailSize
@@ -301,143 +436,144 @@ export function ContentCard({
                 )}
               </div>
             </div>
-          </>
+
+            {/* Left column - Like and Bookmark over image */}
+            {(canLike || canBookmark) && (
+              <div
+                className={cn(
+                  "absolute top-2 left-2 sm:top-3 sm:left-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
+                  isMobile
+                    ? actionsOpen
+                      ? "opacity-100"
+                      : "opacity-0 pointer-events-none"
+                    : "opacity-0 group-hover:opacity-100"
+                )}
+              >
+                {canLike && (
+                  <Tooltip content="Like" side="right">
+                    <span
+                      onClick={handleActionClick}
+                      onTouchEnd={handleActionClick}
+                    >
+                      <LikeButton
+                        targetType={type}
+                        targetId={item.id}
+                        size="sm"
+                        className="bg-white/90 hover:bg-white text-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
+                        useCache={true}
+                      />
+                    </span>
+                  </Tooltip>
+                )}
+                {canBookmark && (
+                  <Tooltip content="Bookmark" side="right">
+                    <span
+                      onClick={handleActionClick}
+                      onTouchEnd={handleActionClick}
+                    >
+                      <BookmarkButton
+                        targetType={type}
+                        targetId={item.id}
+                        size="sm"
+                        className="bg-white/90 hover:bg-white text-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
+                        useCache={true}
+                      />
+                    </span>
+                  </Tooltip>
+                )}
+              </div>
+            )}
+
+            {/* Right column - Action buttons over image */}
+            {(canFullscreen || canAddToAlbum || canDownload || canDelete) && (
+              <div
+                className={cn(
+                  "absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
+                  isMobile
+                    ? actionsOpen
+                      ? "opacity-100"
+                      : "opacity-0 pointer-events-none"
+                    : "opacity-0 group-hover:opacity-100"
+                )}
+              >
+                {canFullscreen && (
+                  <Tooltip content="View fullscreen" side="left">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFullscreen();
+                      }}
+                      className="p-1.5 sm:p-2 rounded-lg bg-black/50 hover:bg-black/70 text-white transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      aria-label="View fullscreen"
+                    >
+                      <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </button>
+                  </Tooltip>
+                )}
+                {canAddToAlbum && (
+                  <Tooltip content="Add to album" side="left">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddToAlbum();
+                      }}
+                      className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      aria-label="Add to album"
+                    >
+                      <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </button>
+                  </Tooltip>
+                )}
+                {canDownload && (
+                  <Tooltip content="Download" side="left">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload();
+                      }}
+                      className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      aria-label="Download"
+                    >
+                      <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </button>
+                  </Tooltip>
+                )}
+                {canDelete && (
+                  <Tooltip content="Delete" side="left">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete();
+                      }}
+                      className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-red-600 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      aria-label="Delete"
+                    >
+                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                    </button>
+                  </Tooltip>
+                )}
+              </div>
+            )}
+
+            {/* Mobile touch area for actions */}
+            {isMobile &&
+              (canLike ||
+                canBookmark ||
+                canFullscreen ||
+                canAddToAlbum ||
+                canDownload ||
+                canDelete) && (
+                <button
+                  className="absolute top-2 right-2 w-6 h-6 sm:w-8 sm:h-8 bg-black/50 rounded-full flex items-center justify-center md:hidden z-20"
+                  onClick={handleActionClick}
+                  onTouchEnd={handleActionClick}
+                >
+                  <span className="text-white text-xs">⋯</span>
+                </button>
+              )}
+          </div>
         ) : null}
 
-        {/* Mobile touch area for actions */}
-        {isMobile &&
-          (canLike ||
-            canBookmark ||
-            canFullscreen ||
-            canAddToAlbum ||
-            canDownload ||
-            canDelete) && (
-            <button
-              className="absolute top-2 right-2 w-6 h-6 sm:w-8 sm:h-8 bg-black/50 rounded-full flex items-center justify-center md:hidden"
-              onClick={handleActionClick}
-              onTouchEnd={handleActionClick}
-            >
-              <span className="text-white text-xs">⋯</span>
-            </button>
-          )}
-
-        {/* Left column - Like and Bookmark over image */}
-        {(canLike || canBookmark) && (
-          <div
-            className={cn(
-              "absolute top-2 left-2 sm:top-3 sm:left-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
-              isMobile
-                ? actionsOpen
-                  ? "opacity-100"
-                  : "opacity-0 pointer-events-none"
-                : "opacity-0 group-hover:opacity-100"
-            )}
-          >
-            {canLike && (
-              <Tooltip content="Like" side="right">
-                <span
-                  onClick={handleActionClick}
-                  onTouchEnd={handleActionClick}
-                >
-                  <LikeButton
-                    targetType={type}
-                    targetId={item.id}
-                    size="sm"
-                    className="bg-white/90 hover:bg-white text-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
-                    useCache={true}
-                  />
-                </span>
-              </Tooltip>
-            )}
-            {canBookmark && (
-              <Tooltip content="Bookmark" side="right">
-                <span
-                  onClick={handleActionClick}
-                  onTouchEnd={handleActionClick}
-                >
-                  <BookmarkButton
-                    targetType={type}
-                    targetId={item.id}
-                    size="sm"
-                    className="bg-white/90 hover:bg-white text-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
-                    useCache={true}
-                  />
-                </span>
-              </Tooltip>
-            )}
-          </div>
-        )}
-
-        {/* Right column - Action buttons over image */}
-        {(canFullscreen || canAddToAlbum || canDownload || canDelete) && (
-          <div
-            className={cn(
-              "absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
-              isMobile
-                ? actionsOpen
-                  ? "opacity-100"
-                  : "opacity-0 pointer-events-none"
-                : "opacity-0 group-hover:opacity-100"
-            )}
-          >
-            {canFullscreen && (
-              <Tooltip content="View fullscreen" side="left">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleFullscreen();
-                  }}
-                  className="p-1.5 sm:p-2 rounded-lg bg-black/50 hover:bg-black/70 text-white transition-colors shadow-lg hover:shadow-xl hover:scale-110"
-                  aria-label="View fullscreen"
-                >
-                  <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                </button>
-              </Tooltip>
-            )}
-            {canAddToAlbum && (
-              <Tooltip content="Add to album" side="left">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddToAlbum();
-                  }}
-                  className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
-                  aria-label="Add to album"
-                >
-                  <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-                </button>
-              </Tooltip>
-            )}
-            {canDownload && (
-              <Tooltip content="Download" side="left">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDownload();
-                  }}
-                  className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
-                  aria-label="Download"
-                >
-                  <Download className="h-3 w-3 sm:h-4 sm:w-4" />
-                </button>
-              </Tooltip>
-            )}
-            {canDelete && (
-              <Tooltip content="Delete" side="left">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDelete();
-                  }}
-                  className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-red-600 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
-                  aria-label="Delete"
-                >
-                  <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                </button>
-              </Tooltip>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Lightbox for fullscreen view */}

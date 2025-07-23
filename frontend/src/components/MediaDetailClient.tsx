@@ -283,7 +283,7 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
               type="media"
               aspectRatio="auto"
               className="bg-card shadow-lg w-full"
-              imageClassName="w-full h-auto max-h-[80vh] object-contain"
+              imageClassName="w-full h-auto max-h-[80vh]"
               preferredThumbnailSize="originalSize"
               canLike={true}
               canBookmark={true}
