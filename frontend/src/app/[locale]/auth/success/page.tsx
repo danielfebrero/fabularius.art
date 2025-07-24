@@ -8,6 +8,11 @@ type AuthSuccessPageProps = {
   params: { locale: string };
 };
 
+// Enable ISR for this page - static generation with revalidation
+export const revalidate = 86400; // revalidate every day
+export const dynamic = "force-static"; // Force static generation at build time
+export const dynamicParams = true; // Allow dynamic params
+
 // Generate static pages for all locales at build time
 export async function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
