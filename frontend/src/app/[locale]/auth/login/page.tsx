@@ -1,8 +1,8 @@
 import { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
 import { locales } from "@/i18n";
 import { Suspense } from "react";
 import { LoginForm } from "@/components/user/LoginForm";
+import { generateTranslatedOpenGraphMetadata, generateSiteUrl } from "@/lib/opengraph";
 
 type LoginPageProps = {
   params: { locale: string };
@@ -21,15 +21,14 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: LoginPageProps): Promise<Metadata> {
-  const t = await getTranslations({
+  return generateTranslatedOpenGraphMetadata({
     locale: params.locale,
+    titleKey: "meta.title",
+    descriptionKey: "meta.description", 
     namespace: "auth.login",
+    url: generateSiteUrl(params.locale, "auth/login"),
+    type: "website",
   });
-
-  return {
-    title: t("meta.title"),
-    description: t("meta.description"),
-  };
 }
 
 function LoginFallback() {

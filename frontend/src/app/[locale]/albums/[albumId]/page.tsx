@@ -9,6 +9,7 @@ import { AlbumDetailClient } from "@/components/AlbumDetailClient";
 import { locales } from "@/i18n";
 import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
+import { generateAlbumMetadata } from "@/lib/opengraph";
 
 type AlbumDetailPageProps = {
   params: {
@@ -28,8 +29,7 @@ export async function generateMetadata({
   const { locale, albumId } = params;
   const { data: album, error } = await getAlbumById(albumId);
 
-  // Get localized translations
-  const t = await getTranslations({ locale, namespace: "site" });
+  // Get localized translations for fallback
   const tAlbum = await getTranslations({ locale, namespace: "album" });
 
   if (error || !album) {
@@ -38,55 +38,11 @@ export async function generateMetadata({
     };
   }
 
-  const albumDescription =
-    album.tags?.join(", ") ||
-    tAlbum("defaultDescription", { title: album.title });
-
-  // Use locale in URL generation
-  const albumUrl = `https://pornspot.ai/${locale}/albums/${albumId}`;
-  const siteName = t("name");
-
-  // Localized metadata titles and descriptions
-  const metaTitle = tAlbum("metaTitle", { title: album.title, siteName });
-  const metaDescription = tAlbum("metaDescription", {
-    description: albumDescription,
-    siteName,
+  return generateAlbumMetadata(locale, albumId, {
+    title: album.title,
+    tags: album.tags,
+    coverImageUrl: album.coverImageUrl ? composeAlbumCoverUrl(album.coverImageUrl) : undefined,
   });
-
-  return {
-    title: metaTitle,
-    description: metaDescription,
-    keywords: [
-      tAlbum("keywords.aiAlbum"),
-      tAlbum("keywords.generatedContent"),
-      tAlbum("keywords.images"),
-      tAlbum("keywords.videos"),
-      ...(album.tags || []),
-    ],
-    openGraph: {
-      title: metaTitle,
-      description: metaDescription,
-      url: albumUrl,
-      type: "article",
-      locale: locale,
-      siteName: siteName,
-      images: [
-        album.coverImageUrl
-          ? composeAlbumCoverUrl(album.coverImageUrl)
-          : "/website.png",
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: metaTitle,
-      description: metaDescription,
-      images: [
-        album.coverImageUrl
-          ? composeAlbumCoverUrl(album.coverImageUrl)
-          : "/website.png",
-      ],
-    },
-  };
 }
 
 export async function generateStaticParams() {
@@ -109,7 +65,7 @@ export async function generateStaticParams() {
 export default async function AlbumDetailPage({
   params,
 }: AlbumDetailPageProps) {
-  const { locale, albumId } = params;
+  const { albumId } = params;
   const albumResult = await getAlbumById(albumId);
   const mediaResult = await getMediaForAlbum(albumId);
 

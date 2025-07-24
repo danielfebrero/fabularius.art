@@ -4,6 +4,7 @@ import { getAlbums } from "@/lib/data";
 import { Album } from "@/types";
 import { DiscoverClient } from "@/components/DiscoverClient";
 import { locales } from "@/i18n";
+import { generateHomepageMetadata } from "@/lib/opengraph";
 
 // Generate static pages for all locales at build time
 export async function generateStaticParams() {
@@ -22,42 +23,7 @@ export async function generateMetadata({
   params: { locale: string };
   searchParams: { tag?: string };
 }): Promise<Metadata> {
-  const t = await getTranslations({ locale: params.locale, namespace: "site" });
-  const tCommon = await getTranslations({
-    locale: params.locale,
-    namespace: "common",
-  });
-
-  const tag = searchParams.tag;
-  const baseTitle = t("meta.title");
-  const title = tag ? `${baseTitle} - ${tag}` : baseTitle;
-  const baseDescription = t("meta.description");
-  const description = tag
-    ? `${baseDescription} ${tCommon("filteredBy")}: ${tag}`
-    : baseDescription;
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      siteName: t("name"),
-    },
-    twitter: {
-      title,
-      description,
-    },
-    keywords: [
-      t("keywords.aiPorn"),
-      t("keywords.aiGeneratedContent"),
-      t("keywords.adultContent"),
-      t("keywords.aiVideos"),
-      t("keywords.aiImages"),
-      t("keywords.generatedPorn"),
-      ...(tag ? [tag] : []),
-    ],
-  };
+  return generateHomepageMetadata(params.locale, searchParams.tag);
 }
 
 export default async function DiscoverPage({
