@@ -41,7 +41,13 @@ export async function getAlbums(
   }
 
   const response = await fetch(`${API_URL}/albums?${params}`, {
-    next: { revalidate: 3600, tags: ["albums"] },
+    // ISR: Revalidate every hour, but serve stale content while regenerating
+    next: { 
+      revalidate: 3600, // 1 hour
+      tags: ["albums", "homepage"] 
+    },
+    // Ensure we can fallback during build
+    cache: 'force-cache'
   });
   return handleResponse<{ albums: Album[]; pagination: any }>(response);
 }

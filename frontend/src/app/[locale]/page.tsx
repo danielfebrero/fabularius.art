@@ -3,6 +3,17 @@ import { getTranslations } from "next-intl/server";
 import { getAlbums } from "@/lib/data";
 import { Album } from "@/types";
 import { DiscoverClient } from "@/components/DiscoverClient";
+import { locales } from "@/i18n";
+
+// Generate static pages for all locales at build time
+export async function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
+
+// Enable ISR for this page - static generation with revalidation
+export const revalidate = 3600; // Revalidate every hour
+export const dynamic = 'force-static'; // Force static generation at build time
+export const dynamicParams = true; // Allow dynamic params (for tags)
 
 export async function generateMetadata({
   params,

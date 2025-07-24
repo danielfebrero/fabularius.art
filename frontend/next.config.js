@@ -98,6 +98,15 @@ const nextConfig = {
     outputFileTracingRoot: __dirname,
   },
 
+  // Enable static optimization and ISR
+  output: 'standalone', // or 'export' for full static export
+  
+  // Configure ISR behavior
+  generateBuildId: async () => {
+    // Use timestamp or commit hash for build ID
+    return process.env.VERCEL_GIT_COMMIT_SHA || `build-${Date.now()}`;
+  },
+
   // Compression
   compress: true,
 
