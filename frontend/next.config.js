@@ -99,8 +99,8 @@ const nextConfig = {
   },
 
   // Enable static optimization and ISR
-  output: 'standalone', // or 'export' for full static export
-  
+  output: "standalone", // or 'export' for full static export
+
   // Configure ISR behavior
   generateBuildId: async () => {
     // Use timestamp or commit hash for build ID

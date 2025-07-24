@@ -12,7 +12,7 @@ export async function generateStaticParams() {
 
 // Enable ISR for this page - static generation with revalidation
 export const revalidate = 3600; // Revalidate every hour
-export const dynamic = 'force-static'; // Force static generation at build time
+export const dynamic = "force-static"; // Force static generation at build time
 export const dynamicParams = true; // Allow dynamic params (for tags)
 
 export async function generateMetadata({

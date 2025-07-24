@@ -29,17 +29,17 @@ export async function POST(request: NextRequest) {
       console.log("Revalidating homepage for all locales");
       revalidateTag("albums");
       revalidateTag("homepage");
-      
+
       for (const locale of locales) {
         revalidatePath(`/${locale}`);
         console.log(`Revalidated path: /${locale}`);
       }
-      
-      return NextResponse.json({ 
-        revalidated: true, 
-        now: Date.now(), 
+
+      return NextResponse.json({
+        revalidated: true,
+        now: Date.now(),
         type: "homepage",
-        locales: locales 
+        locales: locales,
       });
     }
 
@@ -57,7 +57,10 @@ export async function POST(request: NextRequest) {
 
     if (!tag && !path) {
       console.error("Missing tag or path parameter");
-      return NextResponse.json({ message: "Tag or path is required" }, { status: 400 });
+      return NextResponse.json(
+        { message: "Tag or path is required" },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json({ revalidated: true, now: Date.now(), tag, path });
