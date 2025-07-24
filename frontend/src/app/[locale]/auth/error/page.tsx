@@ -1,11 +1,31 @@
 import { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { locales } from "@/i18n";
 import { Suspense } from "react";
 import { AuthErrorClient } from "@/components/user/AuthErrorClient";
 
-export const metadata: Metadata = {
-  title: "Authentication Error - PornSpot.ai",
-  description: "There was an issue with your authentication request.",
+type AuthErrorPageProps = {
+  params: { locale: string };
 };
+
+// Generate static pages for all locales at build time
+export async function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
+
+export async function generateMetadata({
+  params,
+}: AuthErrorPageProps): Promise<Metadata> {
+  const t = await getTranslations({
+    locale: params.locale,
+    namespace: "auth.error",
+  });
+
+  return {
+    title: t("meta.title"),
+    description: t("meta.description"),
+  };
+}
 
 function AuthErrorFallback() {
   return (

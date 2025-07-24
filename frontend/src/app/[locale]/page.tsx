@@ -49,12 +49,12 @@ export async function generateMetadata({
       description,
     },
     keywords: [
-      "AI porn",
-      "AI generated content",
-      "adult content",
-      "AI videos",
-      "AI images",
-      "generated porn",
+      t("keywords.aiPorn"),
+      t("keywords.aiGeneratedContent"),
+      t("keywords.adultContent"),
+      t("keywords.aiVideos"),
+      t("keywords.aiImages"),
+      t("keywords.generatedPorn"),
       ...(tag ? [tag] : []),
     ],
   };

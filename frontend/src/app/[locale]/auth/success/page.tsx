@@ -1,11 +1,31 @@
 import { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
+import { locales } from "@/i18n";
 import { Suspense } from "react";
 import { AuthSuccessClient } from "@/components/user/AuthSuccessClient";
 
-export const metadata: Metadata = {
-  title: "Welcome - PornSpot.ai",
-  description: "Welcome to PornSpot.ai! Your account is ready.",
+type AuthSuccessPageProps = {
+  params: { locale: string };
 };
+
+// Generate static pages for all locales at build time
+export async function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
+
+export async function generateMetadata({
+  params,
+}: AuthSuccessPageProps): Promise<Metadata> {
+  const t = await getTranslations({
+    locale: params.locale,
+    namespace: "auth.success",
+  });
+
+  return {
+    title: t("meta.title"),
+    description: t("meta.description"),
+  };
+}
 
 function AuthSuccessFallback() {
   return (
