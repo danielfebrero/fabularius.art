@@ -1,0 +1,47 @@
+import type { Metadata } from "next";
+import { locales } from "@/i18n";
+import { PrivacyClient } from "@/components/PrivacyClient";
+import {
+  generateTranslatedOpenGraphMetadata,
+  generateSiteUrl,
+} from "@/lib/opengraph";
+
+type PrivacyPageProps = {
+  params: { locale: string };
+};
+
+// Generate static pages for all locales at build time
+export async function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
+
+// Enable static generation with periodic revalidation
+export const revalidate = 86400; // Revalidate every 24 hours (privacy policy changes rarely)
+export const dynamic = "force-static";
+
+export async function generateMetadata({
+  params,
+}: PrivacyPageProps): Promise<Metadata> {
+  const { locale } = params;
+
+  return generateTranslatedOpenGraphMetadata({
+    locale,
+    titleKey: "metaTitle",
+    descriptionKey: "metaDescription",
+    namespace: "privacy",
+    url: generateSiteUrl(locale, "privacy"),
+    type: "website",
+    additionalKeywords: [
+      "privacy policy",
+      "data protection",
+      "AI privacy",
+      "adult content privacy",
+      "GDPR compliance",
+      "data security",
+    ],
+  });
+}
+
+export default function PrivacyPage() {
+  return <PrivacyClient />;
+}

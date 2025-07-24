@@ -675,5 +675,151 @@
       "images": "imágenes IA",
       "videos": "videos IA"
     }
+  },
+  "terms": {
+    "metaTitle": "Términos de Servicio - {siteName}",
+    "metaDescription": "Lee nuestros términos de servicio y condiciones para usar la plataforma de contenido adulto generado por IA PornSpot.ai.",
+    "title": "Términos de Servicio",
+    "lastUpdated": "Última actualización: {date}",
+    "introduction": {
+      "title": "Introducción",
+      "content": "Bienvenido a PornSpot.ai. Estos Términos de Servicio (\"Términos\") rigen su uso de nuestro sitio web y servicios. Al acceder o usar nuestra plataforma, usted acepta estar sujeto a estos Términos."
+    },
+    "acceptance": {
+      "title": "Aceptación de los Términos",
+      "content": "Al crear una cuenta o usar nuestros servicios, confirma que tiene al menos 18 años y la capacidad legal para celebrar estos Términos. Usted acepta cumplir con todas las leyes y regulaciones aplicables."
+    },
+    "services": {
+      "title": "Nuestros Servicios",
+      "content": "PornSpot.ai proporciona servicios de generación de contenido impulsados por IA para entretenimiento adulto. Nuestra plataforma permite a los usuarios crear, ver y gestionar contenido adulto generado por IA según su plan de suscripción."
+    },
+    "userAccounts": {
+      "title": "Cuentas de Usuario",
+      "content": "Usted es responsable de mantener la confidencialidad de sus credenciales de cuenta. Acepta notificarnos inmediatamente de cualquier uso no autorizado de su cuenta. Nos reservamos el derecho de suspender o terminar cuentas que violen estos Términos."
+    },
+    "subscriptions": {
+      "title": "Suscripciones y Pagos",
+      "content": "Nuestros servicios están disponibles a través de varios planes de suscripción. El pago se procesa de forma segura a través de nuestros proveedores de pago. Las suscripciones se renuevan automáticamente a menos que se cancelen. Los reembolsos se proporcionan de acuerdo con nuestra política de reembolso."
+    },
+    "contentPolicy": {
+      "title": "Política de Contenido",
+      "content": "Todo el contenido generado a través de nuestra plataforma debe cumplir con las leyes aplicables. Los usuarios tienen prohibido crear contenido que involucre menores, falta de consentimiento o actividades ilegales. Nos reservamos el derecho de eliminar contenido que viole nuestras políticas."
+    },
+    "intellectualProperty": {
+      "title": "Propiedad Intelectual",
+      "content": "Los usuarios conservan los derechos sobre el contenido que generan a través de nuestra plataforma. Sin embargo, al usar nuestros servicios, nos otorga una licencia para mostrar, almacenar y procesar su contenido según sea necesario para proporcionar nuestros servicios."
+    },
+    "privacy": {
+      "title": "Privacidad y Protección de Datos",
+      "content": "Su privacidad es importante para nosotros. Por favor, revise nuestra Política de Privacidad para entender cómo recopilamos, usamos y protegemos su información personal. Cumplimos con las leyes aplicables de protección de datos."
+    },
+    "prohibited": {
+      "title": "Usos Prohibidos",
+      "content": "No puede usar nuestros servicios para propósitos ilegales, para acosar a otros, distribuir malware o violar los derechos de otros. La violación de estas restricciones puede resultar en la terminación de la cuenta."
+    },
+    "termination": {
+      "title": "Terminación",
+      "content": "Podemos terminar o suspender su cuenta en cualquier momento por violación de estos Términos. Tras la terminación, su derecho a usar nuestros servicios cesa inmediatamente. La retención de datos se rige por nuestra Política de Privacidad."
+    },
+    "disclaimer": {
+      "title": "Descargo de Garantías",
+      "content": "Nuestros servicios se proporcionan \"tal como están\" sin garantías de ningún tipo. No garantizamos servicio ininterrumpido, operación libre de errores o resultados específicos de nuestra tecnología de generación IA."
+    },
+    "limitation": {
+      "title": "Limitación de Responsabilidad",
+      "content": "En la máxima medida permitida por la ley, no seremos responsables de daños indirectos, incidentales, especiales o consecuentes que surjan de su uso de nuestros servicios."
+    },
+    "governing": {
+      "title": "Ley Aplicable",
+      "content": "Estos Términos se rigen e interpretan de acuerdo con las leyes aplicables. Cualquier disputa se resolverá a través de arbitraje vinculante o en tribunales de jurisdicción competente."
+    },
+    "changes": {
+      "title": "Cambios en los Términos",
+      "content": "Nos reservamos el derecho de modificar estos Términos en cualquier momento. Notificaremos a los usuarios de cambios materiales por correo electrónico o notificaciones de la plataforma. El uso continuado después de los cambios constituye aceptación de los nuevos Términos."
+    },
+    "contact": {
+      "title": "Información de Contacto",
+      "content": "Si tiene preguntas sobre estos Términos, contáctenos a través de nuestros canales de soporte o en la información de contacto proporcionada en nuestro sitio web."
+    },
+    "ui": {
+      "tableOfContents": "Tabla de Contenidos",
+      "questionsTitle": "¿Preguntas sobre nuestros Términos?",
+      "questionsDescription": "Si tiene alguna pregunta sobre estos Términos de Servicio, no dude en contactarnos.",
+      "contactSupport": "Contactar Soporte",
+      "privacyPolicy": "Política de Privacidad"
+    }
+  },
+  "privacy": {
+    "metaTitle": "Política de Privacidad - {siteName}",
+    "metaDescription": "Lea nuestra política de privacidad para entender cómo PornSpot.ai recopila, usa y protege su información personal.",
+    "title": "Política de Privacidad",
+    "lastUpdated": "Última actualización: {date}",
+    "introduction": {
+      "title": "Introducción",
+      "content": "En PornSpot.ai, tomamos su privacidad en serio. Esta Política de Privacidad explica cómo recopilamos, usamos, divulgamos y protegemos su información cuando usa nuestra plataforma de generación de contenido adulto impulsada por IA."
+    },
+    "informationWe": {
+      "title": "Información que Recopilamos",
+      "content": "Recopilamos información que nos proporciona directamente, como cuando crea una cuenta, genera contenido o nos contacta. Esto incluye su dirección de correo electrónico, nombre de usuario, información de suscripción y preferencias de generación de contenido."
+    },
+    "howWe": {
+      "title": "Cómo Usamos su Información",
+      "content": "Usamos la información que recopilamos para proporcionar, mantener y mejorar nuestros servicios, procesar transacciones, enviarle notificaciones técnicas y mensajes de soporte, y comunicarnos con usted sobre productos, servicios y ofertas promocionales."
+    },
+    "informationSharing": {
+      "title": "Compartir y Divulgar Información",
+      "content": "No vendemos, intercambiamos ni transferimos su información personal a terceros sin su consentimiento, excepto como se describe en esta política. Podemos compartir información con proveedores de servicios que nos ayudan a operar nuestra plataforma."
+    },
+    "dataStorage": {
+      "title": "Almacenamiento y Seguridad de Datos",
+      "content": "Implementamos medidas técnicas y organizativas apropiadas para proteger su información personal contra acceso no autorizado, alteración, divulgación o destrucción. Sus datos se almacenan en servidores seguros con cifrado estándar de la industria."
+    },
+    "cookies": {
+      "title": "Cookies y Tecnologías de Seguimiento",
+      "content": "Usamos cookies y tecnologías de seguimiento similares para rastrear la actividad en nuestro servicio y mantener cierta información. Puede configurar su navegador para rechazar todas las cookies o indicar cuándo se está enviando una cookie."
+    },
+    "dataRetention": {
+      "title": "Retención de Datos",
+      "content": "Conservamos su información personal durante el tiempo necesario para brindarle servicios, cumplir con nuestras obligaciones legales, resolver disputas y hacer cumplir nuestros acuerdos. Puede solicitar la eliminación de su cuenta y datos personales en cualquier momento."
+    },
+    "yourRights": {
+      "title": "Sus Derechos de Privacidad",
+      "content": "Dependiendo de su ubicación, puede tener ciertos derechos con respecto a su información personal, incluido el derecho a acceder, actualizar o eliminar su información. También puede tener el derecho de restringir u oponerse a ciertos procesamientos de sus datos."
+    },
+    "childrenPrivacy": {
+      "title": "Privacidad de Menores",
+      "content": "Nuestro servicio no está dirigido a personas menores de 18 años. No recopilamos conscientemente información personal de niños menores de 18 años. Si nos enteramos de que hemos recopilado información personal de un niño menor de 18 años, tomaremos medidas para eliminar dicha información."
+    },
+    "internationalTransfers": {
+      "title": "Transferencias Internacionales de Datos",
+      "content": "Su información puede ser transferida y procesada en países distintos al suyo. Nos aseguramos de que dichas transferencias se realicen de acuerdo con las leyes aplicables de protección de datos y con las salvaguardas apropiadas implementadas."
+    },
+    "gdprCompliance": {
+      "title": "Cumplimiento del GDPR",
+      "content": "Si es residente del Espacio Económico Europeo (EEE), tiene ciertos derechos de protección de datos. Nuestro objetivo es tomar medidas razonables para permitirle corregir, enmendar, eliminar o limitar el uso de su información personal."
+    },
+    "californiaCcpa": {
+      "title": "Derechos de Privacidad de California (CCPA)",
+      "content": "Si es residente de California, tiene derechos específicos con respecto a su información personal, incluido el derecho a saber qué información personal recopilamos, usamos, divulgamos y vendemos, y el derecho a eliminar su información personal."
+    },
+    "thirdPartyLinks": {
+      "title": "Enlaces de Terceros",
+      "content": "Nuestro servicio puede contener enlaces a sitios web o servicios de terceros. No somos responsables de las prácticas de privacidad de estos terceros. Le recomendamos que lea sus políticas de privacidad antes de proporcionar cualquier información."
+    },
+    "policyChanges": {
+      "title": "Cambios a Esta Política de Privacidad",
+      "content": "Podemos actualizar esta Política de Privacidad de vez en cuando. Le notificaremos cualquier cambio publicando la nueva Política de Privacidad en esta página y actualizando la fecha de 'Última actualización'. Los cambios entran en vigencia inmediatamente después de la publicación."
+    },
+    "contact": {
+      "title": "Contáctenos",
+      "content": "Si tiene alguna pregunta sobre esta Política de Privacidad, contáctenos a través de nuestros canales de soporte, por correo electrónico, o en la información de contacto proporcionada en nuestro sitio web."
+    },
+    "ui": {
+      "tableOfContents": "Tabla de Contenidos",
+      "questionsTitle": "¿Preguntas sobre nuestra Política de Privacidad?",
+      "questionsDescription": "Si tiene alguna pregunta sobre cómo manejamos sus datos, no dude en contactarnos.",
+      "contactSupport": "Contactar Soporte",
+      "termsOfService": "Términos de Servicio"
+    }
   }
 }

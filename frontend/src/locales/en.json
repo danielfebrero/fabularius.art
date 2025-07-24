@@ -701,5 +701,151 @@
       "images": "AI images",
       "videos": "AI videos"
     }
+  },
+  "terms": {
+    "metaTitle": "Terms of Service - {siteName}",
+    "metaDescription": "Read our terms of service and conditions for using PornSpot.ai AI-generated adult content platform.",
+    "title": "Terms of Service",
+    "lastUpdated": "Last updated: {date}",
+    "introduction": {
+      "title": "Introduction",
+      "content": "Welcome to PornSpot.ai. These Terms of Service (\"Terms\") govern your use of our website and services. By accessing or using our platform, you agree to be bound by these Terms."
+    },
+    "acceptance": {
+      "title": "Acceptance of Terms",
+      "content": "By creating an account or using our services, you confirm that you are at least 18 years old and have the legal capacity to enter into these Terms. You agree to comply with all applicable laws and regulations."
+    },
+    "services": {
+      "title": "Our Services",
+      "content": "PornSpot.ai provides AI-powered content generation services for adult entertainment. Our platform allows users to create, view, and manage AI-generated adult content based on their subscription plan."
+    },
+    "userAccounts": {
+      "title": "User Accounts",
+      "content": "You are responsible for maintaining the confidentiality of your account credentials. You agree to notify us immediately of any unauthorized use of your account. We reserve the right to suspend or terminate accounts that violate these Terms."
+    },
+    "subscriptions": {
+      "title": "Subscriptions and Payments",
+      "content": "Our services are available through various subscription plans. Payment is processed securely through our payment providers. Subscriptions automatically renew unless cancelled. Refunds are provided in accordance with our refund policy."
+    },
+    "contentPolicy": {
+      "title": "Content Policy",
+      "content": "All content generated through our platform must comply with applicable laws. Users are prohibited from creating content involving minors, non-consent, or illegal activities. We reserve the right to remove content that violates our policies."
+    },
+    "intellectualProperty": {
+      "title": "Intellectual Property",
+      "content": "Users retain rights to content they generate through our platform. However, by using our services, you grant us a license to display, store, and process your content as necessary to provide our services."
+    },
+    "privacy": {
+      "title": "Privacy and Data Protection",
+      "content": "Your privacy is important to us. Please review our Privacy Policy to understand how we collect, use, and protect your personal information. We comply with applicable data protection laws."
+    },
+    "prohibited": {
+      "title": "Prohibited Uses",
+      "content": "You may not use our services for illegal purposes, to harass others, to distribute malware, or to violate others' rights. Violation of these restrictions may result in account termination."
+    },
+    "termination": {
+      "title": "Termination",
+      "content": "We may terminate or suspend your account at any time for violation of these Terms. Upon termination, your right to use our services ceases immediately. Data retention is governed by our Privacy Policy."
+    },
+    "disclaimer": {
+      "title": "Disclaimer of Warranties",
+      "content": "Our services are provided \"as is\" without warranties of any kind. We do not guarantee uninterrupted service, error-free operation, or specific results from our AI generation technology."
+    },
+    "limitation": {
+      "title": "Limitation of Liability",
+      "content": "To the fullest extent permitted by law, we shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of our services."
+    },
+    "governing": {
+      "title": "Governing Law",
+      "content": "These Terms are governed by and construed in accordance with applicable laws. Any disputes will be resolved through binding arbitration or in courts of competent jurisdiction."
+    },
+    "changes": {
+      "title": "Changes to Terms",
+      "content": "We reserve the right to modify these Terms at any time. We will notify users of material changes via email or platform notifications. Continued use after changes constitutes acceptance of the new Terms."
+    },
+    "contact": {
+      "title": "Contact Information",
+      "content": "If you have questions about these Terms, please contact us through our support channels or at the contact information provided on our website."
+    },
+    "ui": {
+      "tableOfContents": "Table of Contents",
+      "questionsTitle": "Questions about our Terms?",
+      "questionsDescription": "If you have any questions about these Terms of Service, please don't hesitate to contact us.",
+      "contactSupport": "Contact Support",
+      "privacyPolicy": "Privacy Policy"
+    }
+  },
+  "privacy": {
+    "metaTitle": "Privacy Policy - {siteName}",
+    "metaDescription": "Read our privacy policy to understand how PornSpot.ai collects, uses, and protects your personal information.",
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: {date}",
+    "introduction": {
+      "title": "Introduction",
+      "content": "At PornSpot.ai, we take your privacy seriously. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our AI-powered adult content generation platform."
+    },
+    "informationWe": {
+      "title": "Information We Collect",
+      "content": "We collect information you provide directly to us, such as when you create an account, generate content, or contact us. This includes your email address, username, subscription information, and content generation preferences."
+    },
+    "howWe": {
+      "title": "How We Use Your Information",
+      "content": "We use the information we collect to provide, maintain, and improve our services, process transactions, send you technical notices and support messages, and communicate with you about products, services, and promotional offers."
+    },
+    "informationSharing": {
+      "title": "Information Sharing and Disclosure",
+      "content": "We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as described in this policy. We may share information with service providers who assist us in operating our platform."
+    },
+    "dataStorage": {
+      "title": "Data Storage and Security",
+      "content": "We implement appropriate technical and organizational measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction. Your data is stored on secure servers with industry-standard encryption."
+    },
+    "cookies": {
+      "title": "Cookies and Tracking Technologies",
+      "content": "We use cookies and similar tracking technologies to track activity on our service and hold certain information. You can instruct your browser to refuse all cookies or to indicate when a cookie is being sent."
+    },
+    "dataRetention": {
+      "title": "Data Retention",
+      "content": "We retain your personal information for as long as necessary to provide you services, comply with our legal obligations, resolve disputes, and enforce our agreements. You may request deletion of your account and personal data at any time."
+    },
+    "yourRights": {
+      "title": "Your Privacy Rights",
+      "content": "Depending on your location, you may have certain rights regarding your personal information, including the right to access, update, or delete your information. You may also have the right to restrict or object to certain processing of your data."
+    },
+    "childrenPrivacy": {
+      "title": "Children's Privacy",
+      "content": "Our service is not directed to individuals under the age of 18. We do not knowingly collect personal information from children under 18. If we become aware that we have collected personal information from a child under 18, we will take steps to delete such information."
+    },
+    "internationalTransfers": {
+      "title": "International Data Transfers",
+      "content": "Your information may be transferred to and processed in countries other than your own. We ensure that such transfers are conducted in accordance with applicable data protection laws and with appropriate safeguards in place."
+    },
+    "gdprCompliance": {
+      "title": "GDPR Compliance",
+      "content": "If you are a resident of the European Economic Area (EEA), you have certain data protection rights. We aim to take reasonable steps to allow you to correct, amend, delete, or limit the use of your personal information."
+    },
+    "californiaCcpa": {
+      "title": "California Privacy Rights (CCPA)",
+      "content": "If you are a California resident, you have specific rights regarding your personal information, including the right to know what personal information we collect, use, disclose, and sell, and the right to delete your personal information."
+    },
+    "thirdPartyLinks": {
+      "title": "Third-Party Links",
+      "content": "Our service may contain links to third-party websites or services. We are not responsible for the privacy practices of these third parties. We encourage you to read their privacy policies before providing any information."
+    },
+    "policyChanges": {
+      "title": "Changes to This Privacy Policy",
+      "content": "We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the 'Last updated' date. Changes become effective immediately upon posting."
+    },
+    "contact": {
+      "title": "Contact Us",
+      "content": "If you have any questions about this Privacy Policy, please contact us through our support channels, by email, or at the contact information provided on our website."
+    },
+    "ui": {
+      "tableOfContents": "Table of Contents",
+      "questionsTitle": "Questions about our Privacy Policy?",
+      "questionsDescription": "If you have any questions about how we handle your data, please don't hesitate to contact us.",
+      "contactSupport": "Contact Support",
+      "termsOfService": "Terms of Service"
+    }
   }
 }

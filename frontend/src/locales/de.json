@@ -675,5 +675,151 @@
       "images": "KI-Bilder",
       "videos": "KI-Videos"
     }
+  },
+  "terms": {
+    "metaTitle": "Nutzungsbedingungen - {siteName}",
+    "metaDescription": "Lesen Sie unsere Nutzungsbedingungen und Bedingungen für die Nutzung der KI-generierten Erwachseneninhalte-Plattform PornSpot.ai.",
+    "title": "Nutzungsbedingungen",
+    "lastUpdated": "Zuletzt aktualisiert: {date}",
+    "introduction": {
+      "title": "Einführung",
+      "content": "Willkommen bei PornSpot.ai. Diese Nutzungsbedingungen (\"Bedingungen\") regeln Ihre Nutzung unserer Website und Dienste. Durch den Zugriff auf oder die Nutzung unserer Plattform stimmen Sie zu, an diese Bedingungen gebunden zu sein."
+    },
+    "acceptance": {
+      "title": "Annahme der Bedingungen",
+      "content": "Durch die Erstellung eines Kontos oder die Nutzung unserer Dienste bestätigen Sie, dass Sie mindestens 18 Jahre alt sind und die rechtliche Befähigung haben, diese Bedingungen einzugehen. Sie stimmen zu, alle anwendbaren Gesetze und Vorschriften einzuhalten."
+    },
+    "services": {
+      "title": "Unsere Dienste",
+      "content": "PornSpot.ai bietet KI-gestützte Inhaltsgenerierungsdienste für Erwachsenenunterhaltung. Unsere Plattform ermöglicht es Benutzern, KI-generierte Erwachseneninhalte basierend auf ihrem Abonnement-Plan zu erstellen, anzuzeigen und zu verwalten."
+    },
+    "userAccounts": {
+      "title": "Benutzerkonten",
+      "content": "Sie sind dafür verantwortlich, die Vertraulichkeit Ihrer Kontoanmeldedaten zu wahren. Sie stimmen zu, uns unverzüglich über jede unbefugte Nutzung Ihres Kontos zu informieren. Wir behalten uns das Recht vor, Konten zu sperren oder zu kündigen, die gegen diese Bedingungen verstoßen."
+    },
+    "subscriptions": {
+      "title": "Abonnements und Zahlungen",
+      "content": "Unsere Dienste sind über verschiedene Abonnement-Pläne verfügbar. Zahlungen werden sicher über unsere Zahlungsanbieter abgewickelt. Abonnements verlängern sich automatisch, es sei denn, sie werden gekündigt. Rückerstattungen werden gemäß unserer Rückerstattungsrichtlinie gewährt."
+    },
+    "contentPolicy": {
+      "title": "Inhaltsrichtlinie",
+      "content": "Alle über unsere Plattform generierten Inhalte müssen den geltenden Gesetzen entsprechen. Benutzern ist es untersagt, Inhalte zu erstellen, die Minderjährige, fehlende Einwilligung oder illegale Aktivitäten betreffen. Wir behalten uns das Recht vor, Inhalte zu entfernen, die gegen unsere Richtlinien verstoßen."
+    },
+    "intellectualProperty": {
+      "title": "Geistiges Eigentum",
+      "content": "Benutzer behalten die Rechte an den Inhalten, die sie über unsere Plattform generieren. Durch die Nutzung unserer Dienste gewähren Sie uns jedoch eine Lizenz zur Anzeige, Speicherung und Verarbeitung Ihrer Inhalte, soweit dies zur Bereitstellung unserer Dienste erforderlich ist."
+    },
+    "privacy": {
+      "title": "Datenschutz und Datenschutz",
+      "content": "Ihr Datenschutz ist uns wichtig. Bitte lesen Sie unsere Datenschutzrichtlinie, um zu verstehen, wie wir Ihre persönlichen Informationen sammeln, verwenden und schützen. Wir halten uns an die geltenden Datenschutzgesetze."
+    },
+    "prohibited": {
+      "title": "Verbotene Nutzungen",
+      "content": "Sie dürfen unsere Dienste nicht für illegale Zwecke, zur Belästigung anderer, zur Verbreitung von Malware oder zur Verletzung der Rechte anderer verwenden. Die Verletzung dieser Beschränkungen kann zur Konto-Kündigung führen."
+    },
+    "termination": {
+      "title": "Kündigung",
+      "content": "Wir können Ihr Konto jederzeit bei Verletzung dieser Bedingungen kündigen oder sperren. Bei Kündigung erlischt Ihr Recht zur Nutzung unserer Dienste sofort. Die Datenaufbewahrung wird durch unsere Datenschutzrichtlinie geregelt."
+    },
+    "disclaimer": {
+      "title": "Haftungsausschluss",
+      "content": "Unsere Dienste werden \"wie besehen\" ohne Gewährleistungen jeglicher Art bereitgestellt. Wir garantieren keinen ununterbrochenen Service, fehlerfreien Betrieb oder spezifische Ergebnisse unserer KI-Generierungstechnologie."
+    },
+    "limitation": {
+      "title": "Haftungsbeschränkung",
+      "content": "Soweit gesetzlich zulässig, haften wir nicht für indirekte, zufällige, besondere oder Folgeschäden, die aus Ihrer Nutzung unserer Dienste entstehen."
+    },
+    "governing": {
+      "title": "Geltendes Recht",
+      "content": "Diese Bedingungen unterliegen den geltenden Gesetzen und werden in Übereinstimmung mit ihnen ausgelegt. Streitigkeiten werden durch verbindliches Schiedsverfahren oder vor zuständigen Gerichten beigelegt."
+    },
+    "changes": {
+      "title": "Änderungen der Bedingungen",
+      "content": "Wir behalten uns das Recht vor, diese Bedingungen jederzeit zu ändern. Wir werden Benutzer über wesentliche Änderungen per E-Mail oder Plattform-Benachrichtigungen informieren. Fortgesetzte Nutzung nach Änderungen stellt die Annahme der neuen Bedingungen dar."
+    },
+    "contact": {
+      "title": "Kontaktinformationen",
+      "content": "Wenn Sie Fragen zu diesen Bedingungen haben, kontaktieren Sie uns bitte über unsere Support-Kanäle oder unter den auf unserer Website angegebenen Kontaktinformationen."
+    },
+    "ui": {
+      "tableOfContents": "Inhaltsverzeichnis",
+      "questionsTitle": "Fragen zu unseren Bedingungen?",
+      "questionsDescription": "Wenn Sie Fragen zu diesen Nutzungsbedingungen haben, zögern Sie nicht, uns zu kontaktieren.",
+      "contactSupport": "Support kontaktieren",
+      "privacyPolicy": "Datenschutzrichtlinie"
+    }
+  },
+  "privacy": {
+    "metaTitle": "Datenschutzrichtlinie - {siteName}",
+    "metaDescription": "Lesen Sie unsere Datenschutzrichtlinie, um zu verstehen, wie PornSpot.ai Ihre persönlichen Informationen sammelt, verwendet und schützt.",
+    "title": "Datenschutzrichtlinie",
+    "lastUpdated": "Zuletzt aktualisiert: {date}",
+    "introduction": {
+      "title": "Einführung",
+      "content": "Bei PornSpot.ai nehmen wir Ihre Privatsphäre ernst. Diese Datenschutzrichtlinie erklärt, wie wir Ihre Informationen sammeln, verwenden, offenlegen und schützen, wenn Sie unsere KI-gestützte Plattform für Erwachseneninhalte nutzen."
+    },
+    "informationWe": {
+      "title": "Informationen, die wir sammeln",
+      "content": "Wir sammeln Informationen, die Sie uns direkt zur Verfügung stellen, wie z.B. wenn Sie ein Konto erstellen, Inhalte generieren oder uns kontaktieren. Dazu gehören Ihre E-Mail-Adresse, Benutzername, Abonnement-Informationen und Präferenzen für die Inhaltsgenerierung."
+    },
+    "howWe": {
+      "title": "Wie wir Ihre Informationen verwenden",
+      "content": "Wir verwenden die gesammelten Informationen, um unsere Dienste bereitzustellen, zu warten und zu verbessern, Transaktionen zu verarbeiten, Ihnen technische Mitteilungen und Support-Nachrichten zu senden und mit Ihnen über Produkte, Dienste und Werbeangebote zu kommunizieren."
+    },
+    "informationSharing": {
+      "title": "Informationsaustausch und -offenlegung",
+      "content": "Wir verkaufen, tauschen oder übertragen Ihre persönlichen Informationen nicht ohne Ihre Zustimmung an Dritte, außer wie in dieser Richtlinie beschrieben. Wir können Informationen mit Dienstleistern teilen, die uns beim Betrieb unserer Plattform unterstützen."
+    },
+    "dataStorage": {
+      "title": "Datenspeicherung und -sicherheit",
+      "content": "Wir implementieren angemessene technische und organisatorische Maßnahmen zum Schutz Ihrer persönlichen Informationen vor unbefugtem Zugriff, Veränderung, Offenlegung oder Zerstörung. Ihre Daten werden auf sicheren Servern mit branchenüblicher Verschlüsselung gespeichert."
+    },
+    "cookies": {
+      "title": "Cookies und Tracking-Technologien",
+      "content": "Wir verwenden Cookies und ähnliche Tracking-Technologien, um Aktivitäten auf unserem Service zu verfolgen und bestimmte Informationen zu speichern. Sie können Ihren Browser anweisen, alle Cookies abzulehnen oder anzuzeigen, wann ein Cookie gesendet wird."
+    },
+    "dataRetention": {
+      "title": "Datenaufbewahrung",
+      "content": "Wir bewahren Ihre persönlichen Informationen so lange auf, wie es notwendig ist, um Ihnen Dienste zu erbringen, unseren rechtlichen Verpflichtungen nachzukommen, Streitigkeiten zu lösen und unsere Vereinbarungen durchzusetzen. Sie können jederzeit die Löschung Ihres Kontos und Ihrer persönlichen Daten beantragen."
+    },
+    "yourRights": {
+      "title": "Ihre Datenschutzrechte",
+      "content": "Je nach Ihrem Standort haben Sie möglicherweise bestimmte Rechte bezüglich Ihrer persönlichen Informationen, einschließlich des Rechts auf Zugang, Aktualisierung oder Löschung Ihrer Informationen. Sie können auch das Recht haben, bestimmte Verarbeitungen Ihrer Daten zu beschränken oder zu widersprechen."
+    },
+    "childrenPrivacy": {
+      "title": "Kinderdatenschutz",
+      "content": "Unser Service richtet sich nicht an Personen unter 18 Jahren. Wir sammeln wissentlich keine persönlichen Informationen von Kindern unter 18 Jahren. Wenn wir erfahren, dass wir persönliche Informationen von einem Kind unter 18 Jahren gesammelt haben, werden wir Schritte unternehmen, um diese Informationen zu löschen."
+    },
+    "internationalTransfers": {
+      "title": "Internationale Datenübertragungen",
+      "content": "Ihre Informationen können in andere Länder als Ihrem eigenen übertragen und verarbeitet werden. Wir stellen sicher, dass solche Übertragungen in Übereinstimmung mit den geltenden Datenschutzgesetzen und mit angemessenen Schutzmaßnahmen durchgeführt werden."
+    },
+    "gdprCompliance": {
+      "title": "DSGVO-Konformität",
+      "content": "Wenn Sie Einwohner des Europäischen Wirtschaftsraums (EWR) sind, haben Sie bestimmte Datenschutzrechte. Wir bemühen uns, angemessene Schritte zu unternehmen, damit Sie Ihre persönlichen Informationen korrigieren, ändern, löschen oder deren Verwendung einschränken können."
+    },
+    "californiaCcpa": {
+      "title": "Kalifornische Datenschutzrechte (CCPA)",
+      "content": "Wenn Sie Einwohner Kaliforniens sind, haben Sie spezifische Rechte bezüglich Ihrer persönlichen Informationen, einschließlich des Rechts zu wissen, welche persönlichen Informationen wir sammeln, verwenden, offenlegen und verkaufen, und des Rechts, Ihre persönlichen Informationen zu löschen."
+    },
+    "thirdPartyLinks": {
+      "title": "Drittanbieter-Links",
+      "content": "Unser Service kann Links zu Drittanbieter-Websites oder -Diensten enthalten. Wir sind nicht verantwortlich für die Datenschutzpraktiken dieser Dritten. Wir ermutigen Sie, deren Datenschutzrichtlinien zu lesen, bevor Sie Informationen bereitstellen."
+    },
+    "policyChanges": {
+      "title": "Änderungen an dieser Datenschutzrichtlinie",
+      "content": "Wir können diese Datenschutzrichtlinie von Zeit zu Zeit aktualisieren. Wir werden Sie über Änderungen informieren, indem wir die neue Datenschutzrichtlinie auf dieser Seite veröffentlichen und das Datum 'Zuletzt aktualisiert' aktualisieren. Änderungen werden sofort nach der Veröffentlichung wirksam."
+    },
+    "contact": {
+      "title": "Kontaktieren Sie uns",
+      "content": "Wenn Sie Fragen zu dieser Datenschutzrichtlinie haben, kontaktieren Sie uns bitte über unsere Support-Kanäle, per E-Mail oder über die auf unserer Website angegebenen Kontaktinformationen."
+    },
+    "ui": {
+      "tableOfContents": "Inhaltsverzeichnis",
+      "questionsTitle": "Fragen zu unserer Datenschutzrichtlinie?",
+      "questionsDescription": "Wenn Sie Fragen dazu haben, wie wir Ihre Daten behandeln, zögern Sie nicht, uns zu kontaktieren.",
+      "contactSupport": "Support kontaktieren",
+      "termsOfService": "Nutzungsbedingungen"
+    }
   }
 }

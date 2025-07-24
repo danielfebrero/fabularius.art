@@ -701,5 +701,151 @@
       "images": "images IA",
       "videos": "vidéos IA"
     }
+  },
+  "terms": {
+    "metaTitle": "Conditions d'utilisation - {siteName}",
+    "metaDescription": "Consultez nos conditions d'utilisation et nos conditions pour utiliser la plateforme de contenu adulte généré par IA PornSpot.ai.",
+    "title": "Conditions d'utilisation",
+    "lastUpdated": "Dernière mise à jour : {date}",
+    "introduction": {
+      "title": "Introduction",
+      "content": "Bienvenue sur PornSpot.ai. Ces Conditions d'utilisation (« Conditions ») régissent votre utilisation de notre site web et de nos services. En accédant ou en utilisant notre plateforme, vous acceptez d'être lié par ces Conditions."
+    },
+    "acceptance": {
+      "title": "Acceptation des conditions",
+      "content": "En créant un compte ou en utilisant nos services, vous confirmez que vous avez au moins 18 ans et que vous avez la capacité légale de conclure ces Conditions. Vous acceptez de vous conformer à toutes les lois et réglementations applicables."
+    },
+    "services": {
+      "title": "Nos services",
+      "content": "PornSpot.ai fournit des services de génération de contenu alimentés par l'IA pour le divertissement adulte. Notre plateforme permet aux utilisateurs de créer, visualiser et gérer du contenu adulte généré par l'IA selon leur plan d'abonnement."
+    },
+    "userAccounts": {
+      "title": "Comptes utilisateur",
+      "content": "Vous êtes responsable du maintien de la confidentialité de vos identifiants de compte. Vous acceptez de nous informer immédiatement de toute utilisation non autorisée de votre compte. Nous nous réservons le droit de suspendre ou de résilier les comptes qui violent ces Conditions."
+    },
+    "subscriptions": {
+      "title": "Abonnements et paiements",
+      "content": "Nos services sont disponibles via différents plans d'abonnement. Le paiement est traité de manière sécurisée via nos fournisseurs de paiement. Les abonnements se renouvellent automatiquement sauf annulation. Les remboursements sont fournis conformément à notre politique de remboursement."
+    },
+    "contentPolicy": {
+      "title": "Politique de contenu",
+      "content": "Tout contenu généré via notre plateforme doit respecter les lois applicables. Il est interdit aux utilisateurs de créer du contenu impliquant des mineurs, sans consentement ou des activités illégales. Nous nous réservons le droit de supprimer le contenu qui viole nos politiques."
+    },
+    "intellectualProperty": {
+      "title": "Propriété intellectuelle",
+      "content": "Les utilisateurs conservent les droits sur le contenu qu'ils génèrent via notre plateforme. Cependant, en utilisant nos services, vous nous accordez une licence pour afficher, stocker et traiter votre contenu selon les besoins pour fournir nos services."
+    },
+    "privacy": {
+      "title": "Confidentialité et protection des données",
+      "content": "Votre confidentialité est importante pour nous. Veuillez consulter notre Politique de confidentialité pour comprendre comment nous collectons, utilisons et protégeons vos informations personnelles. Nous nous conformons aux lois applicables sur la protection des données."
+    },
+    "prohibited": {
+      "title": "Utilisations interdites",
+      "content": "Vous ne pouvez pas utiliser nos services à des fins illégales, pour harceler autrui, distribuer des logiciels malveillants ou violer les droits d'autrui. La violation de ces restrictions peut entraîner la résiliation du compte."
+    },
+    "termination": {
+      "title": "Résiliation",
+      "content": "Nous pouvons résilier ou suspendre votre compte à tout moment pour violation de ces Conditions. Lors de la résiliation, votre droit d'utiliser nos services cesse immédiatement. La conservation des données est régie par notre Politique de confidentialité."
+    },
+    "disclaimer": {
+      "title": "Clause de non-responsabilité",
+      "content": "Nos services sont fournis « en l'état » sans garanties d'aucune sorte. Nous ne garantissons pas un service ininterrompu, un fonctionnement sans erreur ou des résultats spécifiques de notre technologie de génération IA."
+    },
+    "limitation": {
+      "title": "Limitation de responsabilité",
+      "content": "Dans toute la mesure permise par la loi, nous ne serons pas responsables des dommages indirects, accessoires, spéciaux ou consécutifs découlant de votre utilisation de nos services."
+    },
+    "governing": {
+      "title": "Droit applicable",
+      "content": "Ces Conditions sont régies et interprétées conformément aux lois applicables. Tout litige sera résolu par arbitrage exécutoire ou devant les tribunaux compétents."
+    },
+    "changes": {
+      "title": "Modifications des conditions",
+      "content": "Nous nous réservons le droit de modifier ces Conditions à tout moment. Nous informerons les utilisateurs des changements importants par e-mail ou notifications de plateforme. L'utilisation continue après les changements constitue une acceptation des nouvelles Conditions."
+    },
+    "contact": {
+      "title": "Informations de contact",
+      "content": "Si vous avez des questions sur ces Conditions, veuillez nous contacter via nos canaux de support ou aux informations de contact fournies sur notre site web."
+    },
+    "ui": {
+      "tableOfContents": "Table des matières",
+      "questionsTitle": "Questions sur nos conditions ?",
+      "questionsDescription": "Si vous avez des questions sur ces Conditions d'utilisation, n'hésitez pas à nous contacter.",
+      "contactSupport": "Contacter le support",
+      "privacyPolicy": "Politique de confidentialité"
+    }
+  },
+  "privacy": {
+    "metaTitle": "Politique de confidentialité - {siteName}",
+    "metaDescription": "Consultez notre politique de confidentialité pour comprendre comment PornSpot.ai collecte, utilise et protège vos informations personnelles.",
+    "title": "Politique de confidentialité",
+    "lastUpdated": "Dernière mise à jour : {date}",
+    "introduction": {
+      "title": "Introduction",
+      "content": "Chez PornSpot.ai, nous prenons votre confidentialité au sérieux. Cette Politique de confidentialité explique comment nous collectons, utilisons, divulguons et protégeons vos informations lorsque vous utilisez notre plateforme de génération de contenu adulte alimentée par l'IA."
+    },
+    "informationWe": {
+      "title": "Informations que nous collectons",
+      "content": "Nous collectons les informations que vous nous fournissez directement, par exemple lorsque vous créez un compte, générez du contenu ou nous contactez. Cela inclut votre adresse e-mail, nom d'utilisateur, informations d'abonnement et préférences de génération de contenu."
+    },
+    "howWe": {
+      "title": "Comment nous utilisons vos informations",
+      "content": "Nous utilisons les informations que nous collectons pour fournir, maintenir et améliorer nos services, traiter les transactions, vous envoyer des notifications techniques et des messages de support, et communiquer avec vous sur les produits, services et offres promotionnelles."
+    },
+    "informationSharing": {
+      "title": "Partage et divulgation d'informations",
+      "content": "Nous ne vendons, n'échangeons ni ne transférons vos informations personnelles à des tiers sans votre consentement, sauf comme décrit dans cette politique. Nous pouvons partager des informations avec des fournisseurs de services qui nous aident à exploiter notre plateforme."
+    },
+    "dataStorage": {
+      "title": "Stockage et sécurité des données",
+      "content": "Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos informations personnelles contre l'accès non autorisé, l'altération, la divulgation ou la destruction. Vos données sont stockées sur des serveurs sécurisés avec un chiffrement standard de l'industrie."
+    },
+    "cookies": {
+      "title": "Cookies et technologies de suivi",
+      "content": "Nous utilisons des cookies et des technologies de suivi similaires pour suivre l'activité sur notre service et conserver certaines informations. Vous pouvez configurer votre navigateur pour refuser tous les cookies ou indiquer quand un cookie est envoyé."
+    },
+    "dataRetention": {
+      "title": "Conservation des données",
+      "content": "Nous conservons vos informations personnelles aussi longtemps que nécessaire pour vous fournir des services, respecter nos obligations légales, résoudre les litiges et faire respecter nos accords. Vous pouvez demander la suppression de votre compte et de vos données personnelles à tout moment."
+    },
+    "yourRights": {
+      "title": "Vos droits de confidentialité",
+      "content": "Selon votre localisation, vous pouvez avoir certains droits concernant vos informations personnelles, y compris le droit d'accéder, de mettre à jour ou de supprimer vos informations. Vous pouvez également avoir le droit de restreindre ou de vous opposer à certains traitements de vos données."
+    },
+    "childrenPrivacy": {
+      "title": "Confidentialité des enfants",
+      "content": "Notre service ne s'adresse pas aux personnes de moins de 18 ans. Nous ne collectons pas sciemment d'informations personnelles auprès d'enfants de moins de 18 ans. Si nous apprenons que nous avons collecté des informations personnelles d'un enfant de moins de 18 ans, nous prendrons des mesures pour supprimer ces informations."
+    },
+    "internationalTransfers": {
+      "title": "Transferts internationaux de données",
+      "content": "Vos informations peuvent être transférées et traitées dans des pays autres que le vôtre. Nous nous assurons que ces transferts sont effectués conformément aux lois applicables sur la protection des données et avec des garanties appropriées en place."
+    },
+    "gdprCompliance": {
+      "title": "Conformité RGPD",
+      "content": "Si vous êtes résident de l'Espace économique européen (EEE), vous avez certains droits de protection des données. Nous visons à prendre des mesures raisonnables pour vous permettre de corriger, modifier, supprimer ou limiter l'utilisation de vos informations personnelles."
+    },
+    "californiaCcpa": {
+      "title": "Droits de confidentialité en Californie (CCPA)",
+      "content": "Si vous êtes résident de Californie, vous avez des droits spécifiques concernant vos informations personnelles, y compris le droit de savoir quelles informations personnelles nous collectons, utilisons, divulguons et vendons, et le droit de supprimer vos informations personnelles."
+    },
+    "thirdPartyLinks": {
+      "title": "Liens vers des tiers",
+      "content": "Notre service peut contenir des liens vers des sites web ou services tiers. Nous ne sommes pas responsables des pratiques de confidentialité de ces tiers. Nous vous encourageons à lire leurs politiques de confidentialité avant de fournir des informations."
+    },
+    "policyChanges": {
+      "title": "Modifications de cette politique de confidentialité",
+      "content": "Nous pouvons mettre à jour cette Politique de confidentialité de temps à autre. Nous vous informerons de tout changement en publiant la nouvelle Politique de confidentialité sur cette page et en mettant à jour la date de 'Dernière mise à jour'. Les changements prennent effet immédiatement après publication."
+    },
+    "contact": {
+      "title": "Nous contacter",
+      "content": "Si vous avez des questions sur cette Politique de confidentialité, veuillez nous contacter via nos canaux de support, par e-mail, ou aux informations de contact fournies sur notre site web."
+    },
+    "ui": {
+      "tableOfContents": "Table des matières",
+      "questionsTitle": "Questions sur notre politique de confidentialité ?",
+      "questionsDescription": "Si vous avez des questions sur la façon dont nous gérons vos données, n'hésitez pas à nous contacter.",
+      "contactSupport": "Contacter le support",
+      "termsOfService": "Conditions d'utilisation"
+    }
   }
 }

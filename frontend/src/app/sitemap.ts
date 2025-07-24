@@ -26,6 +26,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
       changeFrequency: "weekly" as const,
     },
+    {
+      path: "/terms",
+      priority: 0.6,
+      changeFrequency: "yearly" as const,
+    },
+    {
+      path: "/privacy",
+      priority: 0.6,
+      changeFrequency: "yearly" as const,
+    },
   ];
 
   // Generate locale-specific static routes
