@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { ResponseUtil } from "@shared/utils/response";
+import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -10,11 +11,13 @@ export const handler = async (
   }
 
   try {
-    // Extract user ID from JWT token or session
-    const userId = event.requestContext.authorizer?.["userId"];
-    if (!userId) {
-      return ResponseUtil.unauthorized(event, "Authentication required");
+    // Validate user session
+    const authResult = await UserAuthMiddleware.validateSession(event);
+    if (!authResult.isValid || !authResult.user) {
+      return ResponseUtil.unauthorized(event, "Unauthorized");
     }
+
+    const userId = authResult.user.userId;
 
     // Get pagination parameters
     const queryParams = event.queryStringParameters || {};

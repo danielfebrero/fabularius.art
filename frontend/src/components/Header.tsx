@@ -22,6 +22,7 @@ export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const t = useTranslations("common");
   const tNav = useTranslations("navigation");
+  const tSite = useTranslations("site");
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -39,9 +40,11 @@ export function Header() {
           <LocaleLink href="/" className="flex items-center space-x-3">
             <img src="/logo.svg" alt="PornSpot.ai" className="w-8 h-8" />
             <div>
-              <h1 className="text-xl font-bold text-foreground">PornSpot.ai</h1>
+              <h1 className="text-xl font-bold text-foreground">
+                {tSite("name")}
+              </h1>
               <p className="text-xs text-muted-foreground">
-                AI Generated Content
+                {tSite("tagline")}
               </p>
             </div>
           </LocaleLink>
@@ -52,7 +55,7 @@ export function Header() {
             className="sm:hidden flex items-center justify-center p-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             <Zap className="h-6 w-6" />
-            <span className="sr-only">Generate</span>
+            <span className="sr-only">{t("generate")}</span>
           </LocaleLink>
 
           {/* Desktop Navigation - Hidden on mobile */}
@@ -62,24 +65,24 @@ export function Header() {
               className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               <Compass className="h-4 w-4 lg:hidden" />
-              <span className="hidden lg:block">Discover</span>
-              <span className="lg:hidden sr-only">Discover</span>
+              <span className="hidden lg:block">{t("discover")}</span>
+              <span className="lg:hidden sr-only">{t("discover")}</span>
             </LocaleLink>
             <LocaleLink
               href="/generate"
               className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               <Zap className="h-4 w-4 lg:hidden" />
-              <span className="hidden lg:block">Generate</span>
-              <span className="lg:hidden sr-only">Generate</span>
+              <span className="hidden lg:block">{t("generate")}</span>
+              <span className="lg:hidden sr-only">{t("generate")}</span>
             </LocaleLink>
             <LocaleLink
               href="/pricing"
               className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               <DollarSign className="h-4 w-4 lg:hidden" />
-              <span className="hidden lg:block">Pricing</span>
-              <span className="lg:hidden sr-only">Pricing</span>
+              <span className="hidden lg:block">{t("pricing")}</span>
+              <span className="lg:hidden sr-only">{t("pricing")}</span>
             </LocaleLink>
             {user && (
               <>
@@ -88,32 +91,32 @@ export function Header() {
                   className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <ImageIcon className="h-4 w-4 lg:hidden" />
-                  <span className="hidden lg:block">Images</span>
-                  <span className="lg:hidden sr-only">Images</span>
+                  <span className="hidden lg:block">{tNav("images")}</span>
+                  <span className="lg:hidden sr-only">{tNav("images")}</span>
                 </LocaleLink>
                 <LocaleLink
                   href="/user/bookmarks"
                   className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Bookmark className="h-4 w-4 lg:hidden" />
-                  <span className="hidden lg:block">Bookmarks</span>
-                  <span className="lg:hidden sr-only">Bookmarks</span>
+                  <span className="hidden lg:block">{tNav("bookmarks")}</span>
+                  <span className="lg:hidden sr-only">{tNav("bookmarks")}</span>
                 </LocaleLink>
                 <LocaleLink
                   href="/user/likes"
                   className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Heart className="h-4 w-4 lg:hidden" />
-                  <span className="hidden lg:block">Likes</span>
-                  <span className="lg:hidden sr-only">Likes</span>
+                  <span className="hidden lg:block">{tNav("likes")}</span>
+                  <span className="lg:hidden sr-only">{tNav("likes")}</span>
                 </LocaleLink>
                 <LocaleLink
                   href="/user/albums"
                   className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <FolderOpen className="h-4 w-4 lg:hidden" />
-                  <span className="hidden lg:block">Albums</span>
-                  <span className="lg:hidden sr-only">Albums</span>
+                  <span className="hidden lg:block">{tNav("albums")}</span>
+                  <span className="lg:hidden sr-only">{tNav("albums")}</span>
                 </LocaleLink>
               </>
             )}
@@ -136,20 +139,20 @@ export function Header() {
                     href="/auth/login"
                     className="h-9 rounded-md px-3 text-sm border border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex items-center justify-center font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
-                    Login
+                    {t("login")}
                   </LocaleLink>
                   <LocaleLink
                     href="/auth/register"
                     className="h-9 rounded-md px-3 text-sm bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   >
-                    Sign Up
+                    {t("register")}
                   </LocaleLink>
                 </div>
                 {/* Mobile Menu Button - Show for unauthenticated users for login/register and navigation */}
                 <button
                   onClick={toggleMobileMenu}
                   className="sm:hidden p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                  aria-label="Open menu"
+                  aria-label={tNav("menu")}
                 >
                   {isMobileMenuOpen ? (
                     <X className="h-5 w-5" />
@@ -173,7 +176,7 @@ export function Header() {
                 className="flex items-center space-x-3 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
               >
                 <Compass className="h-4 w-4" />
-                <span>Discover</span>
+                <span>{t("discover")}</span>
               </LocaleLink>
               <LocaleLink
                 href="/generate"
@@ -181,7 +184,7 @@ export function Header() {
                 className="flex items-center space-x-3 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
               >
                 <Zap className="h-4 w-4" />
-                <span>Generate</span>
+                <span>{t("generate")}</span>
               </LocaleLink>
               <LocaleLink
                 href="/pricing"
@@ -189,7 +192,7 @@ export function Header() {
                 className="flex items-center space-x-3 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-accent rounded-md transition-colors"
               >
                 <DollarSign className="h-4 w-4" />
-                <span>Pricing</span>
+                <span>{t("pricing")}</span>
               </LocaleLink>
 
               {/* Auth LocaleLinks */}
@@ -199,14 +202,14 @@ export function Header() {
                   onClick={closeMobileMenu}
                   className="block px-4 py-2 text-sm font-medium text-primary hover:bg-accent rounded-md transition-colors"
                 >
-                  Login
+                  {t("login")}
                 </LocaleLink>
                 <LocaleLink
                   href="/auth/register"
                   onClick={closeMobileMenu}
                   className="block px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-md transition-colors"
                 >
-                  Sign Up
+                  {t("register")}
                 </LocaleLink>
               </div>
             </nav>

@@ -8,7 +8,7 @@ export default createMiddleware({
   // Used when no locale matches
   defaultLocale,
 
-  // Always show locale prefix in the URL
+  // Always show locale prefix in the URL for clarity
   localePrefix: "always",
 });
 

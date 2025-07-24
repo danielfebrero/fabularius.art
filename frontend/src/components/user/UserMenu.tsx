@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useUser } from "@/hooks/useUser";
 import { useAdminContext } from "@/contexts/AdminContext";
 import { User } from "@/types/user";
@@ -25,6 +26,10 @@ export function UserMenu({ user }: UserMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  const t = useTranslations("common");
+  const tNav = useTranslations("navigation");
+  const tProfile = useTranslations("user.profile");
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -77,7 +82,7 @@ export function UserMenu({ user }: UserMenuProps) {
           </div>
           {!user.isEmailVerified && (
             <div className="text-xs text-yellow-600 dark:text-yellow-400">
-              Unverified
+              {tProfile("unverified")}
             </div>
           )}
         </div>
@@ -118,7 +123,7 @@ export function UserMenu({ user }: UserMenuProps) {
                 </div>
                 {!user.isEmailVerified && (
                   <div className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
-                    Email not verified
+                    {tProfile("emailNotVerified")}
                   </div>
                 )}
               </div>
@@ -134,7 +139,7 @@ export function UserMenu({ user }: UserMenuProps) {
               >
                 <div className="flex items-center space-x-2">
                   <Compass className="w-4 h-4" />
-                  <span>Discover</span>
+                  <span>{t("discover")}</span>
                 </div>
               </button>
 
@@ -158,7 +163,7 @@ export function UserMenu({ user }: UserMenuProps) {
                       d="M13 10V3L4 14h7v7l9-11h-7z"
                     />
                   </svg>
-                  <span>Generate</span>
+                  <span>{t("generate")}</span>
                 </div>
               </button>
 
@@ -170,7 +175,7 @@ export function UserMenu({ user }: UserMenuProps) {
               >
                 <div className="flex items-center space-x-2">
                   <DollarSign className="w-4 h-4" />
-                  <span>Pricing</span>
+                  <span>{t("pricing")}</span>
                 </div>
               </button>
 
@@ -182,7 +187,7 @@ export function UserMenu({ user }: UserMenuProps) {
               >
                 <div className="flex items-center space-x-2">
                   <ImageIcon className="w-4 h-4" />
-                  <span>Images</span>
+                  <span>{tNav("images")}</span>
                 </div>
               </button>
 
@@ -194,7 +199,7 @@ export function UserMenu({ user }: UserMenuProps) {
               >
                 <div className="flex items-center space-x-2">
                   <Bookmark className="w-4 h-4" />
-                  <span>Bookmarks</span>
+                  <span>{tNav("bookmarks")}</span>
                 </div>
               </button>
 
@@ -206,7 +211,7 @@ export function UserMenu({ user }: UserMenuProps) {
               >
                 <div className="flex items-center space-x-2">
                   <Heart className="w-4 h-4" />
-                  <span>Likes</span>
+                  <span>{tNav("likes")}</span>
                 </div>
               </button>
 
@@ -218,7 +223,7 @@ export function UserMenu({ user }: UserMenuProps) {
               >
                 <div className="flex items-center space-x-2">
                   <FolderOpen className="w-4 h-4" />
-                  <span>Albums</span>
+                  <span>{tNav("albums")}</span>
                 </div>
               </button>
             </div>
@@ -241,7 +246,7 @@ export function UserMenu({ user }: UserMenuProps) {
                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                   />
                 </svg>
-                <span>Profile</span>
+                <span>{tProfile("profile")}</span>
               </div>
             </button>
 
@@ -265,7 +270,7 @@ export function UserMenu({ user }: UserMenuProps) {
                     d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
                   />
                 </svg>
-                <span>Dashboard</span>
+                <span>{tProfile("dashboard")}</span>
               </div>
             </button>
 
@@ -295,7 +300,7 @@ export function UserMenu({ user }: UserMenuProps) {
                     d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
-                <span>Settings</span>
+                <span>{tProfile("settings")}</span>
               </div>
             </button>
 
@@ -319,7 +324,7 @@ export function UserMenu({ user }: UserMenuProps) {
                       d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
                     />
                   </svg>
-                  <span>Admin</span>
+                  <span>{t("admin")}</span>
                 </div>
               </button>
             )}
@@ -345,7 +350,9 @@ export function UserMenu({ user }: UserMenuProps) {
                     d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                   />
                 </svg>
-                <span>{loading ? "Signing out..." : "Sign out"}</span>
+                <span>
+                  {loading ? tProfile("signingOut") : tProfile("signOut")}
+                </span>
               </div>
             </button>
           </div>

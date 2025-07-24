@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useInteractions } from "@/hooks/useInteractions";
@@ -39,6 +40,9 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
     { useCache }
   );
   const [likeCount, setLikeCount] = useState<number | null>(null);
+
+  const t = useTranslations("common");
+  const tUser = useTranslations("user.likes");
 
   // Use the cached status instead of local state
   const isLiked = user ? userLiked : initialLiked;
@@ -114,7 +118,13 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
           !isLiked && "text-gray-500 hover:text-red-500",
           className
         )}
-        title={!user ? "Login to like" : isLiked ? "Remove like" : "Like"}
+        title={
+          !user
+            ? tUser("loginToLike")
+            : isLiked
+            ? tUser("removeLike")
+            : t("like")
+        }
       >
         <Heart
           className={cn(
@@ -132,7 +142,7 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
       )}
 
       {error && (
-        <span className="text-xs text-red-500 ml-2">Failed to update</span>
+        <span className="text-xs text-red-500 ml-2">{t("failedToUpdate")}</span>
       )}
     </div>
   );

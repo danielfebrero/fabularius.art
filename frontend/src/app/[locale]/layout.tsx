@@ -90,10 +90,17 @@ export default async function LocaleLayout({
   children,
   params: { locale },
 }: Props) {
-  const messages = await getMessages();
+  console.log("LocaleLayout called with locale:", locale);
+  const messages = await getMessages({ locale });
+  console.log(
+    "getMessages returned messages for locale:",
+    locale,
+    "keys:",
+    Object.keys(messages || {})
+  );
 
   return (
-    <NextIntlClientProvider messages={messages}>
+    <NextIntlClientProvider messages={messages} locale={locale}>
       <UserProvider>
         <UserInteractionProvider>
           <PermissionsWrapper>

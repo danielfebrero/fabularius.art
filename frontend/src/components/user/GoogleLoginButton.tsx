@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import useGoogleAuth from "@/hooks/useGoogleAuth";
 
@@ -13,6 +14,7 @@ export function GoogleLoginButton({
   disabled,
 }: GoogleLoginButtonProps) {
   const { loading, error, loginWithGoogle, clearError } = useGoogleAuth();
+  const tGoogle = useTranslations("auth.google");
 
   const handleGoogleLogin = () => {
     clearError();
@@ -51,7 +53,7 @@ export function GoogleLoginButton({
             fill="#EA4335"
           />
         </svg>
-        {loading ? "Connecting..." : "Continue with Google"}
+        {loading ? tGoogle("connecting") : tGoogle("continueWith")}
       </Button>
 
       {error && <p className="text-sm text-destructive text-center">{error}</p>}

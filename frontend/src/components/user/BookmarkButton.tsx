@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useInteractions } from "@/hooks/useInteractions";
@@ -36,6 +37,9 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
   const { userBookmarked, updateStatusOptimistically } =
     useTargetInteractionStatus(targetType, targetId, { useCache });
   const [bookmarkCount, setBookmarkCount] = useState<number | null>(null);
+
+  const t = useTranslations("common");
+  const tUser = useTranslations("user.bookmarks");
 
   // Use the cached status instead of local state
   const isBookmarked = user ? userBookmarked : initialBookmarked;
@@ -115,10 +119,10 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
         )}
         title={
           !user
-            ? "Login to bookmark"
+            ? tUser("loginToBookmark")
             : isBookmarked
-            ? "Remove bookmark"
-            : "Bookmark"
+            ? tUser("removeBookmark")
+            : t("bookmark")
         }
       >
         <Bookmark
@@ -137,7 +141,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
       )}
 
       {error && (
-        <span className="text-xs text-red-500 ml-2">Failed to update</span>
+        <span className="text-xs text-red-500 ml-2">{t("failedToUpdate")}</span>
       )}
     </div>
   );

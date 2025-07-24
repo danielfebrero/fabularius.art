@@ -2,7 +2,7 @@
   "common": {
     "discover": "Découvrir",
     "generate": "Générer",
-    "pricing": "Tarification",
+    "pricing": "Tarifs",
     "login": "Connexion",
     "register": "S'inscrire",
     "logout": "Déconnexion",
@@ -20,7 +20,56 @@
     "previous": "Précédent",
     "search": "Rechercher",
     "filter": "Filtrer",
-    "sort": "Trier"
+    "sort": "Trier",
+    "like": "J'aime",
+    "bookmark": "Favori",
+    "download": "Télécharger",
+    "loadMore": "Charger plus",
+    "goBack": "Retour",
+    "share": "Partager",
+    "close": "Fermer",
+    "open": "Ouvrir",
+    "view": "Voir",
+    "create": "Créer",
+    "update": "Mettre à jour",
+    "submit": "Soumettre",
+    "confirm": "Confirmer",
+    "retry": "Réessayer",
+    "refresh": "Actualiser",
+    "upload": "Téléverser",
+    "remove": "Supprimer",
+    "add": "Ajouter",
+    "done": "Terminé",
+    "ok": "OK",
+    "yes": "Oui",
+    "no": "Non",
+    "select": "Sélectionner",
+    "all": "Tout",
+    "none": "Aucun",
+    "toggle": "Basculer",
+    "expand": "Développer",
+    "collapse": "Réduire",
+    "copy": "Copier",
+    "paste": "Coller",
+    "cut": "Couper",
+    "clear": "Effacer",
+    "reset": "Réinitialiser",
+    "apply": "Appliquer",
+    "preview": "Aperçu",
+    "fullscreen": "Plein écran",
+    "minimize": "Réduire",
+    "maximize": "Agrandir",
+    "failedToUpdate": "Échec de la mise à jour",
+    "filteredBy": "Filtré par",
+    "errors": {
+      "loadingAlbums": "Erreur lors du chargement des albums",
+      "refreshPage": "Veuillez actualiser la page",
+      "failedToUpdate": "Échec de la mise à jour",
+      "unexpected": "Une erreur inattendue s'est produite",
+      "checkConnection": "Vérifiez votre connexion internet",
+      "failedToLoad": "Échec du chargement",
+      "networkResponse": "La réponse réseau n'était pas correcte"
+    }
   },
   "navigation": {
     "images": "Images",
@@ -28,7 +77,13 @@
     "likes": "J'aime",
     "albums": "Albums",
     "dashboard": "Tableau de bord",
-    "profile": "Profil"
+    "profile": "Profil",
+    "menu": "Menu",
+    "sidebar": "Barre latérale",
+    "header": "En-tête",
+    "footer": "Pied de page",
+    "breadcrumb": "Fil d'Ariane",
+    "pagination": "Pagination"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -38,25 +93,524 @@
     "dontHaveAccount": "Vous n'avez pas de compte ?",
     "email": "Email",
     "password": "Mot de passe",
-    "confirmPassword": "Confirmer le mot de passe"
+    "confirmPassword": "Confirmer le mot de passe",
+    "username": "Nom d'utilisateur",
+    "rememberMe": "Se souvenir de moi",
+    "createAccount": "Créer un compte",
+    "loginToAccount": "Se connecter au compte",
+    "welcomeBack": "Bon retour ! Veuillez entrer vos informations.",
+    "signInToAccount": "Connectez-vous à votre compte",
+    "labels": {
+      "email": "Adresse email",
+      "password": "Mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "username": "Nom d'utilisateur"
+    },
+    "placeholders": {
+      "enterEmail": "Entrez votre email",
+      "enterPassword": "Entrez votre mot de passe",
+      "createPassword": "Créez un mot de passe fort",
+      "confirmPassword": "Confirmez votre mot de passe",
+      "chooseUsername": "Choisissez un nom d'utilisateur"
+    },
+    "login": {
+      "meta": {
+        "title": "Connexion - PornSpot.ai",
+        "description": "Connectez-vous à votre compte PornSpot.ai"
+      }
+    },
+    "messages": {
+      "orContinueWith": "Ou continuez avec",
+      "createYourAccount": "Créez votre compte",
+      "joinMessage": "Rejoignez PornSpot.ai et commencez à créer du contenu incroyable.",
+      "registrationSuccessful": "Inscription réussie !",
+      "welcomeMessage": "Bienvenue sur PornSpot.ai ! Veuillez vérifier votre email à",
+      "toVerifyAccount": "pour vérifier votre compte.",
+      "goToSignIn": "Aller à la connexion",
+      "backToRegistration": "Retour à l'inscription",
+      "passwordRequirements": "Le mot de passe doit contenir au moins 8 caractères avec majuscule, minuscule et chiffre.",
+      "usernameRequirements": "Le nom d'utilisateur doit contenir 3-30 caractères (lettres, chiffres, tirets bas et traits d'union uniquement).",
+      "checkingAvailability": "Vérification de la disponibilité...",
+      "usernameAvailable": "Le nom d'utilisateur est disponible",
+      "usernameAlreadyTaken": "Le nom d'utilisateur est déjà pris",
+      "usernameInvalidChars": "Le nom d'utilisateur ne peut contenir que des lettres, chiffres, tirets bas et traits d'union",
+      "usernameTooLong": "Le nom d'utilisateur ne doit pas dépasser 30 caractères",
+      "waitForUsernameCheck": "Veuillez attendre la fin de la vérification de disponibilité du nom d'utilisateur",
+      "byCreatingAccount": "En créant un compte, vous acceptez nos"
+    },
+    "validation": {
+      "emailRequired": "L'email est requis",
+      "emailInvalid": "Veuillez entrer une adresse email valide",
+      "passwordRequired": "Le mot de passe est requis",
+      "passwordTooShort": "Le mot de passe doit contenir au moins 8 caractères",
+      "passwordsDoNotMatch": "Les mots de passe ne correspondent pas",
+      "usernameRequired": "Le nom d'utilisateur est requis",
+      "usernameTooShort": "Le nom d'utilisateur doit contenir au moins 3 caractères",
+      "usernameInvalid": "Le nom d'utilisateur ne peut contenir que des lettres, chiffres et tirets bas"
+    },
+    "verification": {
+      "emailSent": "Email de vérification envoyé",
+      "emailVerified": "Email vérifié avec succès",
+      "checkEmail": "Veuillez vérifier votre email pour le lien de vérification",
+      "resendEmail": "Renvoyer l'email de vérification",
+      "verifyEmail": "Vérifier l'email"
+    },
+    "oauth": {
+      "continueWith": "Continuer avec",
+      "signInWith": "Se connecter avec",
+      "or": "ou"
+    },
+    "google": {
+      "signIn": "Se connecter avec Google",
+      "signUp": "S'inscrire avec Google",
+      "continueWith": "Continuer avec Google",
+      "connecting": "Connexion..."
+    },
+    "errors": {
+      "invalidCredentials": "Identifiants invalides",
+      "userNotFound": "Utilisateur non trouvé",
+      "emailAlreadyExists": "L'email existe déjà",
+      "usernameAlreadyExists": "Le nom d'utilisateur existe déjà",
+      "loginFailed": "Échec de la connexion",
+      "registrationFailed": "Échec de l'inscription",
+      "verificationFailed": "Échec de la vérification",
+      "sessionExpired": "Session expirée"
+    },
+    "actions": {
+      "signOut": "Se déconnecter",
+      "deleteAccount": "Supprimer le compte",
+      "changePassword": "Changer le mot de passe",
+      "updateProfile": "Mettre à jour le profil"
+    }
   },
   "site": {
-    "title": "PornSpot.ai - Images et Vidéos Pornographiques générées par IA",
-    "description": "Découvrez et créez du contenu pornographique généré par IA. Générez des images et vidéos personnalisées avec des prompts, des sélections LoRA, et plus encore.",
-    "tagline": "Contenu Généré par IA"
+    "name": "PornSpot.ai",
+    "title": "PornSpot.ai - Images et vidéos pornographiques générées par IA",
+    "description": "Découvrez et créez du contenu adulte généré par IA. Générez des images et vidéos personnalisées avec des prompts, sélections LoRA, et plus.",
+    "tagline": "Contenu généré par IA",
+    "meta": {
+      "title": "PornSpot.ai - Découvrez du porno généré par IA",
+      "description": "Parcourez et générez des images et vidéos porno alimentées par IA. Gratuit pour commencer, avec des plans premium pour une création illimitée. Explorez le contenu adulte généré par IA : images, vidéos, et plus."
+    },
+    "welcomeTitle": "Bienvenue sur PornSpot.ai - Contenu adulte généré par IA",
+    "welcomeDescription": "Explorez et créez du contenu adulte généré par IA : images, vidéos, et plus.",
+    "welcome": "Bienvenue sur PornSpot.ai",
+    "subtitle": "Créez du contenu adulte époustouflant généré par IA",
+    "getStarted": "Commencer",
+    "learnMore": "En savoir plus",
+    "features": "Fonctionnalités",
+    "about": "À propos",
+    "contact": "Contact",
+    "terms": "Conditions d'utilisation",
+    "privacy": "Politique de confidentialité",
+    "copyright": "Droits d'auteur",
+    "allRightsReserved": "Tous droits réservés"
   },
   "admin": {
-    "title": "Tableau de Bord Admin",
-    "manageAlbums": "Gérer les Albums",
-    "manageMedia": "Gérer les Médias",
-    "createAlbum": "Créer un Album",
+    "title": "Tableau de bord Admin",
+    "manageAlbums": "Gérer les albums",
+    "manageMedia": "Gérer les médias",
+    "createAlbum": "Créer un album",
     "users": "Utilisateurs",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "stats": {
+      "totalUsers": "Total utilisateurs",
+      "totalAlbums": "Total albums",
+      "totalMedia": "Total médias",
+      "activeUsers": "Utilisateurs actifs",
+      "recentActivity": "Activité récente",
+      "systemHealth": "Santé du système",
+      "overview": "Aperçu",
+      "analytics": "Analytiques"
+    },
+    "navigation": {
+      "dashboard": "Tableau de bord",
+      "users": "Utilisateurs",
+      "albums": "Albums",
+      "media": "Médias",
+      "settings": "Paramètres",
+      "logs": "Journaux",
+      "reports": "Rapports"
+    },
+    "roles": {
+      "admin": "Administrateur",
+      "moderator": "Modérateur",
+      "user": "Utilisateur",
+      "guest": "Invité",
+      "banned": "Banni"
+    },
+    "media": {
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "pending": "En attente",
+      "approved": "Approuvé",
+      "rejected": "Rejeté",
+      "moderate": "Modérer",
+      "flag": "Signaler",
+      "unflag": "Retirer le signalement"
+    },
+    "albums": {
+      "publish": "Publier",
+      "unpublish": "Dépublier",
+      "feature": "Mettre en avant",
+      "unfeature": "Retirer de la mise en avant",
+      "archive": "Archiver",
+      "unarchive": "Désarchiver"
+    },
+    "fileUpload": {
+      "selectFiles": "Sélectionner des fichiers",
+      "dragAndDrop": "Glissez et déposez les fichiers ici",
+      "uploading": "Téléversement...",
+      "uploadComplete": "Téléversement terminé",
+      "uploadFailed": "Échec du téléversement",
+      "maxFileSize": "Taille maximale du fichier",
+      "allowedFormats": "Formats autorisés"
+    },
+    "coverImage": {
+      "select": "Sélectionner l'image de couverture",
+      "change": "Changer l'image de couverture",
+      "remove": "Supprimer l'image de couverture",
+      "upload": "Téléverser l'image de couverture"
+    }
+  },
+  "user": {
+    "dashboard": {
+      "welcome": "Bon retour",
+      "recentActivity": "Activité récente",
+      "quickActions": "Actions rapides",
+      "stats": "Vos statistiques",
+      "favorites": "Favoris",
+      "recommendations": "Recommandations"
+    },
+    "albums": {
+      "myAlbums": "Mes albums",
+      "createAlbum": "Créer un album",
+      "noAlbums": "Vous n'avez pas encore créé d'albums",
+      "albumCreated": "Album créé avec succès",
+      "albumUpdated": "Album mis à jour avec succès",
+      "albumDeleted": "Album supprimé avec succès"
+    },
+    "images": {
+      "myImages": "Mes images",
+      "uploadImage": "Téléverser une image",
+      "noImages": "Vous n'avez pas encore téléversé d'images",
+      "imageUploaded": "Image téléversée avec succès",
+      "imageDeleted": "Image supprimée avec succès",
+      "generateImage": "Générer une image"
+    },
+    "bookmarks": {
+      "myBookmarks": "Mes favoris",
+      "noBookmarks": "Vous n'avez pas encore de favoris",
+      "bookmarkAdded": "Ajouté aux favoris",
+      "bookmarkRemoved": "Retiré des favoris",
+      "removeBookmark": "Retirer des favoris",
+      "loginToBookmark": "Connectez-vous pour ajouter aux favoris"
+    },
+    "likes": {
+      "myLikes": "Mes j'aime",
+      "noLikes": "Vous n'avez encore rien aimé",
+      "likeAdded": "Aimé",
+      "likeRemoved": "J'aime retiré",
+      "removeLike": "Retirer le j'aime",
+      "loginToLike": "Connectez-vous pour aimer"
+    },
+    "menu": {
+      "account": "Compte",
+      "preferences": "Préférences",
+      "subscription": "Abonnement",
+      "billing": "Facturation",
+      "support": "Support",
+      "logout": "Déconnexion"
+    },
+    "profile": {
+      "profile": "Profil",
+      "dashboard": "Tableau de bord",
+      "settings": "Paramètres",
+      "unverified": "Non vérifié",
+      "emailNotVerified": "Email non vérifié",
+      "signingOut": "Déconnexion...",
+      "signOut": "Se déconnecter"
+    }
+  },
+  "media": {
+    "details": {
+      "title": "Titre",
+      "description": "Description",
+      "tags": "Tags",
+      "createdAt": "Créé",
+      "updatedAt": "Mis à jour",
+      "size": "Taille",
+      "format": "Format",
+      "resolution": "Résolution",
+      "duration": "Durée",
+      "views": "Vues",
+      "likes": "J'aime",
+      "bookmarks": "Favoris"
+    },
+    "errors": {
+      "loadFailed": "Échec du chargement du média",
+      "uploadFailed": "Échec du téléversement",
+      "deleteFailed": "Échec de la suppression",
+      "notFound": "Média non trouvé",
+      "accessDenied": "Accès refusé",
+      "invalidFormat": "Format invalide",
+      "fileTooLarge": "Fichier trop volumineux"
+    },
+    "loading": {
+      "uploading": "Téléversement...",
+      "processing": "Traitement...",
+      "generating": "Génération...",
+      "loading": "Chargement du média...",
+      "saving": "Enregistrement..."
+    },
+    "actions": {
+      "view": "Voir",
+      "download": "Télécharger",
+      "share": "Partager",
+      "like": "J'aime",
+      "bookmark": "Favori",
+      "report": "Signaler",
+      "delete": "Supprimer",
+      "edit": "Modifier",
+      "duplicate": "Dupliquer"
+    }
+  },
+  "albums": {
+    "errors": {
+      "loadFailed": "Échec du chargement des albums",
+      "createFailed": "Échec de la création de l'album",
+      "updateFailed": "Échec de la mise à jour de l'album",
+      "deleteFailed": "Échec de la suppression de l'album",
+      "notFound": "Album non trouvé",
+      "accessDenied": "Accès refusé"
+    },
+    "loading": {
+      "loading": "Chargement des albums...",
+      "creating": "Création de l'album...",
+      "updating": "Mise à jour de l'album...",
+      "deleting": "Suppression de l'album..."
+    },
+    "status": {
+      "draft": "Brouillon",
+      "published": "Publié",
+      "private": "Privé",
+      "public": "Public",
+      "featured": "En vedette",
+      "archived": "Archivé"
+    },
+    "actions": {
+      "create": "Créer un album",
+      "edit": "Modifier l'album",
+      "delete": "Supprimer l'album",
+      "publish": "Publier",
+      "unpublish": "Dépublier",
+      "addToAlbum": "Ajouter à l'album",
+      "removeFromAlbum": "Retirer de l'album"
+    }
+  },
+  "generate": {
+    "labels": {
+      "prompt": "Prompt",
+      "negativePrompt": "Prompt négatif",
+      "style": "Style",
+      "model": "Modèle",
+      "steps": "Étapes",
+      "seed": "Graine",
+      "width": "Largeur",
+      "height": "Hauteur",
+      "guidance": "Échelle de guidage",
+      "strength": "Force",
+      "scheduler": "Planificateur",
+      "lora": "LoRA",
+      "controlnet": "ControlNet"
+    },
+    "actions": {
+      "generate": "Générer",
+      "regenerate": "Régénérer",
+      "upscale": "Améliorer la résolution",
+      "enhance": "Améliorer",
+      "variations": "Variations",
+      "randomize": "Aléatoire",
+      "reset": "Réinitialiser",
+      "presets": "Préréglages"
+    },
+    "features": {
+      "highResolution": "Haute résolution",
+      "faceRestore": "Restauration de visage",
+      "backgroundRemoval": "Suppression d'arrière-plan",
+      "stylization": "Stylisation",
+      "inpainting": "Inpainting",
+      "outpainting": "Outpainting"
+    },
+    "example": {
+      "prompt": "Belle femme aux cheveux longs",
+      "negativePrompt": "flou, faible qualité, déformé"
+    },
+    "status": {
+      "idle": "Prêt à générer",
+      "queued": "En file d'attente",
+      "generating": "Génération...",
+      "completed": "Terminé",
+      "failed": "Échec de la génération",
+      "cancelled": "Annulé"
+    }
+  },
+  "pricing": {
+    "title": "Choisissez votre plan",
+    "subtitle": "Obtenez un accès illimité à du contenu de haute qualité généré par IA",
+    "monthly": "Mensuel",
+    "yearly": "Annuel",
+    "saveUpTo": "Économisez jusqu'à 17%",
+    "year": "an",
+    "month": "mois",
+    "saveVsMonthly": "Économisez {percentage}% vs mensuel",
+    "getStarted": "Commencer",
+    "plans": {
+      "free": "Gratuit",
+      "starter": "Débutant",
+      "pro": "Pro",
+      "unlimited": "Illimité",
+      "enterprise": "Entreprise"
+    },
+    "planDetails": {
+      "starter": {
+        "name": "Débutant",
+        "description": "Parfait pour les utilisateurs occasionnels explorant le contenu généré par IA",
+        "features": ["300 images par mois"]
+      },
+      "unlimited": {
+        "name": "Illimité",
+        "description": "Idéal pour les créateurs de contenu réguliers et les passionnés",
+        "badge": "Le plus populaire",
+        "features": ["Génération d'images illimitée"]
+      },
+      "pro": {
+        "name": "Pro",
+        "description": "Fonctionnalités avancées pour les utilisateurs expérimentés et les professionnels",
+        "badge": "Pro",
+        "features": [
+          "Génération d'images illimitée",
+          "Création de contenu privé",
+          "Prompts négatifs pour un meilleur contrôle",
+          "Génération d'images en masse",
+          "Tailles d'images personnalisées",
+          "Activer et désactiver les modèles LoRA"
+        ]
+      }
+    },
+    "features": {
+      "generations": "Générations",
+      "upscaling": "Amélioration de résolution",
+      "privateAlbums": "Albums privés",
+      "priorityQueue": "File prioritaire",
+      "commercialUse": "Usage commercial",
+      "apiAccess": "Accès API",
+      "support": "Support",
+      "customModels": "Modèles personnalisés"
+    },
+    "badges": {
+      "popular": "Le plus populaire",
+      "recommended": "Recommandé",
+      "bestValue": "Meilleur rapport qualité-prix",
+      "new": "Nouveau",
+      "limited": "Durée limitée"
+    },
+    "descriptions": {
+      "perMonth": "par mois",
+      "perYear": "par an",
+      "oneTime": "unique",
+      "forever": "à vie",
+      "included": "inclus",
+      "unlimited": "illimité",
+      "priority": "priorité"
+    },
+    "faq": {
+      "title": "Questions fréquemment posées",
+      "questions": {
+        "changePlan": {
+          "question": "Puis-je changer mon plan à tout moment ?",
+          "answer": "Oui, vous pouvez mettre à niveau ou rétrograder votre plan à tout moment. Les modifications seront calculées au prorata et reflétées dans votre prochain cycle de facturation."
+        },
+        "paymentMethods": {
+          "question": "Quels modes de paiement acceptez-vous ?",
+          "answer": "Nous acceptons actuellement les cartes de crédit et de débit Visa et Mastercard pour tous les plans d'abonnement."
+        },
+        "freeTrial": {
+          "question": "Y a-t-il un essai gratuit disponible ?",
+          "answer": "Oui ! Tous les utilisateurs reçoivent 5 générations d'images gratuites lors de l'inscription, plus une image gratuite supplémentaire chaque jour pour explorer notre plateforme."
+        },
+        "proFeatures": {
+          "question": "Quelles fonctionnalités avancées offre le plan Pro ?",
+          "answer": "Les utilisateurs Pro ont accès aux prompts négatifs pour un meilleur contrôle des images, à la personnalisation des modèles LoRA, à la génération en masse, à la création de contenu privé et aux tailles d'images personnalisées - tous les outils dont vous avez besoin pour du contenu de qualité professionnelle."
+        },
+        "contentAfterCancel": {
+          "question": "Qu'arrive-t-il à mon contenu si j'annule ?",
+          "answer": "Votre contenu généré restera dans votre compte. Vous pouvez gérer et supprimer votre contenu à tout moment, ou demander la suppression complète du compte via notre équipe de support."
+        },
+        "refunds": {
+          "question": "Offrez-vous des remboursements ?",
+          "answer": "Nous n'offrons pas de remboursements sur les plans d'abonnement. Cependant, vous pouvez annuler votre abonnement à tout moment pour éviter de futurs frais."
+        },
+        "commercialUse": {
+          "question": "Puis-je utiliser le contenu généré commercialement ?",
+          "answer": "Oui, vous avez des droits d'usage commercial complets pour tout le contenu généré via notre plateforme sur tous les plans d'abonnement."
+        }
+      }
+    },
+    "cta": {
+      "title": "Prêt à commencer à créer ?",
+      "subtitle": "Rejoignez des milliers de créateurs qui utilisent déjà PornSpot.ai pour donner vie à leur imagination.",
+      "button": "Commencez votre voyage"
+    }
+  },
+  "usage": {
+    "dailyLimit": {
+      "title": "Limite quotidienne",
+      "remaining": "Restant aujourd'hui",
+      "used": "Utilisé aujourd'hui",
+      "resets": "Remet à zéro dans",
+      "exceeded": "Limite quotidienne dépassée"
+    },
+    "monthlyLimit": {
+      "title": "Limite mensuelle",
+      "remaining": "Restant ce mois",
+      "used": "Utilisé ce mois",
+      "resets": "Remet à zéro le",
+      "exceeded": "Limite mensuelle dépassée"
+    }
+  },
+  "permissions": {
+    "imagesToday": {
+      "canGenerate": "Vous pouvez générer {count} images de plus aujourd'hui",
+      "limitReached": "Vous avez atteint votre limite quotidienne de génération",
+      "upgradePrompt": "Améliorez votre plan pour plus de générations"
+    }
   },
   "placeholders": {
     "noResults": "Aucun résultat trouvé",
     "noAlbums": "Aucun album trouvé",
     "noImages": "Aucune image trouvée",
-    "createFirstAlbum": "Créez votre premier album pour commencer !"
+    "createFirstAlbum": "Créez votre premier album pour commencer !",
+    "noBookmarks": "Aucun favori pour le moment",
+    "noLikes": "Aucun j'aime pour le moment",
+    "noMedia": "Aucun média trouvé",
+    "noUsers": "Aucun utilisateur trouvé",
+    "noActivity": "Aucune activité récente",
+    "emptyState": "Rien ici pour le moment",
+    "comingSoon": "Bientôt disponible",
+    "underMaintenance": "En maintenance",
+    "searchPlaceholder": "Rechercher...",
+    "enterPrompt": "Entrez votre prompt ici...",
+    "selectOption": "Sélectionnez une option",
+    "chooseFile": "Choisissez un fichier",
+    "noDataAvailable": "Aucune donnée disponible"
+  },
+  "albumGrid": {
+    "noAlbumsTitle": "Aucun album trouvé",
+    "noAlbumsDescription": "Il n'y a pas d'albums publics à afficher pour le moment.",
+    "loadingMore": "Chargement d'autres albums...",
+    "noMoreToLoad": "Plus d'albums à charger",
+    "errorLoading": "Erreur lors du chargement d'autres albums :",
+    "tryAgain": "Réessayer"
   }
 }

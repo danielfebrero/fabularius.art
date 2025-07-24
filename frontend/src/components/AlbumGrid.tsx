@@ -5,6 +5,7 @@ import { ThumbnailContext } from "../types/index";
 import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
 import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
+import { useTranslations } from "next-intl";
 
 interface AlbumGridProps {
   albums: Album[];
@@ -26,6 +27,7 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({
   error = null,
 }) => {
   const { preloadStatuses } = useUserInteractionStatus();
+  const t = useTranslations("albumGrid");
   const { ref, inView } = useInView({
     threshold: 0,
     rootMargin: "200px 0px",
@@ -76,11 +78,9 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({
             />
           </svg>
           <h3 className="text-lg font-semibold text-foreground mb-2">
-            No albums found
+            {t("noAlbumsTitle")}
           </h3>
-          <p className="text-muted-foreground">
-            There are no public albums to display at the moment.
-          </p>
+          <p className="text-muted-foreground">{t("noAlbumsDescription")}</p>
         </div>
       </div>
     );
@@ -127,24 +127,26 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({
         <div className="text-center py-8">
           {error ? (
             <div className="space-y-4">
-              <p className="text-red-500">Error loading more albums: {error}</p>
+              <p className="text-red-500">
+                {t("errorLoading")} {error}
+              </p>
               <button
                 onClick={loadMore}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
                 disabled={loading}
               >
-                Try Again
+                {t("tryAgain")}
               </button>
             </div>
           ) : loading ? (
             <div className="space-y-4">
               <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-              <p className="text-gray-500">Loading more albums...</p>
+              <p className="text-gray-500">{t("loadingMore")}</p>
             </div>
           ) : hasMore ? (
             <div ref={ref} className="h-4" aria-hidden="true" />
           ) : albums.length > 0 ? (
-            <p className="text-gray-500">No more albums to load</p>
+            <p className="text-gray-500">{t("noMoreToLoad")}</p>
           ) : null}
         </div>
       )}

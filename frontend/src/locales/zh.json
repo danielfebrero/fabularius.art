@@ -1,0 +1,616 @@
+{
+  "common": {
+    "discover": "发现",
+    "generate": "生成",
+    "pricing": "定价",
+    "login": "登录",
+    "register": "注册",
+    "logout": "退出",
+    "home": "首页",
+    "admin": "管理员",
+    "user": "用户",
+    "loading": "加载中...",
+    "error": "错误",
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "back": "返回",
+    "next": "下一个",
+    "previous": "上一个",
+    "search": "搜索",
+    "filter": "筛选",
+    "sort": "排序",
+    "like": "点赞",
+    "bookmark": "收藏",
+    "download": "下载",
+    "loadMore": "加载更多",
+    "goBack": "返回",
+    "share": "分享",
+    "close": "关闭",
+    "open": "打开",
+    "view": "查看",
+    "create": "创建",
+    "update": "更新",
+    "submit": "提交",
+    "confirm": "确认",
+    "retry": "重试",
+    "refresh": "刷新",
+    "upload": "上传",
+    "remove": "移除",
+    "add": "添加",
+    "done": "完成",
+    "ok": "确定",
+    "yes": "是",
+    "no": "否",
+    "select": "选择",
+    "all": "全部",
+    "none": "无",
+    "toggle": "切换",
+    "expand": "展开",
+    "collapse": "收起",
+    "copy": "复制",
+    "paste": "粘贴",
+    "cut": "剪切",
+    "clear": "清除",
+    "reset": "重置",
+    "apply": "应用",
+    "preview": "预览",
+    "fullscreen": "全屏",
+    "minimize": "最小化",
+    "maximize": "最大化",
+    "failedToUpdate": "更新失败",
+    "filteredBy": "筛选条件",
+    "errors": {
+      "loadingAlbums": "加载相册时出错",
+      "refreshPage": "请刷新页面",
+      "failedToUpdate": "更新失败",
+      "unexpected": "发生了意外错误",
+      "checkConnection": "请检查您的网络连接",
+      "failedToLoad": "加载失败",
+      "networkResponse": "网络响应异常"
+    }
+  },
+  "navigation": {
+    "images": "图片",
+    "bookmarks": "收藏",
+    "likes": "点赞",
+    "albums": "相册",
+    "dashboard": "仪表板",
+    "profile": "个人资料",
+    "menu": "菜单",
+    "sidebar": "侧边栏",
+    "header": "页头",
+    "footer": "页脚",
+    "breadcrumb": "面包屑",
+    "pagination": "分页"
+  },
+  "auth": {
+    "signIn": "登录",
+    "signUp": "注册",
+    "forgotPassword": "忘记密码？",
+    "alreadyHaveAccount": "已有账户？",
+    "dontHaveAccount": "没有账户？",
+    "email": "邮箱",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "username": "用户名",
+    "rememberMe": "记住我",
+    "createAccount": "创建账户",
+    "loginToAccount": "登录账户",
+    "welcomeBack": "欢迎回来！请输入您的详细信息。",
+    "signInToAccount": "登录您的账户",
+    "labels": {
+      "email": "邮箱地址",
+      "password": "密码",
+      "confirmPassword": "确认密码",
+      "username": "用户名"
+    },
+    "placeholders": {
+      "enterEmail": "输入您的邮箱",
+      "enterPassword": "输入您的密码",
+      "createPassword": "创建一个强密码",
+      "confirmPassword": "确认您的密码",
+      "chooseUsername": "选择用户名"
+    },
+    "login": {
+      "meta": {
+        "title": "登录 - PornSpot.ai",
+        "description": "登录您的PornSpot.ai账户"
+      }
+    },
+    "messages": {
+      "orContinueWith": "或继续使用",
+      "createYourAccount": "创建您的账户",
+      "joinMessage": "加入PornSpot.ai，开始创建精彩内容。",
+      "registrationSuccessful": "注册成功！",
+      "welcomeMessage": "欢迎来到PornSpot.ai！请检查您的邮箱",
+      "toVerifyAccount": "以验证您的账户。",
+      "goToSignIn": "前往登录",
+      "backToRegistration": "返回注册",
+      "passwordRequirements": "密码必须至少8个字符，包含大写、小写字母和数字。",
+      "usernameRequirements": "用户名必须为3-30个字符（仅限字母、数字、下划线和连字符）。",
+      "checkingAvailability": "检查可用性...",
+      "usernameAvailable": "用户名可用",
+      "usernameAlreadyTaken": "用户名已被占用",
+      "usernameInvalidChars": "用户名只能包含字母、数字、下划线和连字符",
+      "usernameTooLong": "用户名不得超过30个字符",
+      "waitForUsernameCheck": "请等待用户名可用性检查完成",
+      "byCreatingAccount": "通过创建账户，您同意我们的"
+    },
+    "validation": {
+      "emailRequired": "邮箱是必需的",
+      "emailInvalid": "请输入有效的邮箱地址",
+      "passwordRequired": "密码是必需的",
+      "passwordTooShort": "密码必须至少8个字符",
+      "passwordsDoNotMatch": "密码不匹配",
+      "usernameRequired": "用户名是必需的",
+      "usernameTooShort": "用户名必须至少3个字符",
+      "usernameInvalid": "用户名只能包含字母、数字和下划线"
+    },
+    "verification": {
+      "emailSent": "验证邮件已发送",
+      "emailVerified": "邮箱验证成功",
+      "checkEmail": "请检查您的邮箱获取验证链接",
+      "resendEmail": "重新发送验证邮件",
+      "verifyEmail": "验证邮箱"
+    },
+    "oauth": {
+      "continueWith": "继续使用",
+      "signInWith": "登录使用",
+      "or": "或"
+    },
+    "google": {
+      "signIn": "使用Google登录",
+      "signUp": "使用Google注册",
+      "continueWith": "继续使用Google",
+      "connecting": "连接中..."
+    },
+    "errors": {
+      "invalidCredentials": "凭据无效",
+      "userNotFound": "用户未找到",
+      "emailAlreadyExists": "邮箱已存在",
+      "usernameAlreadyExists": "用户名已存在",
+      "loginFailed": "登录失败",
+      "registrationFailed": "注册失败",
+      "verificationFailed": "验证失败",
+      "sessionExpired": "会话已过期"
+    },
+    "actions": {
+      "signOut": "退出登录",
+      "deleteAccount": "删除账户",
+      "changePassword": "修改密码",
+      "updateProfile": "更新个人资料"
+    }
+  },
+  "site": {
+    "name": "PornSpot.ai",
+    "title": "PornSpot.ai - AI生成的色情图片和视频",
+    "description": "发现并创建AI生成的成人内容。使用提示词、LoRA选择等生成自定义图片和视频。",
+    "tagline": "AI生成内容",
+    "meta": {
+      "title": "PornSpot.ai - 发现AI生成的色情内容",
+      "description": "浏览和生成AI驱动的色情图片和视频。免费开始，提供高级套餐以无限制创作。探索AI生成的成人内容：图片、视频等。"
+    },
+    "welcomeTitle": "欢迎来到PornSpot.ai - AI生成的成人内容",
+    "welcomeDescription": "探索和创建AI生成的成人内容：图片、视频等。",
+    "welcome": "欢迎来到PornSpot.ai",
+    "subtitle": "创建令人惊艳的AI生成成人内容",
+    "getStarted": "开始使用",
+    "learnMore": "了解更多",
+    "features": "功能",
+    "about": "关于",
+    "contact": "联系",
+    "terms": "服务条款",
+    "privacy": "隐私政策",
+    "copyright": "版权",
+    "allRightsReserved": "保留所有权利"
+  },
+  "admin": {
+    "title": "管理员仪表板",
+    "manageAlbums": "管理相册",
+    "manageMedia": "管理媒体",
+    "createAlbum": "创建相册",
+    "users": "用户",
+    "settings": "设置",
+    "stats": {
+      "totalUsers": "总用户数",
+      "totalAlbums": "总相册数",
+      "totalMedia": "总媒体数",
+      "activeUsers": "活跃用户",
+      "recentActivity": "最近活动",
+      "systemHealth": "系统健康",
+      "overview": "概览",
+      "analytics": "分析"
+    },
+    "navigation": {
+      "dashboard": "仪表板",
+      "users": "用户",
+      "albums": "相册",
+      "media": "媒体",
+      "settings": "设置",
+      "logs": "日志",
+      "reports": "报告"
+    },
+    "roles": {
+      "admin": "管理员",
+      "moderator": "版主",
+      "user": "用户",
+      "guest": "访客",
+      "banned": "被封禁"
+    },
+    "media": {
+      "approve": "批准",
+      "reject": "拒绝",
+      "pending": "待审核",
+      "approved": "已批准",
+      "rejected": "已拒绝",
+      "moderate": "审核",
+      "flag": "举报",
+      "unflag": "取消举报"
+    },
+    "albums": {
+      "publish": "发布",
+      "unpublish": "取消发布",
+      "feature": "推荐",
+      "unfeature": "取消推荐",
+      "archive": "归档",
+      "unarchive": "取消归档"
+    },
+    "fileUpload": {
+      "selectFiles": "选择文件",
+      "dragAndDrop": "将文件拖放到此处",
+      "uploading": "上传中...",
+      "uploadComplete": "上传完成",
+      "uploadFailed": "上传失败",
+      "maxFileSize": "最大文件大小",
+      "allowedFormats": "允许的格式"
+    },
+    "coverImage": {
+      "select": "选择封面图片",
+      "change": "更换封面图片",
+      "remove": "移除封面图片",
+      "upload": "上传封面图片"
+    }
+  },
+  "user": {
+    "dashboard": {
+      "welcome": "欢迎回来",
+      "recentActivity": "最近活动",
+      "quickActions": "快速操作",
+      "stats": "您的统计",
+      "favorites": "收藏",
+      "recommendations": "推荐"
+    },
+    "albums": {
+      "myAlbums": "我的相册",
+      "createAlbum": "创建相册",
+      "noAlbums": "您还没有创建任何相册",
+      "albumCreated": "相册创建成功",
+      "albumUpdated": "相册更新成功",
+      "albumDeleted": "相册删除成功"
+    },
+    "images": {
+      "myImages": "我的图片",
+      "uploadImage": "上传图片",
+      "noImages": "您还没有上传任何图片",
+      "imageUploaded": "图片上传成功",
+      "imageDeleted": "图片删除成功",
+      "generateImage": "生成图片"
+    },
+    "bookmarks": {
+      "myBookmarks": "我的收藏",
+      "noBookmarks": "您还没有收藏任何内容",
+      "bookmarkAdded": "已添加到收藏",
+      "bookmarkRemoved": "已从收藏中移除",
+      "removeBookmark": "移除收藏",
+      "loginToBookmark": "登录以收藏"
+    },
+    "likes": {
+      "myLikes": "我的点赞",
+      "noLikes": "您还没有点赞任何内容",
+      "likeAdded": "已点赞",
+      "likeRemoved": "已取消点赞",
+      "removeLike": "取消点赞",
+      "loginToLike": "登录以点赞"
+    },
+    "menu": {
+      "account": "账户",
+      "preferences": "偏好设置",
+      "subscription": "订阅",
+      "billing": "账单",
+      "support": "支持",
+      "logout": "退出登录"
+    },
+    "profile": {
+      "profile": "个人资料",
+      "dashboard": "仪表板",
+      "settings": "设置",
+      "unverified": "未验证",
+      "emailNotVerified": "邮箱未验证",
+      "signingOut": "退出中...",
+      "signOut": "退出登录"
+    }
+  },
+  "media": {
+    "details": {
+      "title": "标题",
+      "description": "描述",
+      "tags": "标签",
+      "createdAt": "创建时间",
+      "updatedAt": "更新时间",
+      "size": "大小",
+      "format": "格式",
+      "resolution": "分辨率",
+      "duration": "时长",
+      "views": "观看次数",
+      "likes": "点赞数",
+      "bookmarks": "收藏数"
+    },
+    "errors": {
+      "loadFailed": "媒体加载失败",
+      "uploadFailed": "上传失败",
+      "deleteFailed": "删除失败",
+      "notFound": "媒体未找到",
+      "accessDenied": "访问被拒绝",
+      "invalidFormat": "格式无效",
+      "fileTooLarge": "文件太大"
+    },
+    "loading": {
+      "uploading": "上传中...",
+      "processing": "处理中...",
+      "generating": "生成中...",
+      "loading": "媒体加载中...",
+      "saving": "保存中..."
+    },
+    "actions": {
+      "view": "查看",
+      "download": "下载",
+      "share": "分享",
+      "like": "点赞",
+      "bookmark": "收藏",
+      "report": "举报",
+      "delete": "删除",
+      "edit": "编辑",
+      "duplicate": "复制"
+    }
+  },
+  "albums": {
+    "errors": {
+      "loadFailed": "相册加载失败",
+      "createFailed": "创建相册失败",
+      "updateFailed": "更新相册失败",
+      "deleteFailed": "删除相册失败",
+      "notFound": "相册未找到",
+      "accessDenied": "访问被拒绝"
+    },
+    "loading": {
+      "loading": "相册加载中...",
+      "creating": "创建相册中...",
+      "updating": "更新相册中...",
+      "deleting": "删除相册中..."
+    },
+    "status": {
+      "draft": "草稿",
+      "published": "已发布",
+      "private": "私人",
+      "public": "公开",
+      "featured": "推荐",
+      "archived": "已归档"
+    },
+    "actions": {
+      "create": "创建相册",
+      "edit": "编辑相册",
+      "delete": "删除相册",
+      "publish": "发布",
+      "unpublish": "取消发布",
+      "addToAlbum": "添加到相册",
+      "removeFromAlbum": "从相册中移除"
+    }
+  },
+  "generate": {
+    "labels": {
+      "prompt": "提示词",
+      "negativePrompt": "负面提示词",
+      "style": "风格",
+      "model": "模型",
+      "steps": "步骤",
+      "seed": "种子",
+      "width": "宽度",
+      "height": "高度",
+      "guidance": "引导强度",
+      "strength": "强度",
+      "scheduler": "调度器",
+      "lora": "LoRA",
+      "controlnet": "ControlNet"
+    },
+    "actions": {
+      "generate": "生成",
+      "regenerate": "重新生成",
+      "upscale": "放大",
+      "enhance": "增强",
+      "variations": "变体",
+      "randomize": "随机化",
+      "reset": "重置",
+      "presets": "预设"
+    },
+    "features": {
+      "highResolution": "高分辨率",
+      "faceRestore": "面部修复",
+      "backgroundRemoval": "背景移除",
+      "stylization": "风格化",
+      "inpainting": "内绘制",
+      "outpainting": "外绘制"
+    },
+    "example": {
+      "prompt": "长发美女",
+      "negativePrompt": "模糊，低质量，扭曲"
+    },
+    "status": {
+      "idle": "准备生成",
+      "queued": "排队中",
+      "generating": "生成中...",
+      "completed": "已完成",
+      "failed": "生成失败",
+      "cancelled": "已取消"
+    }
+  },
+  "pricing": {
+    "title": "选择您的计划",
+    "subtitle": "获得高质量AI生成内容的无限访问权限",
+    "monthly": "按月",
+    "yearly": "按年",
+    "saveUpTo": "节省高达17%",
+    "year": "年",
+    "month": "月",
+    "saveVsMonthly": "比按月节省{percentage}%",
+    "getStarted": "开始使用",
+    "plans": {
+      "free": "免费",
+      "starter": "入门版",
+      "pro": "专业版",
+      "unlimited": "无限版",
+      "enterprise": "企业版"
+    },
+    "planDetails": {
+      "starter": {
+        "name": "入门版",
+        "description": "非常适合探索AI生成内容的普通用户",
+        "features": ["每月300张图片"]
+      },
+      "unlimited": {
+        "name": "无限版",
+        "description": "适合常规的内容创作者和爱好者",
+        "badge": "最受欢迎",
+        "features": ["无限图片生成"]
+      },
+      "pro": {
+        "name": "专业版",
+        "description": "为高级用户和专业人士提供的高级功能",
+        "badge": "专业版",
+        "features": [
+          "无限图片生成",
+          "私人内容创建",
+          "用于更好控制的负面提示",
+          "批量图片生成",
+          "自定义图片尺寸",
+          "开启和关闭LoRA模型"
+        ]
+      }
+    },
+    "features": {
+      "generations": "生成次数",
+      "upscaling": "图像放大",
+      "privateAlbums": "私人相册",
+      "priorityQueue": "优先队列",
+      "commercialUse": "商业用途",
+      "apiAccess": "API访问",
+      "support": "支持",
+      "customModels": "自定义模型"
+    },
+    "badges": {
+      "popular": "最受欢迎",
+      "recommended": "推荐",
+      "bestValue": "最超值",
+      "new": "新品",
+      "limited": "限时优惠"
+    },
+    "descriptions": {
+      "perMonth": "每月",
+      "perYear": "每年",
+      "oneTime": "一次性",
+      "forever": "永久",
+      "included": "包含",
+      "unlimited": "无限",
+      "priority": "优先"
+    },
+    "faq": {
+      "title": "常见问题",
+      "questions": {
+        "changePlan": {
+          "question": "我可以随时更改计划吗？",
+          "answer": "是的，您可以随时升级或降级您的计划。更改将按比例计算并在您的下一个计费周期中体现。"
+        },
+        "paymentMethods": {
+          "question": "您接受哪些付款方式？",
+          "answer": "我们目前接受所有订阅计划的Visa和万事达信用卡和借记卡。"
+        },
+        "freeTrial": {
+          "question": "有免费试用吗？",
+          "answer": "有的！所有用户注册时都会获得5次免费图像生成，另外每天还有一张额外的免费图像来探索我们的平台。"
+        },
+        "proFeatures": {
+          "question": "专业版计划提供哪些高级功能？",
+          "answer": "专业版用户可以访问负面提示词以更好地控制图像、LoRA模型定制、批量生成、私人内容创建和自定义图像尺寸——这些都是您制作专业级内容所需的工具。"
+        },
+        "contentAfterCancel": {
+          "question": "如果我取消订阅，我的内容会怎样？",
+          "answer": "您生成的内容将保留在您的账户中。您可以随时管理和删除您的内容，或通过我们的支持团队请求完全删除账户。"
+        },
+        "refunds": {
+          "question": "你们提供退款吗？",
+          "answer": "我们不对订阅计划提供退款。但是，您可以随时取消订阅以避免未来的费用。"
+        },
+        "commercialUse": {
+          "question": "我可以商业使用生成的内容吗？",
+          "answer": "是的，您对通过我们平台生成的所有内容拥有完全的商业使用权，适用于所有订阅计划。"
+        }
+      }
+    },
+    "cta": {
+      "title": "准备开始创作了吗？",
+      "subtitle": "加入已经在使用PornSpot.ai将想象变为现实的数千名创作者。",
+      "button": "开始您的旅程"
+    }
+  },
+  "usage": {
+    "dailyLimit": {
+      "title": "每日限额",
+      "remaining": "今日剩余",
+      "used": "今日已用",
+      "resets": "重置时间",
+      "exceeded": "已超出每日限额"
+    },
+    "monthlyLimit": {
+      "title": "每月限额",
+      "remaining": "本月剩余",
+      "used": "本月已用",
+      "resets": "重置日期",
+      "exceeded": "已超出每月限额"
+    }
+  },
+  "permissions": {
+    "imagesToday": {
+      "canGenerate": "您今天还可以生成{count}张图片",
+      "limitReached": "您已达到每日生成限额",
+      "upgradePrompt": "升级您的套餐以获得更多生成次数"
+    }
+  },
+  "placeholders": {
+    "noResults": "未找到结果",
+    "noAlbums": "未找到相册",
+    "noImages": "未找到图片",
+    "createFirstAlbum": "创建您的第一个相册开始使用！",
+    "noBookmarks": "暂无收藏",
+    "noLikes": "暂无点赞",
+    "noMedia": "未找到媒体",
+    "noUsers": "未找到用户",
+    "noActivity": "无最近活动",
+    "emptyState": "这里还没有内容",
+    "comingSoon": "即将推出",
+    "underMaintenance": "维护中",
+    "searchPlaceholder": "搜索...",
+    "enterPrompt": "在这里输入您的提示词...",
+    "selectOption": "选择一个选项",
+    "chooseFile": "选择文件",
+    "noDataAvailable": "暂无数据"
+  },
+  "albumGrid": {
+    "noAlbumsTitle": "未找到相册",
+    "noAlbumsDescription": "目前没有可显示的公开相册。",
+    "loadingMore": "加载更多相册...",
+    "noMoreToLoad": "没有更多相册可加载",
+    "errorLoading": "加载更多相册时出错：",
+    "tryAgain": "重试"
+  }
+}

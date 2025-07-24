@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { getAlbums } from "@/lib/data";
 import { Album } from "@/types";
 import { DiscoverClient } from "@/components/DiscoverClient";
@@ -10,13 +11,18 @@ export async function generateMetadata({
   params: { locale: string };
   searchParams: { tag?: string };
 }): Promise<Metadata> {
+  const t = await getTranslations({ locale: params.locale, namespace: "site" });
+  const tCommon = await getTranslations({
+    locale: params.locale,
+    namespace: "common",
+  });
+
   const tag = searchParams.tag;
-  const baseTitle = "PornSpot.ai - Discover AI Generated Porn";
+  const baseTitle = t("meta.title");
   const title = tag ? `${baseTitle} - ${tag}` : baseTitle;
-  const baseDescription =
-    "Browse and generate AI-powered porn images and videos. Free to start, with premium plans for unlimited creation. Explore AI-generated adult content: images, videos, and more.";
+  const baseDescription = t("meta.description");
   const description = tag
-    ? `${baseDescription} Filtered by: ${tag}`
+    ? `${baseDescription} ${tCommon("filteredBy")}: ${tag}`
     : baseDescription;
 
   return {
@@ -25,7 +31,7 @@ export async function generateMetadata({
     openGraph: {
       title,
       description,
-      siteName: "PornSpot.ai",
+      siteName: t("name"),
     },
     twitter: {
       title,
@@ -50,6 +56,16 @@ export default async function DiscoverPage({
   params: { locale: string };
   searchParams: { tag?: string };
 }) {
+  const t = await getTranslations({ locale: params.locale, namespace: "site" });
+  const tCommon = await getTranslations({
+    locale: params.locale,
+    namespace: "common",
+  });
+  const tPlaceholders = await getTranslations({
+    locale: params.locale,
+    namespace: "placeholders",
+  });
+
   const tag = searchParams.tag;
   let albums: Album[] = [];
   let pagination: any = null;
@@ -79,23 +95,20 @@ export default async function DiscoverPage({
     <>
       {/* SEO-friendly hidden content for search engines */}
       <div className="sr-only">
-        <h1>Welcome to PornSpot.ai - AI Generated Adult Content</h1>
-        <p>
-          Explore and create AI-generated adult content: images, videos, and
-          more.
-        </p>
+        <h1>{t("welcomeTitle")}</h1>
+        <p>{t("welcomeDescription")}</p>
       </div>
 
       {error && albums.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-red-500 mb-4">Error loading albums: {error}</p>
-          <p className="text-gray-500">Please try refreshing the page.</p>
+          <p className="text-red-500 mb-4">
+            {tCommon("errors.loadingAlbums")}: {error}
+          </p>
+          <p className="text-gray-500">{tCommon("errors.refreshPage")}</p>
         </div>
       ) : albums.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-500">
-            No albums found. Create your first album to get started!
-          </p>
+          <p className="text-gray-500">{tPlaceholders("noAlbumsFound")}</p>
         </div>
       ) : (
         <DiscoverClient

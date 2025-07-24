@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { GoogleLoginButton } from "./GoogleLoginButton";
@@ -54,6 +55,9 @@ export function RegisterForm() {
   const [usernameMessage, setUsernameMessage] = useState("");
   const router = useRouter();
 
+  const t = useTranslations("common");
+  const tAuth = useTranslations("auth");
+
   const {
     register,
     handleSubmit,
@@ -84,20 +88,18 @@ export function RegisterForm() {
     // Check format first
     if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
       setUsernameStatus("error");
-      setUsernameMessage(
-        "Username can only contain letters, numbers, underscores, and hyphens"
-      );
+      setUsernameMessage(tAuth("messages.usernameInvalidChars"));
       return;
     }
 
     if (username.length > 30) {
       setUsernameStatus("error");
-      setUsernameMessage("Username must not exceed 30 characters");
+      setUsernameMessage(tAuth("messages.usernameTooLong"));
       return;
     }
 
     setUsernameStatus("checking");
-    setUsernameMessage("Checking availability...");
+    setUsernameMessage(tAuth("messages.checkingAvailability"));
 
     try {
       const response = await userApi.checkUsernameAvailability({ username });
@@ -105,11 +107,11 @@ export function RegisterForm() {
       if (response.success && response.data) {
         if (response.data.available) {
           setUsernameStatus("available");
-          setUsernameMessage("Username is available");
+          setUsernameMessage(tAuth("messages.usernameAvailable"));
         } else {
           setUsernameStatus("taken");
           setUsernameMessage(
-            response.data.message || "Username is already taken"
+            response.data.message || tAuth("messages.usernameAlreadyTaken")
           );
         }
       } else {
@@ -143,7 +145,7 @@ export function RegisterForm() {
       if (usernameStatus === "taken") {
         setFormError("username", {
           type: "manual",
-          message: "Username is already taken",
+          message: tAuth("messages.usernameAlreadyTaken"),
         });
         return;
       }
@@ -151,7 +153,7 @@ export function RegisterForm() {
       if (usernameStatus === "checking") {
         setFormError("username", {
           type: "manual",
-          message: "Please wait for username availability check to complete",
+          message: tAuth("messages.waitForUsernameCheck"),
         });
         return;
       }
@@ -203,25 +205,25 @@ export function RegisterForm() {
 
         <div>
           <h2 className="text-xl font-semibold text-foreground">
-            Registration Successful!
+            {tAuth("messages.registrationSuccessful")}
           </h2>
           <p className="text-muted-foreground mt-2">
-            Welcome to PornSpot.ai! Please check your email at{" "}
+            {tAuth("messages.welcomeMessage")}{" "}
             <span className="font-medium text-foreground">{watchedEmail}</span>{" "}
-            to verify your account.
+            {tAuth("messages.toVerifyAccount")}
           </p>
         </div>
 
         <div className="space-y-3">
           <Button onClick={() => router.push("/auth/login")} className="w-full">
-            Go to Sign In
+            {tAuth("messages.goToSignIn")}
           </Button>
 
           <button
             onClick={() => setRegistrationSuccess(false)}
             className="text-sm text-muted-foreground hover:text-foreground"
           >
-            Back to Registration
+            {tAuth("messages.backToRegistration")}
           </button>
         </div>
       </div>
@@ -232,10 +234,10 @@ export function RegisterForm() {
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-xl font-semibold text-foreground">
-          Create your account
+          {tAuth("messages.createYourAccount")}
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Join PornSpot.ai and start creating amazing content.
+          {tAuth("messages.joinMessage")}
         </p>
       </div>
 
@@ -244,8 +246,8 @@ export function RegisterForm() {
           <Input
             {...register("username")}
             type="text"
-            label="Username"
-            placeholder="Choose a username"
+            label={tAuth("labels.username")}
+            placeholder={tAuth("placeholders.chooseUsername")}
             error={errors.username?.message}
             disabled={isLoading}
             autoComplete="username"
@@ -327,8 +329,8 @@ export function RegisterForm() {
         <Input
           {...register("email")}
           type="email"
-          label="Email address"
-          placeholder="Enter your email"
+          label={tAuth("labels.email")}
+          placeholder={tAuth("placeholders.enterEmail")}
           error={errors.email?.message}
           disabled={isLoading}
           autoComplete="email"
@@ -339,8 +341,8 @@ export function RegisterForm() {
           <Input
             {...register("password")}
             type={showPassword ? "text" : "password"}
-            label="Password"
-            placeholder="Create a strong password"
+            label={tAuth("labels.password")}
+            placeholder={tAuth("placeholders.createPassword")}
             error={errors.password?.message}
             disabled={isLoading}
             autoComplete="new-password"
@@ -394,8 +396,8 @@ export function RegisterForm() {
           <Input
             {...register("confirmPassword")}
             type={showConfirmPassword ? "text" : "password"}
-            label="Confirm password"
-            placeholder="Confirm your password"
+            label={tAuth("labels.confirmPassword")}
+            placeholder={tAuth("placeholders.confirmPassword")}
             error={errors.confirmPassword?.message}
             disabled={isLoading}
             autoComplete="new-password"
@@ -446,14 +448,8 @@ export function RegisterForm() {
         </div>
 
         <div className="text-xs text-muted-foreground space-y-1">
-          <div>
-            Password must be at least 8 characters with uppercase, lowercase,
-            and number.
-          </div>
-          <div>
-            Username must be 3-30 characters (letters, numbers, underscores, and
-            hyphens only).
-          </div>
+          <div>{tAuth("messages.passwordRequirements")}</div>
+          <div>{tAuth("messages.usernameRequirements")}</div>
         </div>
 
         {(errors.root || error) && (
@@ -468,7 +464,7 @@ export function RegisterForm() {
           loading={isLoading}
           disabled={isLoading}
         >
-          Create account
+          {tAuth("createAccount")}
         </Button>
       </form>
 
@@ -478,7 +474,7 @@ export function RegisterForm() {
         </div>
         <div className="relative flex justify-center text-xs uppercase">
           <span className="bg-card px-2 text-muted-foreground">
-            Or continue with
+            {tAuth("messages.orContinueWith")}
           </span>
         </div>
       </div>
@@ -486,17 +482,19 @@ export function RegisterForm() {
       <GoogleLoginButton disabled={isLoading} />
 
       <div className="text-center text-sm">
-        <span className="text-muted-foreground">Already have an account? </span>
+        <span className="text-muted-foreground">
+          {tAuth("alreadyHaveAccount")}{" "}
+        </span>
         <LocaleLink
           href="/auth/login"
           className="text-primary hover:text-primary/90 font-medium"
         >
-          Sign in
+          {tAuth("signIn")}
         </LocaleLink>
       </div>
 
       <div className="text-xs text-center text-muted-foreground">
-        By creating an account, you agree to our{" "}
+        {tAuth("messages.byCreatingAccount")}{" "}
         <LocaleLink
           href="/terms"
           className="text-primary hover:text-primary/90"

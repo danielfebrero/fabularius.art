@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { GoogleLoginButton } from "./GoogleLoginButton";
@@ -13,23 +14,29 @@ import { UserLoginFormData } from "@/types/user";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { EmailVerificationForm } from "./EmailVerificationForm";
 
-// Validation schema
-const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Please enter a valid email address"),
-  password: z
-    .string()
-    .min(1, "Password is required")
-    .min(6, "Password must be at least 6 characters"),
-});
+// Validation schema with internationalization
+const createLoginSchema = (tAuth: any) =>
+  z.object({
+    email: z
+      .string()
+      .min(1, tAuth("validation.emailRequired"))
+      .email(tAuth("validation.emailInvalid")),
+    password: z
+      .string()
+      .min(1, tAuth("validation.passwordRequired"))
+      .min(6, tAuth("validation.passwordTooShort")),
+  });
 
 export function LoginForm() {
   const { login, loading, error, clearError, emailVerificationRequired } =
     useUser();
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+
+  const t = useTranslations("common");
+  const tAuth = useTranslations("auth");
+
+  const loginSchema = createLoginSchema(tAuth);
 
   const {
     register,
@@ -62,14 +69,13 @@ export function LoginForm() {
       } else if (!emailVerificationRequired) {
         setFormError("root", {
           type: "manual",
-          message: error || "Login failed. Please check your credentials.",
+          message: error || tAuth("errors.loginFailed"),
         });
       }
     } catch (err) {
       setFormError("root", {
         type: "manual",
-        message:
-          err instanceof Error ? err.message : "An unexpected error occurred",
+        message: err instanceof Error ? err.message : t("error"),
       });
     }
   };
@@ -84,10 +90,10 @@ export function LoginForm() {
     <div className="space-y-6">
       <div className="text-center">
         <h2 className="text-xl font-semibold text-foreground">
-          Sign in to your account
+          {tAuth("signInToAccount")}
         </h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Welcome back! Please enter your details.
+          {tAuth("welcomeBack")}
         </p>
       </div>
 
@@ -95,8 +101,8 @@ export function LoginForm() {
         <Input
           {...register("email")}
           type="email"
-          label="Email address"
-          placeholder="Enter your email"
+          label={tAuth("labels.email")}
+          placeholder={tAuth("placeholders.enterEmail")}
           error={errors.email?.message}
           disabled={isLoading}
           autoComplete="email"
@@ -107,8 +113,8 @@ export function LoginForm() {
           <Input
             {...register("password")}
             type={showPassword ? "text" : "password"}
-            label="Password"
-            placeholder="Enter your password"
+            label={tAuth("labels.password")}
+            placeholder={tAuth("placeholders.enterPassword")}
             error={errors.password?.message}
             disabled={isLoading}
             autoComplete="current-password"
@@ -170,7 +176,7 @@ export function LoginForm() {
           loading={isLoading}
           disabled={isLoading}
         >
-          Sign in
+          {tAuth("signIn")}
         </Button>
       </form>
 
@@ -180,7 +186,7 @@ export function LoginForm() {
         </div>
         <div className="relative flex justify-center text-xs uppercase">
           <span className="bg-card px-2 text-muted-foreground">
-            Or continue with
+            {tAuth("messages.orContinueWith")}
           </span>
         </div>
       </div>
@@ -189,13 +195,13 @@ export function LoginForm() {
 
       <div className="text-center text-sm">
         <span className="text-muted-foreground">
-          Don&apos;t have an account?{" "}
+          {tAuth("dontHaveAccount")}{" "}
         </span>
         <LocaleLink
           href="/auth/register"
           className="text-primary hover:text-primary/90 font-medium"
         >
-          Sign up
+          {tAuth("signUp")}
         </LocaleLink>
       </div>
 
@@ -204,7 +210,7 @@ export function LoginForm() {
           href="/auth/forgot-password"
           className="text-sm text-muted-foreground hover:text-foreground"
         >
-          Forgot your password?
+          {tAuth("forgotPassword")}
         </LocaleLink>
       </div>
     </div>
