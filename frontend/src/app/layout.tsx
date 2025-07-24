@@ -1,4 +1,6 @@
 import { Inter } from "next/font/google";
+import { headers } from "next/headers";
+import { defaultLocale } from "@/i18n";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
@@ -8,8 +10,12 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Get locale from middleware header
+  const headersList = headers();
+  const locale = headersList.get("x-locale") || defaultLocale;
+
   return (
-    <html className="dark">
+    <html lang={locale} className="dark">
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/favicon.ico" />
