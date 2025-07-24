@@ -27,7 +27,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   // No need to call checkAuth here since UserContext already does it on mount
   // We can rely on userContext.loading to know when initialization is complete
-  const initialized = !userContext.loading;
+  // const initialized = !userContext.loading;
 
   // Admin-specific context that wraps the user context
   const adminContextValue: AdminContextType = {
@@ -42,9 +42,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Don't render children until we've checked auth
-  if (!initialized) {
-    return <div>Loading...</div>;
-  }
+  // if (!initialized) {
+  //   return <div>Loading...</div>;
+  // }
 
   return (
     <AdminContext.Provider value={adminContextValue}>
