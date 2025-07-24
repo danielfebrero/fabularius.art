@@ -205,6 +205,32 @@
         "title": "Vérifier l'email - PornSpot.ai",
         "description": "Vérifiez votre adresse e-mail"
       }
+    },
+    "whyRegister": {
+      "title": "Pourquoi s'inscrire ?",
+      "subtitle": "Découvrez tous les avantages de rejoindre notre communauté",
+      "benefits": {
+        "freeGenerations": {
+          "title": "5 générations gratuites",
+          "description": "Créez vos premières images IA sans engagement"
+        },
+        "saveImages": {
+          "title": "Conservez vos images",
+          "description": "Gardez une liste personnalisée de vos créations"
+        },
+        "createAlbums": {
+          "title": "Créez des albums",
+          "description": "Organisez vos images par thèmes et collections"
+        },
+        "community": {
+          "title": "Engagez avec la communauté",
+          "description": "Commentez, likez et gérez vos favoris"
+        }
+      },
+      "gallery": {
+        "title": "Exemples de créations",
+        "description": "Voici quelques exemples de ce que vous pourrez créer"
+      }
     }
   },
   "site": {

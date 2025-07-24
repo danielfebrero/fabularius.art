@@ -55,7 +55,6 @@ export function RegisterForm() {
   const [usernameMessage, setUsernameMessage] = useState("");
   const router = useRouter();
 
-  const t = useTranslations("common");
   const tAuth = useTranslations("auth");
 
   const {
@@ -78,53 +77,56 @@ export function RegisterForm() {
   const watchedUsername = watch("username");
 
   // Debounced username availability checking
-  const checkUsernameAvailability = useCallback(async (username: string) => {
-    if (!username || username.length < 3) {
-      setUsernameStatus("idle");
-      setUsernameMessage("");
-      return;
-    }
+  const checkUsernameAvailability = useCallback(
+    async (username: string) => {
+      if (!username || username.length < 3) {
+        setUsernameStatus("idle");
+        setUsernameMessage("");
+        return;
+      }
 
-    // Check format first
-    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-      setUsernameStatus("error");
-      setUsernameMessage(tAuth("messages.usernameInvalidChars"));
-      return;
-    }
+      // Check format first
+      if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+        setUsernameStatus("error");
+        setUsernameMessage(tAuth("messages.usernameInvalidChars"));
+        return;
+      }
 
-    if (username.length > 30) {
-      setUsernameStatus("error");
-      setUsernameMessage(tAuth("messages.usernameTooLong"));
-      return;
-    }
+      if (username.length > 30) {
+        setUsernameStatus("error");
+        setUsernameMessage(tAuth("messages.usernameTooLong"));
+        return;
+      }
 
-    setUsernameStatus("checking");
-    setUsernameMessage(tAuth("messages.checkingAvailability"));
+      setUsernameStatus("checking");
+      setUsernameMessage(tAuth("messages.checkingAvailability"));
 
-    try {
-      const response = await userApi.checkUsernameAvailability({ username });
+      try {
+        const response = await userApi.checkUsernameAvailability({ username });
 
-      if (response.success && response.data) {
-        if (response.data.available) {
-          setUsernameStatus("available");
-          setUsernameMessage(tAuth("messages.usernameAvailable"));
+        if (response.success && response.data) {
+          if (response.data.available) {
+            setUsernameStatus("available");
+            setUsernameMessage(tAuth("messages.usernameAvailable"));
+          } else {
+            setUsernameStatus("taken");
+            setUsernameMessage(
+              response.data.message || tAuth("messages.usernameAlreadyTaken")
+            );
+          }
         } else {
-          setUsernameStatus("taken");
+          setUsernameStatus("error");
           setUsernameMessage(
-            response.data.message || tAuth("messages.usernameAlreadyTaken")
+            response.error || "Failed to check username availability"
           );
         }
-      } else {
+      } catch (error) {
         setUsernameStatus("error");
-        setUsernameMessage(
-          response.error || "Failed to check username availability"
-        );
+        setUsernameMessage("Failed to check username availability");
       }
-    } catch (error) {
-      setUsernameStatus("error");
-      setUsernameMessage("Failed to check username availability");
-    }
-  }, []);
+    },
+    [tAuth]
+  );
 
   // Debounce username checking
   useEffect(() => {
@@ -239,6 +241,20 @@ export function RegisterForm() {
         <p className="text-sm text-muted-foreground mt-1">
           {tAuth("messages.joinMessage")}
         </p>
+      </div>
+
+      {/* Google OAuth first */}
+      <GoogleLoginButton disabled={isLoading} />
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-border" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-card px-2 text-muted-foreground">
+            {tAuth("messages.orContinueWith")} Email
+          </span>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -467,19 +483,6 @@ export function RegisterForm() {
           {tAuth("createAccount")}
         </Button>
       </form>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">
-            {tAuth("messages.orContinueWith")}
-          </span>
-        </div>
-      </div>
-
-      <GoogleLoginButton disabled={isLoading} />
 
       <div className="text-center text-sm">
         <span className="text-muted-foreground">

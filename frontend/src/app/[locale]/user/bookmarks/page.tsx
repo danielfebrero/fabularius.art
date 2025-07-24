@@ -210,6 +210,8 @@ const UserBookmarksPage: React.FC = () => {
                     item={media || album!}
                     type={bookmark.targetType as "media" | "album"}
                     mediaList={mediaItems}
+                    canFullscreen={!album}
+                    canAddToAlbum={!album}
                     className={
                       viewMode === "grid" ? "aspect-square" : undefined
                     }

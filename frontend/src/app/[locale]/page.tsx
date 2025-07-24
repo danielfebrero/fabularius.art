@@ -84,7 +84,7 @@ export default async function DiscoverPage({
         </div>
       ) : albums.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-gray-500">{tPlaceholders("noAlbumsFound")}</p>
+          <p className="text-gray-500">{tPlaceholders("noAlbums")}</p>
         </div>
       ) : (
         <DiscoverClient

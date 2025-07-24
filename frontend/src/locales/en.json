@@ -205,6 +205,32 @@
         "title": "Verify Email - PornSpot.ai",
         "description": "Verify your email address"
       }
+    },
+    "whyRegister": {
+      "title": "Why Register?",
+      "subtitle": "Discover all the benefits of joining our community",
+      "benefits": {
+        "freeGenerations": {
+          "title": "5 Free Generations",
+          "description": "Create your first AI images without commitment"
+        },
+        "saveImages": {
+          "title": "Save Your Images",
+          "description": "Keep a personalized list of your creations"
+        },
+        "createAlbums": {
+          "title": "Create Albums",
+          "description": "Organize your images by themes and collections"
+        },
+        "community": {
+          "title": "Engage with Community",
+          "description": "Comment, like, and manage your favorites"
+        }
+      },
+      "gallery": {
+        "title": "Creation Examples",
+        "description": "Here are some examples of what you can create"
+      }
     }
   },
   "site": {

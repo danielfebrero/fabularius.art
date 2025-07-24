@@ -210,6 +210,8 @@ const UserLikesPage: React.FC = () => {
                     item={media || album!}
                     type={like.targetType as "media" | "album"}
                     mediaList={mediaItems}
+                    canFullscreen={!album}
+                    canAddToAlbum={!album}
                     className={
                       viewMode === "grid" ? "aspect-square" : undefined
                     }
