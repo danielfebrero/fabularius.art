@@ -2,6 +2,10 @@ import { MetadataRoute } from "next";
 import { fetchAllPublicAlbums } from "@/lib/data";
 import { locales } from "@/i18n";
 
+// Enable ISR for sitemap - static generation with revalidation
+export const revalidate = 86400; // Revalidate every 24 hours (1 day)
+export const dynamic = "force-static"; // Force static generation at build time
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env["NEXT_PUBLIC_SITE_URL"] || "https://pornspot.ai";
 
