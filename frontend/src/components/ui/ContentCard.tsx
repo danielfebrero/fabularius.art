@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Media, Album, ThumbnailContext, ThumbnailSize } from "@/types";
 import { LikeButton } from "@/components/user/LikeButton";
 import { BookmarkButton } from "@/components/user/BookmarkButton";
-import { InteractionCounts } from "@/components/user/InteractionCounts";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { cn } from "@/lib/utils";
@@ -88,7 +87,8 @@ export function ContentCard({
   const router = useRouter();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [actionsOpen, setActionsOpen] = useState(false);
+  const [showMobileActions, setShowMobileActions] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   const isMedia = type === "media";
   const media = isMedia ? (item as Media) : null;
@@ -99,13 +99,44 @@ export function ContentCard({
 
   const isVideo = isMedia && media?.mimeType.startsWith("video/");
 
+  // Hide mobile actions when clicking outside or after timeout
+  useEffect(() => {
+    if (!isMobile || !showMobileActions) return;
+
+    const handleClickOutside = (event: Event) => {
+      if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
+        setShowMobileActions(false);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      setShowMobileActions(false);
+    }, 5000); // Auto-hide after 5 seconds
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+      clearTimeout(timeoutId);
+    };
+  }, [isMobile, showMobileActions]);
+
   // Handle click events based on content type
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
     if (onClick) {
       onClick();
     } else {
-      // Default behavior: navigate to content page
-      if (isMedia && media) {
+      // For media on mobile: taps only show actions, no navigation
+      if (isMedia && isMobile) {
+        e.preventDefault();
+        setShowMobileActions(true);
+        return;
+      }
+
+      // Default behavior: navigate to content page (desktop only for media)
+      if (isMedia && media && !isMobile) {
         router.push(`/media/${media.id}`);
       } else if (album) {
         router.push(`/albums/${album.id}`);
@@ -211,15 +242,6 @@ export function ContentCard({
     }
   };
 
-  const handleActionClick = (event: React.MouseEvent | React.TouchEvent) => {
-    event.stopPropagation();
-    event.preventDefault();
-
-    if (isMobile) {
-      setActionsOpen(!actionsOpen);
-    }
-  };
-
   // Get the appropriate media list for lightbox
   const getLightboxMedia = (): Media[] => {
     if (mediaList && mediaList.length > 0) {
@@ -233,6 +255,7 @@ export function ContentCard({
   return (
     <>
       <div
+        ref={cardRef}
         className={cn(
           "group relative cursor-pointer overflow-hidden shadow-lg transition-all duration-200",
           !useAllAvailableSpace && "rounded-lg sm:rounded-xl",
@@ -292,59 +315,29 @@ export function ContentCard({
             )}
 
             {/* Overlay */}
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
+            <div className={cn(
+              "absolute inset-0 transition-colors duration-300",
+              isMobile && showMobileActions 
+                ? "bg-black/30" 
+                : "bg-black/0 group-hover:bg-black/20"
+            )} />
+
+            {/* Media overlay with gradient - only visible on hover/tap */}
+            <div
+              className={cn(
+                "absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300",
+                isMobile
+                  ? showMobileActions
+                    ? "opacity-100"
+                    : "opacity-0"
+                  : "opacity-0 group-hover:opacity-100"
+              )}
+            />
 
             {/* Play button for videos */}
             {isVideo && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <PlayCircle className="w-16 h-16 text-white/80 opacity-50 group-hover:opacity-100 transition-opacity duration-300 transform group-hover:scale-110" />
-              </div>
-            )}
-
-            {/* Left column - Like and Bookmark over image */}
-            {(canLike || canBookmark) && (
-              <div
-                className={cn(
-                  "absolute top-2 left-2 sm:top-3 sm:left-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
-                  isMobile
-                    ? actionsOpen
-                      ? "opacity-100"
-                      : "opacity-0 pointer-events-none"
-                    : "opacity-0 group-hover:opacity-100"
-                )}
-              >
-                {canLike && (
-                  <Tooltip content="Like" side="right">
-                    <span
-                      onClick={handleActionClick}
-                      onTouchEnd={handleActionClick}
-                    >
-                      <LikeButton
-                        targetType={type}
-                        targetId={item.id}
-                        size="sm"
-                        className="bg-white/90 hover:bg-white text-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
-                        useCache={true}
-                      />
-                    </span>
-                  </Tooltip>
-                )}
-                {canBookmark && (
-                  <Tooltip content="Bookmark" side="right">
-                    <span
-                      onClick={handleActionClick}
-                      onTouchEnd={handleActionClick}
-                    >
-                      <BookmarkButton
-                        targetType={type}
-                        targetId={item.id}
-                        size="sm"
-                        className="bg-white/90 hover:bg-white text-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
-                        useCache={true}
-                      />
-                    </span>
-                  </Tooltip>
-                )}
               </div>
             )}
 
@@ -354,7 +347,7 @@ export function ContentCard({
                 className={cn(
                   "absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
                   isMobile
-                    ? actionsOpen
+                    ? showMobileActions
                       ? "opacity-100"
                       : "opacity-0 pointer-events-none"
                     : "opacity-0 group-hover:opacity-100"
@@ -419,37 +412,78 @@ export function ContentCard({
               </div>
             )}
 
-            {/* Media interaction counts */}
-            {showCounts && media && (
-              <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <InteractionCounts
-                  targetType="media"
-                  targetId={media.id}
-                  likeCount={media.likeCount}
-                  bookmarkCount={media.bookmarkCount}
-                  showIcons={true}
-                  size="sm"
-                  className="text-white bg-black/50 rounded-md px-2 py-1"
-                />
-              </div>
-            )}
+            {/* Bottom content for media - exactly like albums */}
+            <div className="absolute bottom-0 left-0 right-0 p-4">
+              <div className="flex items-center justify-between">
+                {/* Empty space for alignment - could add media title here if needed */}
+                <div></div>
 
-            {/* Mobile touch area for actions */}
-            {isMobile &&
-              (canLike ||
-                canBookmark ||
-                canFullscreen ||
-                canAddToAlbum ||
-                canDownload ||
-                canDelete) && (
-                <button
-                  className="absolute top-2 right-2 w-6 h-6 sm:w-8 sm:h-8 bg-black/50 rounded-full flex items-center justify-center md:hidden z-20"
-                  onClick={handleActionClick}
-                  onTouchEnd={handleActionClick}
-                >
-                  <span className="text-white text-xs">⋯</span>
-                </button>
-              )}
+                {/* Like, Bookmark, View count */}
+                {showCounts && (
+                  <div className="flex items-center gap-3">
+                    {canLike && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className={cn(
+                          "transition-opacity duration-200",
+                          isMobile
+                            ? showMobileActions
+                              ? "opacity-100"
+                              : "opacity-0"
+                            : "opacity-0 group-hover:opacity-100"
+                        )}
+                      >
+                        <LikeButton
+                          targetType="media"
+                          targetId={media.id}
+                          size="sm"
+                          className="text-white hover:text-red-400 transition-colors duration-200"
+                          useCache={true}
+                          showCount={true}
+                        />
+                      </div>
+                    )}
+                    {canBookmark && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className={cn(
+                          "transition-opacity duration-200",
+                          isMobile
+                            ? showMobileActions
+                              ? "opacity-100"
+                              : "opacity-0"
+                            : "opacity-0 group-hover:opacity-100"
+                        )}
+                      >
+                        <BookmarkButton
+                          targetType="media"
+                          targetId={media.id}
+                          size="sm"
+                          className="text-white hover:text-blue-400 transition-colors duration-200"
+                          useCache={true}
+                          showCount={false}
+                        />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1 text-white text-sm">
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                        <path
+                          fillRule="evenodd"
+                          d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <span>{media.viewCount ?? 0}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         ) : album ? (
           <div className="relative w-full h-full">
@@ -520,79 +554,56 @@ export function ContentCard({
                   </p>
                 )}
                 {showCounts && (
-                  <InteractionCounts
-                    targetType="album"
-                    targetId={album.id}
-                    likeCount={album.likeCount}
-                    bookmarkCount={album.bookmarkCount}
-                    viewCount={album.viewCount}
-                    showIcons={true}
-                    size="sm"
-                    className="text-white"
-                  />
+                  <div className="flex items-center gap-3">
+                    {canLike && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <LikeButton
+                          targetType="album"
+                          targetId={album.id}
+                          size="sm"
+                          className="text-white hover:text-red-400 transition-colors duration-200"
+                          useCache={true}
+                          showCount={true}
+                        />
+                      </div>
+                    )}
+                    {canBookmark && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <BookmarkButton
+                          targetType="album"
+                          targetId={album.id}
+                          size="sm"
+                          className="text-white hover:text-blue-400 transition-colors duration-200"
+                          useCache={true}
+                          showCount={false}
+                        />
+                      </div>
+                    )}
+                    {album.viewCount && (
+                      <div className="flex items-center gap-1 text-white text-sm">
+                        <svg
+                          className="w-4 h-4"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                          <path
+                            fillRule="evenodd"
+                            d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        <span>{album.viewCount}</span>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* Left column - Like and Bookmark over image */}
-            {(canLike || canBookmark) && (
-              <div
-                className={cn(
-                  "absolute top-2 left-2 sm:top-3 sm:left-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
-                  isMobile
-                    ? actionsOpen
-                      ? "opacity-100"
-                      : "opacity-0 pointer-events-none"
-                    : "opacity-0 group-hover:opacity-100"
-                )}
-              >
-                {canLike && (
-                  <Tooltip content="Like" side="right">
-                    <span
-                      onClick={handleActionClick}
-                      onTouchEnd={handleActionClick}
-                    >
-                      <LikeButton
-                        targetType={type}
-                        targetId={item.id}
-                        size="sm"
-                        className="bg-white/90 hover:bg-white text-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
-                        useCache={true}
-                      />
-                    </span>
-                  </Tooltip>
-                )}
-                {canBookmark && (
-                  <Tooltip content="Bookmark" side="right">
-                    <span
-                      onClick={handleActionClick}
-                      onTouchEnd={handleActionClick}
-                    >
-                      <BookmarkButton
-                        targetType={type}
-                        targetId={item.id}
-                        size="sm"
-                        className="bg-white/90 hover:bg-white text-gray-800 shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-110"
-                        useCache={true}
-                      />
-                    </span>
-                  </Tooltip>
-                )}
-              </div>
-            )}
-
             {/* Right column - Action buttons over image */}
             {(canFullscreen || canAddToAlbum || canDownload || canDelete) && (
-              <div
-                className={cn(
-                  "absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
-                  isMobile
-                    ? actionsOpen
-                      ? "opacity-100"
-                      : "opacity-0 pointer-events-none"
-                    : "opacity-0 group-hover:opacity-100"
-                )}
-              >
+              <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex flex-col gap-1 sm:gap-2">
                 {canFullscreen && (
                   <Tooltip content="View fullscreen" side="left">
                     <button
@@ -651,23 +662,6 @@ export function ContentCard({
                 )}
               </div>
             )}
-
-            {/* Mobile touch area for actions */}
-            {isMobile &&
-              (canLike ||
-                canBookmark ||
-                canFullscreen ||
-                canAddToAlbum ||
-                canDownload ||
-                canDelete) && (
-                <button
-                  className="absolute top-2 right-2 w-6 h-6 sm:w-8 sm:h-8 bg-black/50 rounded-full flex items-center justify-center md:hidden z-20"
-                  onClick={handleActionClick}
-                  onTouchEnd={handleActionClick}
-                >
-                  <span className="text-white text-xs">⋯</span>
-                </button>
-              )}
           </div>
         ) : null}
       </div>
