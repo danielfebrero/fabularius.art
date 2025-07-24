@@ -79,6 +79,9 @@ export async function generateMetadata({
   };
 }
 
+export const revalidate = 3600 * 24; // Revalidate every hour
+export const dynamic = "force-static"; // Force static generation at build time
+
 export async function generateStaticParams() {
   const media = await fetchAllPublicMedia();
 
