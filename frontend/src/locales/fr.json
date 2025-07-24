@@ -181,6 +181,30 @@
       "deleteAccount": "Supprimer le compte",
       "changePassword": "Changer le mot de passe",
       "updateProfile": "Mettre à jour le profil"
+    },
+    "error": {
+      "meta": {
+        "title": "Erreur d'authentification - PornSpot.ai",
+        "description": "Une erreur s'est produite lors de l'authentification"
+      }
+    },
+    "register": {
+      "meta": {
+        "title": "S'inscrire - PornSpot.ai",
+        "description": "Créer un nouveau compte sur PornSpot.ai"
+      }
+    },
+    "success": {
+      "meta": {
+        "title": "Succès - PornSpot.ai",
+        "description": "Authentification réussie"
+      }
+    },
+    "verifyEmail": {
+      "meta": {
+        "title": "Vérifier l'email - PornSpot.ai",
+        "description": "Vérifiez votre adresse e-mail"
+      }
     }
   },
   "site": {

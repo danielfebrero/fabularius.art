@@ -33,11 +33,6 @@ export function DiscoverClient({
   // If no tag, use initial data
   const shouldUseInitialData = !tag && !initialTag;
 
-  console.log(
-    "[DiscoverClient] Should use initial data:",
-    shouldUseInitialData
-  );
-
   const { albums, loading, error, pagination, loadMore, refresh } = useAlbums({
     isPublic: true,
     limit: 12,

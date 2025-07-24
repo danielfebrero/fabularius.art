@@ -181,6 +181,30 @@
       "deleteAccount": "删除账户",
       "changePassword": "修改密码",
       "updateProfile": "更新个人资料"
+    },
+    "error": {
+      "meta": {
+        "title": "认证错误 - PornSpot.ai",
+        "description": "认证过程中发生错误"
+      }
+    },
+    "register": {
+      "meta": {
+        "title": "注册 - PornSpot.ai",
+        "description": "在PornSpot.ai创建新账户"
+      }
+    },
+    "success": {
+      "meta": {
+        "title": "成功 - PornSpot.ai",
+        "description": "认证成功"
+      }
+    },
+    "verifyEmail": {
+      "meta": {
+        "title": "验证邮箱 - PornSpot.ai",
+        "description": "验证您的邮箱地址"
+      }
     }
   },
   "site": {

@@ -181,6 +181,30 @@
       "deleteAccount": "Delete Account",
       "changePassword": "Change Password",
       "updateProfile": "Update Profile"
+    },
+    "error": {
+      "meta": {
+        "title": "Authentication Error - PornSpot.ai",
+        "description": "An error occurred during authentication"
+      }
+    },
+    "register": {
+      "meta": {
+        "title": "Register - PornSpot.ai",
+        "description": "Create a new account on PornSpot.ai"
+      }
+    },
+    "success": {
+      "meta": {
+        "title": "Success - PornSpot.ai",
+        "description": "Authentication successful"
+      }
+    },
+    "verifyEmail": {
+      "meta": {
+        "title": "Verify Email - PornSpot.ai",
+        "description": "Verify your email address"
+      }
     }
   },
   "site": {

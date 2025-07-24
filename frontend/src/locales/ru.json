@@ -181,6 +181,30 @@
       "deleteAccount": "Удалить аккаунт",
       "changePassword": "Изменить пароль",
       "updateProfile": "Обновить профиль"
+    },
+    "error": {
+      "meta": {
+        "title": "Ошибка аутентификации - PornSpot.ai",
+        "description": "Произошла ошибка при аутентификации"
+      }
+    },
+    "register": {
+      "meta": {
+        "title": "Регистрация - PornSpot.ai",
+        "description": "Создать новый аккаунт на PornSpot.ai"
+      }
+    },
+    "success": {
+      "meta": {
+        "title": "Успех - PornSpot.ai",
+        "description": "Аутентификация прошла успешно"
+      }
+    },
+    "verifyEmail": {
+      "meta": {
+        "title": "Подтвердить email - PornSpot.ai",
+        "description": "Подтвердите ваш адрес электронной почты"
+      }
     }
   },
   "site": {
