@@ -36,6 +36,9 @@ interface ContentCardProps {
   // Disable hover effects
   disableHoverEffects?: boolean;
 
+  // Layout controls
+  useAllAvailableSpace?: boolean; // When true, extends to edge of screen without cropping
+
   // Event handlers (optional - if not provided, default behavior will be used)
   onClick?: () => void;
   onFullscreen?: () => void;
@@ -70,6 +73,7 @@ export function ContentCard({
   canDelete = false,
   showCounts = true,
   disableHoverEffects = false,
+  useAllAvailableSpace = false,
   onClick,
   onFullscreen,
   onAddToAlbum,
@@ -230,9 +234,15 @@ export function ContentCard({
     <>
       <div
         className={cn(
-          "group relative cursor-pointer overflow-hidden shadow-lg transition-all duration-200 rounded-lg sm:rounded-xl",
-          !disableHoverEffects && "hover:shadow-xl hover:scale-[1.02]",
-          aspectRatio === "square" ? "aspect-square" : "",
+          "group relative cursor-pointer overflow-hidden shadow-lg transition-all duration-200",
+          !useAllAvailableSpace && "rounded-lg sm:rounded-xl",
+          !disableHoverEffects &&
+            !useAllAvailableSpace &&
+            "hover:shadow-xl hover:scale-[1.02]",
+          aspectRatio === "square" && !useAllAvailableSpace
+            ? "aspect-square"
+            : "",
+          useAllAvailableSpace ? "w-full h-full" : "",
           className
         )}
         onClick={handleClick}
@@ -244,7 +254,11 @@ export function ContentCard({
               <video
                 src={composeMediaUrl(media.url)}
                 poster={composeMediaUrl(media.thumbnailUrl)}
-                className={cn("w-full h-full object-cover", imageClassName)}
+                className={cn(
+                  "w-full h-full",
+                  useAllAvailableSpace ? "object-contain" : "object-cover",
+                  imageClassName
+                )}
                 preload="metadata"
                 muted
                 playsInline
@@ -264,8 +278,11 @@ export function ContentCard({
                 )}
                 alt={title || media.originalFilename || media.filename}
                 className={cn(
-                  "w-full h-full object-cover transition-transform duration-200",
-                  !disableHoverEffects && "group-hover:scale-105",
+                  "w-full h-full transition-transform duration-200",
+                  useAllAvailableSpace ? "object-contain" : "object-cover",
+                  !disableHoverEffects &&
+                    !useAllAvailableSpace &&
+                    "group-hover:scale-105",
                   imageClassName
                 )}
                 context={context}
@@ -450,8 +467,11 @@ export function ContentCard({
               )}
               alt={title || album.title}
               className={cn(
-                "w-full h-full object-cover transition-transform duration-200",
-                !disableHoverEffects && "group-hover:scale-105",
+                "w-full h-full transition-transform duration-200",
+                useAllAvailableSpace ? "object-contain" : "object-cover",
+                !disableHoverEffects &&
+                  !useAllAvailableSpace &&
+                  "group-hover:scale-105",
                 imageClassName
               )}
               context={context}

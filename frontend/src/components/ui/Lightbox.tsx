@@ -94,7 +94,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
               type="media"
               aspectRatio="auto"
               className="bg-transparent shadow-none border-none w-fit h-fit"
-              imageClassName="max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] w-auto h-auto object-contain"
+              imageClassName="max-w-[calc(100vw)] max-h-[calc(100vh)] w-auto h-auto object-contain"
               canLike={true}
               canBookmark={true}
               canFullscreen={false}
@@ -103,6 +103,8 @@ export const Lightbox: React.FC<LightboxProps> = ({
               canDelete={false}
               showCounts={false}
               disableHoverEffects={true}
+              preferredThumbnailSize="originalSize"
+              useAllAvailableSpace={true}
               onClick={() => {}}
             />
           </div>
