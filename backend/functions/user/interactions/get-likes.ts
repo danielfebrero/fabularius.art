@@ -54,6 +54,7 @@ export const handler = async (
               thumbnailUrls: album.thumbnailUrls,
               mediaCount: album.mediaCount,
               isPublic: album.isPublic,
+              viewCount: album.viewCount,
               createdAt: album.createdAt,
               updatedAt: album.updatedAt,
             };
@@ -70,6 +71,7 @@ export const handler = async (
               size: media.size,
               thumbnailUrls: media.thumbnailUrls,
               url: media.url,
+              viewCount: media.viewCount,
               createdAt: media.createdAt,
               updatedAt: media.updatedAt,
             };

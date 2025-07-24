@@ -179,6 +179,7 @@ export interface UserInteraction {
     };
     mediaCount?: number;
     isPublic?: boolean;
+    viewCount?: number;
     createdAt?: string;
     updatedAt?: string;
     type?: string;

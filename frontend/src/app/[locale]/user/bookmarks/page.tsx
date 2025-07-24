@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bookmark, Search, Grid, List } from "lucide-react";
+import { Bookmark, Grid, List } from "lucide-react";
 import { useBookmarks } from "@/hooks/useBookmarks";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -21,21 +21,11 @@ const UserBookmarksPage: React.FC = () => {
   } = useBookmarks(true);
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [searchTerm, setSearchTerm] = useState("");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
-  // Filter bookmarks based on search term
-  const filteredBookmarks = bookmarks.filter(
-    (bookmark) =>
-      bookmark.target?.title
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      bookmark.targetId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   // Get media items for lightbox (only media type bookmarks)
-  const mediaItems = filteredBookmarks
+  const mediaItems = bookmarks
     .filter((bookmark) => bookmark.targetType === "media")
     .map((bookmark) => ({
       id: bookmark.targetId,
@@ -47,6 +37,7 @@ const UserBookmarksPage: React.FC = () => {
       url: bookmark.target?.url || "",
       thumbnailUrl: bookmark.target?.thumbnailUrls?.medium || "",
       thumbnailUrls: bookmark.target?.thumbnailUrls,
+      viewCount: bookmark.target?.viewCount || 0,
       createdAt: bookmark.createdAt,
       updatedAt: bookmark.createdAt,
     }));
@@ -80,6 +71,7 @@ const UserBookmarksPage: React.FC = () => {
         url: bookmark.target?.url || "",
         thumbnailUrl: bookmark.target?.thumbnailUrls?.medium || "",
         thumbnailUrls: bookmark.target?.thumbnailUrls,
+        viewCount: bookmark.target?.viewCount || 0,
         createdAt: bookmark.createdAt,
         updatedAt: bookmark.createdAt,
       };
@@ -99,6 +91,7 @@ const UserBookmarksPage: React.FC = () => {
         mediaCount: bookmark.target?.mediaCount || 0,
         tags: [],
         isPublic: bookmark.target?.isPublic || false,
+        viewCount: bookmark.target?.viewCount || 0,
         createdAt: bookmark.createdAt,
         updatedAt: bookmark.createdAt,
       };
@@ -161,18 +154,6 @@ const UserBookmarksPage: React.FC = () => {
               </Button>
             </div>
           </div>
-
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-admin-primary/60" />
-            <input
-              type="text"
-              placeholder="Search your bookmarks..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-card/50 border border-admin-primary/20 rounded-lg focus:ring-2 focus:ring-admin-primary/30 focus:border-admin-primary/50 transition-all duration-200 text-foreground placeholder:text-muted-foreground"
-            />
-          </div>
         </div>
 
         {/* Content */}
@@ -210,7 +191,7 @@ const UserBookmarksPage: React.FC = () => {
               </div>
             ))}
           </div>
-        ) : filteredBookmarks.length > 0 ? (
+        ) : bookmarks.length > 0 ? (
           <div className="space-y-6">
             <div
               className={cn(
@@ -219,7 +200,7 @@ const UserBookmarksPage: React.FC = () => {
                   : "space-y-4"
               )}
             >
-              {filteredBookmarks.map((bookmark, index) => {
+              {bookmarks.map((bookmark, index) => {
                 const media = createMediaFromBookmark(bookmark);
                 const album = createAlbumFromBookmark(bookmark);
 
@@ -229,9 +210,11 @@ const UserBookmarksPage: React.FC = () => {
                     item={media || album!}
                     type={bookmark.targetType as "media" | "album"}
                     mediaList={mediaItems}
-                    canBookmark={false} // Don't show bookmark button since these are already bookmarked
                     className={
                       viewMode === "grid" ? "aspect-square" : undefined
+                    }
+                    preferredThumbnailSize={
+                      viewMode === "grid" ? "originalSize" : undefined
                     }
                   />
                 );
@@ -256,18 +239,12 @@ const UserBookmarksPage: React.FC = () => {
           <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-12 text-center">
             <Bookmark className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
-              {searchTerm ? "No matching bookmarks found" : "No bookmarks yet"}
+              No bookmarks yet
             </h3>
             <p className="text-muted-foreground mb-6">
-              {searchTerm
-                ? `Try adjusting your search for "${searchTerm}"`
-                : "Start exploring content and bookmark what you want to save for later!"}
+              Start exploring content and bookmark what you want to save for
+              later!
             </p>
-            {searchTerm && (
-              <Button onClick={() => setSearchTerm("")} variant="outline">
-                Clear Search
-              </Button>
-            )}
           </div>
         )}
       </div>

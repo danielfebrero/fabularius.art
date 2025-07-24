@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Heart, Search, Grid, List } from "lucide-react";
+import { Heart, Grid, List } from "lucide-react";
 import { useLikes } from "@/hooks/useLikes";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
@@ -21,19 +21,11 @@ const UserLikesPage: React.FC = () => {
   } = useLikes(true);
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [searchTerm, setSearchTerm] = useState("");
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
-  // Filter likes based on search term
-  const filteredLikes = likes.filter(
-    (like) =>
-      like.target?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      like.targetId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   // Get media items for lightbox (only media type likes)
-  const mediaItems = filteredLikes
+  const mediaItems = likes
     .filter((like) => like.targetType === "media")
     .map((like) => ({
       id: like.targetId,
@@ -45,6 +37,7 @@ const UserLikesPage: React.FC = () => {
       url: like.target?.url || "",
       thumbnailUrl: like.target?.thumbnailUrls?.medium || "",
       thumbnailUrls: like.target?.thumbnailUrls,
+      viewCount: like.target?.viewCount || 0,
       createdAt: like.createdAt,
       updatedAt: like.createdAt,
     }));
@@ -78,6 +71,7 @@ const UserLikesPage: React.FC = () => {
         url: like.target?.url || "",
         thumbnailUrl: like.target?.thumbnailUrls?.medium || "",
         thumbnailUrls: like.target?.thumbnailUrls,
+        viewCount: like.target?.viewCount || 0,
         createdAt: like.createdAt,
         updatedAt: like.createdAt,
       };
@@ -95,8 +89,9 @@ const UserLikesPage: React.FC = () => {
         coverImageUrl: like.target?.coverImageUrl || "",
         thumbnailUrls: like.target?.thumbnailUrls,
         mediaCount: like.target?.mediaCount || 0,
-        isPublic: false,
         tags: [],
+        isPublic: like.target?.isPublic || false,
+        viewCount: like.target?.viewCount || 0,
         createdAt: like.createdAt,
         updatedAt: like.createdAt,
       };
@@ -159,18 +154,6 @@ const UserLikesPage: React.FC = () => {
               </Button>
             </div>
           </div>
-
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-admin-primary/60" />
-            <input
-              type="text"
-              placeholder="Search your likes..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-card/50 border border-admin-primary/20 rounded-lg focus:ring-2 focus:ring-admin-primary/30 focus:border-admin-primary/50 transition-all duration-200 text-foreground placeholder:text-muted-foreground"
-            />
-          </div>
         </div>
 
         {/* Content */}
@@ -208,7 +191,7 @@ const UserLikesPage: React.FC = () => {
               </div>
             ))}
           </div>
-        ) : filteredLikes.length > 0 ? (
+        ) : likes.length > 0 ? (
           <div className="space-y-6">
             <div
               className={cn(
@@ -217,7 +200,7 @@ const UserLikesPage: React.FC = () => {
                   : "space-y-4"
               )}
             >
-              {filteredLikes.map((like, index) => {
+              {likes.map((like, index) => {
                 const media = createMediaFromLike(like);
                 const album = createAlbumFromLike(like);
 
@@ -227,7 +210,6 @@ const UserLikesPage: React.FC = () => {
                     item={media || album!}
                     type={like.targetType as "media" | "album"}
                     mediaList={mediaItems}
-                    canLike={false} // Don't show like button since these are already liked
                     className={
                       viewMode === "grid" ? "aspect-square" : undefined
                     }
@@ -254,18 +236,11 @@ const UserLikesPage: React.FC = () => {
           <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-12 text-center">
             <Heart className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-medium text-foreground mb-2">
-              {searchTerm ? "No matching likes found" : "No likes yet"}
+              {"No likes yet"}
             </h3>
             <p className="text-muted-foreground mb-6">
-              {searchTerm
-                ? `Try adjusting your search for "${searchTerm}"`
-                : "Start exploring content and like what you enjoy!"}
+              {"Start exploring content and like what you enjoy!"}
             </p>
-            {searchTerm && (
-              <Button onClick={() => setSearchTerm("")} variant="outline">
-                Clear Search
-              </Button>
-            )}
           </div>
         )}
       </div>
