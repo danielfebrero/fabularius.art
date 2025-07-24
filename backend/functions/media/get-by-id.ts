@@ -57,6 +57,19 @@ export const handler = async (
       mediaResponse.metadata = mediaEntity.metadata;
     }
 
+    // Add interaction counts
+    if (mediaEntity.likeCount !== undefined) {
+      mediaResponse.likeCount = mediaEntity.likeCount;
+    }
+
+    if (mediaEntity.bookmarkCount !== undefined) {
+      mediaResponse.bookmarkCount = mediaEntity.bookmarkCount;
+    }
+
+    if (mediaEntity.viewCount !== undefined) {
+      mediaResponse.viewCount = mediaEntity.viewCount;
+    }
+
     // Add creator information if available
     if (mediaEntity.createdBy !== undefined) {
       mediaResponse.createdBy = mediaEntity.createdBy;

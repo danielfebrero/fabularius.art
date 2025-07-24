@@ -204,7 +204,15 @@
     "terms": "Conditions d'utilisation",
     "privacy": "Politique de confidentialité",
     "copyright": "Droits d'auteur",
-    "allRightsReserved": "Tous droits réservés"
+    "allRightsReserved": "Tous droits réservés",
+    "keywords": {
+      "aiPorn": "porno IA",
+      "aiGeneratedContent": "contenu généré par IA",
+      "adultContent": "contenu adulte",
+      "aiVideos": "vidéos IA",
+      "aiImages": "images IA",
+      "generatedPorn": "porno généré"
+    }
   },
   "admin": {
     "title": "Tableau de bord Admin",

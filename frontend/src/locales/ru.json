@@ -204,7 +204,15 @@
     "terms": "Условия использования",
     "privacy": "Политика конфиденциальности",
     "copyright": "Авторские права",
-    "allRightsReserved": "Все права защищены"
+    "allRightsReserved": "Все права защищены",
+    "keywords": {
+      "aiPorn": "ИИ порно",
+      "aiGeneratedContent": "контент, созданный ИИ",
+      "adultContent": "контент для взрослых",
+      "aiVideos": "ИИ видео",
+      "aiImages": "ИИ изображения",
+      "generatedPorn": "сгенерированное порно"
+    }
   },
   "admin": {
     "title": "Панель администратора",

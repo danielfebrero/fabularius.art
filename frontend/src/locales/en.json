@@ -204,7 +204,15 @@
     "terms": "Terms of Service",
     "privacy": "Privacy Policy",
     "copyright": "Copyright",
-    "allRightsReserved": "All rights reserved"
+    "allRightsReserved": "All rights reserved",
+    "keywords": {
+      "aiPorn": "AI porn",
+      "aiGeneratedContent": "AI generated content",
+      "adultContent": "adult content",
+      "aiVideos": "AI videos",
+      "aiImages": "AI images",
+      "generatedPorn": "generated porn"
+    }
   },
   "admin": {
     "title": "Admin Dashboard",

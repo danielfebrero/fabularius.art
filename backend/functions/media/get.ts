@@ -33,14 +33,6 @@ export const handler = async (
       await DynamoDBService.listAlbumMedia(albumId, limit, lastEvaluatedKey);
 
     const mediaResponse: Media[] = media.map((item) => {
-      console.log(`🔍 DEBUG - Processing media item ${item.id}:`, {
-        id: item.id,
-        hasThumbnailUrls: !!item.thumbnailUrls,
-        thumbnailUrls: item.thumbnailUrls,
-        thumbnailUrl: item.thumbnailUrl,
-        allKeys: Object.keys(item),
-      });
-
       const response: Media = {
         id: item.id,
         filename: item.filename,
@@ -78,6 +70,10 @@ export const handler = async (
 
       if (item.bookmarkCount !== undefined) {
         response.bookmarkCount = item.bookmarkCount;
+      }
+
+      if (item.viewCount !== undefined) {
+        response.viewCount = item.viewCount;
       }
 
       // Add creator information if available

@@ -397,11 +397,6 @@ export class DynamoDBService {
       })
     );
 
-    console.log(
-      `🔍 DEBUG - getMedia(${mediaId}) raw result:`,
-      JSON.stringify(result.Item, null, 2)
-    );
-
     return (result.Item as MediaEntity) || null;
   }
 

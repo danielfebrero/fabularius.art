@@ -204,7 +204,15 @@
     "terms": "Términos de servicio",
     "privacy": "Política de privacidad",
     "copyright": "Derechos de autor",
-    "allRightsReserved": "Todos los derechos reservados"
+    "allRightsReserved": "Todos los derechos reservados",
+    "keywords": {
+      "aiPorn": "porno IA",
+      "aiGeneratedContent": "contenido generado por IA",
+      "adultContent": "contenido adulto",
+      "aiVideos": "videos IA",
+      "aiImages": "imágenes IA",
+      "generatedPorn": "porno generado"
+    }
   },
   "admin": {
     "title": "Panel de administración",
