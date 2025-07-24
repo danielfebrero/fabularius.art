@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Album } from "../types/index";
+import { Album } from "@/types/index";
 
 interface UseAlbumsOptions {
   isPublic?: boolean;

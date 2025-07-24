@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { AdminUser, LoginRequest } from "../types/index";
+import { AdminUser, LoginRequest } from "@/types/index";
 
 interface UseAdminReturn {
   user: AdminUser | null;

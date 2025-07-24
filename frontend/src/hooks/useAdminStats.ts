@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { AdminStats } from "../types";
-import API_URL from "../lib/api";
+import { AdminStats } from "@/types";
+import API_URL from "@/lib/api";
 
 export const useAdminStats = () => {
   const [stats, setStats] = useState<AdminStats | null>(null);

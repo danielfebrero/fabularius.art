@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Media } from "../../types/index";
-import { cn } from "../../lib/utils";
+import { Media } from "@/types/index";
+import { cn } from "@/lib/utils";
 import { ContentCard } from "./ContentCard";
 import { ViewTracker } from "./ViewTracker";
 

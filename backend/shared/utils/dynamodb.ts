@@ -15,13 +15,13 @@ import {
   AlbumMediaEntity,
   AdminUserEntity,
   AdminSessionEntity,
-} from "../types";
+} from "@shared/types";
 import {
   UserEntity,
   UserSessionEntity,
   EmailVerificationTokenEntity,
   UserInteractionEntity,
-} from "../types/user";
+} from "@shared/types/user";
 
 const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
 
@@ -36,17 +36,10 @@ if (isLocal) {
   };
 }
 
-console.log(
-  "🔧 DynamoDB Client Config:",
-  JSON.stringify(clientConfig, null, 2)
-);
-console.log("🌍 AWS_SAM_LOCAL env var:", process.env["AWS_SAM_LOCAL"]);
-
 const client = new DynamoDBClient(clientConfig);
 const docClient = DynamoDBDocumentClient.from(client);
 
 const TABLE_NAME = process.env["DYNAMODB_TABLE"]!;
-console.log("📋 Table name from env:", TABLE_NAME);
 
 export class DynamoDBService {
   // Helper method to convert AlbumEntity to Album

@@ -5,7 +5,7 @@ import {
   ThumbnailContext,
   ThumbnailUrls,
   Media,
-} from "../types/index";
+} from "@/types/index";
 
 // Re-export types for convenience
 export type { ThumbnailSize, ThumbnailContext };

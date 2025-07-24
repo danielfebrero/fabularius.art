@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Media } from "../types/index";
+import { Media } from "@/types/index";
 import API_URL from "@/lib/api";
 
 interface UseMediaOptions {

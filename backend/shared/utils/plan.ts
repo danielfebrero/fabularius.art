@@ -1,6 +1,6 @@
 // Plan and subscription utilities
 import { DynamoDBService } from "./dynamodb";
-import { UserEntity } from "../types/user";
+import { UserEntity } from "@shared/types/user";
 
 export type UserPlan = "free" | "starter" | "unlimited" | "pro";
 export type UserRole = "user" | "admin" | "moderator";

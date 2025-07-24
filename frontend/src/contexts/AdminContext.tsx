@@ -1,8 +1,8 @@
 "use client";
 
 import React, { createContext, useContext } from "react";
-import { useUser } from "../hooks/useUser";
-import { UserWithPlanInfo } from "../types/user";
+import { useUser } from "@/hooks/useUser";
+import { UserWithPlanInfo } from "@/types/user";
 
 interface AdminContextType {
   user: UserWithPlanInfo | null;

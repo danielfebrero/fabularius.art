@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAdminContext } from "../../contexts/AdminContext";
+import { usePathname } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useAdminContext } from "@/contexts/AdminContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

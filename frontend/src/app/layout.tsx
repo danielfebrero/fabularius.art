@@ -2,6 +2,7 @@ import { Inter } from "next/font/google";
 import { headers } from "next/headers";
 import { defaultLocale } from "@/i18n";
 import "./globals.css";
+import FingerprintBootstrap from "@/components/FingerprintBootstrap";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -26,6 +27,8 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
+        {/* Client-side visitor fingerprinting bootstrap */}
+        <FingerprintBootstrap />
         {children}
       </body>
     </html>

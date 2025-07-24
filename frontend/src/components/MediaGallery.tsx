@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Media } from "../types/index";
+import { Media } from "@/types/index";
 import { ContentCard } from "./ui/ContentCard";
 import { Lightbox } from "./ui/Lightbox";
 import { Button } from "./ui/Button";
-import { cn } from "../lib/utils";
-import { getMediaForAlbum } from "../lib/data";
-import { useUserInteractionStatus } from "../hooks/useUserInteractionStatus";
+import { cn } from "@/lib/utils";
+import { getMediaForAlbum } from "@/lib/data";
+import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
 
 interface MediaGalleryProps {
   albumId: string;

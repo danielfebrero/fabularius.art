@@ -1,6 +1,6 @@
 import React from "react";
-import { cn } from "../../lib/utils";
-import { ThumbnailUrls, ThumbnailContext } from "../../types/index";
+import { cn } from "@/lib/utils";
+import { ThumbnailUrls, ThumbnailContext } from "@/types/index";
 
 interface ResponsivePictureProps {
   thumbnailUrls?: ThumbnailUrls;

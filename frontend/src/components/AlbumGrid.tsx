@@ -1,7 +1,7 @@
-import { Album } from "../types/index";
+import { Album } from "@/types/index";
 import { ContentCard } from "./ui/ContentCard";
-import { cn } from "../lib/utils";
-import { ThumbnailContext } from "../types/index";
+import { cn } from "@/lib/utils";
+import { ThumbnailContext } from "@/types/index";
 import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
 import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";

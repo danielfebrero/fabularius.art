@@ -67,6 +67,10 @@ Resources:
           AttributeType: S
         - AttributeName: createdAt
           AttributeType: S
+        - AttributeName: GSI4PK
+          AttributeType: S
+        - AttributeName: GSI4SK
+          AttributeType: S
       KeySchema:
         - AttributeName: PK
           KeyType: HASH
@@ -102,6 +106,14 @@ Resources:
             - AttributeName: isPublic
               KeyType: HASH
             - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: GSI4
+          KeySchema:
+            - AttributeName: GSI4PK
+              KeyType: HASH
+            - AttributeName: GSI4SK
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
@@ -898,6 +910,29 @@ Resources:
               Resource: !Sub "arn:aws:s3:::${MediaBucket}/*"
 
   AdminStatsFunction:
+FingerprintCollectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-fingerprint-collect"
+      CodeUri: backend/dist/functions/fingerprint/
+      Handler: collect.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        PostFingerprintCollect:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /fingerprint/collect
+            Method: POST
+            Auth:
+              Authorizer: NONE # Update as needed for your access control
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+      Environment:
+        Variables:
+          DYNAMODB_TABLE: !Ref MediaTable
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-admin-stats"

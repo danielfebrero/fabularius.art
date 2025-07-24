@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ThumbnailUrls, ThumbnailContext, ThumbnailSize } from "../types/index";
+import { ThumbnailUrls, ThumbnailContext, ThumbnailSize } from "@/types/index";
 
 /**
  * Hook to manage responsive image selection and updates

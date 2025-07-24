@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Album } from "../types/index";
+import { Album } from "@/types/index";
 import API_URL from "@/lib/api";
 
 interface UseAlbumReturn {

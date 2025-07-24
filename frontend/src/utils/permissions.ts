@@ -4,11 +4,11 @@
  */
 
 import {
-  PlanPermissions,
+  UserRole,
   RolePermissions,
   UserPlan,
-  UserRole,
-} from "../types/permissions";
+  PlanPermissions,
+} from "@/types/permissions";
 
 export interface FeatureDefinition {
   name: string;

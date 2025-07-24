@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
-import { interactionApi } from "../../lib/api";
+import React, { useEffect, useRef } from "react";
+import { interactionApi } from "@/lib/api";
 
 interface ViewTrackerProps {
   targetType: "album" | "media";
   targetId: string;
 }
-
-import { useRef } from "react";
 
 export const ViewTracker: React.FC<ViewTrackerProps> = ({
   targetType,

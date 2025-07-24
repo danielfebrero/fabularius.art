@@ -10,6 +10,12 @@ export interface User {
   isEmailVerified: boolean;
   lastLoginAt?: string;
   googleId?: string; // For future Google OAuth integration
+  fingerprintIds?: string[];
+  riskProfile?: {
+    level: "low" | "medium" | "high";
+    factors: string[];
+    lastAssessment: string;
+  };
 }
 
 export interface UserSession {
@@ -30,12 +36,26 @@ export interface UserRegistrationRequest {
 export interface UserLoginRequest {
   email: string;
   password: string;
+  fingerprintId?: string;
+  fingerprintData?: any;
 }
 
 export interface UserLoginResponse {
   success: boolean;
   user: User;
   sessionId: string;
+  fingerprintAnalysis?: {
+    isRecognized: boolean;
+    confidence: number;
+    riskScore: number;
+    deviceMatch: boolean;
+    locationMatch: boolean;
+  };
+  securityAlert?: {
+    type: "new_device" | "location_change" | "suspicious_activity";
+    message: string;
+    requiresVerification: boolean;
+  };
 }
 
 export interface UserSessionValidationResult {
@@ -128,6 +148,12 @@ export interface UserEntity {
   isEmailVerified: boolean;
   lastLoginAt?: string;
   googleId?: string; // For Google OAuth integration
+  fingerprintIds?: string[]; // User's known device fingerprints
+  riskProfile?: {
+    level: "low" | "medium" | "high";
+    factors: string[];
+    lastAssessment: string;
+  };
 
   // Plan and subscription information
   role?: "user" | "admin" | "moderator"; // User role

@@ -1,8 +1,11 @@
 "use client";
 
 import LocaleLink from "@/components/ui/LocaleLink";
+import React from "react";
+import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
-import { cn } from "../../lib/utils";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 const navItems = [
   {
