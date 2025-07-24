@@ -141,12 +141,12 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({
           ) : loading ? (
             <div className="space-y-4">
               <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
-              <p className="text-gray-500">{t("loadingMore")}</p>
+              <p className="text-muted-foreground">{t("loadingMore")}</p>
             </div>
           ) : hasMore ? (
             <div ref={ref} className="h-4" aria-hidden="true" />
           ) : albums.length > 0 ? (
-            <p className="text-gray-500">{t("noMoreToLoad")}</p>
+            <p className="text-muted-foreground">{t("noMoreToLoad")}</p>
           ) : null}
         </div>
       )}
