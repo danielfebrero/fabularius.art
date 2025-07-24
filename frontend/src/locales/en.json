@@ -409,6 +409,15 @@
     }
   },
   "generate": {
+    "metaTitle": "AI Image Generator - {siteName}",
+    "metaDescription": "Generate AI-powered adult content with our advanced image generation tools. Choose from multiple models, styles, and parameters.",
+    "keywords": {
+      "aiGeneration": "AI image generation",
+      "adultCreation": "adult content creation",
+      "customParameters": "custom parameters",
+      "loraModels": "LoRA models",
+      "bulkGeneration": "bulk generation"
+    },
     "labels": {
       "prompt": "Prompt",
       "negativePrompt": "Negative Prompt",
@@ -456,6 +465,16 @@
     }
   },
   "pricing": {
+    "metaTitle": "Pricing - {siteName} | AI Generated Plans",
+    "metaDescription": "Choose the perfect plan for your AI content generation needs. From starter to unlimited plans with advanced features like private content and customization.",
+    "keywords": {
+      "aiPricing": "AI pricing",
+      "generatedPlans": "generated content plans",
+      "adultSubscription": "AI adult content subscription",
+      "generationPricing": "content generation pricing",
+      "membership": "AI membership",
+      "adultPlans": "adult AI plans"
+    },
     "title": "Choose Your Plan",
     "subtitle": "Get unlimited access to high-quality AI-generated content",
     "monthly": "Monthly",
@@ -612,5 +631,17 @@
     "noMoreToLoad": "No more albums to load",
     "errorLoading": "Error loading more albums:",
     "tryAgain": "Try Again"
+  },
+  "album": {
+    "notFound": "Album Not Found",
+    "defaultDescription": "Explore this AI-generated album: {title}",
+    "metaTitle": "{title} - AI Generated Album on {siteName}",
+    "metaDescription": "{description}. Create your own custom adult content with {siteName}.",
+    "keywords": {
+      "aiAlbum": "AI album",
+      "generatedContent": "generated adult content",
+      "images": "AI images",
+      "videos": "AI videos"
+    }
   }
 }

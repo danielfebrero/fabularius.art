@@ -18,7 +18,9 @@
     "test:e2e:headed": "playwright test --headed",
     "test:all": "npm run test && npm run test:e2e",
     "playwright:install": "playwright install",
-    "revalidate:homepage": "node ../scripts/revalidate-homepage.js"
+    "revalidate:homepage": "node ../scripts/revalidate-homepage.js",
+    "revalidate:album": "node ../scripts/revalidate-album.js",
+    "revalidate:static-pages": "node ../scripts/revalidate-static-pages.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.1.1",

@@ -89,7 +89,11 @@ export async function fetchAllPublicAlbums(): Promise<Album[]> {
 // Fetch a single album by ID
 export async function getAlbumById(albumId: string) {
   const response = await fetch(`${API_URL}/albums/${albumId}`, {
-    next: { revalidate: 3600, tags: ["album"] },
+    next: { 
+      revalidate: 7200, // 2 hours - albums change less frequently
+      tags: ["album", `album-${albumId}`] 
+    },
+    cache: 'force-cache'
   });
   return handleResponse<Album>(response);
 }
@@ -108,7 +112,11 @@ export async function getMediaForAlbum(
   }
 
   const response = await fetch(`${API_URL}/albums/${albumId}/media?${params}`, {
-    next: { revalidate: 3600, tags: ["media"] },
+    next: { 
+      revalidate: 7200, // 2 hours - media changes less frequently
+      tags: ["media", `album-${albumId}-media`] 
+    },
+    cache: 'force-cache'
   });
 
   const result = await handleResponse<{ media: Media[]; pagination: any }>(

@@ -409,6 +409,15 @@
     }
   },
   "generate": {
+    "metaTitle": "Générateur d'Images IA - {siteName}",
+    "metaDescription": "Générez du contenu adulte alimenté par l'IA avec nos outils avancés de génération d'images. Choisissez parmi plusieurs modèles, styles et paramètres.",
+    "keywords": {
+      "aiGeneration": "génération d'images IA",
+      "adultCreation": "création de contenu adulte",
+      "customParameters": "paramètres personnalisés",
+      "loraModels": "modèles LoRA",
+      "bulkGeneration": "génération en lot"
+    },
     "labels": {
       "prompt": "Prompt",
       "negativePrompt": "Prompt négatif",
@@ -456,6 +465,16 @@
     }
   },
   "pricing": {
+    "metaTitle": "Tarifs - {siteName} | Plans Générés par IA",
+    "metaDescription": "Choisissez le plan parfait pour vos besoins de génération de contenu IA. Des plans débutants aux plans illimités avec des fonctionnalités avancées comme le contenu privé et la personnalisation.",
+    "keywords": {
+      "aiPricing": "tarifs IA",
+      "generatedPlans": "plans de contenu généré",
+      "adultSubscription": "abonnement contenu adulte IA",
+      "generationPricing": "tarifs génération de contenu",
+      "membership": "adhésion IA",
+      "adultPlans": "plans IA adulte"
+    },
     "title": "Choisissez votre plan",
     "subtitle": "Obtenez un accès illimité à du contenu de haute qualité généré par IA",
     "monthly": "Mensuel",

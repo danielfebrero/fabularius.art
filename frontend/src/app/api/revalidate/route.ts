@@ -29,17 +29,61 @@ export async function POST(request: NextRequest) {
       console.log("Revalidating homepage for all locales");
       revalidateTag("albums");
       revalidateTag("homepage");
-
+      
       for (const locale of locales) {
         revalidatePath(`/${locale}`);
         console.log(`Revalidated path: /${locale}`);
       }
-
-      return NextResponse.json({
-        revalidated: true,
-        now: Date.now(),
+      
+      return NextResponse.json({ 
+        revalidated: true, 
+        now: Date.now(), 
         type: "homepage",
+        locales: locales 
+      });
+    }
+
+    if (type === "static-pages") {
+      // Revalidate static pages (generate, pricing) for all locales
+      console.log("Revalidating static pages for all locales");
+      
+      for (const locale of locales) {
+        revalidatePath(`/${locale}/generate`);
+        revalidatePath(`/${locale}/pricing`);
+        console.log(`Revalidated paths: /${locale}/generate, /${locale}/pricing`);
+      }
+      
+      return NextResponse.json({ 
+        revalidated: true, 
+        now: Date.now(), 
+        type: "static-pages",
         locales: locales,
+        pages: ["generate", "pricing"]
+      });
+    }
+
+    if (type === "album") {
+      // Revalidate specific album across all locales
+      const albumId = request.nextUrl.searchParams.get("albumId");
+      if (!albumId) {
+        return NextResponse.json({ message: "albumId is required for album revalidation" }, { status: 400 });
+      }
+      
+      console.log(`Revalidating album ${albumId} for all locales`);
+      revalidateTag(`album-${albumId}`);
+      revalidateTag(`album-${albumId}-media`);
+      
+      for (const locale of locales) {
+        revalidatePath(`/${locale}/albums/${albumId}`);
+        console.log(`Revalidated path: /${locale}/albums/${albumId}`);
+      }
+      
+      return NextResponse.json({ 
+        revalidated: true, 
+        now: Date.now(), 
+        type: "album",
+        albumId,
+        locales: locales 
       });
     }
 

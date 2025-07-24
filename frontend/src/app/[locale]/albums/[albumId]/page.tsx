@@ -6,42 +6,70 @@ import {
 } from "@/lib/data";
 import { composeAlbumCoverUrl } from "@/lib/urlUtils";
 import { AlbumDetailClient } from "@/components/AlbumDetailClient";
+import { locales } from "@/i18n";
+import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 
 type AlbumDetailPageProps = {
-  params: { albumId: string };
+  params: { 
+    locale: string;
+    albumId: string;
+  };
 };
+
+// Enable ISR for album pages
+export const revalidate = 7200; // Revalidate every 2 hours (less frequent than homepage)
+export const dynamic = 'force-static';
+export const dynamicParams = true;
 
 export async function generateMetadata({
   params,
 }: AlbumDetailPageProps): Promise<Metadata> {
-  const { data: album, error } = await getAlbumById(params.albumId);
+  const { locale, albumId } = params;
+  const { data: album, error } = await getAlbumById(albumId);
+
+  // Get localized translations
+  const t = await getTranslations({ locale, namespace: "site" });
+  const tAlbum = await getTranslations({ locale, namespace: "album" });
 
   if (error || !album) {
     return {
-      title: "Album Not Found",
+      title: tAlbum("notFound"),
     };
   }
 
   const albumDescription =
     album.tags?.join(", ") ||
-    `Explore this AI-generated porn album: ${album.title}`;
+    tAlbum("defaultDescription", { title: album.title });
+
+  // Use locale in URL generation
+  const albumUrl = `https://pornspot.ai/${locale}/albums/${albumId}`;
+  const siteName = t("name");
+
+  // Localized metadata titles and descriptions
+  const metaTitle = tAlbum("metaTitle", { title: album.title, siteName });
+  const metaDescription = tAlbum("metaDescription", { 
+    description: albumDescription, 
+    siteName 
+  });
 
   return {
-    title: `${album.title} - AI Generated Porn Album on PornSpot.ai`,
-    description: `${albumDescription}. Create your own custom adult content with PornSpot.ai.`,
+    title: metaTitle,
+    description: metaDescription,
     keywords: [
-      "AI porn album",
-      "generated adult content",
-      "porn images",
-      "porn videos",
+      tAlbum("keywords.aiAlbum"),
+      tAlbum("keywords.generatedContent"), 
+      tAlbum("keywords.images"),
+      tAlbum("keywords.videos"),
       ...(album.tags || []),
     ],
     openGraph: {
-      title: `${album.title} - AI Generated Porn Album on PornSpot.ai`,
-      description: `${albumDescription}. Create your own custom adult content with PornSpot.ai.`,
-      url: `https://pornspot.ai/albums/${params.albumId}`,
+      title: metaTitle,
+      description: metaDescription,
+      url: albumUrl,
       type: "article",
+      locale: locale,
+      siteName: siteName,
       images: [
         album.coverImageUrl
           ? composeAlbumCoverUrl(album.coverImageUrl)
@@ -50,8 +78,8 @@ export async function generateMetadata({
     },
     twitter: {
       card: "summary_large_image",
-      title: `${album.title} - AI Generated Porn Album on PornSpot.ai`,
-      description: `${albumDescription}. Create your own custom adult content with PornSpot.ai.`,
+      title: metaTitle,
+      description: metaDescription,
       images: [
         album.coverImageUrl
           ? composeAlbumCoverUrl(album.coverImageUrl)
@@ -63,15 +91,25 @@ export async function generateMetadata({
 
 export async function generateStaticParams() {
   const albums = await fetchAllPublicAlbums();
-  return albums.map((album) => ({
-    albumId: album.id,
-  }));
+  
+  // Generate params for all locale/album combinations
+  const params = [];
+  for (const locale of locales) {
+    for (const album of albums) {
+      params.push({
+        locale,
+        albumId: album.id,
+      });
+    }
+  }
+  
+  return params;
 }
 
 export default async function AlbumDetailPage({
   params,
 }: AlbumDetailPageProps) {
-  const albumId = params.albumId;
+  const { locale, albumId } = params;
   const albumResult = await getAlbumById(albumId);
   const mediaResult = await getMediaForAlbum(albumId);
 

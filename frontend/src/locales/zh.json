@@ -409,6 +409,15 @@
     }
   },
   "generate": {
+    "metaTitle": "AI图像生成器 - {siteName}",
+    "metaDescription": "使用我们先进的图像生成工具创建AI驱动的成人内容。从多种模型、风格和参数中选择。",
+    "keywords": {
+      "aiGeneration": "AI图像生成",
+      "adultCreation": "成人内容创作",
+      "customParameters": "自定义参数",
+      "loraModels": "LoRA模型",
+      "bulkGeneration": "批量生成"
+    },
     "labels": {
       "prompt": "提示词",
       "negativePrompt": "负面提示词",
@@ -456,6 +465,16 @@
     }
   },
   "pricing": {
+    "metaTitle": "价格 - {siteName} | AI生成计划",
+    "metaDescription": "为您的AI内容生成需求选择完美的计划。从入门级到无限制计划，具有私人内容和定制等高级功能。",
+    "keywords": {
+      "aiPricing": "AI价格",
+      "generatedPlans": "生成内容计划",
+      "adultSubscription": "AI成人内容订阅",
+      "generationPricing": "内容生成价格",
+      "membership": "AI会员",
+      "adultPlans": "成人AI计划"
+    },
     "title": "选择您的计划",
     "subtitle": "获得高质量AI生成内容的无限访问权限",
     "monthly": "按月",
@@ -612,5 +631,17 @@
     "noMoreToLoad": "没有更多相册可加载",
     "errorLoading": "加载更多相册时出错：",
     "tryAgain": "重试"
+  },
+  "album": {
+    "notFound": "未找到相册",
+    "defaultDescription": "探索这个AI生成的相册：{title}",
+    "metaTitle": "{title} - {siteName}上的AI生成相册",
+    "metaDescription": "{description}。使用{siteName}创建您自己的定制成人内容。",
+    "keywords": {
+      "aiAlbum": "AI相册",
+      "generatedContent": "生成的成人内容",
+      "images": "AI图像",
+      "videos": "AI视频"
+    }
   }
 }

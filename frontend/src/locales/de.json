@@ -409,6 +409,15 @@
     }
   },
   "generate": {
+    "metaTitle": "KI-Bildgenerator - {siteName}",
+    "metaDescription": "Generieren Sie KI-gestützte Inhalte für Erwachsene mit unseren fortschrittlichen Bildgenerierungstools. Wählen Sie aus mehreren Modellen, Stilen und Parametern.",
+    "keywords": {
+      "aiGeneration": "KI-Bildgenerierung",
+      "adultCreation": "Erstellung von Inhalten für Erwachsene",
+      "customParameters": "benutzerdefinierte Parameter",
+      "loraModels": "LoRA-Modelle",
+      "bulkGeneration": "Massengenerierung"
+    },
     "labels": {
       "prompt": "Prompt",
       "negativePrompt": "Negativer Prompt",
@@ -456,6 +465,16 @@
     }
   },
   "pricing": {
+    "metaTitle": "Preise - {siteName} | KI-Generierte Pläne",
+    "metaDescription": "Wählen Sie den perfekten Plan für Ihre KI-Inhaltsgenerierungsbedürfnisse. Von Starter- bis zu unbegrenzten Plänen mit erweiterten Funktionen wie privaten Inhalten und Anpassung.",
+    "keywords": {
+      "aiPricing": "KI-Preise",
+      "generatedPlans": "generierte Inhaltspläne",
+      "adultSubscription": "KI-Abonnement für Erwachsene",
+      "generationPricing": "Preise für Inhaltsgenerierung",
+      "membership": "KI-Mitgliedschaft",
+      "adultPlans": "KI-Pläne für Erwachsene"
+    },
     "title": "Wählen Sie Ihren Plan",
     "subtitle": "Erhalten Sie unbegrenzten Zugang zu hochwertigen KI-generierten Inhalten",
     "monthly": "Monatlich",
@@ -612,5 +631,17 @@
     "noMoreToLoad": "Keine weiteren Alben zu laden",
     "errorLoading": "Fehler beim Laden weiterer Alben:",
     "tryAgain": "Erneut versuchen"
+  },
+  "album": {
+    "notFound": "Album nicht gefunden",
+    "defaultDescription": "Entdecken Sie dieses KI-generierte Album: {title}",
+    "metaTitle": "{title} - KI-generiertes Album auf {siteName}",
+    "metaDescription": "{description}. Erstellen Sie Ihre eigenen benutzerdefinierten Inhalte für Erwachsene mit {siteName}.",
+    "keywords": {
+      "aiAlbum": "KI-Album",
+      "generatedContent": "generierte Inhalte für Erwachsene",
+      "images": "KI-Bilder",
+      "videos": "KI-Videos"
+    }
   }
 }
