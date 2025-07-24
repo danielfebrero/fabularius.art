@@ -2,7 +2,10 @@ import { Metadata } from "next";
 import { locales } from "@/i18n";
 import { Suspense } from "react";
 import { LoginForm } from "@/components/user/LoginForm";
-import { generateTranslatedOpenGraphMetadata, generateSiteUrl } from "@/lib/opengraph";
+import {
+  generateTranslatedOpenGraphMetadata,
+  generateSiteUrl,
+} from "@/lib/opengraph";
 
 type LoginPageProps = {
   params: { locale: string };
@@ -24,7 +27,7 @@ export async function generateMetadata({
   return generateTranslatedOpenGraphMetadata({
     locale: params.locale,
     titleKey: "meta.title",
-    descriptionKey: "meta.description", 
+    descriptionKey: "meta.description",
     namespace: "auth.login",
     url: generateSiteUrl(params.locale, "auth/login"),
     type: "website",

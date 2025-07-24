@@ -1,7 +1,10 @@
 import { Metadata } from "next";
 import { locales } from "@/i18n";
 import { GenerateClient } from "@/components/GenerateClient";
-import { generateTranslatedOpenGraphMetadata, generateSiteUrl } from "@/lib/opengraph";
+import {
+  generateTranslatedOpenGraphMetadata,
+  generateSiteUrl,
+} from "@/lib/opengraph";
 
 type GeneratePageProps = {
   params: { locale: string };
@@ -20,7 +23,7 @@ export async function generateMetadata({
   params,
 }: GeneratePageProps): Promise<Metadata> {
   const { locale } = params;
-  
+
   return generateTranslatedOpenGraphMetadata({
     locale,
     titleKey: "metaTitle",

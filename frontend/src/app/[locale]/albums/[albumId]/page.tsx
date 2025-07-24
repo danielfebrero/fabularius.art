@@ -41,7 +41,9 @@ export async function generateMetadata({
   return generateAlbumMetadata(locale, albumId, {
     title: album.title,
     tags: album.tags,
-    coverImageUrl: album.coverImageUrl ? composeAlbumCoverUrl(album.coverImageUrl) : undefined,
+    coverImageUrl: album.coverImageUrl
+      ? composeAlbumCoverUrl(album.coverImageUrl)
+      : undefined,
   });
 }
 

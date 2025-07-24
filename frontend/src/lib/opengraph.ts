@@ -46,7 +46,7 @@ export async function generateOpenGraphMetadata(
   const finalTitle = title || t("meta.title");
   const finalDescription = description || t("meta.description");
   const finalSiteName = siteName || t("name");
-  
+
   // Ensure image is an absolute URL
   const finalImage = ensureAbsoluteUrl(image);
 
@@ -129,16 +129,17 @@ export async function generateTranslatedOpenGraphMetadata(
  */
 export function ensureAbsoluteUrl(url?: string): string {
   if (!url) {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.pornspot.ai";
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://www.pornspot.ai";
     return `${baseUrl}/website.png`;
   }
-  
-  if (url.startsWith('http')) {
+
+  if (url.startsWith("http")) {
     return url; // Already absolute
   }
-  
+
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.pornspot.ai";
-  return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  return `${baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
 }
 
 /**

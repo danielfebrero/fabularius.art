@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { locales } from "@/i18n";
 import { PricingClient } from "@/components/PricingClient";
-import { generateTranslatedOpenGraphMetadata, generateSiteUrl } from "@/lib/opengraph";
+import {
+  generateTranslatedOpenGraphMetadata,
+  generateSiteUrl,
+} from "@/lib/opengraph";
 
 type PricingPageProps = {
   params: { locale: string };
@@ -20,7 +23,7 @@ export async function generateMetadata({
   params,
 }: PricingPageProps): Promise<Metadata> {
   const { locale } = params;
-  
+
   return generateTranslatedOpenGraphMetadata({
     locale,
     titleKey: "metaTitle",
@@ -30,7 +33,7 @@ export async function generateMetadata({
     type: "website",
     additionalKeywords: [
       "AI pricing",
-      "generated plans", 
+      "generated plans",
       "adult subscription",
       "generation pricing",
       "membership",
