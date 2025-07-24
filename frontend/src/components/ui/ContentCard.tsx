@@ -113,12 +113,12 @@ export function ContentCard({
       setShowMobileActions(false);
     }, 5000); // Auto-hide after 5 seconds
 
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
       clearTimeout(timeoutId);
     };
   }, [isMobile, showMobileActions]);
@@ -315,12 +315,14 @@ export function ContentCard({
             )}
 
             {/* Overlay */}
-            <div className={cn(
-              "absolute inset-0 transition-colors duration-300",
-              isMobile && showMobileActions 
-                ? "bg-black/30" 
-                : "bg-black/0 group-hover:bg-black/20"
-            )} />
+            <div
+              className={cn(
+                "absolute inset-0 transition-colors duration-300",
+                isMobile && showMobileActions
+                  ? "bg-black/30"
+                  : "bg-black/0 group-hover:bg-black/20"
+              )}
+            />
 
             {/* Media overlay with gradient - only visible on hover/tap */}
             <div
