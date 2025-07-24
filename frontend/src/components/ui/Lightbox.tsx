@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Media } from "../../types/index";
 import { cn } from "../../lib/utils";
 import { ContentCard } from "./ContentCard";
+import { ViewTracker } from "./ViewTracker";
 
 interface LightboxProps {
   media: Media[];
@@ -81,6 +82,15 @@ export const Lightbox: React.FC<LightboxProps> = ({
 
   return createPortal(
     <div className="fixed inset-0 z-50 bg-black" onClick={handleClose}>
+      {/* View Tracker - Track view when media is displayed */}
+      {currentMedia && (
+        <ViewTracker
+          key={currentMedia.id}
+          targetType="media"
+          targetId={currentMedia.id}
+        />
+      )}
+
       {/* Content wrapper: stop propagation to prevent closing when clicking on content */}
       <div
         className="relative w-full h-full"
