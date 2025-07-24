@@ -7,6 +7,7 @@ Album detail pages now use fully localized metadata through `next-intl` translat
 ## What's Localized
 
 ### Page Titles
+
 - **English**: `"Album Title - AI Generated Album on PornSpot.ai"`
 - **French**: `"Titre de l'Album - Album généré par IA sur PornSpot.ai"`
 - **German**: `"Album Titel - KI-generiertes Album auf PornSpot.ai"`
@@ -15,16 +16,19 @@ Album detail pages now use fully localized metadata through `next-intl` translat
 - **Chinese**: `"相册标题 - PornSpot.ai上的AI生成相册"`
 
 ### Meta Descriptions
+
 - Localized descriptions that include the album's tag list
 - Call-to-action text in the appropriate language
 - Site name integration
 
 ### Keywords
+
 - Core SEO keywords translated to each language:
-  - "AI album" / "album IA" / "KI-Album" / "álbum IA" / "альбом ИИ" / "AI相册"
+  - "AI album" / "album IA" / "KI-Album" / "álbum IA" / "альбом ИИ" / "AI 相册"
   - "generated adult content" / "contenu adulte généré" / etc.
 
 ### OpenGraph & Twitter Cards
+
 - Localized social sharing titles and descriptions
 - Proper `locale` attribute for OpenGraph
 - Locale-aware URLs (`/en/albums/123`, `/fr/albums/123`, etc.)
@@ -42,7 +46,7 @@ All translations are in the `album` namespace:
     "metaDescription": "{description}. Create your own custom adult content with {siteName}.",
     "keywords": {
       "aiAlbum": "AI album",
-      "generatedContent": "generated adult content", 
+      "generatedContent": "generated adult content",
       "images": "AI images",
       "videos": "AI videos"
     }
@@ -60,8 +64,9 @@ All translations are in the `album` namespace:
 ## URL Structure
 
 Each album is accessible in all locales:
+
 - `/en/albums/abc123` - English
-- `/fr/albums/abc123` - French  
+- `/fr/albums/abc123` - French
 - `/de/albums/abc123` - German
 - `/es/albums/abc123` - Spanish
 - `/ru/albums/abc123` - Russian
@@ -79,6 +84,7 @@ When adding a new locale:
 4. Rebuild to generate static pages for the new locale
 
 The system will automatically:
-- Generate static pages for all album/locale combinations  
+
+- Generate static pages for all album/locale combinations
 - Include the new locale in revalidation API calls
 - Serve localized metadata for the new language

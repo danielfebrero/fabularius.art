@@ -27,7 +27,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   className,
 }) => {
   const router = useRouter();
-  console.log({ initialMedia });
   const [media, setMedia] = useState<Media[]>(initialMedia);
   const [pagination, setPagination] = useState(initialPagination);
   const [loading, setLoading] = useState(false);

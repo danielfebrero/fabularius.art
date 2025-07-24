@@ -631,5 +631,17 @@
     "noMoreToLoad": "No hay más álbumes que cargar",
     "errorLoading": "Error cargando más álbumes:",
     "tryAgain": "Intentar de nuevo"
+  },
+  "album": {
+    "notFound": "Álbum no encontrado",
+    "defaultDescription": "Explora este álbum generado por IA: {title}",
+    "metaTitle": "{title} - Álbum generado por IA en {siteName}",
+    "metaDescription": "{description}. Crea tu propio contenido adulto personalizado con {siteName}.",
+    "keywords": {
+      "aiAlbum": "álbum IA",
+      "generatedContent": "contenido adulto generado",
+      "images": "imágenes IA",
+      "videos": "videos IA"
+    }
   }
 }

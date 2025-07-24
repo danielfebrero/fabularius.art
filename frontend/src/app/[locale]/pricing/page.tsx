@@ -14,7 +14,7 @@ export async function generateStaticParams() {
 
 // Enable static generation with periodic revalidation
 export const revalidate = 86400; // Revalidate every 24 hours (pricing changes rarely)
-export const dynamic = 'force-static';
+export const dynamic = "force-static";
 
 export async function generateMetadata({
   params,
@@ -47,7 +47,7 @@ export async function generateMetadata({
       siteName: t("name"),
     },
     twitter: {
-      card: "summary_large_image", 
+      card: "summary_large_image",
       title,
       description,
     },

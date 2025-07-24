@@ -95,7 +95,6 @@ export default async function DiscoverPage({
     } else {
       albums = result.data?.albums || [];
       pagination = result.data?.pagination || null;
-      console.log(`Successfully fetched ${albums.length} albums`);
     }
   } catch (fetchError) {
     console.error("Exception while fetching albums:", fetchError);

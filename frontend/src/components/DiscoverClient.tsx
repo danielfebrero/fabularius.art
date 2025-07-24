@@ -29,8 +29,6 @@ export function DiscoverClient({
   const tag = searchParams.get("tag") || initialTag || undefined;
   const prevTag = useRef<string | undefined>(tag);
 
-  console.log("[DiscoverClient] Current tag:", tag, "Initial tag:", initialTag);
-
   // For now, let's simplify: if we have a tag, always fetch fresh data
   // If no tag, use initial data
   const shouldUseInitialData = !tag && !initialTag;

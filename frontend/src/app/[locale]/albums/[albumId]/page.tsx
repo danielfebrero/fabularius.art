@@ -11,7 +11,7 @@ import { getTranslations } from "next-intl/server";
 import type { Metadata } from "next";
 
 type AlbumDetailPageProps = {
-  params: { 
+  params: {
     locale: string;
     albumId: string;
   };
@@ -19,7 +19,7 @@ type AlbumDetailPageProps = {
 
 // Enable ISR for album pages
 export const revalidate = 7200; // Revalidate every 2 hours (less frequent than homepage)
-export const dynamic = 'force-static';
+export const dynamic = "force-static";
 export const dynamicParams = true;
 
 export async function generateMetadata({
@@ -48,9 +48,9 @@ export async function generateMetadata({
 
   // Localized metadata titles and descriptions
   const metaTitle = tAlbum("metaTitle", { title: album.title, siteName });
-  const metaDescription = tAlbum("metaDescription", { 
-    description: albumDescription, 
-    siteName 
+  const metaDescription = tAlbum("metaDescription", {
+    description: albumDescription,
+    siteName,
   });
 
   return {
@@ -58,7 +58,7 @@ export async function generateMetadata({
     description: metaDescription,
     keywords: [
       tAlbum("keywords.aiAlbum"),
-      tAlbum("keywords.generatedContent"), 
+      tAlbum("keywords.generatedContent"),
       tAlbum("keywords.images"),
       tAlbum("keywords.videos"),
       ...(album.tags || []),
@@ -91,7 +91,7 @@ export async function generateMetadata({
 
 export async function generateStaticParams() {
   const albums = await fetchAllPublicAlbums();
-  
+
   // Generate params for all locale/album combinations
   const params = [];
   for (const locale of locales) {
@@ -102,7 +102,7 @@ export async function generateStaticParams() {
       });
     }
   }
-  
+
   return params;
 }
 

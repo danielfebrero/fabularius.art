@@ -46,8 +46,7 @@ export async function getAlbums(
       revalidate: 3600, // 1 hour
       tags: ["albums", "homepage"],
     },
-    // Ensure we can fallback during build
-    cache: "force-cache",
+    // Remove cache: force-cache since we're using revalidate
   });
   return handleResponse<{ albums: Album[]; pagination: any }>(response);
 }
@@ -89,11 +88,11 @@ export async function fetchAllPublicAlbums(): Promise<Album[]> {
 // Fetch a single album by ID
 export async function getAlbumById(albumId: string) {
   const response = await fetch(`${API_URL}/albums/${albumId}`, {
-    next: { 
+    next: {
       revalidate: 7200, // 2 hours - albums change less frequently
-      tags: ["album", `album-${albumId}`] 
+      tags: ["album", `album-${albumId}`],
     },
-    cache: 'force-cache'
+    // Remove cache: force-cache since we're using revalidate
   });
   return handleResponse<Album>(response);
 }
@@ -112,11 +111,11 @@ export async function getMediaForAlbum(
   }
 
   const response = await fetch(`${API_URL}/albums/${albumId}/media?${params}`, {
-    next: { 
+    next: {
       revalidate: 7200, // 2 hours - media changes less frequently
-      tags: ["media", `album-${albumId}-media`] 
+      tags: ["media", `album-${albumId}-media`],
     },
-    cache: 'force-cache'
+    // Remove cache: force-cache since we're using revalidate
   });
 
   const result = await handleResponse<{ media: Media[]; pagination: any }>(
