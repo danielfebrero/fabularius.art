@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { useInteractions } from "@/hooks/useInteractions";
 import { useUser } from "@/hooks/useUser";
 import { useTargetInteractionStatus } from "@/hooks/useUserInteractionStatus";
+import { InteractionButtonSkeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/utils";
 
 interface LikeButtonProps {
@@ -34,11 +35,8 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
 }) => {
   const { user } = useUser();
   const { toggleLike, isToggling, error } = useInteractions();
-  const { userLiked, updateStatusOptimistically } = useTargetInteractionStatus(
-    targetType,
-    targetId,
-    { useCache }
-  );
+  const { userLiked, isLoading, updateStatusOptimistically } =
+    useTargetInteractionStatus(targetType, targetId, { useCache });
   const [likeCount, setLikeCount] = useState<number | null>(null);
 
   const t = useTranslations("common");
@@ -106,34 +104,38 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
 
   return (
     <div className="flex items-center gap-1">
-      <Button
-        variant={variant}
-        size="icon"
-        onClick={handleLike}
-        disabled={isToggling || !user}
-        className={cn(
-          config.button,
-          "transition-colors duration-200",
-          isLiked && "text-red-500 hover:text-red-600",
-          !isLiked && "text-gray-500 hover:text-red-500",
-          className
-        )}
-        title={
-          !user
-            ? tUser("loginToLike")
-            : isLiked
-            ? tUser("removeLike")
-            : t("like")
-        }
-      >
-        <Heart
+      {user && isLoading ? (
+        <InteractionButtonSkeleton size={size} className={className} />
+      ) : (
+        <Button
+          variant={variant}
+          size="icon"
+          onClick={handleLike}
+          disabled={isToggling || !user}
           className={cn(
-            config.icon,
-            "transition-all duration-200",
-            isLiked && "fill-current"
+            config.button,
+            "transition-colors duration-200",
+            isLiked && "text-red-500 hover:text-red-600",
+            !isLiked && "text-gray-500 hover:text-red-500",
+            className
           )}
-        />
-      </Button>
+          title={
+            !user
+              ? tUser("loginToLike")
+              : isLiked
+              ? tUser("removeLike")
+              : t("like")
+          }
+        >
+          <Heart
+            className={cn(
+              config.icon,
+              "transition-all duration-200",
+              isLiked && "fill-current"
+            )}
+          />
+        </Button>
+      )}
 
       {showCount && likeCount !== null && (
         <span className={cn("font-medium text-gray-600", config.text)}>

@@ -85,23 +85,60 @@ export function GridSkeleton({
   itemType?: "card" | "media" | "list";
   className?: string;
 }) {
-  const ItemComponent =
+  const SkeletonComponent =
     itemType === "media"
       ? MediaCardSkeleton
       : itemType === "list"
       ? ListItemSkeleton
       : CardSkeleton;
 
-  const gridClass =
-    itemType === "list"
-      ? "space-y-4"
-      : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6";
-
   return (
-    <div className={cn(gridClass, className)}>
-      {[...Array(itemCount)].map((_, i) => (
-        <ItemComponent key={i} />
+    <div
+      className={cn(
+        "grid gap-4",
+        itemType === "list"
+          ? "grid-cols-1"
+          : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
+        className
+      )}
+    >
+      {Array.from({ length: itemCount }).map((_, i) => (
+        <SkeletonComponent key={i} />
       ))}
     </div>
   );
+}
+
+export function InteractionButtonSkeleton({
+  size = "md",
+  className,
+}: {
+  size?: "sm" | "md" | "lg";
+  className?: string;
+}) {
+  const sizeConfig = {
+    sm: "h-8 w-8",
+    md: "h-10 w-10",
+    lg: "h-12 w-12",
+  };
+
+  return (
+    <Skeleton className={cn("rounded-full", sizeConfig[size], className)} />
+  );
+}
+
+export function InteractionCountSkeleton({
+  size = "md",
+  className,
+}: {
+  size?: "sm" | "md" | "lg";
+  className?: string;
+}) {
+  const sizeConfig = {
+    sm: "h-3 w-6",
+    md: "h-4 w-8",
+    lg: "h-5 w-10",
+  };
+
+  return <Skeleton className={cn(sizeConfig[size], className)} />;
 }

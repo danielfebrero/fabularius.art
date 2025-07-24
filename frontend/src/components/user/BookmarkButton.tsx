@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { useInteractions } from "@/hooks/useInteractions";
 import { useUser } from "@/hooks/useUser";
 import { useTargetInteractionStatus } from "@/hooks/useUserInteractionStatus";
+import { InteractionButtonSkeleton } from "@/components/ui/Skeleton";
 import { cn } from "@/lib/utils";
 
 interface BookmarkButtonProps {
@@ -34,7 +35,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
 }) => {
   const { user } = useUser();
   const { toggleBookmark, isToggling, error } = useInteractions();
-  const { userBookmarked, updateStatusOptimistically } =
+  const { userBookmarked, isLoading, updateStatusOptimistically } =
     useTargetInteractionStatus(targetType, targetId, { useCache });
   const [bookmarkCount, setBookmarkCount] = useState<number | null>(null);
 
@@ -105,34 +106,38 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
 
   return (
     <div className="flex items-center gap-1">
-      <Button
-        variant={variant}
-        size="icon"
-        onClick={handleBookmark}
-        disabled={isToggling || !user}
-        className={cn(
-          config.button,
-          "transition-colors duration-200",
-          isBookmarked && "text-blue-500 hover:text-blue-600",
-          !isBookmarked && "text-gray-500 hover:text-blue-500",
-          className
-        )}
-        title={
-          !user
-            ? tUser("loginToBookmark")
-            : isBookmarked
-            ? tUser("removeBookmark")
-            : t("bookmark")
-        }
-      >
-        <Bookmark
+      {user && isLoading ? (
+        <InteractionButtonSkeleton size={size} className={className} />
+      ) : (
+        <Button
+          variant={variant}
+          size="icon"
+          onClick={handleBookmark}
+          disabled={isToggling || !user}
           className={cn(
-            config.icon,
-            "transition-all duration-200",
-            isBookmarked && "fill-current"
+            config.button,
+            "transition-colors duration-200",
+            isBookmarked && "text-blue-500 hover:text-blue-600",
+            !isBookmarked && "text-gray-500 hover:text-blue-500",
+            className
           )}
-        />
-      </Button>
+          title={
+            !user
+              ? tUser("loginToBookmark")
+              : isBookmarked
+              ? tUser("removeBookmark")
+              : t("bookmark")
+          }
+        >
+          <Bookmark
+            className={cn(
+              config.icon,
+              "transition-all duration-200",
+              isBookmarked && "fill-current"
+            )}
+          />
+        </Button>
+      )}
 
       {showCount && bookmarkCount !== null && (
         <span className={cn("font-medium text-gray-600", config.text)}>

@@ -199,7 +199,6 @@ const UserDashboard: React.FC = () => {
                       item={media || album!}
                       type={like.targetType as "media" | "album"}
                       mediaList={likesMediaItems}
-                      canLike={false} // Don't show like button since these are already liked
                       className="aspect-square"
                     />
                   );
@@ -265,7 +264,6 @@ const UserDashboard: React.FC = () => {
                       item={media || album!}
                       type={bookmark.targetType as "media" | "album"}
                       mediaList={bookmarksMediaItems}
-                      canBookmark={false} // Don't show bookmark button since these are already bookmarked
                       className="aspect-square"
                     />
                   );

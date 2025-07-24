@@ -105,11 +105,7 @@ export const InteractionCounts: React.FC<InteractionCountsProps> = ({
       {/* Views - only show for albums */}
       {targetType === "album" && (
         <div className="flex items-center gap-1">
-          {showIcons && (
-            <Eye
-              className={cn(config.icon, "text-gray-400")}
-            />
-          )}
+          {showIcons && <Eye className={cn(config.icon, "text-gray-400")} />}
           <span className={cn("font-medium text-gray-600", config.text)}>
             {viewCount.toLocaleString()}
           </span>
