@@ -1,30 +1,31 @@
 import {
   CoreFingerprintData,
   AdvancedFingerprintData,
-  BehavioralData,
   FingerprintCollectionRequest,
   FingerprintCollectionResponse,
   FingerprintConfig,
   FingerprintEvent,
   FingerprintEventHandler,
   FingerprintError,
-  CanvasFingerprint,
-  WebGLFingerprint,
-  AudioFingerprint,
-  FontFingerprint,
-  CSSFingerprint,
-  TimingFingerprint,
-  WebRTCFingerprint,
-  BatteryFingerprint,
-  MediaDeviceFingerprint,
-  DeviceSensorFingerprint,
-  NetworkFingerprint,
-  WebAssemblyFingerprint,
-  StorageFingerprint,
-  PluginFingerprint,
+  BehavioralFingerprint,
 } from "@/types/fingerprint";
 import { collectBehavioralFingerprint } from "./modules/behavioral";
+import { collectCanvasFingerprint } from "./modules/canvas";
+import { collectWebGLFingerprint } from "./modules/webgl";
+import { collectAudioFingerprint } from "./modules/audio";
+import { collectFontFingerprint } from "./modules/fonts";
+import { collectCSSFingerprint } from "./modules/css";
+import { collectTimingFingerprint } from "./modules/timing";
+import { collectWebRTCFingerprint } from "./modules/webrtc";
+import { collectBatteryFingerprint } from "./modules/battery";
+import { collectMediaDeviceFingerprint } from "./modules/media-devices";
+import { collectSensorFingerprint } from "./modules/sensors";
+import { collectNetworkFingerprint } from "./modules/network";
+import { collectWebAssemblyFingerprint } from "./modules/webassembly";
+import { collectStorageFingerprint } from "./modules/storage";
+import { collectPluginFingerprint } from "./modules/plugins";
 import { API_URL } from "@/utils/config";
+
 // Default configuration
 const DEFAULT_CONFIG: FingerprintConfig = {
   apiEndpoint: API_URL + "/fingerprint/collect",
@@ -258,7 +259,7 @@ export class FingerprintCollector {
       });
 
       // Collect behavioral data if enabled
-      let behavioralData: BehavioralData | undefined;
+      let behavioralData: BehavioralFingerprint | undefined;
       if (this.config.collectBehavioral) {
         behavioralData = await this.collectBehavioralData();
       }
@@ -318,86 +319,37 @@ export class FingerprintCollector {
     // Canvas fingerprinting
     if (this.config.features.canvas) {
       // await this.randomDelay();
-      const canvasData = await this.collectCanvasFingerprint();
-      results.canvas =
-        canvasData.basic || canvasData.advanced || "canvas_fallback";
+      results.canvas = await collectCanvasFingerprint();
     }
 
     // WebGL fingerprinting
     if (this.config.features.webgl) {
       // await this.randomDelay();
-      const webglData = await this.collectWebGLFingerprint();
-      results.webgl = {
-        vendor: webglData.vendor || "unknown",
-        renderer: webglData.renderer || "unknown",
-        unmaskedVendor: webglData.unmaskedVendor,
-        unmaskedRenderer: webglData.unmaskedRenderer,
-        extensions: webglData.extensions || [],
-        parameters: webglData.parameters || {},
-        renderHash: webglData.renderHashes?.basic || "webgl_fallback",
-      };
+      results.webgl = await collectWebGLFingerprint();
     }
 
     // Audio fingerprinting
     if (this.config.features.audio) {
       // await this.randomDelay();
-      const audioData = await this.collectAudioFingerprint();
-      results.audio = {
-        contextHash: audioData.contextHashes?.hybrid || "audio_fallback",
-        compressionRatio: audioData.compressionRatio || 0,
-        oscillatorHash:
-          audioData.contextHashes?.oscillator || "oscillator_fallback",
-        dynamicsHash: audioData.contextHashes?.dynamics || "dynamics_fallback",
-      };
+      results.audio = await collectAudioFingerprint();
     }
 
     // Font fingerprinting
     if (this.config.features.fonts) {
       // await this.randomDelay();
-      const fontData = await this.collectFontFingerprint();
-      results.fonts = {
-        available: Object.fromEntries(
-          Object.entries(fontData.fontMeasurements).map(
-            ([font, measurement]) => [
-              font,
-              typeof measurement === "object" && measurement !== null
-                ? `${measurement.width || 0}x${measurement.height || 0}`
-                : String(measurement),
-            ]
-          )
-        ),
-        systemFonts: fontData.systemFonts,
-        webFonts: fontData.webFonts,
-      };
+      results.fonts = await collectFontFingerprint();
     }
 
     // CSS fingerprinting
     if (this.config.features.css) {
       // await this.randomDelay();
-      const cssData = await this.collectCSSFingerprint();
-      results.css = {
-        mediaQueries: cssData.mediaQueries,
-        computedStyles: cssData.computedStyles,
-        supportedFeatures: Object.keys(cssData.cssFeatures).filter(
-          (key) => cssData.cssFeatures[key]
-        ),
-      };
+      results.css = await collectCSSFingerprint();
     }
 
     // Timing fingerprinting
     if (this.config.features.timing) {
       // await this.randomDelay();
-      const timingData = await this.collectTimingFingerprint();
-      results.timing = {
-        cryptoTiming:
-          timingData.performanceTimings?.cryptoOperations?.sha256 || 0,
-        regexTiming:
-          timingData.performanceTimings?.regexOperations?.complexPattern || 0,
-        sortTiming:
-          timingData.performanceTimings?.sortingAlgorithms?.quickSort || 0,
-        wasmTiming:
-          timingData.wasmTimings?.executionTimings?.fibonacci || undefined,
-      };
+      results.timing = await collectTimingFingerprint();
     }
 
     return results as CoreFingerprintData;
@@ -1066,7 +1018,6 @@ export class FingerprintCollector {
       if (this.config.features.webrtc) {
         await this.randomDelay();
         try {
-          const { collectWebRTCFingerprint } = await import("./modules/webrtc");
           results.webrtc = await collectWebRTCFingerprint();
         } catch (error) {
           console.warn("WebRTC fingerprint collection failed:", error);
@@ -1078,9 +1029,6 @@ export class FingerprintCollector {
       if (this.config.features.battery) {
         await this.randomDelay();
         try {
-          const { collectBatteryFingerprint } = await import(
-            "./modules/battery"
-          );
           results.battery = await collectBatteryFingerprint();
         } catch (error) {
           console.warn("Battery fingerprint collection failed:", error);
@@ -1092,9 +1040,6 @@ export class FingerprintCollector {
       if (this.config.features.mediaDevices) {
         await this.randomDelay();
         try {
-          const { collectMediaDeviceFingerprint } = await import(
-            "./modules/media-devices"
-          );
           results.mediaDevices = await collectMediaDeviceFingerprint();
         } catch (error) {
           console.warn("Media devices fingerprint collection failed:", error);
@@ -1106,9 +1051,6 @@ export class FingerprintCollector {
       if (this.config.features.sensors) {
         await this.randomDelay();
         try {
-          const { collectSensorFingerprint } = await import(
-            "./modules/sensors"
-          );
           results.sensors = await collectSensorFingerprint();
         } catch (error) {
           console.warn("Sensor fingerprint collection failed:", error);
@@ -1120,9 +1062,6 @@ export class FingerprintCollector {
       if (this.config.features.network) {
         await this.randomDelay();
         try {
-          const { collectNetworkFingerprint } = await import(
-            "./modules/network"
-          );
           results.network = await collectNetworkFingerprint();
         } catch (error) {
           console.warn("Network fingerprint collection failed:", error);
@@ -1134,9 +1073,6 @@ export class FingerprintCollector {
       if (this.config.features.webassembly) {
         await this.randomDelay();
         try {
-          const { collectWebAssemblyFingerprint } = await import(
-            "./modules/webassembly"
-          );
           results.webassembly = await collectWebAssemblyFingerprint();
         } catch (error) {
           console.warn("WebAssembly fingerprint collection failed:", error);
@@ -1148,9 +1084,6 @@ export class FingerprintCollector {
       if (this.config.features.storage) {
         await this.randomDelay();
         try {
-          const { collectStorageFingerprint } = await import(
-            "./modules/storage"
-          );
           const storageData = await collectStorageFingerprint();
           results.storage = storageData;
         } catch (error) {
@@ -1163,11 +1096,7 @@ export class FingerprintCollector {
       if (this.config.features.plugins) {
         await this.randomDelay();
         try {
-          const { collectPluginFingerprint } = await import(
-            "./modules/plugins"
-          );
-          const pluginData = await collectPluginFingerprint();
-          results.plugins = pluginData;
+          results.plugins = await collectPluginFingerprint();
         } catch (error) {
           console.warn("Plugin fingerprint collection failed:", error);
           // results.plugins already has fallback value
@@ -1186,984 +1115,60 @@ export class FingerprintCollector {
   /**
    * Collect behavioral data
    */
-  private async collectBehavioralData(): Promise<BehavioralData | undefined> {
+  private async collectBehavioralData(): Promise<
+    BehavioralFingerprint | undefined
+  > {
     if (!this.config.features.behavioral) return undefined;
 
     try {
-      const behavioralFingerprint = await collectBehavioralFingerprint();
-      return this.convertBehavioralFingerprint(behavioralFingerprint);
+      return await collectBehavioralFingerprint();
     } catch (error) {
       console.warn("Behavioral fingerprinting failed:", error);
       return undefined;
     }
   }
 
-  /**
-   * Convert BehavioralFingerprint to BehavioralData
-   */
-  private convertBehavioralFingerprint(fingerprint: any): BehavioralData {
-    return {
-      mouseMovements: {
-        entropy: fingerprint.statistics?.entropy || 0,
-        patterns: [fingerprint.signatures?.mouseSignature || ""],
-        velocity:
-          fingerprint.mouseEvents
-            ?.slice(0, 10)
-            .map((e: any) => e.velocity || 0) || [],
-        acceleration: [
-          fingerprint.mousePatterns?.movementPattern?.acceleration || 0,
-        ],
-        clickPatterns: [fingerprint.signatures?.mouseSignature || ""],
-      },
-      keyboardPatterns: {
-        typingSpeed: fingerprint.typingPatterns?.overall?.wpm || 0,
-        dwellTimes:
-          fingerprint.typingPatterns?.overall?.pausePattern?.slice(0, 10) || [],
-        flightTimes: [fingerprint.typingPatterns?.overall?.flightTime || 0],
-        rhythm: fingerprint.signatures?.keyboardSignature || "",
-      },
-      scrollBehavior: {
-        patterns: [fingerprint.signatures?.navigationSignature || ""],
-        velocity: [fingerprint.mousePatterns?.scrollPattern?.velocity || 0],
-        acceleration: [
-          fingerprint.mousePatterns?.scrollPattern?.acceleration || 0,
-        ],
-      },
-      touchBehavior:
-        fingerprint.touchEvents?.length > 0
-          ? {
-              touchPoints: fingerprint.touchPatterns?.multiTouchFrequency || 0,
-              pressure: [fingerprint.touchPatterns?.tapPressure || 0],
-              gestures: [fingerprint.signatures?.touchSignature || ""],
-            }
-          : undefined,
-    };
-  }
-
-  // Placeholder methods for specific fingerprinting techniques
-  // These will be implemented in separate modules
-
-  private async collectCanvasFingerprint(): Promise<CanvasFingerprint> {
-    try {
-      const { collectCanvasFingerprint } = await import("./modules/canvas");
-      return await collectCanvasFingerprint();
-    } catch (error) {
-      console.warn("Canvas fingerprint collection failed:", error);
-      return {
-        isSupported: false,
-        basic: "canvas_error",
-        advanced: "canvas_error",
-        fonts: {},
-        textSamples: {},
-        textMetrics: {},
-        blendModes: {},
-        imageData: "canvas_error",
-        entropy: 0,
-      };
-    }
-  }
-
-  private async collectWebGLFingerprint(): Promise<WebGLFingerprint> {
-    try {
-      const { collectWebGLFingerprint } = await import("./modules/webgl");
-      return await collectWebGLFingerprint();
-    } catch (error) {
-      console.warn("WebGL fingerprint collection failed:", error);
-      return {
-        isSupported: false,
-        vendor: "webgl_error",
-        renderer: "webgl_error",
-        version: "webgl_error",
-        shadingLanguageVersion: "webgl_error",
-        extensions: [],
-        parameters: {},
-        capabilities: {},
-        renderHashes: {
-          basic: "webgl_error",
-          triangle: "webgl_error",
-          gradient: "webgl_error",
-          floating: "webgl_error",
-        },
-        supportedFormats: {
-          textures: [],
-          renderbuffers: [],
-        },
-        maxValues: {},
-        entropy: 0,
-      };
-    }
-  }
-
-  private async collectAudioFingerprint(): Promise<AudioFingerprint> {
-    try {
-      const { collectAudioFingerprint } = await import("./modules/audio");
-      return await collectAudioFingerprint();
-    } catch (error) {
-      console.warn("Audio fingerprint collection failed:", error);
-      return {
-        isSupported: false,
-        contextHashes: {
-          oscillator: "audio_error",
-          triangle: "audio_error",
-          sawtooth: "audio_error",
-          square: "audio_error",
-          compressor: "audio_error",
-          dynamics: "audio_error",
-          hybrid: "audio_error",
-        },
-        sampleRate: 0,
-        bufferSize: 0,
-        channelCount: 0,
-        compressionRatio: 0,
-        processingTimes: {
-          oscillator: 0,
-          compressor: 0,
-          hybrid: 0,
-        },
-        audioCapabilities: {
-          maxChannels: 0,
-          sampleRates: [],
-          audioFormats: [],
-        },
-        nodeSupport: {},
-        entropy: 0,
-      };
-    }
-  }
-
-  private async collectFontFingerprint(): Promise<FontFingerprint> {
-    try {
-      const { collectFontFingerprint } = await import("./modules/fonts");
-      return await collectFontFingerprint();
-    } catch (error) {
-      console.warn("Font fingerprint collection failed:", error);
-      return {
-        isSupported: false,
-        availableFonts: [],
-        systemFonts: [],
-        webFonts: [],
-        fontMeasurements: {},
-        unicodeSupport: {},
-        fallbackDetection: {},
-        fontStacks: {},
-        renderingTests: {},
-        totalFontsDetected: 0,
-        detectionTechniques: {},
-        entropy: 0,
-      };
-    }
-  }
-
-  private async collectCSSFingerprint(): Promise<CSSFingerprint> {
-    try {
-      const { collectCSSFingerprint } = await import("./modules/css");
-      const cssData = await collectCSSFingerprint();
-      return {
-        isSupported: cssData.isSupported || true,
-        mediaQueries: cssData.mediaQueries || {},
-        cssFeatures: cssData.cssFeatures || {},
-        computedStyles: cssData.computedStyles || {},
-        cssProperties: cssData.cssProperties || {},
-        browserExtensions: cssData.browserExtensions || {},
-        cssUnits: cssData.cssUnits || {},
-        colorSpaces: cssData.colorSpaces || {},
-        animations: cssData.animations || {},
-        layoutMethods: cssData.layoutMethods || {},
-        selectors: cssData.selectors || {},
-        pseudoElements: cssData.pseudoElements || {},
-        pseudoClasses: cssData.pseudoClasses || {},
-        atRules: cssData.atRules || {},
-        cssValues: cssData.cssValues || {},
-        vendorPrefixes: cssData.vendorPrefixes || [],
-        entropy: cssData.entropy || 0,
-      };
-    } catch (error) {
-      console.warn("CSS fingerprint collection failed:", error);
-      return {
-        isSupported: false,
-        mediaQueries: {},
-        cssFeatures: {},
-        computedStyles: {},
-        cssProperties: {},
-        browserExtensions: {},
-        cssUnits: {},
-        colorSpaces: {},
-        animations: {},
-        layoutMethods: {},
-        selectors: {},
-        pseudoElements: {},
-        pseudoClasses: {},
-        atRules: {},
-        cssValues: {},
-        vendorPrefixes: [],
-        entropy: 0,
-      };
-    }
-  }
-
-  private async collectTimingFingerprint(): Promise<TimingFingerprint> {
-    try {
-      const { collectTimingFingerprint } = await import("./modules/timing");
-      return await collectTimingFingerprint();
-    } catch (error) {
-      console.warn("Timing fingerprint collection failed:", error);
-      return {
-        isSupported: false,
-        performanceTimings: {
-          cryptoOperations: {},
-          mathOperations: {},
-          arrayOperations: {},
-          stringOperations: {},
-          regexOperations: {},
-          sortingAlgorithms: {},
-        },
-        wasmTimings: {
-          isSupported: false,
-          compilationTime: 0,
-          instantiationTime: 0,
-          executionTimings: {},
-          memoryOperations: {},
-        },
-        cpuBenchmarks: {
-          singleThread: {},
-          workerThread: {},
-          concurrency: {},
-        },
-        memoryTimings: {
-          allocation: {},
-          access: {},
-          garbage: {},
-        },
-        clockResolution: 0,
-        performanceApiPrecision: 0,
-        entropy: 0,
-      };
-    }
-  }
-
-  private async collectWebRTCFingerprint(): Promise<WebRTCFingerprint> {
-    try {
-      const { collectWebRTCFingerprint } = await import("./modules/webrtc");
-      return await collectWebRTCFingerprint();
-    } catch (error) {
-      console.warn("WebRTC fingerprint collection failed:", error);
-      return {
-        isSupported: false,
-        localIPs: [],
-        stunResponses: {},
-        rtcCapabilities: { codecs: [], headerExtensions: [], transports: [] },
-        iceGatheringTime: 0,
-        candidateTypes: [],
-        candidates: [],
-        networkInterfaces: [],
-        connectionTypes: [],
-        protocols: [],
-        stunServers: [],
-        turnServers: [],
-        iceCandidatePoolSize: 0,
-        bundlePolicy: "balanced",
-        rtcpMuxPolicy: "require",
-        iceTransportPolicy: "all",
-        sdpSemantics: "unified-plan",
-        fingerprint: "webrtc_error",
-        entropy: 0,
-      };
-    }
-  }
-
-  private async collectBatteryFingerprint(): Promise<BatteryFingerprint> {
-    try {
-      const { collectBatteryFingerprint } = await import("./modules/battery");
-      return await collectBatteryFingerprint();
-    } catch (error) {
-      console.warn("Battery fingerprint collection failed:", error);
-      return {
-        available: false,
-        powerProfile: {},
-        hardwareSignature: {},
-        timingPatterns: {
-          updateFrequency: 0,
-          precisionLevel: 0,
-          eventIntervals: [],
-          jitterPattern: "",
-        },
-        privacyMasking: {
-          levelMasked: false,
-          timingMasked: false,
-          artificialValues: false,
-        },
-        batteryHash: "battery_error",
-        stabilityScore: 0,
-        confidenceLevel: 0,
-        collectionTime: 0,
-        samplingDuration: 0,
-        errorCount: 0,
-      };
-    }
-  }
-
-  private async collectMediaDevicesFingerprint(): Promise<MediaDeviceFingerprint> {
-    try {
-      const { collectMediaDeviceFingerprint } = await import(
-        "./modules/media-devices"
-      );
-      return await collectMediaDeviceFingerprint();
-    } catch (error) {
-      console.warn("Media devices fingerprint collection failed:", error);
-      return {
-        available: false,
-        devices: {
-          audioInputs: [],
-          audioOutputs: [],
-          videoInputs: [],
-          totalCount: 0,
-          uniqueDevices: 0,
-        },
-        capabilities: {
-          video: {
-            resolutions: [],
-            audioFormats: [],
-            videoCodecs: [],
-            constraints: {},
-          },
-          audio: {
-            resolutions: [],
-            audioFormats: [],
-            videoCodecs: [],
-            constraints: {},
-          },
-          supportedConstraints: [],
-        },
-        permissions: {
-          camera: "denied",
-          microphone: "denied",
-          speaker: "denied",
-          permissionAPI: false,
-        },
-        hardwareSignature: {
-          deviceFingerprint: "media_error",
-          vendorPatterns: [],
-          modelSignatures: [],
-          driverVersions: [],
-        },
-        streamAnalysis: {
-          defaultResolution: { width: 0, height: 0 },
-          supportedFrameRates: [],
-          audioChannels: [],
-          bitRateProfiles: [],
-        },
-        privacyIndicators: {
-          labelsBlocked: false,
-          deviceIdsRandomized: false,
-          permissionDenied: true,
-          virtualDevicesDetected: false,
-        },
-        mediaDeviceHash: "media_error",
-        stabilityScore: 0,
-        confidenceLevel: 0,
-        collectionTime: 0,
-        enumerationDuration: 0,
-        errorCount: 1,
-      };
-    }
-  }
-
-  private async collectSensorFingerprint(): Promise<DeviceSensorFingerprint> {
-    try {
-      const { collectSensorFingerprint } = await import("./modules/sensors");
-      return await collectSensorFingerprint();
-    } catch (error) {
-      console.warn("Sensor fingerprint collection failed:", error);
-      return {
-        available: false,
-        accelerometer: {
-          available: false,
-          frequency: 0,
-          precision: 0,
-          range: 0,
-          resolution: 0,
-          noiseLevel: 0,
-          driftRate: 0,
-          calibration: {
-            offsetX: 0,
-            offsetY: 0,
-            offsetZ: 0,
-            scaleX: 1,
-            scaleY: 1,
-            scaleZ: 1,
-          },
-          readings: [],
-          patterns: {
-            staticNoise: "",
-            dynamicResponse: "",
-            temperatureDrift: "",
-          },
-        },
-        gyroscope: {
-          available: false,
-          frequency: 0,
-          precision: 0,
-          range: 0,
-          resolution: 0,
-          noiseLevel: 0,
-          driftRate: 0,
-          calibration: {
-            offsetX: 0,
-            offsetY: 0,
-            offsetZ: 0,
-            scaleX: 1,
-            scaleY: 1,
-            scaleZ: 1,
-          },
-          readings: [],
-          patterns: {
-            staticNoise: "",
-            dynamicResponse: "",
-            temperatureDrift: "",
-          },
-        },
-        magnetometer: {
-          available: false,
-          frequency: 0,
-          precision: 0,
-          range: 0,
-          resolution: 0,
-          noiseLevel: 0,
-          driftRate: 0,
-          calibration: {
-            offsetX: 0,
-            offsetY: 0,
-            offsetZ: 0,
-            scaleX: 1,
-            scaleY: 1,
-            scaleZ: 1,
-          },
-          readings: [],
-          patterns: {
-            staticNoise: "",
-            dynamicResponse: "",
-            temperatureDrift: "",
-          },
-        },
-        ambientLight: {
-          available: false,
-          frequency: 0,
-          precision: 0,
-          range: 0,
-          resolution: 0,
-          noiseLevel: 0,
-          driftRate: 0,
-          calibration: {
-            offsetX: 0,
-            offsetY: 0,
-            offsetZ: 0,
-            scaleX: 1,
-            scaleY: 1,
-            scaleZ: 1,
-          },
-          readings: [],
-          patterns: {
-            staticNoise: "",
-            dynamicResponse: "",
-            temperatureDrift: "",
-          },
-        },
-        proximity: {
-          available: false,
-          frequency: 0,
-          precision: 0,
-          range: 0,
-          resolution: 0,
-          noiseLevel: 0,
-          driftRate: 0,
-          calibration: {
-            offsetX: 0,
-            offsetY: 0,
-            offsetZ: 0,
-            scaleX: 1,
-            scaleY: 1,
-            scaleZ: 1,
-          },
-          readings: [],
-          patterns: {
-            staticNoise: "",
-            dynamicResponse: "",
-            temperatureDrift: "",
-          },
-        },
-        orientation: {
-          available: false,
-          frequency: 0,
-          precision: 0,
-          range: 0,
-          resolution: 0,
-          noiseLevel: 0,
-          driftRate: 0,
-          calibration: {
-            offsetX: 0,
-            offsetY: 0,
-            offsetZ: 0,
-            scaleX: 1,
-            scaleY: 1,
-            scaleZ: 1,
-          },
-          readings: [],
-          patterns: {
-            staticNoise: "",
-            dynamicResponse: "",
-            temperatureDrift: "",
-          },
-        },
-        motion: {
-          available: false,
-          frequency: 0,
-          precision: 0,
-          range: 0,
-          resolution: 0,
-          noiseLevel: 0,
-          driftRate: 0,
-          calibration: {
-            offsetX: 0,
-            offsetY: 0,
-            offsetZ: 0,
-            scaleX: 1,
-            scaleY: 1,
-            scaleZ: 1,
-          },
-          readings: [],
-          patterns: {
-            staticNoise: "",
-            dynamicResponse: "",
-            temperatureDrift: "",
-          },
-        },
-        deviceMotion: {
-          supported: false,
-          interval: 0,
-          accelerationIncludingGravity: false,
-          rotationRate: false,
-        },
-        deviceOrientation: {
-          supported: false,
-          absolute: false,
-          compassHeading: false,
-        },
-        hardwareSignature: {
-          vendorFingerprint: "",
-          modelSignature: "",
-          calibrationSignature: "",
-          noiseProfile: "",
-        },
-        permissions: {
-          accelerometer: "denied",
-          gyroscope: "denied",
-          magnetometer: "denied",
-          permissionAPI: false,
-        },
-        correlation: {
-          accelerometerGyroscope: 0,
-          orientationMotion: 0,
-          stabilityScore: 0,
-        },
-        privacyIndicators: {
-          sensorsBlocked: false,
-          reducedPrecision: false,
-          artificialReadings: false,
-          spoofingDetected: false,
-        },
-        sensorHash: "sensor_error",
-        hardwareHash: "sensor_error",
-        confidenceLevel: 0,
-        collectionTime: 0,
-        samplingDuration: 0,
-        errorCount: 1,
-        capabilities: {
-          maxFrequency: 0,
-          bufferSize: 0,
-          sensorTypes: [],
-          permissions: [],
-        },
-        patterns: {
-          motionSignatures: [],
-          orientationPatterns: [],
-          usageCharacteristics: [],
-        },
-        analysis: {
-          stabilityScores: {},
-          entropyMeasures: {},
-          correlationMatrix: {},
-        },
-        fingerprints: {
-          sensorHash: "sensor_error",
-          patternHash: "sensor_error",
-          capabilityHash: "sensor_error",
-        },
-      };
-    }
-  }
-
-  private async collectNetworkFingerprint(): Promise<NetworkFingerprint> {
-    try {
-      const { collectNetworkFingerprint } = await import("./modules/network");
-      return await collectNetworkFingerprint();
-    } catch (error) {
-      console.warn("Network fingerprint collection failed:", error);
-      return {
-        available: false,
-        endpoints: [],
-        analysis: {
-          avgRTT: 0,
-          minRTT: 0,
-          maxRTT: 0,
-          jitter: 0,
-          packetLoss: 0,
-          stability: 0,
-          latencyVariation: 0,
-          throughputEstimate: 0,
-          jitterMeasurement: 0,
-        },
-        connection: {},
-        timingPatterns: {
-          dnsLookup: [],
-          tcpConnect: [],
-          tlsHandshake: [],
-          requestResponse: [],
-          totalTime: [],
-        },
-        bandwidth: {
-          estimated: 0,
-          downloadSpeed: 0,
-          uploadSpeed: 0,
-          testDuration: 0,
-        },
-        geographic: {
-          estimatedLocation: "unknown",
-          timezone: "unknown",
-          proximityToServers: {},
-        },
-        characteristics: {
-          mtu: 0,
-          ipVersion: "unknown",
-          dnsProvider: "unknown",
-          proxy: false,
-          vpn: false,
-          tor: false,
-        },
-        privacyIndicators: {
-          maskedIP: false,
-          reducedTiming: false,
-          artificialDelays: false,
-          tunneled: false,
-        },
-        networkHash: "network_error",
-        timingHash: "timing_error",
-        confidenceLevel: 0,
-        collectionTime: 0,
-        testDuration: 0,
-        errorCount: 1,
-      };
-    }
-  }
-
-  private async collectWebAssemblyFingerprint(): Promise<WebAssemblyFingerprint> {
-    try {
-      const { collectWebAssemblyFingerprint } = await import(
-        "./modules/webassembly"
-      );
-      return await collectWebAssemblyFingerprint();
-    } catch (error) {
-      console.warn("WebAssembly fingerprint collection failed:", error);
-      return {
-        available: false,
-        capabilities: {
-          basicWasm: false,
-          simdSupported: false,
-          threadsSupported: false,
-          bulkMemorySupported: false,
-          multiValueSupported: false,
-          referenceTypesSupported: false,
-          tailCallSupported: false,
-          exceptionHandlingSupported: false,
-          atomicsSupported: false,
-          bigIntSupported: false,
-        },
-        instructionSets: {
-          basic: false,
-          simd128: false,
-          atomic: false,
-          bulk: false,
-          reference: false,
-          multiValue: false,
-          tailCall: false,
-          exceptions: false,
-        },
-        performance: {
-          compilationTime: 0,
-          instantiationTime: 0,
-          executionTime: 0,
-          memoryOperations: 0,
-          mathOperations: 0,
-          cryptoOperations: 0,
-        },
-        limits: {
-          maxMemoryPages: 0,
-          maxTableSize: 0,
-          maxFunctionParams: 0,
-          maxFunctionLocals: 0,
-          maxModuleSize: 0,
-        },
-        hardware: {
-          cpuArchitecture: "unknown",
-          instructionSupport: {},
-          performanceProfile: "unknown",
-          parallelizationSupport: false,
-        },
-        modules: {
-          testModules: [],
-          supportedFormats: [],
-          optimizationLevel: "unknown",
-        },
-        security: {
-          sandboxingEffective: false,
-          memoryProtection: false,
-          stackProtection: false,
-          codeIntegrity: false,
-        },
-        environment: {
-          engineVersion: "unknown",
-          optimizationFlags: [],
-          debugSupport: false,
-          profilingSupport: false,
-        },
-        fingerprints: {
-          instructionHash: "wasm_error",
-          performanceHash: "wasm_error",
-          capabilityHash: "wasm_error",
-          moduleHash: "wasm_error",
-        },
-        confidenceLevel: 0,
-        collectionTime: 0,
-        errorCount: 1,
-      };
-    }
-  }
-
-  private async collectStorageFingerprint(): Promise<StorageFingerprint> {
-    try {
-      const { collectStorageFingerprint } = await import("./modules/storage");
-      return await collectStorageFingerprint();
-    } catch (error) {
-      console.warn("Storage fingerprint collection failed:", error);
-      return {
-        available: false,
-        serviceWorker: {
-          supported: false,
-          scope: "",
-          scriptURL: "",
-          state: "error",
-          registration: false,
-          updateViaCache: "none",
-          permissions: "denied",
-        },
-        cacheAPI: {
-          supported: false,
-          storageEstimate: {
-            quota: 0,
-            usage: 0,
-            usageDetails: {},
-          },
-          cacheNames: [],
-          cacheOperations: {
-            add: false,
-            addAll: false,
-            delete: false,
-            keys: false,
-            match: false,
-            matchAll: false,
-            put: false,
-          },
-          cacheBehavior: {
-            requestMode: "same-origin",
-            cacheMode: "default",
-            credentials: "same-origin",
-            redirect: "follow",
-          },
-        },
-        persistentStorage: {
-          supported: false,
-          persisted: false,
-          requestPersistent: false,
-          storageManager: false,
-        },
-        indexedDB: {
-          supported: false,
-          databases: [],
-          version: 0,
-          objectStores: [],
-          storageQuota: 0,
-          usageBytes: 0,
-        },
-        webSQL: {
-          supported: false,
-          version: "",
-          databases: [],
-          storageSize: 0,
-        },
-        localStorage: {
-          supported: false,
-          quota: 0,
-          usage: 0,
-          testWrite: false,
-          testRead: false,
-          itemCount: 0,
-        },
-        sessionStorage: {
-          supported: false,
-          quota: 0,
-          usage: 0,
-          testWrite: false,
-          testRead: false,
-          itemCount: 0,
-        },
-        storageEvents: {
-          supported: false,
-          crossTab: false,
-          persistence: false,
-        },
-        backgroundSync: {
-          supported: false,
-          registration: false,
-          permissions: "denied",
-        },
-        pushAPI: {
-          supported: false,
-          permissions: "denied",
-          subscription: false,
-          applicationServerKey: false,
-        },
-        notifications: {
-          supported: false,
-          permissions: "denied",
-          showNotification: false,
-          actions: false,
-          badge: false,
-          icon: false,
-          image: false,
-          silent: false,
-          tag: false,
-          timestamp: false,
-          vibrate: false,
-        },
-        broadcastChannel: {
-          supported: false,
-          postMessage: false,
-          onMessage: false,
-        },
-        storageAnalysis: {
-          totalQuota: 0,
-          totalUsage: 0,
-          storageBreakdown: {},
-          compressionRatio: 0,
-          accessPatterns: [],
-        },
-        fingerprints: {
-          serviceWorkerHash: "storage_error",
-          cacheHash: "storage_error",
-          storageHash: "storage_error",
-          behaviorHash: "storage_error",
-        },
-        confidenceLevel: 0,
-        collectionTime: 0,
-        errorCount: 1,
-      };
-    }
-  }
-
-  private async collectPluginFingerprint(): Promise<PluginFingerprint> {
-    try {
-      const { collectPluginFingerprint } = await import("./modules/plugins");
-      return await collectPluginFingerprint();
-    } catch (error) {
-      console.warn("Plugin fingerprint collection failed:", error);
-      return {
-        available: false,
-        plugins: {
-          navigator: [],
-          count: 0,
-          enabledPlugins: [],
-          disabledPlugins: [],
-        },
-        mimeTypes: {
-          supported: [],
-          count: 0,
-          categories: {},
-        },
-        extensions: {
-          detected: [],
-          adBlocker: false,
-          passwordManager: false,
-          vpnExtension: false,
-          developerExtensions: false,
-          customExtensions: [],
-        },
-        automation: {
-          selenium: false,
-          puppeteer: false,
-          playwright: false,
-          webDriver: false,
-          headless: false,
-          automationIndicators: [],
-        },
-        developerTools: {
-          open: false,
-          orientation: "unknown",
-          detected: false,
-          debuggerPresent: false,
-          consoleModified: false,
-        },
-        modifications: {
-          windowProperties: [],
-          prototypeChanges: [],
-          globalVariables: [],
-          functionOverrides: [],
-          nativeCodeModified: false,
-        },
-        security: {
-          cspBlocked: false,
-          mixedContent: false,
-          secureContext: false,
-          permissions: {},
-        },
-        browserFeatures: {
-          webgl: false,
-          webrtc: false,
-          geolocation: false,
-          notifications: false,
-          camera: false,
-          microphone: false,
-          clipboard: false,
-          fullscreen: false,
-        },
-        fingerprintResistance: {
-          canvasBlocked: false,
-          audioBlocked: false,
-          webglBlocked: false,
-          fontsBlocked: false,
-          spoofingDetected: false,
-          privacyMode: false,
-        },
-        fingerprints: {
-          pluginHash: "plugin_error",
-          mimeTypeHash: "plugin_error",
-          extensionHash: "plugin_error",
-          modificationHash: "plugin_error",
-        },
-        confidenceLevel: 0,
-        collectionTime: 0,
-        errorCount: 1,
-      };
-    }
-  }
+  // /**
+  //  * Convert BehavioralFingerprint to BehavioralData
+  //  */
+  // private convertBehavioralFingerprint(fingerprint: any): BehavioralData {
+  //   return {
+  //     mouseMovements: {
+  //       entropy: fingerprint.statistics?.entropy || 0,
+  //       patterns: [fingerprint.signatures?.mouseSignature || ""],
+  //       velocity:
+  //         fingerprint.mouseEvents
+  //           ?.slice(0, 10)
+  //           .map((e: any) => e.velocity || 0) || [],
+  //       acceleration: [
+  //         fingerprint.mousePatterns?.movementPattern?.acceleration || 0,
+  //       ],
+  //       clickPatterns: [fingerprint.signatures?.mouseSignature || ""],
+  //     },
+  //     keyboardPatterns: {
+  //       typingSpeed: fingerprint.typingPatterns?.overall?.wpm || 0,
+  //       dwellTimes:
+  //         fingerprint.typingPatterns?.overall?.pausePattern?.slice(0, 10) || [],
+  //       flightTimes: [fingerprint.typingPatterns?.overall?.flightTime || 0],
+  //       rhythm: fingerprint.signatures?.keyboardSignature || "",
+  //     },
+  //     scrollBehavior: {
+  //       patterns: [fingerprint.signatures?.navigationSignature || ""],
+  //       velocity: [fingerprint.mousePatterns?.scrollPattern?.velocity || 0],
+  //       acceleration: [
+  //         fingerprint.mousePatterns?.scrollPattern?.acceleration || 0,
+  //       ],
+  //     },
+  //     touchBehavior:
+  //       fingerprint.touchEvents?.length > 0
+  //         ? {
+  //             touchPoints: fingerprint.touchPatterns?.multiTouchFrequency || 0,
+  //             pressure: [fingerprint.touchPatterns?.tapPressure || 0],
+  //             gestures: [fingerprint.signatures?.touchSignature || ""],
+  //           }
+  //         : undefined,
+  //   };
+  // }
 
   /**
    * Generate session ID

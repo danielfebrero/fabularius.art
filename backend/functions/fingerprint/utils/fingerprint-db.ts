@@ -14,6 +14,7 @@ import {
   FingerprintSessionEntity,
   FingerprintAnalyticsEntity,
   FingerprintCollectionRequest,
+  BehavioralFingerprint,
 } from "@shared/types/fingerprint";
 import {
   UniqueVisitor,
@@ -26,6 +27,7 @@ import {
   generateFuzzyFingerprintHash,
   calculateLSHSimilarity,
   getLSHBucketConfigs,
+  LSH_BUCKET_MAP,
 } from "./fuzzy-hash";
 import { DEFAULT_ENTROPY_WEIGHTS } from "./config";
 
@@ -78,12 +80,14 @@ export class FingerprintDatabaseService {
   static generateFuzzyHashes(
     coreFingerprint: any,
     advancedFingerprint: any,
+    behavioralData?: BehavioralFingerprint,
     userId?: string
   ): string[] {
     // Use the advanced LSH approach for better fuzzy matching
     const fuzzyHashes = generateLocalitySensitiveHashes(
       coreFingerprint,
       advancedFingerprint,
+      behavioralData,
       userId
     );
 
@@ -190,6 +194,14 @@ export class FingerprintDatabaseService {
 
   /**
    * Calculate entropy-weighted similarity between two fingerprints using LSH buckets
+   * Improved version:
+   * - Fixed typos in audio comparison (coreFingerprint vs core)
+   * - Added comparisons for more components: CSS, Timing, WebAssembly, Storage, Plugins, Sensors, MediaDevices, Network, Behavioral, ServerEnhancement
+   * - Used appropriate similarity metrics: Jaccard for arrays/sets, exact match for hashes/strings, normalized difference for numbers
+   * - Incorporated component-specific entropy for dynamic weighting where available
+   * - Enhanced combining logic: weighted average of LSH and legacy scores, biased towards LSH if signals are strong
+   * - Handled missing data more gracefully
+   * - Added more granular matchedComponents
    */
   static calculateSimilarity(
     fp1: FingerprintEntity,
@@ -201,6 +213,10 @@ export class FingerprintDatabaseService {
     signals: number;
     matchedComponents: string[];
   } {
+    let lshSimilarity = 0;
+    let lshSignals = 0;
+    let lshComponents: string[] = [];
+
     // If both fingerprints have fuzzy hashes, use the advanced LSH similarity
     if (
       fp1.fuzzyHashes &&
@@ -214,119 +230,651 @@ export class FingerprintDatabaseService {
       );
 
       // Extract matched components from bucket matches
-      const matchedComponents = lshResult.bucketMatches
+      lshComponents = lshResult.bucketMatches
         .filter((bucket) => bucket.matched)
         .map((bucket) => bucket.bucketName);
 
-      return {
-        similarity: lshResult.similarity,
-        confidence: lshResult.confidence,
-        signals: lshResult.signals,
-        matchedComponents,
-      };
+      lshSimilarity = lshResult.similarity;
+      lshSignals = lshResult.signals;
     }
 
-    // Fallback to legacy similarity calculation if no fuzzy hashes
+    // Legacy similarity calculation for comprehensive component analysis
     let totalSimilarity = 0;
     let totalWeight = 0;
     const matchedComponents: string[] = [];
 
+    // Helper function for Jaccard similarity
+    const jaccardSimilarity = (set1: any[], set2: any[]): number => {
+      const intersection = set1.filter((item) => set2.includes(item));
+      const union = [...new Set([...set1, ...set2])];
+      return union.length > 0 ? intersection.length / union.length : 0;
+    };
+
+    // Helper for normalized difference (for numbers)
+    const normalizedDiff = (a: number, b: number): number => {
+      if (a === undefined || b === undefined) return 0;
+      const maxVal = Math.max(Math.abs(a), Math.abs(b));
+      return maxVal > 0 ? 1 - Math.abs(a - b) / maxVal : 1;
+    };
+
     // Canvas similarity
     if (fp1.coreFingerprint.canvas && fp2.coreFingerprint.canvas) {
       const similarity =
-        fp1.coreFingerprint.canvas === fp2.coreFingerprint.canvas ? 1 : 0;
-      totalSimilarity += similarity * weights.canvas;
-      totalWeight += weights.canvas;
+        fp1.coreFingerprint.canvas.basic === fp2.coreFingerprint.canvas.basic
+          ? 1
+          : 0;
+      const dynamicWeight =
+        (weights.canvas *
+          (fp1.coreFingerprint.canvas.entropy +
+            fp2.coreFingerprint.canvas.entropy)) /
+        2;
+      totalSimilarity += similarity * dynamicWeight;
+      totalWeight += dynamicWeight;
       if (similarity > 0.8) matchedComponents.push("canvas");
     }
 
     // WebGL similarity
     if (fp1.coreFingerprint.webgl && fp2.coreFingerprint.webgl) {
       let webglSimilarity = 0;
-
-      if (
-        fp1.coreFingerprint.webgl.vendor === fp2.coreFingerprint.webgl.vendor
-      ) {
-        webglSimilarity += 0.3;
-      }
+      if (fp1.coreFingerprint.webgl.vendor === fp2.coreFingerprint.webgl.vendor)
+        webglSimilarity += 0.2;
       if (
         fp1.coreFingerprint.webgl.renderer ===
         fp2.coreFingerprint.webgl.renderer
-      ) {
-        webglSimilarity += 0.3;
-      }
+      )
+        webglSimilarity += 0.2;
       if (
-        fp1.coreFingerprint.webgl.renderHash ===
-        fp2.coreFingerprint.webgl.renderHash
-      ) {
-        webglSimilarity += 0.4;
+        fp1.coreFingerprint.webgl.unmaskedVendor ===
+        fp2.coreFingerprint.webgl.unmaskedVendor
+      )
+        webglSimilarity += 0.1;
+      if (
+        fp1.coreFingerprint.webgl.unmaskedRenderer ===
+        fp2.coreFingerprint.webgl.unmaskedRenderer
+      )
+        webglSimilarity += 0.1;
+      webglSimilarity +=
+        jaccardSimilarity(
+          fp1.coreFingerprint.webgl.extensions,
+          fp2.coreFingerprint.webgl.extensions
+        ) * 0.2;
+      const renderHashes1 = fp1.coreFingerprint.webgl.renderHashes;
+      const renderHashes2 = fp2.coreFingerprint.webgl.renderHashes;
+      if (renderHashes1 && renderHashes2) {
+        let hashMatches = 0;
+        (["basic", "triangle", "gradient", "floating"] as const).forEach(
+          (key) => {
+            if (renderHashes1[key] === renderHashes2[key]) hashMatches++;
+          }
+        );
+        webglSimilarity += (hashMatches / 4) * 0.2;
       }
-
-      totalSimilarity += webglSimilarity * weights.webgl;
-      totalWeight += weights.webgl;
+      const dynamicWeight =
+        (weights.webgl *
+          (fp1.coreFingerprint.webgl.entropy +
+            fp2.coreFingerprint.webgl.entropy)) /
+        2;
+      totalSimilarity += webglSimilarity * dynamicWeight;
+      totalWeight += dynamicWeight;
       if (webglSimilarity > 0.8) matchedComponents.push("webgl");
     }
 
     // Audio similarity
     if (fp1.coreFingerprint.audio && fp2.coreFingerprint.audio) {
-      const audioSimilarity =
-        fp1.coreFingerprint.audio.contextHash ===
-        fp2.coreFingerprint.audio.contextHash
-          ? 1
-          : 0;
-      totalSimilarity += audioSimilarity * weights.audio;
-      totalWeight += weights.audio;
+      let audioSimilarity = 0;
+      const hashes1 = fp1.coreFingerprint.audio.contextHashes;
+      const hashes2 = fp2.coreFingerprint.audio.contextHashes;
+      if (hashes1 && hashes2) {
+        const hashKeys = Object.keys(hashes1) as (keyof typeof hashes1)[];
+        let matchingHashes = 0;
+        hashKeys.forEach((key) => {
+          if (hashes1[key] === hashes2[key]) matchingHashes++;
+        });
+        audioSimilarity += (matchingHashes / hashKeys.length) * 0.6;
+      }
+      audioSimilarity +=
+        normalizedDiff(
+          fp1.coreFingerprint.audio.sampleRate,
+          fp2.coreFingerprint.audio.sampleRate
+        ) * 0.1;
+      audioSimilarity +=
+        normalizedDiff(
+          fp1.coreFingerprint.audio.compressionRatio,
+          fp2.coreFingerprint.audio.compressionRatio
+        ) * 0.1;
+      audioSimilarity +=
+        jaccardSimilarity(
+          fp1.coreFingerprint.audio.audioCapabilities.audioFormats,
+          fp2.coreFingerprint.audio.audioCapabilities.audioFormats
+        ) * 0.2;
+      const dynamicWeight =
+        (weights.audio *
+          (fp1.coreFingerprint.audio.entropy +
+            fp2.coreFingerprint.audio.entropy)) /
+        2;
+      totalSimilarity += audioSimilarity * dynamicWeight;
+      totalWeight += dynamicWeight;
       if (audioSimilarity > 0.8) matchedComponents.push("audio");
     }
 
     // Font similarity
     if (fp1.coreFingerprint.fonts && fp2.coreFingerprint.fonts) {
-      const fonts1 = Object.keys(fp1.coreFingerprint.fonts.available);
-      const fonts2 = Object.keys(fp2.coreFingerprint.fonts.available);
-      const intersection = fonts1.filter((f) => fonts2.includes(f));
-      const union = [...new Set([...fonts1, ...fonts2])];
       const fontSimilarity =
-        union.length > 0 ? intersection.length / union.length : 0;
-
-      totalSimilarity += fontSimilarity * weights.fonts;
-      totalWeight += weights.fonts;
+        jaccardSimilarity(
+          fp1.coreFingerprint.fonts.availableFonts,
+          fp2.coreFingerprint.fonts.availableFonts
+        ) *
+          0.5 +
+        jaccardSimilarity(
+          fp1.coreFingerprint.fonts.systemFonts,
+          fp2.coreFingerprint.fonts.systemFonts
+        ) *
+          0.3 +
+        jaccardSimilarity(
+          fp1.coreFingerprint.fonts.webFonts,
+          fp2.coreFingerprint.fonts.webFonts
+        ) *
+          0.2;
+      const dynamicWeight =
+        (weights.fonts *
+          (fp1.coreFingerprint.fonts.entropy +
+            fp2.coreFingerprint.fonts.entropy)) /
+        2;
+      totalSimilarity += fontSimilarity * dynamicWeight;
+      totalWeight += dynamicWeight;
       if (fontSimilarity > 0.8) matchedComponents.push("fonts");
+    }
+
+    // CSS similarity
+    if (fp1.coreFingerprint.css && fp2.coreFingerprint.css) {
+      let cssSimilarity = 0;
+      cssSimilarity +=
+        jaccardSimilarity(
+          Object.keys(fp1.coreFingerprint.css.mediaQueries),
+          Object.keys(fp2.coreFingerprint.css.mediaQueries)
+        ) * 0.3;
+      cssSimilarity +=
+        jaccardSimilarity(
+          Object.keys(fp1.coreFingerprint.css.cssFeatures),
+          Object.keys(fp2.coreFingerprint.css.cssFeatures)
+        ) * 0.3;
+      cssSimilarity +=
+        jaccardSimilarity(
+          fp1.coreFingerprint.css.vendorPrefixes,
+          fp2.coreFingerprint.css.vendorPrefixes
+        ) * 0.2;
+      // Compare computedStyles by matching values
+      let styleMatches = 0;
+      const styles1 = fp1.coreFingerprint.css.computedStyles;
+      const styles2 = fp2.coreFingerprint.css.computedStyles;
+      Object.keys(styles1).forEach((key) => {
+        if (styles1[key] === styles2[key]) styleMatches++;
+      });
+      cssSimilarity += (styleMatches / Object.keys(styles1).length) * 0.2;
+      const dynamicWeight =
+        (weights.css *
+          (fp1.coreFingerprint.css.entropy + fp2.coreFingerprint.css.entropy)) /
+        2;
+      totalSimilarity += cssSimilarity * dynamicWeight;
+      totalWeight += dynamicWeight;
+      if (cssSimilarity > 0.8) matchedComponents.push("css");
+    }
+
+    // Timing similarity
+    if (fp1.coreFingerprint.timing && fp2.coreFingerprint.timing) {
+      let timingSimilarity = 0;
+      // Average normalized diffs for performanceTimings subrecords
+      const timings1 = fp1.coreFingerprint.timing.performanceTimings;
+      const timings2 = fp2.coreFingerprint.timing.performanceTimings;
+      let subSimilarity = 0;
+      let subCount = 0;
+      (Object.keys(timings1) as (keyof typeof timings1)[]).forEach(
+        (category) => {
+          Object.keys(timings1[category]).forEach((key) => {
+            const value1 = timings1[category][key];
+            const value2 = timings2[category][key];
+            if (value1 !== undefined && value2 !== undefined) {
+              subSimilarity += normalizedDiff(value1, value2);
+              subCount++;
+            }
+          });
+        }
+      );
+      timingSimilarity += (subSimilarity / subCount) * 0.4;
+      // WASM timings
+      if (
+        fp1.coreFingerprint.timing.wasmTimings &&
+        fp2.coreFingerprint.timing.wasmTimings
+      ) {
+        timingSimilarity +=
+          normalizedDiff(
+            fp1.coreFingerprint.timing.wasmTimings.compilationTime,
+            fp2.coreFingerprint.timing.wasmTimings.compilationTime
+          ) * 0.1;
+        timingSimilarity +=
+          normalizedDiff(
+            fp1.coreFingerprint.timing.wasmTimings.executionTimings?.[
+              "mathOperations"
+            ] || 0,
+            fp2.coreFingerprint.timing.wasmTimings.executionTimings?.[
+              "mathOperations"
+            ] || 0
+          ) * 0.1;
+      }
+      // CPU benchmarks, etc.
+      timingSimilarity +=
+        normalizedDiff(
+          fp1.coreFingerprint.timing.clockResolution,
+          fp2.coreFingerprint.timing.clockResolution
+        ) * 0.2;
+      const dynamicWeight =
+        (weights.timing *
+          (fp1.coreFingerprint.timing.entropy +
+            fp2.coreFingerprint.timing.entropy)) /
+        2;
+      totalSimilarity += timingSimilarity * dynamicWeight;
+      totalWeight += dynamicWeight;
+      if (timingSimilarity > 0.8) matchedComponents.push("timing");
     }
 
     // WebRTC similarity
     if (fp1.advancedFingerprint.webrtc && fp2.advancedFingerprint.webrtc) {
       const ips1 = fp1.advancedFingerprint.webrtc.localIPs;
       const ips2 = fp2.advancedFingerprint.webrtc.localIPs;
-      const ipIntersection = ips1.filter((ip) => ips2.includes(ip));
-      const ipSimilarity =
-        ips1.length > 0
-          ? ipIntersection.length / Math.max(ips1.length, ips2.length)
-          : 0;
-
-      totalSimilarity += ipSimilarity * weights.webrtc;
-      totalWeight += weights.webrtc;
-      if (ipSimilarity > 0.8) matchedComponents.push("webrtc");
+      const ipSimilarity = jaccardSimilarity(ips1, ips2);
+      let webrtcSimilarity = ipSimilarity * 0.5;
+      webrtcSimilarity +=
+        jaccardSimilarity(
+          fp1.advancedFingerprint.webrtc.candidateTypes,
+          fp2.advancedFingerprint.webrtc.candidateTypes
+        ) * 0.2;
+      webrtcSimilarity +=
+        normalizedDiff(
+          fp1.advancedFingerprint.webrtc.iceGatheringTime,
+          fp2.advancedFingerprint.webrtc.iceGatheringTime
+        ) * 0.1;
+      webrtcSimilarity +=
+        jaccardSimilarity(
+          fp1.advancedFingerprint.webrtc.connectionTypes,
+          fp2.advancedFingerprint.webrtc.connectionTypes
+        ) * 0.1;
+      webrtcSimilarity +=
+        (fp1.advancedFingerprint.webrtc.fingerprint ===
+        fp2.advancedFingerprint.webrtc.fingerprint
+          ? 1
+          : 0) * 0.1;
+      const dynamicWeight =
+        (weights.webrtc *
+          (fp1.advancedFingerprint.webrtc.entropy +
+            fp2.advancedFingerprint.webrtc.entropy)) /
+        2;
+      totalSimilarity += webrtcSimilarity * dynamicWeight;
+      totalWeight += dynamicWeight;
+      if (webrtcSimilarity > 0.8) matchedComponents.push("webrtc");
     }
 
     // Battery similarity
     if (fp1.advancedFingerprint.battery && fp2.advancedFingerprint.battery) {
-      const batterySimilarity =
-        fp1.advancedFingerprint.battery.batteryHash ===
+      let batterySimilarity =
+        (fp1.advancedFingerprint.battery.batteryHash ===
         fp2.advancedFingerprint.battery.batteryHash
           ? 1
-          : 0;
-      totalSimilarity += batterySimilarity * weights.battery;
-      totalWeight += weights.battery;
+          : 0) * 0.4;
+      batterySimilarity +=
+        normalizedDiff(
+          fp1.advancedFingerprint.battery.level || 0,
+          fp2.advancedFingerprint.battery.level || 0
+        ) * 0.2;
+      batterySimilarity +=
+        normalizedDiff(
+          fp1.advancedFingerprint.battery.chargingTime || 0,
+          fp2.advancedFingerprint.battery.chargingTime || 0
+        ) * 0.1;
+      batterySimilarity +=
+        normalizedDiff(
+          fp1.advancedFingerprint.battery.dischargingTime || 0,
+          fp2.advancedFingerprint.battery.dischargingTime || 0
+        ) * 0.1;
+      batterySimilarity +=
+        (fp1.advancedFingerprint.battery.hardwareSignature.capacityEstimate ===
+        fp2.advancedFingerprint.battery.hardwareSignature.capacityEstimate
+          ? 1
+          : 0) * 0.2;
+      const dynamicWeight =
+        (weights.battery *
+          (fp1.advancedFingerprint.battery.confidenceLevel / 100 +
+            fp2.advancedFingerprint.battery.confidenceLevel / 100)) /
+        2; // Using confidence as proxy if no entropy
+      totalSimilarity += batterySimilarity * dynamicWeight;
+      totalWeight += dynamicWeight;
       if (batterySimilarity > 0.8) matchedComponents.push("battery");
     }
 
-    const similarity = totalWeight > 0 ? totalSimilarity / totalWeight : 0;
+    // MediaDevices similarity
+    if (
+      fp1.advancedFingerprint.mediaDevices &&
+      fp2.advancedFingerprint.mediaDevices
+    ) {
+      let mediaSimilarity =
+        (fp1.advancedFingerprint.mediaDevices.mediaDeviceHash ===
+        fp2.advancedFingerprint.mediaDevices.mediaDeviceHash
+          ? 1
+          : 0) * 0.4;
+      mediaSimilarity +=
+        jaccardSimilarity(
+          fp1.advancedFingerprint.mediaDevices.capabilities.video.audioFormats,
+          fp2.advancedFingerprint.mediaDevices.capabilities.video.audioFormats
+        ) * 0.2;
+      mediaSimilarity +=
+        normalizedDiff(
+          fp1.advancedFingerprint.mediaDevices.devices.totalCount,
+          fp2.advancedFingerprint.mediaDevices.devices.totalCount
+        ) * 0.1;
+      mediaSimilarity +=
+        (fp1.advancedFingerprint.mediaDevices.hardwareSignature
+          .deviceFingerprint ===
+        fp2.advancedFingerprint.mediaDevices.hardwareSignature.deviceFingerprint
+          ? 1
+          : 0) * 0.3;
+      const dynamicWeight =
+        (weights.mediaDevices *
+          (fp1.advancedFingerprint.mediaDevices.confidenceLevel / 100 +
+            fp2.advancedFingerprint.mediaDevices.confidenceLevel / 100)) /
+        2;
+      totalSimilarity += mediaSimilarity * dynamicWeight;
+      totalWeight += dynamicWeight;
+      if (mediaSimilarity > 0.8) matchedComponents.push("mediaDevices");
+    }
+
+    // Sensors similarity
+    if (fp1.advancedFingerprint.sensors && fp2.advancedFingerprint.sensors) {
+      let sensorsSimilarity =
+        (fp1.advancedFingerprint.sensors.sensorHash ===
+        fp2.advancedFingerprint.sensors.sensorHash
+          ? 1
+          : 0) * 0.4;
+      sensorsSimilarity +=
+        (fp1.advancedFingerprint.sensors.hardwareHash ===
+        fp2.advancedFingerprint.sensors.hardwareHash
+          ? 1
+          : 0) * 0.3;
+      sensorsSimilarity +=
+        normalizedDiff(
+          fp1.advancedFingerprint.sensors.correlation.stabilityScore,
+          fp2.advancedFingerprint.sensors.correlation.stabilityScore
+        ) * 0.1;
+      sensorsSimilarity +=
+        jaccardSimilarity(
+          fp1.advancedFingerprint.sensors.capabilities.sensorTypes,
+          fp2.advancedFingerprint.sensors.capabilities.sensorTypes
+        ) * 0.2;
+      const dynamicWeight =
+        (weights.sensors *
+          (fp1.advancedFingerprint.sensors.confidenceLevel / 100 +
+            fp2.advancedFingerprint.sensors.confidenceLevel / 100)) /
+        2;
+      totalSimilarity += sensorsSimilarity * dynamicWeight;
+      totalWeight += dynamicWeight;
+      if (sensorsSimilarity > 0.8) matchedComponents.push("sensors");
+    }
+
+    // Network similarity
+    if (fp1.advancedFingerprint.network && fp2.advancedFingerprint.network) {
+      let networkSimilarity =
+        (fp1.advancedFingerprint.network.networkHash ===
+        fp2.advancedFingerprint.network.networkHash
+          ? 1
+          : 0) * 0.3;
+      networkSimilarity +=
+        (fp1.advancedFingerprint.network.timingHash ===
+        fp2.advancedFingerprint.network.timingHash
+          ? 1
+          : 0) * 0.2;
+      networkSimilarity +=
+        normalizedDiff(
+          fp1.advancedFingerprint.network.analysis.avgRTT,
+          fp2.advancedFingerprint.network.analysis.avgRTT
+        ) * 0.1;
+      networkSimilarity +=
+        normalizedDiff(
+          fp1.advancedFingerprint.network.bandwidth.estimated,
+          fp2.advancedFingerprint.network.bandwidth.estimated
+        ) * 0.1;
+      networkSimilarity +=
+        (fp1.advancedFingerprint.network.geographic.timezone ===
+        fp2.advancedFingerprint.network.geographic.timezone
+          ? 1
+          : 0) * 0.1;
+      networkSimilarity +=
+        (fp1.advancedFingerprint.network.characteristics.proxy ===
+        fp2.advancedFingerprint.network.characteristics.proxy
+          ? 1
+          : 0) * 0.1;
+      networkSimilarity +=
+        (fp1.advancedFingerprint.network.characteristics.vpn ===
+        fp2.advancedFingerprint.network.characteristics.vpn
+          ? 1
+          : 0) * 0.1;
+      const dynamicWeight =
+        (weights.network *
+          (fp1.advancedFingerprint.network.confidenceLevel / 100 +
+            fp2.advancedFingerprint.network.confidenceLevel / 100)) /
+        2;
+      totalSimilarity += networkSimilarity * dynamicWeight;
+      totalWeight += dynamicWeight;
+      if (networkSimilarity > 0.8) matchedComponents.push("network");
+    }
+
+    // WebAssembly similarity
+    if (
+      fp1.advancedFingerprint.webassembly &&
+      fp2.advancedFingerprint.webassembly
+    ) {
+      let wasmSimilarity =
+        jaccardSimilarity(
+          Object.keys(fp1.advancedFingerprint.webassembly.capabilities),
+          Object.keys(fp2.advancedFingerprint.webassembly.capabilities)
+        ) * 0.3;
+      wasmSimilarity +=
+        (fp1.advancedFingerprint.webassembly.fingerprints.capabilityHash ===
+        fp2.advancedFingerprint.webassembly.fingerprints.capabilityHash
+          ? 1
+          : 0) * 0.2;
+      wasmSimilarity +=
+        (fp1.advancedFingerprint.webassembly.fingerprints.performanceHash ===
+        fp2.advancedFingerprint.webassembly.fingerprints.performanceHash
+          ? 1
+          : 0) * 0.2;
+      wasmSimilarity +=
+        normalizedDiff(
+          fp1.advancedFingerprint.webassembly.performance.executionTime,
+          fp2.advancedFingerprint.webassembly.performance.executionTime
+        ) * 0.1;
+      wasmSimilarity +=
+        (fp1.advancedFingerprint.webassembly.hardware.cpuArchitecture ===
+        fp2.advancedFingerprint.webassembly.hardware.cpuArchitecture
+          ? 1
+          : 0) * 0.2;
+      const dynamicWeight =
+        (weights.webassembly *
+          (fp1.advancedFingerprint.webassembly.confidenceLevel / 100 +
+            fp2.advancedFingerprint.webassembly.confidenceLevel / 100)) /
+        2;
+      totalSimilarity += wasmSimilarity * dynamicWeight;
+      totalWeight += dynamicWeight;
+      if (wasmSimilarity > 0.8) matchedComponents.push("webassembly");
+    }
+
+    // Storage similarity
+    if (fp1.advancedFingerprint.storage && fp2.advancedFingerprint.storage) {
+      let storageSimilarity =
+        (fp1.advancedFingerprint.storage.fingerprints.storageHash ===
+        fp2.advancedFingerprint.storage.fingerprints.storageHash
+          ? 1
+          : 0) * 0.4;
+      storageSimilarity +=
+        normalizedDiff(
+          fp1.advancedFingerprint.storage.storageAnalysis.totalQuota,
+          fp2.advancedFingerprint.storage.storageAnalysis.totalQuota
+        ) * 0.2;
+      storageSimilarity +=
+        normalizedDiff(
+          fp1.advancedFingerprint.storage.indexedDB.storageQuota,
+          fp2.advancedFingerprint.storage.indexedDB.storageQuota
+        ) * 0.2;
+      storageSimilarity +=
+        jaccardSimilarity(
+          fp1.advancedFingerprint.storage.storageAnalysis.accessPatterns,
+          fp2.advancedFingerprint.storage.storageAnalysis.accessPatterns
+        ) * 0.2;
+      const dynamicWeight =
+        (weights.storage *
+          (fp1.advancedFingerprint.storage.confidenceLevel / 100 +
+            fp2.advancedFingerprint.storage.confidenceLevel / 100)) /
+        2;
+      totalSimilarity += storageSimilarity * dynamicWeight;
+      totalWeight += dynamicWeight;
+      if (storageSimilarity > 0.8) matchedComponents.push("storage");
+    }
+
+    // Plugins similarity
+    if (fp1.advancedFingerprint.plugins && fp2.advancedFingerprint.plugins) {
+      let pluginsSimilarity =
+        (fp1.advancedFingerprint.plugins.fingerprints.pluginHash ===
+        fp2.advancedFingerprint.plugins.fingerprints.pluginHash
+          ? 1
+          : 0) * 0.3;
+      pluginsSimilarity +=
+        jaccardSimilarity(
+          fp1.advancedFingerprint.plugins.plugins.enabledPlugins,
+          fp2.advancedFingerprint.plugins.plugins.enabledPlugins
+        ) * 0.2;
+      pluginsSimilarity +=
+        jaccardSimilarity(
+          fp1.advancedFingerprint.plugins.extensions.detected,
+          fp2.advancedFingerprint.plugins.extensions.detected
+        ) * 0.2;
+      pluginsSimilarity +=
+        (fp1.advancedFingerprint.plugins.automation.headless ===
+        fp2.advancedFingerprint.plugins.automation.headless
+          ? 1
+          : 0) * 0.1;
+      pluginsSimilarity +=
+        jaccardSimilarity(
+          Object.keys(fp1.advancedFingerprint.plugins.browserFeatures),
+          Object.keys(fp2.advancedFingerprint.plugins.browserFeatures)
+        ) * 0.2;
+      const dynamicWeight =
+        (weights.plugins *
+          (fp1.advancedFingerprint.plugins.confidenceLevel / 100 +
+            fp2.advancedFingerprint.plugins.confidenceLevel / 100)) /
+        2;
+      totalSimilarity += pluginsSimilarity * dynamicWeight;
+      totalWeight += dynamicWeight;
+      if (pluginsSimilarity > 0.8) matchedComponents.push("plugins");
+    }
+
+    // Behavioral similarity
+    if (fp1.behavioralData && fp2.behavioralData) {
+      let behavioralSimilarity =
+        (fp1.behavioralData.behavioralHash === fp2.behavioralData.behavioralHash
+          ? 1
+          : 0) * 0.3;
+
+      behavioralSimilarity +=
+        (fp1.behavioralData.signatures.mouseSignature ===
+        fp2.behavioralData.signatures.mouseSignature
+          ? 1
+          : 0) * 0.1;
+      behavioralSimilarity +=
+        (fp1.behavioralData.signatures.keyboardSignature ===
+        fp2.behavioralData.signatures.keyboardSignature
+          ? 1
+          : 0) * 0.1;
+      behavioralSimilarity +=
+        normalizedDiff(
+          fp1.behavioralData.humanVerification.overallHumanness,
+          fp2.behavioralData.humanVerification.overallHumanness
+        ) * 0.1;
+      behavioralSimilarity +=
+        normalizedDiff(
+          fp1.behavioralData.statistics.entropy,
+          fp2.behavioralData.statistics.entropy
+        ) * 0.1;
+      const dynamicWeight =
+        (weights.behavioral *
+          (fp1.behavioralData.statistics.entropy +
+            fp2.behavioralData.statistics.entropy)) /
+        2;
+      totalSimilarity += behavioralSimilarity * dynamicWeight;
+      totalWeight += dynamicWeight;
+      if (behavioralSimilarity > 0.8) matchedComponents.push("behavioral");
+    }
+
+    // Server Enhancement similarity
+    if (fp1.serverEnhancement && fp2.serverEnhancement) {
+      let serverSimilarity = 0;
+      if (fp1.serverEnhancement.tlsFingerprint) {
+        serverSimilarity +=
+          (fp1.serverEnhancement.tlsFingerprint.tlsVersion ===
+          fp2.serverEnhancement.tlsFingerprint.tlsVersion
+            ? 1
+            : 0) * 0.2;
+        serverSimilarity +=
+          jaccardSimilarity(
+            fp1.serverEnhancement.tlsFingerprint.extensions || [],
+            fp2.serverEnhancement.tlsFingerprint.extensions || []
+          ) * 0.2;
+      }
+      serverSimilarity +=
+        (fp1.serverEnhancement.httpHeaders.userAgent ===
+        fp2.serverEnhancement.httpHeaders.userAgent
+          ? 1
+          : 0) * 0.2;
+      serverSimilarity +=
+        (fp1.serverEnhancement.ipGeolocation.country ===
+        fp2.serverEnhancement.ipGeolocation.country
+          ? 1
+          : 0) * 0.1;
+      serverSimilarity +=
+        (fp1.serverEnhancement.ipGeolocation.timezone ===
+        fp2.serverEnhancement.ipGeolocation.timezone
+          ? 1
+          : 0) * 0.1;
+      serverSimilarity +=
+        normalizedDiff(
+          fp1.serverEnhancement.serverTiming.processingTime,
+          fp2.serverEnhancement.serverTiming.processingTime
+        ) * 0.1;
+      const dynamicWeight = weights.server;
+      totalSimilarity += serverSimilarity * dynamicWeight;
+      totalWeight += dynamicWeight;
+      if (serverSimilarity > 0.8) matchedComponents.push("serverEnhancement");
+    }
+
+    const legacySimilarity =
+      totalWeight > 0 ? totalSimilarity / totalWeight : 0;
+
+    // Combine LSH and legacy similarity scores
+    // Weighted average, with more weight to LSH if it has more signals
+    const lshWeight = lshSignals > 3 ? 0.7 : 0.5;
+    const legacyWeight = 1 - lshWeight;
+    const finalSimilarity =
+      lshSimilarity * lshWeight + legacySimilarity * legacyWeight;
+
+    // Combine matched components from both approaches
+    const allMatchedComponents = [
+      ...new Set([...lshComponents, ...matchedComponents]),
+    ];
+    const totalSignals = lshSignals + matchedComponents.length;
 
     return {
-      similarity,
-      confidence: similarity, // For legacy compatibility
-      signals: matchedComponents.length,
-      matchedComponents,
+      similarity: finalSimilarity,
+      confidence:
+        finalSimilarity *
+        (totalSignals / (LSH_BUCKET_MAP.size + Object.keys(weights).length)), // Normalize confidence by total possible components
+      signals: totalSignals,
+      matchedComponents: allMatchedComponents,
     };
   }
 
@@ -351,6 +899,7 @@ export class FingerprintDatabaseService {
     const fuzzyHashes = this.generateFuzzyHashes(
       fingerprintData.coreFingerprint,
       fingerprintData.advancedFingerprint,
+      fingerprintData.behavioralData,
       userId
     );
 
@@ -595,6 +1144,7 @@ export class FingerprintDatabaseService {
   static async findSimilarFingerprintsAdvanced(
     coreFingerprint: any,
     advancedFingerprint: any,
+    behavioralData?: BehavioralFingerprint,
     userId?: string,
     limit = 10,
     confidenceThreshold = 0.7
@@ -612,6 +1162,7 @@ export class FingerprintDatabaseService {
     const currentFuzzyHashes = this.generateFuzzyHashes(
       coreFingerprint,
       advancedFingerprint,
+      behavioralData,
       userId
     );
 
@@ -982,6 +1533,7 @@ export class FingerprintDatabaseService {
       const similarFingerprints = await this.findSimilarFingerprintsAdvanced(
         currentFingerprint.coreFingerprint,
         currentFingerprint.advancedFingerprint,
+        currentFingerprint.behavioralData,
         userId, // Pass userId if available for enhanced matching
         20 // Get more matches for comprehensive reconciliation
       );

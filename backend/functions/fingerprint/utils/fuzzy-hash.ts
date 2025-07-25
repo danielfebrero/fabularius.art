@@ -2,12 +2,14 @@
  * Advanced Fuzzy Hashing for Fingerprint Similarity Detection
  *
  * This module implements locality-sensitive hashing       extractor: (
+
         _core: CoreFingerprintData,
+
             extractor: (core: CoreFingerprin      extractor: (
         _core:      extractor: (
         core: CoreFingerprintData,
         _advanced: AdvancedFingerprintData,
-        _behavioral?: BehavioralData,
+        _behavioral?: BehavioralFingerprint,
         userId?: string
       ) => {
         const userIdStr = userId || "";
@@ -17,7 +19,7 @@
         return createShortHash(dataStr, HASH_ALGORITHMS.SHA256, 16);
       },ntData,
         _advanced: AdvancedFingerprintData,
-        behavioral?: BehavioralData
+        behavioral?: BehavioralFingerprint
       ) => {
         if (!behavioral) return "";
         const mouseEntropy = behavioral.mouseMovements?.entropy || 0;
@@ -55,13 +57,27 @@
  * Refactored to directly use complete fingerprint interface objects
  * instead of extracting stable features. Uses Map-based bucket
  * configuration for easier management and lookup.
+ * 
+ * New candidate matching features:
+ * - Low-confidence userId and IP buckets for candidate identification
+ * - analyzeBucketMatches() to separate strong signals from candidate signals
+ * - isGoodCandidate() to determine if a match warrants further investigation
+ * 
+ * Example usage:
+ * ```typescript
+ * const result = calculateLSHSimilarity(hashes1, hashes2);
+ * const candidate = isGoodCandidate(result.similarity, result.confidence, result.candidateAnalysis);
+ * if (candidate.isCandidate) {
+ *   console.log(`Potential match: ${candidate.reason} (score: ${candidate.candidateScore})`);
+ * }
+ * ```
  */
 
 import * as crypto from "crypto";
 import type {
   CoreFingerprintData,
   AdvancedFingerprintData,
-  BehavioralData,
+  BehavioralFingerprint,
 } from "@shared/types/fingerprint";
 
 /**
@@ -121,7 +137,7 @@ interface LSHBucketConfig {
   extractor: (
     core: CoreFingerprintData,
     advanced: AdvancedFingerprintData,
-    behavioral?: BehavioralData,
+    behavioral?: BehavioralFingerprint,
     userId?: string
   ) => string;
   entropy: number; // Calculated entropy weight (0-1, higher = more unique)
@@ -135,13 +151,17 @@ type LSHBucketMapConfig = Omit<LSHBucketConfig, "name">;
 // Predefined LSH bucket configurations using a Map for easier lookup and management
 // Hash algorithm selection strategy:
 // - SHA256: Used for high-entropy, security-critical buckets (coreHardware, browserEnvironment, hardwareCapabilities, behavioralSignature, userIdentity)
-// - MD5: Used for lower-entropy, performance-sensitive buckets (deviceRendering, networkProfile, performanceProfile)
+// - MD5: Used for lower-entropy, performance-sensitive buckets (deviceRendering, networkProfile, performanceProfile, userId, userIP)
 //
 // Performance optimizations applied:
 // - String concatenation instead of JSON.stringify for better performance
 // - Pipe delimiter (|) used to separate fields for consistent serialization
 // - Memoized hashing available for frequently repeated computations
-const LSH_BUCKET_MAP = new Map<string, LSHBucketMapConfig>([
+//
+// Candidate matching buckets:
+// - userId: Low-confidence matching for user identification candidates
+// - userIP: Very low-confidence for rough geolocation/network-based grouping
+export const LSH_BUCKET_MAP = new Map<string, LSHBucketMapConfig>([
   [
     "coreHardware",
     {
@@ -149,10 +169,10 @@ const LSH_BUCKET_MAP = new Map<string, LSHBucketMapConfig>([
         core: CoreFingerprintData,
         _advanced: AdvancedFingerprintData
       ) => {
-        const dataStr = `${core.canvas?.substring(0, 32) || ""}|${
+        const dataStr = `${core.canvas?.basic?.substring(0, 32) || ""}|${
           core.webgl?.vendor || ""
         }|${core.webgl?.renderer || ""}|${
-          core.audio?.contextHash?.substring(0, 16) || ""
+          core.audio?.contextHashes?.oscillator?.substring(0, 16) || ""
         }`;
         return createShortHash(dataStr, HASH_ALGORITHMS.SHA256, 16);
       },
@@ -170,8 +190,8 @@ const LSH_BUCKET_MAP = new Map<string, LSHBucketMapConfig>([
           ? JSON.stringify(core.webgl.parameters).substring(0, 100)
           : "";
         const dataStr = `${webglParams}|${
-          core.canvas?.substring(0, 32) || ""
-        }|${core.webgl?.renderHash || ""}`;
+          core.canvas?.basic?.substring(0, 32) || ""
+        }|${core.webgl?.renderHashes?.basic || ""}`;
         return createShortHash(dataStr, HASH_ALGORITHMS.MD5, 16);
       },
       entropy: 0.7,
@@ -188,9 +208,15 @@ const LSH_BUCKET_MAP = new Map<string, LSHBucketMapConfig>([
         const fonts =
           core.fonts?.systemFonts?.slice(0, 10).sort().join(",") || "";
         const css =
-          core.css?.supportedFeatures?.slice(0, 15).sort().join(",") || "";
+          Object.keys(core.css?.cssFeatures || {})
+            .slice(0, 15)
+            .sort()
+            .join(",") || "";
         const timezone = new Date().getTimezoneOffset().toString();
-        const audioTiming = core.timing?.cryptoTiming?.toString() || "0";
+        const audioTiming =
+          Object.values(
+            core.timing?.performanceTimings?.cryptoOperations || {}
+          )[0]?.toString() || "0";
         const dataStr = `${extensions}|${fonts}|${css}|${timezone}|${audioTiming}`;
         return createShortHash(dataStr, HASH_ALGORITHMS.SHA256, 16);
       },
@@ -233,11 +259,11 @@ const LSH_BUCKET_MAP = new Map<string, LSHBucketMapConfig>([
         const webglParams = core.webgl?.parameters
           ? JSON.stringify(core.webgl.parameters).substring(0, 100)
           : "";
-        const audioHash = core.audio?.contextHash || "";
+        const audioHash = core.audio?.contextHashes?.hybrid || "";
         const mediaDeviceCount =
-          (advanced.mediaDevices?.videoInputs || 0) +
-          (advanced.mediaDevices?.audioInputs || 0) +
-          (advanced.mediaDevices?.audioOutputs || 0);
+          (advanced.mediaDevices?.devices?.videoInputs?.length || 0) +
+          (advanced.mediaDevices?.devices?.audioInputs?.length || 0) +
+          (advanced.mediaDevices?.devices?.audioOutputs?.length || 0);
         const batteryPresent = !!(advanced.battery?.level !== undefined);
         const sensorsAvailable =
           advanced.sensors?.accelerometer?.available ||
@@ -256,19 +282,36 @@ const LSH_BUCKET_MAP = new Map<string, LSHBucketMapConfig>([
     {
       extractor: (core: CoreFingerprintData) => {
         const timing = core.timing || {};
-        const data = {
-          cryptoRange: timing.cryptoTiming
-            ? Math.floor(timing.cryptoTiming / 10) * 10
-            : 0,
-          regexRange: timing.regexTiming
-            ? Math.floor(timing.regexTiming / 5) * 5
-            : 0,
-          sortRange: timing.sortTiming
-            ? Math.floor(timing.sortTiming / 5) * 5
-            : 0,
-          wasmSupported: !!timing.wasmTiming,
-        };
-        return createShortHash(data, HASH_ALGORITHMS.MD5, 16);
+        const cryptoOperations = timing.performanceTimings?.cryptoOperations;
+        const regexOperations = timing.performanceTimings?.regexOperations;
+        const sortingAlgorithms = timing.performanceTimings?.sortingAlgorithms;
+
+        const cryptoValues = cryptoOperations
+          ? Object.values(cryptoOperations)
+          : [];
+        const regexValues = regexOperations
+          ? Object.values(regexOperations)
+          : [];
+        const sortingValues = sortingAlgorithms
+          ? Object.values(sortingAlgorithms)
+          : [];
+
+        const cryptoRange =
+          cryptoValues.length > 0 && typeof cryptoValues[0] === "number"
+            ? Math.floor(cryptoValues[0] / 10) * 10
+            : 0;
+        const regexRange =
+          regexValues.length > 0 && typeof regexValues[0] === "number"
+            ? Math.floor(regexValues[0] / 5) * 5
+            : 0;
+        const sortRange =
+          sortingValues.length > 0 && typeof sortingValues[0] === "number"
+            ? Math.floor(sortingValues[0] / 5) * 5
+            : 0;
+        const wasmSupported = !!timing.wasmTimings?.isSupported;
+
+        const dataStr = `${cryptoRange}|${regexRange}|${sortRange}|${wasmSupported}`;
+        return createShortHash(dataStr, HASH_ALGORITHMS.MD5, 16);
       },
       entropy: 0.75,
       weight: 0.6,
@@ -281,20 +324,38 @@ const LSH_BUCKET_MAP = new Map<string, LSHBucketMapConfig>([
       extractor: (
         _core: CoreFingerprintData,
         _advanced: AdvancedFingerprintData,
-        behavioral?: BehavioralData
+        behavioral?: BehavioralFingerprint
       ) => {
-        if (!behavioral) return "";
-        const data = {
-          mouseEntropy: behavioral.mouseMovements?.entropy || 0,
-          typingSpeed: behavioral.keyboardPatterns?.typingSpeed || 0,
-          touchAvailable: !!behavioral.touchBehavior,
-          scrollPatterns: behavioral.scrollBehavior?.patterns?.length || 0,
-        };
-        return createShortHash(data, HASH_ALGORITHMS.SHA256, 16);
+        if (!behavioral || !behavioral.available) return "";
+
+        // Focus on stable, identifying characteristics that persist across sessions
+        // Use pre-computed signatures that are already stable and identifying
+        const mouseSignature =
+          behavioral.signatures?.mouseSignature?.substring(0, 12) || "";
+        const keyboardSignature =
+          behavioral.signatures?.keyboardSignature?.substring(0, 12) || "";
+        const touchSignature =
+          behavioral.signatures?.touchSignature?.substring(0, 8) || "";
+
+        // Simple human verification (stable across sessions for real users)
+        const isHuman =
+          behavioral.humanVerification?.overallHumanness > 0.7 ? "1" : "0";
+
+        // Privacy level (indicates user's general privacy awareness pattern)
+        const privacyLevel = behavioral.privacy?.consentLevel || "unknown";
+
+        // Simple data quality indicator (high quality data suggests consistent user)
+        const hasQualityData =
+          (behavioral.collectionMetadata?.dataQuality || 0) > 0.5 ? "1" : "0";
+
+        // Combine stable behavioral identifiers
+        const dataStr = `${mouseSignature}|${keyboardSignature}|${touchSignature}|${isHuman}|${privacyLevel}|${hasQualityData}`;
+
+        return createShortHash(dataStr, HASH_ALGORITHMS.SHA256, 16);
       },
-      entropy: 0.9,
-      weight: 1.2,
-      collisionProbability: 0.005,
+      entropy: 0.7, // Moderate entropy - stable but not too variable
+      weight: 0.8, // Moderate weight - good signal but allows for behavioral variation
+      collisionProbability: 0.05, // Higher collision probability to allow user identification across sessions
     },
   ],
   [
@@ -303,20 +364,65 @@ const LSH_BUCKET_MAP = new Map<string, LSHBucketMapConfig>([
       extractor: (
         core: CoreFingerprintData,
         _advanced: AdvancedFingerprintData,
-        _behavioral?: BehavioralData,
+        _behavioral?: BehavioralFingerprint,
         userId?: string
       ) => {
-        const data = {
-          userId: userId || "",
-          // Combine with some device characteristics for stronger binding
-          canvas: core.canvas?.substring(0, 16) || "",
-          webglVendor: core.webgl?.vendor || "",
-        };
-        return createShortHash(data, HASH_ALGORITHMS.SHA256, 16);
+        const userIdStr = userId || "";
+        const canvas = core.canvas?.basic?.substring(0, 16) || "";
+        const webglVendor = core.webgl?.vendor || "";
+        const dataStr = `${userIdStr}|${canvas}|${webglVendor}`;
+        return createShortHash(dataStr, HASH_ALGORITHMS.SHA256, 16);
       },
       entropy: 1.0,
       weight: 1.5,
       collisionProbability: 0.0001,
+    },
+  ],
+  [
+    "userId",
+    {
+      extractor: (
+        _core: CoreFingerprintData,
+        _advanced: AdvancedFingerprintData,
+        _behavioral?: BehavioralFingerprint,
+        userId?: string
+      ) => {
+        // Simple userId hash for candidate matching - low confidence
+        return userId ? createShortHash(userId, HASH_ALGORITHMS.MD5, 16) : "";
+      },
+      entropy: 0.3, // Low entropy - easily spoofable
+      weight: 0.2, // Low weight - good for candidates, not strong signal
+      collisionProbability: 0.5, // High collision probability
+    },
+  ],
+  [
+    "userIP",
+    {
+      extractor: (
+        _core: CoreFingerprintData,
+        advanced: AdvancedFingerprintData,
+        _behavioral?: BehavioralFingerprint,
+        _userId?: string
+      ) => {
+        // Use external IP if available, otherwise fall back to local IPs or connection info
+        // Note: This assumes external IP might be added to the advanced fingerprint data
+        const externalIP =
+          (advanced as any)?.network?.externalIP ||
+          advanced.webrtc?.localIPs?.find(
+            (ip) =>
+              !ip.startsWith("192.168.") &&
+              !ip.startsWith("10.") &&
+              !ip.startsWith("172.16.")
+          ) ||
+          advanced.webrtc?.localIPs?.[0] ||
+          "";
+        return externalIP
+          ? createShortHash(externalIP, HASH_ALGORITHMS.MD5, 16)
+          : "";
+      },
+      entropy: 0.2, // Very low entropy - many users share IPs
+      weight: 0.1, // Very low weight - good for rough geolocation matching
+      collisionProbability: 0.8, // Very high collision probability
     },
   ],
 ]);
@@ -327,14 +433,14 @@ const LSH_BUCKET_MAP = new Map<string, LSHBucketMapConfig>([
 export function generateLocalitySensitiveHashes(
   coreFingerprint: CoreFingerprintData,
   advancedFingerprint: AdvancedFingerprintData,
-  behavioralData?: BehavioralData,
+  BehavioralFingerprint?: BehavioralFingerprint,
   userId?: string
 ): string[] {
   return Array.from(LSH_BUCKET_MAP.entries()).map(([_name, config]) =>
     config.extractor(
       coreFingerprint,
       advancedFingerprint,
-      behavioralData,
+      BehavioralFingerprint,
       userId
     )
   );
@@ -382,6 +488,120 @@ export function getBucketNames(): string[] {
 }
 
 /**
+ * Analyze bucket matches to identify potential candidates
+ * Separates high-confidence signals from low-confidence candidate indicators
+ */
+export function analyzeBucketMatches(
+  bucketMatches: Array<{
+    bucketName: string;
+    matched: boolean;
+    weight: number;
+    entropy: number;
+  }>
+): {
+  strongSignals: string[];
+  candidateSignals: string[];
+  hasUserIdMatch: boolean;
+  hasIpMatch: boolean;
+} {
+  const strongSignals: string[] = [];
+  const candidateSignals: string[] = [];
+  let hasUserIdMatch = false;
+  let hasIpMatch = false;
+
+  bucketMatches.forEach((match) => {
+    if (match.matched) {
+      if (match.bucketName === "userId") {
+        hasUserIdMatch = true;
+        candidateSignals.push(match.bucketName);
+      } else if (match.bucketName === "userIP") {
+        hasIpMatch = true;
+        candidateSignals.push(match.bucketName);
+      } else if (match.weight >= 0.5 && match.entropy >= 0.5) {
+        // High-confidence signals
+        strongSignals.push(match.bucketName);
+      } else {
+        // Other low-confidence signals
+        candidateSignals.push(match.bucketName);
+      }
+    }
+  });
+
+  return {
+    strongSignals,
+    candidateSignals,
+    hasUserIdMatch,
+    hasIpMatch,
+  };
+}
+
+/**
+ * Determine if a fingerprint comparison indicates a good candidate match
+ * Based on combination of similarity score and candidate signals
+ */
+export function isGoodCandidate(
+  similarity: number,
+  confidence: number,
+  candidateAnalysis: {
+    strongSignals: string[];
+    candidateSignals: string[];
+    hasUserIdMatch: boolean;
+    hasIpMatch: boolean;
+  }
+): {
+  isCandidate: boolean;
+  reason: string;
+  candidateScore: number;
+} {
+  // Base candidate score from similarity and confidence
+  let candidateScore = similarity * 0.7 + confidence * 0.3;
+
+  // Boost score based on candidate signals
+  if (candidateAnalysis.hasUserIdMatch) {
+    candidateScore += 0.3; // Strong candidate indicator
+  }
+
+  if (candidateAnalysis.hasIpMatch) {
+    candidateScore += 0.1; // Weak but helpful indicator
+  }
+
+  // Additional boost for having some strong signals even with low overall similarity
+  if (candidateAnalysis.strongSignals.length > 0) {
+    candidateScore += candidateAnalysis.strongSignals.length * 0.1;
+  }
+
+  // Determine if it's a good candidate
+  const isCandidate = candidateScore > 0.3; // Lower threshold for candidates
+
+  // Generate reason
+  let reason = "";
+  if (candidateAnalysis.hasUserIdMatch && candidateAnalysis.hasIpMatch) {
+    reason = "Same user ID and IP with some fingerprint similarity";
+  } else if (candidateAnalysis.hasUserIdMatch) {
+    reason = "Same user ID with some fingerprint similarity";
+  } else if (
+    candidateAnalysis.hasIpMatch &&
+    candidateAnalysis.strongSignals.length > 0
+  ) {
+    reason = "Same IP with strong fingerprint signals";
+  } else if (candidateAnalysis.strongSignals.length >= 2) {
+    reason = `Multiple strong fingerprint matches: ${candidateAnalysis.strongSignals.join(
+      ", "
+    )}`;
+  } else if (similarity > 0.5) {
+    reason = "High fingerprint similarity";
+  } else {
+    reason = "Low similarity, not a good candidate";
+  }
+
+  return {
+    isCandidate,
+    reason,
+    candidateScore: Math.min(candidateScore, 1.0),
+  };
+}
+
+/**
  * Calculate entropy-weighted similarity between two sets of LSH hashes
  * Returns both raw similarity and confidence score with signal analysis
  */
@@ -398,9 +618,26 @@ export function calculateLSHSimilarity(
     weight: number;
     entropy: number;
   }>;
+  candidateAnalysis: {
+    strongSignals: string[];
+    candidateSignals: string[];
+    hasUserIdMatch: boolean;
+    hasIpMatch: boolean;
+  };
 } {
   if (!hashes1.length || !hashes2.length) {
-    return { similarity: 0, confidence: 0, signals: 0, bucketMatches: [] };
+    return {
+      similarity: 0,
+      confidence: 0,
+      signals: 0,
+      bucketMatches: [],
+      candidateAnalysis: {
+        strongSignals: [],
+        candidateSignals: [],
+        hasUserIdMatch: false,
+        hasIpMatch: false,
+      },
+    };
   }
 
   let weightedMatches = 0;
@@ -463,11 +700,15 @@ export function calculateLSHSimilarity(
     1.0
   );
 
+  // Analyze bucket matches for candidate identification
+  const candidateAnalysis = analyzeBucketMatches(bucketMatches);
+
   return {
     similarity,
     confidence,
     signals,
     bucketMatches,
+    candidateAnalysis,
   };
 }
 
@@ -482,22 +723,32 @@ export function generateFuzzyFingerprintHash(
 ): string {
   // Create a hash using lightweight string concatenation instead of JSON.stringify
   // Focus on the most stable and identifying components
-  const canvas = coreFingerprint.canvas?.substring(0, 32) || "";
+  const canvas = coreFingerprint.canvas?.basic?.substring(0, 32) || "";
   const webgl = `${coreFingerprint.webgl?.vendor || ""}-${
     coreFingerprint.webgl?.renderer || ""
   }`;
-  const audio = coreFingerprint.audio?.contextHash || "";
+  const audio =
+    Object.values(coreFingerprint.audio?.contextHashes || {})
+      .slice(0, 10)
+      .sort()
+      .join(",") || "";
   const screen = coreFingerprint.webgl?.parameters
     ? JSON.stringify(coreFingerprint.webgl.parameters).substring(0, 50)
     : "";
   const timezone = new Date().getTimezoneOffset().toString();
-  const timing = coreFingerprint.timing?.cryptoTiming?.toString() || "0";
+  const timing =
+    Object.values(
+      coreFingerprint.timing?.performanceTimings?.cryptoOperations || {}
+    )[0]?.toString() || "0";
   const extensions =
     coreFingerprint.webgl?.extensions?.slice(0, 10).sort().join(",") || "";
   const fonts =
     coreFingerprint.fonts?.systemFonts?.slice(0, 10).sort().join(",") || "";
   const cssFeatures =
-    coreFingerprint.css?.supportedFeatures?.slice(0, 10).sort().join(",") || "";
+    Object.keys(coreFingerprint.css?.cssFeatures || {})
+      .slice(0, 10)
+      .sort()
+      .join(",") || "";
   const webrtcIPs =
     advancedFingerprint.webrtc?.localIPs?.slice(0, 3).sort().join(",") || "";
   const userIdStr = userId || "";

@@ -356,38 +356,12 @@ export interface TimingFingerprint {
 }
 
 export interface CoreFingerprintData {
-  canvas: string;
-  webgl: {
-    vendor: string;
-    renderer: string;
-    unmaskedVendor?: string;
-    unmaskedRenderer?: string;
-    extensions: string[];
-    parameters: Record<string, any>;
-    renderHash: string;
-  };
-  audio: {
-    contextHash: string;
-    compressionRatio: number;
-    oscillatorHash: string;
-    dynamicsHash: string;
-  };
-  fonts: {
-    available: Record<string, string>; // font -> measurement hash
-    systemFonts: string[];
-    webFonts: string[];
-  };
-  css: {
-    mediaQueries: Record<string, boolean>;
-    computedStyles: Record<string, string>;
-    supportedFeatures: string[];
-  };
-  timing: {
-    cryptoTiming: number;
-    regexTiming: number;
-    sortTiming: number;
-    wasmTiming?: number;
-  };
+  canvas: CanvasFingerprint;
+  webgl: WebGLFingerprint;
+  audio: AudioFingerprint;
+  fonts: FontFingerprint;
+  css: CSSFingerprint;
+  timing: TimingFingerprint;
 }
 
 export interface WebRTCFingerprint {
@@ -810,36 +784,36 @@ export interface AdvancedFingerprintData {
   plugins: PluginFingerprint;
 }
 
-export interface BehavioralData {
-  mouseMovements: {
-    entropy: number;
-    patterns: string[];
-    velocity: number[];
-    acceleration: number[];
-    clickPatterns: string[];
-  };
-  keyboardPatterns: {
-    typingSpeed: number;
-    dwellTimes: number[];
-    flightTimes: number[];
-    rhythm: string;
-  };
-  scrollBehavior: {
-    patterns: string[];
-    velocity: number[];
-    acceleration: number[];
-  };
-  touchBehavior?: {
-    touchPoints: number;
-    pressure: number[];
-    gestures: string[];
-  };
-}
+// export interface BehavioralData {
+//   mouseMovements: {
+//     entropy: number;
+//     patterns: string[];
+//     velocity: number[];
+//     acceleration: number[];
+//     clickPatterns: string[];
+//   };
+//   keyboardPatterns: {
+//     typingSpeed: number;
+//     dwellTimes: number[];
+//     flightTimes: number[];
+//     rhythm: string;
+//   };
+//   scrollBehavior: {
+//     patterns: string[];
+//     velocity: number[];
+//     acceleration: number[];
+//   };
+//   touchBehavior?: {
+//     touchPoints: number;
+//     pressure: number[];
+//     gestures: string[];
+//   };
+// }
 
 export interface FingerprintCollectionRequest {
   coreFingerprint: CoreFingerprintData;
   advancedFingerprint: AdvancedFingerprintData;
-  behavioralData?: BehavioralData;
+  behavioralData?: BehavioralFingerprint;
   sessionId?: string;
   userId?: string; // Add userId to request type
   pageUrl: string;
@@ -929,7 +903,7 @@ export interface FingerprintEvent {
   timestamp: number;
 }
 
-export type FingerprintEventHandler = (event: FingerprintEvent) => void;
+export type FingerprintEventHandler = (_event: FingerprintEvent) => void;
 
 // Error types
 export class FingerprintError extends Error {

@@ -80,6 +80,7 @@ export const handler = async (
       const currentFuzzyHashes = FingerprintDatabaseService.generateFuzzyHashes(
         fingerprintData.coreFingerprint,
         fingerprintData.advancedFingerprint,
+        fingerprintData.behavioralData,
         userId
       );
 
@@ -94,6 +95,7 @@ export const handler = async (
         await FingerprintDatabaseService.findSimilarFingerprintsAdvanced(
           fingerprintData.coreFingerprint,
           fingerprintData.advancedFingerprint,
+          fingerprintData.behavioralData,
           userId,
           5,
           0.7 // Confidence threshold for reconciliation
