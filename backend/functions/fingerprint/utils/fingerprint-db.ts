@@ -1469,7 +1469,7 @@ export class FingerprintDatabaseService {
   /**
    * Get visitor associations for a specific fingerprint
    */
-  private static async getVisitorAssociationsForFingerprint(
+  static async getVisitorAssociationsForFingerprint(
     fingerprintId: string
   ): Promise<Array<{ visitorId: string; associatedAt: string }>> {
     try {

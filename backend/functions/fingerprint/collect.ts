@@ -130,19 +130,52 @@ export const handler = async (
           if (bestMatch.confidence >= 0.7) {
             isNewVisitor = false;
             confidence = bestMatch.confidence;
-            // Use the best match's fingerprint ID as visitor identifier
-            visitorId = bestMatch.fingerprintId;
-            console.log(
-              "🔄 High-confidence match found, reconciling as returning visitor",
-              {
-                similarity: bestMatch.similarity.toFixed(3),
-                confidence: bestMatch.confidence.toFixed(3),
-                signals: bestMatch.signals,
-                matchedFingerprintId:
-                  bestMatch.fingerprintId.substring(0, 8) + "...",
-                components: bestMatch.matchedComponents.join(", "),
+
+            // CRITICAL FIX: Look up the actual visitorId associated with this fingerprintId
+            // Instead of using fingerprintId as visitorId
+            const existingAssociations =
+              await FingerprintDatabaseService.getVisitorAssociationsForFingerprint(
+                bestMatch.fingerprintId
+              );
+
+            if (existingAssociations.length > 0) {
+              // Use the visitorId from the existing association (take the first one)
+              const association = existingAssociations[0];
+              if (association && association.visitorId) {
+                visitorId = association.visitorId;
+                console.log(
+                  "🔄 High-confidence match found, using existing visitor",
+                  {
+                    similarity: bestMatch.similarity.toFixed(3),
+                    confidence: bestMatch.confidence.toFixed(3),
+                    signals: bestMatch.signals,
+                    matchedFingerprintId:
+                      bestMatch.fingerprintId.substring(0, 8) + "...",
+                    existingVisitorId: visitorId.substring(0, 8) + "...",
+                    components: bestMatch.matchedComponents.join(", "),
+                  }
+                );
+              } else {
+                console.warn(
+                  "⚠️ Found association but no valid visitorId, treating as new visitor",
+                  {
+                    associationData: association,
+                  }
+                );
+                isNewVisitor = true;
+                visitorId = uuidv4(); // Keep the new visitorId
               }
-            );
+            } else {
+              console.warn(
+                "⚠️ No visitor associations found for fingerprint match, treating as new visitor",
+                {
+                  matchedFingerprintId:
+                    bestMatch.fingerprintId.substring(0, 8) + "...",
+                }
+              );
+              isNewVisitor = true;
+              visitorId = uuidv4(); // Keep the new visitorId
+            }
           } else {
             console.log(
               "🆕 Confidence below reconciliation threshold, treating as new visitor",
