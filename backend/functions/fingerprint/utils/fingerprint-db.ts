@@ -6,6 +6,7 @@ import {
   QueryCommand,
   UpdateCommand,
   ScanCommand,
+  DeleteCommand,
 } from "@aws-sdk/lib-dynamodb";
 import * as crypto from "crypto";
 import {
@@ -57,10 +58,11 @@ export class FingerprintDatabaseService {
    */
   static generateFingerprintHash(
     coreFingerprint: any,
-    advancedFingerprint: any
+    advancedFingerprint: any,
+    userId?: string
   ): string {
     // Use the fuzzy fingerprint hash for better similarity detection
-    return generateFuzzyFingerprintHash(coreFingerprint, advancedFingerprint);
+    return generateFuzzyFingerprintHash(coreFingerprint, advancedFingerprint, userId);
   }
 
   /**
@@ -69,26 +71,28 @@ export class FingerprintDatabaseService {
    */
   static generateFuzzyHashes(
     coreFingerprint: any,
-    advancedFingerprint: any
+    advancedFingerprint: any,
+    userId?: string
   ): string[] {
     // Use the advanced LSH approach for better fuzzy matching
     const fuzzyHashes = generateLocalitySensitiveHashes(
       coreFingerprint,
       advancedFingerprint,
-      4
+      userId
     );
-    
+
     console.log("🔍 Generated fuzzy hashes:", {
       count: fuzzyHashes.length,
       hashes: fuzzyHashes,
+      userId: userId ? "present" : "not provided",
       coreFeatures: {
         hasCanvas: !!coreFingerprint?.canvas,
         hasWebgl: !!coreFingerprint?.webgl,
         hasAudio: !!coreFingerprint?.audio,
-        hasScreen: !!coreFingerprint?.screen
-      }
+        hasScreen: !!coreFingerprint?.screen,
+      },
     });
-    
+
     return fuzzyHashes;
   }
 
@@ -295,13 +299,15 @@ export class FingerprintDatabaseService {
     const fingerprintId = this.generateFingerprintId();
     const fingerprintHash = this.generateFingerprintHash(
       fingerprintData.coreFingerprint,
-      fingerprintData.advancedFingerprint
+      fingerprintData.advancedFingerprint,
+      userId
     );
 
     // Generate fuzzy hashes for similarity detection
     const fuzzyHashes = this.generateFuzzyHashes(
       fingerprintData.coreFingerprint,
-      fingerprintData.advancedFingerprint
+      fingerprintData.advancedFingerprint,
+      userId
     );
 
     const entropy = this.calculateWeightedEntropy(
@@ -544,18 +550,21 @@ export class FingerprintDatabaseService {
   static async findSimilarFingerprintsAdvanced(
     coreFingerprint: any,
     advancedFingerprint: any,
+    userId?: string,
     limit = 10
   ): Promise<FingerprintEntity[]> {
     // Generate fuzzy hashes for the current fingerprint
     const currentFuzzyHashes = this.generateFuzzyHashes(
       coreFingerprint,
-      advancedFingerprint
+      advancedFingerprint,
+      userId
     );
 
     // Try exact matches first
     const mainHash = this.generateFingerprintHash(
       coreFingerprint,
-      advancedFingerprint
+      advancedFingerprint,
+      userId
     );
     const exactMatches = await this.findExactHashMatches(mainHash, limit);
 
@@ -707,6 +716,8 @@ export class FingerprintDatabaseService {
 
   /**
    * Store the association between visitorId and fingerprintId in the database
+   * ENHANCED: Now includes triangular table reconciliation to merge visitor identities
+   * when fingerprint matching reveals they belong to the same user
    */
   static async storeVisitorFingerprintAssociation(
     visitorId: string,
@@ -719,8 +730,10 @@ export class FingerprintDatabaseService {
     }
   ): Promise<void> {
     try {
-      // Store visitor-fingerprint association in DynamoDB
-      // This creates a bidirectional link for quick lookups
+      // STEP 1: Perform triangular reconciliation
+      await this.performTriangularReconciliation(visitorId, fingerprintId, metadata);
+
+      // STEP 2: Store the association record (after reconciliation)
       const associationRecord = {
         PK: `VISITOR#${visitorId}`,
         SK: `FINGERPRINT#${fingerprintId}`,
@@ -753,6 +766,341 @@ export class FingerprintDatabaseService {
     } catch (error) {
       console.warn("Failed to store visitor-fingerprint association:", error);
       // Don't fail the entire request if this association storage fails
+    }
+  }
+
+  /**
+   * Perform triangular table reconciliation
+   * This detects when multiple visitor_ids should be merged into one identity
+   * based on fingerprint similarity and userId matching
+   */
+  private static async performTriangularReconciliation(
+    currentVisitorId: string,
+    currentFingerprintId: string,
+    metadata: {
+      isNewVisitor: boolean;
+      confidence: number;
+      timestamp: string;
+      fingerprintHash: string;
+    }
+  ): Promise<void> {
+    try {
+      console.log("🔺 Starting triangular reconciliation for visitor:", {
+        visitorId: currentVisitorId.substring(0, 8) + "...",
+        fingerprintId: currentFingerprintId.substring(0, 8) + "...",
+      });
+
+      // Get the current fingerprint to extract userId and fuzzy hashes
+      const currentFingerprint = await this.getFingerprintById(currentFingerprintId);
+      if (!currentFingerprint) {
+        console.log("⚠️ Current fingerprint not found, skipping reconciliation");
+        return;
+      }
+
+      // Extract userId from fingerprint data
+      const userId = currentFingerprint.userId;
+      if (!userId) {
+        console.log("⚠️ No userId in fingerprint, skipping reconciliation");
+        return;
+      }
+
+      // STEP 1: Find all similar fingerprints using fuzzy matching
+      const similarFingerprints = await this.findSimilarFingerprintsAdvanced(
+        currentFingerprint.coreFingerprint,
+        currentFingerprint.advancedFingerprint,
+        userId,
+        20 // Get more matches for comprehensive reconciliation
+      );
+
+      // STEP 2: Extract visitor IDs from similar fingerprints
+      const candidateVisitorIds = new Set<string>();
+      const fingerprintToVisitorMap = new Map<string, string>();
+
+      for (const similarFingerprint of similarFingerprints) {
+        // Skip if it's the same fingerprint
+        if (similarFingerprint.fingerprintId === currentFingerprintId) {
+          continue;
+        }
+
+        // Only consider fingerprints with the same userId
+        if (similarFingerprint.userId !== userId) {
+          continue;
+        }
+
+        // Find existing visitor associations for this fingerprint
+        const associations = await this.getVisitorAssociationsForFingerprint(
+          similarFingerprint.fingerprintId
+        );
+
+        for (const association of associations) {
+          if (association.visitorId !== currentVisitorId) {
+            candidateVisitorIds.add(association.visitorId);
+            fingerprintToVisitorMap.set(
+              similarFingerprint.fingerprintId,
+              association.visitorId
+            );
+          }
+        }
+      }
+
+      if (candidateVisitorIds.size === 0) {
+        console.log("✅ No visitor reconciliation needed");
+        return;
+      }
+
+      console.log("🔍 Found candidate visitors for reconciliation:", {
+        candidates: candidateVisitorIds.size,
+        visitorIds: Array.from(candidateVisitorIds)
+          .map(id => id.substring(0, 8) + "...")
+      });
+
+      // STEP 3: Determine the primary visitor ID (oldest one)
+      let primaryVisitorId = currentVisitorId;
+      let earliestTimestamp = metadata.timestamp;
+
+      for (const candidateId of candidateVisitorIds) {
+        const visitor = await this.getVisitorById(candidateId);
+        if (visitor && visitor.createdAt < earliestTimestamp) {
+          primaryVisitorId = candidateId;
+          earliestTimestamp = visitor.createdAt;
+        }
+      }
+
+      // If current visitor is already primary, no need to reconcile
+      if (primaryVisitorId === currentVisitorId) {
+        console.log("✅ Current visitor is already primary, no reconciliation needed");
+        return;
+      }
+
+      console.log("🔄 Reconciling visitors under primary:", {
+        primaryVisitorId: primaryVisitorId.substring(0, 8) + "...",
+        mergingCount: candidateVisitorIds.size,
+      });
+
+      // STEP 4: Merge all candidate visitors into the primary visitor
+      const allVisitorIds = [currentVisitorId, ...Array.from(candidateVisitorIds)];
+      await this.mergeVisitorsIntoPrimary(primaryVisitorId, allVisitorIds, userId);
+
+    } catch (error) {
+      console.error("❌ Triangular reconciliation failed:", error);
+      // Don't throw - reconciliation failure shouldn't break fingerprint collection
+    }
+  }
+
+  /**
+   * Get visitor associations for a specific fingerprint
+   */
+  private static async getVisitorAssociationsForFingerprint(
+    fingerprintId: string
+  ): Promise<Array<{ visitorId: string; associatedAt: string }>> {
+    try {
+      const command = new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :fingerprintPK",
+        ExpressionAttributeValues: {
+          ":fingerprintPK": `FINGERPRINT#${fingerprintId}`,
+        },
+      });
+
+      const result = await docClient.send(command);
+      return (result.Items || []).map(item => ({
+        visitorId: item["visitorId"],
+        associatedAt: item["associatedAt"],
+      }));
+    } catch (error) {
+      console.error("Error getting visitor associations:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Merge multiple visitors into a primary visitor identity
+   * This is the core of the triangular reconciliation system
+   */
+  private static async mergeVisitorsIntoPrimary(
+    primaryVisitorId: string,
+    allVisitorIds: string[],
+    userId: string
+  ): Promise<void> {
+    console.log("🔀 Merging visitors into primary:", {
+      primary: primaryVisitorId.substring(0, 8) + "...",
+      merging: allVisitorIds.length,
+      userId: userId.substring(0, 8) + "...",
+    });
+
+    const secondaryVisitorIds = allVisitorIds.filter(id => id !== primaryVisitorId);
+
+    for (const secondaryVisitorId of secondaryVisitorIds) {
+      try {
+        // 1. Get all fingerprint associations for secondary visitor
+        const secondaryAssociations = await this.getAssociationsForVisitor(secondaryVisitorId);
+
+        // 2. Re-associate all fingerprints to primary visitor
+        for (const association of secondaryAssociations) {
+          await this.reassociateFingerprintToPrimaryVisitor(
+            association.fingerprintId,
+            secondaryVisitorId,
+            primaryVisitorId
+          );
+        }
+
+        // 3. Merge visitor profile data
+        await this.mergeVisitorProfiles(primaryVisitorId, secondaryVisitorId);
+
+        // 4. Clean up secondary visitor record
+        await this.cleanupSecondaryVisitor(secondaryVisitorId);
+
+        console.log("✅ Merged secondary visitor:", {
+          secondary: secondaryVisitorId.substring(0, 8) + "...",
+          associations: secondaryAssociations.length,
+        });
+
+      } catch (error) {
+        console.error("❌ Failed to merge visitor:", secondaryVisitorId, error);
+        // Continue with other visitors even if one fails
+      }
+    }
+
+    console.log("🎉 Triangular reconciliation completed successfully");
+  }
+
+  /**
+   * Get all fingerprint associations for a visitor
+   */
+  private static async getAssociationsForVisitor(
+    visitorId: string
+  ): Promise<Array<{ fingerprintId: string; fingerprintHash: string }>> {
+    try {
+      const command = new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: "PK = :visitorPK AND begins_with(SK, :fingerprintPrefix)",
+        ExpressionAttributeValues: {
+          ":visitorPK": `VISITOR#${visitorId}`,
+          ":fingerprintPrefix": "FINGERPRINT#",
+        },
+      });
+
+      const result = await docClient.send(command);
+      return (result.Items || []).map(item => ({
+        fingerprintId: item["fingerprintId"],
+        fingerprintHash: item["fingerprintHash"],
+      }));
+    } catch (error) {
+      console.error("Error getting associations for visitor:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Re-associate a fingerprint from secondary to primary visitor
+   */
+  private static async reassociateFingerprintToPrimaryVisitor(
+    fingerprintId: string,
+    secondaryVisitorId: string,
+    _primaryVisitorId: string
+  ): Promise<void> {
+    try {
+      // Delete old association
+      await docClient.send(new DeleteCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `VISITOR#${secondaryVisitorId}`,
+          SK: `FINGERPRINT#${fingerprintId}`,
+        },
+      }));
+
+      // The new association will be created by the calling function
+      // We just need to clean up the old one here
+
+    } catch (error) {
+      console.error("Error reassociating fingerprint:", error);
+    }
+  }
+
+  /**
+   * Merge visitor profile data from secondary into primary
+   */
+  private static async mergeVisitorProfiles(
+    primaryVisitorId: string,
+    secondaryVisitorId: string
+  ): Promise<void> {
+    try {
+      const [primaryVisitor, secondaryVisitor] = await Promise.all([
+        this.getVisitorById(primaryVisitorId),
+        this.getVisitorById(secondaryVisitorId),
+      ]);
+
+      if (!primaryVisitor || !secondaryVisitor) {
+        return;
+      }
+
+      // Merge visit counts and session times
+      const mergedData = {
+        visitCount: (primaryVisitor.visitCount || 0) + (secondaryVisitor.visitCount || 0),
+        totalSessionTime: (primaryVisitor.totalSessionTime || 0) + (secondaryVisitor.totalSessionTime || 0),
+        associatedFingerprints: [
+          ...new Set([
+            ...(primaryVisitor.associatedFingerprints || []),
+            ...(secondaryVisitor.associatedFingerprints || []),
+          ])
+        ],
+        // Use the earlier creation date
+        createdAt: primaryVisitor.createdAt < secondaryVisitor.createdAt ? 
+          primaryVisitor.createdAt : secondaryVisitor.createdAt,
+        // Use the latest last seen date
+        lastSeenAt: primaryVisitor.lastSeenAt > secondaryVisitor.lastSeenAt ? 
+          primaryVisitor.lastSeenAt : secondaryVisitor.lastSeenAt,
+      };
+
+      // Update primary visitor with merged data
+      await docClient.send(new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `VISITOR#${primaryVisitorId}`,
+          SK: "PROFILE",
+        },
+        UpdateExpression: `
+          SET visitCount = :visitCount,
+              totalSessionTime = :totalSessionTime,
+              associatedFingerprints = :fingerprints,
+              createdAt = :createdAt,
+              lastSeenAt = :lastSeenAt
+        `,
+        ExpressionAttributeValues: {
+          ":visitCount": mergedData.visitCount,
+          ":totalSessionTime": mergedData.totalSessionTime,
+          ":fingerprints": mergedData.associatedFingerprints,
+          ":createdAt": mergedData.createdAt,
+          ":lastSeenAt": mergedData.lastSeenAt,
+        },
+      }));
+
+    } catch (error) {
+      console.error("Error merging visitor profiles:", error);
+    }
+  }
+
+  /**
+   * Clean up secondary visitor record after merge
+   */
+  private static async cleanupSecondaryVisitor(secondaryVisitorId: string): Promise<void> {
+    try {
+      // Delete visitor profile
+      await docClient.send(new DeleteCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `VISITOR#${secondaryVisitorId}`,
+          SK: "PROFILE",
+        },
+      }));
+
+      console.log("🗑️ Cleaned up secondary visitor:", {
+        visitorId: secondaryVisitorId.substring(0, 8) + "...",
+      });
+
+    } catch (error) {
+      console.error("Error cleaning up secondary visitor:", error);
     }
   }
 

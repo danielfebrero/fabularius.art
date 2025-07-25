@@ -351,6 +351,7 @@ export interface FingerprintCollectionRequest {
   advancedFingerprint: AdvancedFingerprintData;
   behavioralData?: BehavioralData;
   sessionId?: string;
+  userId?: string; // Add userId to request type
   pageUrl: string;
   referrer?: string;
   consentGiven: boolean;

@@ -7,6 +7,7 @@ import {
   extractServerEnhancement,
   storeVisitorEvent,
 } from "./utils/collect-utils";
+import { UserAuthMiddleware } from "@shared/index";
 
 /**
  * Clean fingerprint collection with simple visitor tracking
@@ -27,6 +28,10 @@ export const handler = async (
       return ResponseUtil.badRequest(event, "Request body is required");
     }
 
+    // Validate user session
+    const authResult = await UserAuthMiddleware.validateSession(event);
+    const user = authResult.user;
+
     // Parse fingerprint data
     const fingerprintData: FingerprintCollectionRequest = JSON.parse(
       event.body
@@ -44,7 +49,7 @@ export const handler = async (
     }
 
     const timestamp = new Date().toISOString();
-    const userId = event.requestContext.authorizer?.["userId"];
+    const userId = user?.userId;
     const sessionId = fingerprintData.sessionId || uuidv4();
 
     // Extract server-side enhancements
@@ -53,7 +58,8 @@ export const handler = async (
     // Generate fingerprint hash for uniqueness
     const fingerprintHash = FingerprintDatabaseService.generateFingerprintHash(
       fingerprintData.coreFingerprint,
-      fingerprintData.advancedFingerprint
+      fingerprintData.advancedFingerprint,
+      userId
     );
 
     console.log("🔧 Processing fingerprint:", {
@@ -73,13 +79,14 @@ export const handler = async (
       // Generate fuzzy hashes to debug what we're looking for
       const currentFuzzyHashes = FingerprintDatabaseService.generateFuzzyHashes(
         fingerprintData.coreFingerprint,
-        fingerprintData.advancedFingerprint
+        fingerprintData.advancedFingerprint,
+        userId
       );
-      
+
       console.log("🔍 Generated fuzzy hashes for current fingerprint:", {
         count: currentFuzzyHashes.length,
-        hashes: currentFuzzyHashes.map(h => h.substring(0, 8) + "..."),
-        fingerprintHash: fingerprintHash.substring(0, 8) + "..."
+        hashes: currentFuzzyHashes.map((h) => h.substring(0, 8) + "..."),
+        fingerprintHash: fingerprintHash.substring(0, 8) + "...",
       });
 
       // Try to find similar fingerprints using the advanced fuzzy matching
@@ -87,18 +94,20 @@ export const handler = async (
         await FingerprintDatabaseService.findSimilarFingerprintsAdvanced(
           fingerprintData.coreFingerprint,
           fingerprintData.advancedFingerprint,
+          userId,
           5
         );
 
       console.log("🔍 Fuzzy matching results:", {
         found: similarFingerprints.length,
-        matches: similarFingerprints.map(fp => ({
+        matches: similarFingerprints.map((fp) => ({
           id: fp.fingerprintId.substring(0, 8) + "...",
           hash: fp.fingerprintHash.substring(0, 8) + "...",
-          fuzzyHashes: fp.fuzzyHashes?.map(h => h.substring(0, 8) + "...") || [],
+          fuzzyHashes:
+            fp.fuzzyHashes?.map((h) => h.substring(0, 8) + "...") || [],
           created: fp.createdAt,
-          lastSeen: fp.lastSeenAt
-        }))
+          lastSeen: fp.lastSeenAt,
+        })),
       });
 
       if (similarFingerprints.length > 0) {
@@ -112,7 +121,7 @@ export const handler = async (
               fingerprintHash,
               coreFingerprint: fingerprintData.coreFingerprint,
               advancedFingerprint: fingerprintData.advancedFingerprint,
-              fuzzyHashes: currentFuzzyHashes
+              fuzzyHashes: currentFuzzyHashes,
             } as any,
             bestMatch
           );
@@ -120,7 +129,7 @@ export const handler = async (
           console.log("🔍 Similarity calculation:", {
             similarity,
             threshold: 0.7,
-            willMatch: similarity >= 0.7
+            willMatch: similarity >= 0.7,
           });
 
           // Only treat as returning visitor if similarity is high enough
@@ -134,18 +143,21 @@ export const handler = async (
               {
                 similarity,
                 confidence,
-                matchedFingerprintId: bestMatch.fingerprintId.substring(0, 8) + "..."
+                matchedFingerprintId:
+                  bestMatch.fingerprintId.substring(0, 8) + "...",
               }
             );
           } else {
             console.log("🆕 Similarity too low, treating as new visitor", {
               similarity,
-              threshold: 0.7
+              threshold: 0.7,
             });
           }
         }
       } else {
-        console.log("🆕 No similar fingerprints found, treating as new visitor");
+        console.log(
+          "🆕 No similar fingerprints found, treating as new visitor"
+        );
       }
     } catch (error) {
       console.warn(

@@ -18,12 +18,15 @@ The table uses Global Secondary Indexes (GSIs) to support additional query patte
 - **GSI1**: Used for querying items by type and other attributes.
   - `GSI1PK`: The partition key for GSI1.
   - `GSI1SK`: The sort key for GSI1.
-- **GSI2**: Used for querying users by their Google ID.
+- **GSI2**: Used for querying users by their Google ID and fingerprints by hash.
   - `GSI2PK`: The partition key for GSI2.
   - `GSI2SK`: The sort key for GSI2.
-- **GSI3**: Used for querying users by their username.
+- **GSI3**: Used for querying users by their username and analytics data.
   - `GSI3PK`: The partition key for GSI3.
   - `GSI3SK`: The sort key for GSI3.
+- **GSI4**: Used for device type queries and fuzzy fingerprint matching.
+  - `GSI4PK`: The partition key for GSI4 (supports both `DEVICE_TYPE#` and `FINGERPRINT_FUZZY#` patterns).
+  - `GSI4SK`: The sort key for GSI4.
 
 ## New Global Secondary Index: isPublic-createdAt-index
 
@@ -260,6 +263,36 @@ Represents a user's interaction with a media item (e.g., a like or a bookmark).
 | `mediaId`         | `string` | The ID of the media item.                           |
 | `interactionType` | `string` | The type of interaction (e.g., `like`, `bookmark`). |
 | `createdAt`       | `string` | The ISO 8601 timestamp of the interaction.          |
+
+### Fingerprint Entity
+
+Represents a browser/device fingerprint for user tracking and analytics.
+
+- **PK**: `FINGERPRINT#<fingerprintId>`
+- **SK**: `METADATA` (main entity) or `FUZZY#<index>` (for fuzzy matching)
+- **GSI1PK**: `USER#<userId>` or `ANONYMOUS`
+- **GSI1SK**: `<timestamp>#<fingerprintId>`
+- **GSI2PK**: `FP_HASH#<fingerprintHash>`
+- **GSI2SK**: `<confidence>#<timestamp>`
+- **GSI3PK**: `ANALYTICS#<date>`
+- **GSI3SK**: `<hour>#<fingerprintId>`
+- **GSI4PK**: `DEVICE_TYPE#<category>` or `FINGERPRINT_FUZZY#<fuzzyHash>`
+- **GSI4SK**: `<userAgent>#<timestamp>` or `<timestamp>#<fingerprintId>`
+- **EntityType**: `Fingerprint`
+
+| Attribute             | Type       | Description                                    |
+| --------------------- | ---------- | ---------------------------------------------- |
+| `fingerprintId`       | `string`   | The unique ID of the fingerprint.              |
+| `userId`              | `string`   | Optional: The ID of the associated user.       |
+| `fingerprintHash`     | `string`   | Hash of the fingerprint data.                  |
+| `fuzzyHashes`         | `string[]` | Array of hashes for similarity detection.      |
+| `confidence`          | `number`   | Confidence score (0-100).                      |
+| `deviceCategory`      | `string`   | Device type: desktop, mobile, tablet, unknown. |
+| `coreFingerprint`     | `object`   | Core fingerprint data (canvas, webgl, etc.).   |
+| `advancedFingerprint` | `object`   | Advanced fingerprint data.                     |
+| `entropy`             | `number`   | Entropy score (0-1).                           |
+| `createdAt`           | `string`   | The ISO 8601 timestamp of creation.            |
+| `lastSeenAt`          | `string`   | The ISO 8601 timestamp of last seen.           |
 
 ## Entity Relationship Diagram
 

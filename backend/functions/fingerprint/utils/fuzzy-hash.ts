@@ -8,6 +8,77 @@
 
 import * as crypto from "crypto";
 
+// Define the possible feature types
+type FeatureName = 
+  | 'canvas'
+  | 'webglVendor'
+  | 'webglRenderer'
+  | 'audioContext'
+  | 'screenResolution'
+  | 'timezone'
+  | 'language'
+  | 'webglExtensions'
+  | 'fontSample'
+  | 'userAgent'
+  | 'userId'; // Add userId as a stable feature
+
+// LSH bucket configuration type
+interface LSHBucketConfig {
+  name: string;
+  features: FeatureName[];
+}
+
+// Stable features extracted from fingerprints
+interface StableFeatures {
+  canvas: string;
+  webglVendor: string;
+  webglRenderer: string;
+  audioContext: string;
+  screenResolution: string;
+  timezone: string;
+  language: string;
+  webglExtensions: string;
+  fontSample: string;
+  userAgent: string;
+  userId: string; // Add userId as a stable feature
+}
+
+// Predefined LSH bucket configurations
+const LSH_BUCKET_CONFIGS: LSHBucketConfig[] = [
+  {
+    name: 'coreHardware',
+    features: ['canvas', 'webglVendor', 'webglRenderer', 'audioContext']
+  },
+  {
+    name: 'deviceEnvironment',
+    features: ['screenResolution', 'timezone', 'language', 'webglVendor']
+  },
+  {
+    name: 'browserCapabilities',
+    features: ['canvas', 'webglExtensions', 'fontSample']
+  },
+  {
+    name: 'mixedStability',
+    features: ['webglRenderer', 'audioContext', 'screenResolution', 'userAgent']
+  },
+  {
+    name: 'displayAudio',
+    features: ['canvas', 'audioContext', 'screenResolution']
+  },
+  {
+    name: 'webglProfile',
+    features: ['webglVendor', 'webglRenderer', 'webglExtensions']
+  },
+  {
+    name: 'userProfile',
+    features: ['userId', 'timezone', 'language', 'screenResolution']
+  },
+  {
+    name: 'userDevice',
+    features: ['userId', 'webglVendor', 'webglRenderer', 'canvas']
+  }
+];
+
 /**
  * Generate a locality-sensitive hash (LSH) from fingerprint data
  * This creates multiple hash "buckets" that similar fingerprints will likely share
@@ -15,19 +86,20 @@ import * as crypto from "crypto";
 export function generateLocalitySensitiveHashes(
   coreFingerprint: any,
   advancedFingerprint: any,
-  numHashes = 4
+  userId?: string
 ): string[] {
   const hashes: string[] = [];
 
   // Extract stable features for LSH
   const stableFeatures = extractStableFeatures(
     coreFingerprint,
-    advancedFingerprint
+    advancedFingerprint,
+    userId
   );
 
-  // Generate multiple LSH buckets
-  for (let i = 0; i < numHashes; i++) {
-    const bucket = generateLSHBucket(stableFeatures, i);
+  // Generate LSH buckets for each predefined configuration
+  for (const config of LSH_BUCKET_CONFIGS) {
+    const bucket = generateLSHBucket(stableFeatures, config);
     hashes.push(bucket);
   }
 
@@ -39,8 +111,9 @@ export function generateLocalitySensitiveHashes(
  */
 function extractStableFeatures(
   coreFingerprint: any,
-  advancedFingerprint: any
-): any {
+  advancedFingerprint: any,
+  userId?: string
+): StableFeatures {
   return {
     // High stability features (rarely change)
     canvas: coreFingerprint.canvas?.substring(0, 32) || "", // Truncate for fuzzy matching
@@ -61,60 +134,25 @@ function extractStableFeatures(
 
     // Device category indicators
     userAgent: extractUserAgentFeatures(advancedFingerprint),
+
+    // User identity (highest stability when available)
+    userId: userId || "", // Empty string when not authenticated
   };
 }
 
 /**
- * Generate a single LSH bucket using different feature combinations
+ * Generate a single LSH bucket using the specified feature configuration
  */
-function generateLSHBucket(features: any, bucketIndex: number): string {
-  let data: string;
+function generateLSHBucket(features: StableFeatures, config: LSHBucketConfig): string {
+  const bucketData: Partial<StableFeatures> = {};
 
-  switch (bucketIndex % 4) {
-    case 0:
-      // Core hardware features
-      data = JSON.stringify({
-        canvas: features.canvas,
-        webgl: features.webglVendor + features.webglRenderer,
-        audio: features.audioContext,
-      });
-      break;
-
-    case 1:
-      // Device and environment
-      data = JSON.stringify({
-        screen: features.screenResolution,
-        timezone: features.timezone,
-        language: features.language,
-        webgl: features.webglVendor,
-      });
-      break;
-
-    case 2:
-      // Browser capabilities
-      data = JSON.stringify({
-        canvas: features.canvas,
-        extensions: features.webglExtensions,
-        fonts: features.fontSample,
-      });
-      break;
-
-    case 3:
-      // Mixed stability features
-      data = JSON.stringify({
-        webgl: features.webglRenderer,
-        audio: features.audioContext,
-        screen: features.screenResolution,
-        userAgent: features.userAgent,
-      });
-      break;
-
-    default:
-      // Fallback
-      data = JSON.stringify(features);
+  // Extract only the specified features for this bucket
+  for (const featureName of config.features) {
+    bucketData[featureName] = features[featureName];
   }
 
   // Create a hash that's more forgiving of small changes
+  const data = JSON.stringify(bucketData);
   return crypto.createHash("md5").update(data).digest("hex").substring(0, 16);
 }
 
@@ -269,11 +307,13 @@ export function calculateLSHSimilarity(
  */
 export function generateFuzzyFingerprintHash(
   coreFingerprint: any,
-  advancedFingerprint: any
+  advancedFingerprint: any,
+  userId?: string
 ): string {
   const stableFeatures = extractStableFeatures(
     coreFingerprint,
-    advancedFingerprint
+    advancedFingerprint,
+    userId
   );
 
   // Create a hash that's more stable than SHA256 of the entire object
@@ -292,6 +332,9 @@ export function generateFuzzyFingerprintHash(
       extensions: stableFeatures.webglExtensions,
       fonts: stableFeatures.fontSample,
       userAgent: stableFeatures.userAgent,
+    },
+    user: {
+      userId: stableFeatures.userId, // Include userId in hash
     },
   };
 
