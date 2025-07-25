@@ -15,6 +15,8 @@ import {
   FingerprintAnalyticsEntity,
   FingerprintCollectionRequest,
   BehavioralFingerprint,
+  CoreFingerprintData,
+  AdvancedFingerprintData,
 } from "@shared/types/fingerprint";
 import {
   UniqueVisitor,
@@ -132,8 +134,8 @@ export class FingerprintDatabaseService {
    * Calculate weighted entropy score for entire fingerprint
    */
   static calculateWeightedEntropy(
-    coreFingerprint: any,
-    advancedFingerprint: any,
+    coreFingerprint: CoreFingerprintData,
+    advancedFingerprint: AdvancedFingerprintData,
     weights = DEFAULT_ENTROPY_WEIGHTS
   ): number {
     let totalEntropy = 0;
@@ -141,7 +143,9 @@ export class FingerprintDatabaseService {
 
     // Core fingerprint entropy
     if (coreFingerprint.canvas) {
-      const entropy = this.calculateEntropy(coreFingerprint.canvas);
+      const entropy = this.calculateEntropy(
+        JSON.stringify(coreFingerprint.canvas)
+      );
       totalEntropy += entropy * weights.canvas;
       totalWeight += weights.canvas;
     }

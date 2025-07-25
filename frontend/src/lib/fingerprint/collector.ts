@@ -49,7 +49,7 @@ const DEFAULT_CONFIG: FingerprintConfig = {
     webassembly: true,
     storage: true,
     plugins: true,
-    behavioral: false,
+    behavioral: true,
   },
   privacy: {
     consentRequired: false,

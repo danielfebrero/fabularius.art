@@ -49,8 +49,8 @@ export class DeviceSensorFingerprinting {
   private readonly MAX_READINGS = 100;
   private readonly MOTION_THRESHOLD = 0.1; // Minimum motion to detect
 
-  private motionListener?: (event: DeviceMotionEvent) => void;
-  private orientationListener?: (event: DeviceOrientationEvent) => void;
+  private motionListener?: (arg0: DeviceMotionEvent) => void;
+  private orientationListener?: (arg0: DeviceOrientationEvent) => void;
   private samplingActive: boolean = false;
 
   /**
@@ -82,6 +82,10 @@ export class DeviceSensorFingerprinting {
       const accelerometer = this.analyzeSensorCharacteristics("accelerometer");
       const gyroscope = this.analyzeSensorCharacteristics("gyroscope");
       const magnetometer = this.analyzeSensorCharacteristics("magnetometer");
+      const ambientLight = this.analyzeSensorCharacteristics("ambientLight");
+      const proximity = this.analyzeSensorCharacteristics("proximity");
+      const orientation = this.analyzeSensorCharacteristics("orientation");
+      const motion = this.analyzeSensorCharacteristics("motion");
 
       // Analyze device motion/orientation capabilities
       const deviceMotion = this.analyzeDeviceMotion();
@@ -96,6 +100,18 @@ export class DeviceSensorFingerprinting {
       // Detect privacy indicators
       const privacyIndicators = this.detectPrivacyIndicators();
 
+      // Analyze capabilities
+      const capabilities = this.analyzeSensorCapabilities();
+
+      // Generate patterns
+      const patterns = this.generateSensorPatterns();
+
+      // Perform analysis
+      const analysis = this.performSensorAnalysis();
+
+      // Generate fingerprints
+      const fingerprints = await this.generateSensorFingerprints();
+
       // Calculate unique hashes and confidence
       const sensorHash = await this.calculateSensorHash();
       const hardwareHash = await this.calculateHardwareHash(hardwareSignature);
@@ -108,12 +124,20 @@ export class DeviceSensorFingerprinting {
         accelerometer,
         gyroscope,
         magnetometer,
+        ambientLight,
+        proximity,
+        orientation,
+        motion,
         deviceMotion,
         deviceOrientation,
         hardwareSignature,
         permissions: this.formatPermissions(),
         correlation,
         privacyIndicators,
+        capabilities,
+        patterns,
+        analysis,
+        fingerprints,
         sensorHash,
         hardwareHash,
         confidenceLevel,
@@ -435,6 +459,12 @@ export class DeviceSensorFingerprinting {
       case "magnetometer":
         readings = this.magnetometerReadings;
         break;
+      case "ambientLight":
+      case "proximity":
+      case "orientation":
+      case "motion":
+        // These sensors are not implemented yet, return unavailable
+        return this.createUnavailableSensorCharacteristics();
     }
 
     if (readings.length === 0) {
@@ -460,7 +490,7 @@ export class DeviceSensorFingerprinting {
       const calibration = this.estimateCalibration(readings);
 
       // Generate patterns
-      const patterns = this.generateSensorPatterns(readings);
+      const patterns = this.generateSensorPatternSignatures(readings);
 
       return {
         available: true,
@@ -645,7 +675,7 @@ export class DeviceSensorFingerprinting {
   /**
    * Generate sensor pattern signatures
    */
-  private generateSensorPatterns(
+  private generateSensorPatternSignatures(
     readings: SensorReading[]
   ): SensorCharacteristics["patterns"] {
     if (readings.length < 5) {
@@ -753,7 +783,6 @@ export class DeviceSensorFingerprinting {
    */
   private analyzeDeviceMotion(): DeviceSensorFingerprint["deviceMotion"] {
     const hasMotionEvents = this.motionEvents.length > 0;
-    const hasAcceleration = this.motionEvents.some((e) => e.acceleration);
     const hasAccelerationIncludingGravity = this.motionEvents.some(
       (e) => e.accelerationIncludingGravity
     );
@@ -776,6 +805,230 @@ export class DeviceSensorFingerprinting {
       accelerationIncludingGravity: hasAccelerationIncludingGravity,
       rotationRate: hasRotationRate,
     };
+  }
+
+  /**
+   * Analyze sensor capabilities
+   */
+  private analyzeSensorCapabilities(): DeviceSensorFingerprint["capabilities"] {
+    const sensorTypes: string[] = [];
+    const permissions: string[] = [];
+    let maxFrequency = 0;
+    const bufferSize = this.MAX_READINGS;
+
+    // Check available sensor types
+    if (this.accelerometerReadings.length > 0) {
+      sensorTypes.push("accelerometer");
+      maxFrequency = Math.max(
+        maxFrequency,
+        this.calculateSensorFrequency(this.accelerometerReadings)
+      );
+    }
+    if (this.gyroscopeReadings.length > 0) {
+      sensorTypes.push("gyroscope");
+      maxFrequency = Math.max(
+        maxFrequency,
+        this.calculateSensorFrequency(this.gyroscopeReadings)
+      );
+    }
+    if (this.magnetometerReadings.length > 0) {
+      sensorTypes.push("magnetometer");
+      maxFrequency = Math.max(
+        maxFrequency,
+        this.calculateSensorFrequency(this.magnetometerReadings)
+      );
+    }
+    if (this.motionEvents.length > 0) {
+      sensorTypes.push("deviceMotion");
+    }
+    if (this.orientationEvents.length > 0) {
+      sensorTypes.push("deviceOrientation");
+    }
+
+    // Check permissions
+    Object.entries(this.permissionStates).forEach(([sensor, state]) => {
+      if (state === "granted") {
+        permissions.push(sensor);
+      }
+    });
+
+    return {
+      maxFrequency: Math.round(maxFrequency * 100) / 100,
+      bufferSize,
+      sensorTypes,
+      permissions,
+    };
+  }
+
+  /**
+   * Generate comprehensive sensor patterns
+   */
+  private generateSensorPatterns(): DeviceSensorFingerprint["patterns"] {
+    const motionSignatures: string[] = [];
+    const orientationPatterns: string[] = [];
+    const usageCharacteristics: string[] = [];
+
+    // Motion signatures from accelerometer and gyroscope
+    if (this.accelerometerReadings.length > 0) {
+      const accelPattern = this.generateSensorPatternSignatures(
+        this.accelerometerReadings
+      );
+      motionSignatures.push(`accel_${accelPattern.staticNoise}`);
+      motionSignatures.push(`accel_${accelPattern.dynamicResponse}`);
+    }
+
+    if (this.gyroscopeReadings.length > 0) {
+      const gyroPattern = this.generateSensorPatternSignatures(
+        this.gyroscopeReadings
+      );
+      motionSignatures.push(`gyro_${gyroPattern.staticNoise}`);
+      motionSignatures.push(`gyro_${gyroPattern.dynamicResponse}`);
+    }
+
+    // Orientation patterns
+    if (this.orientationEvents.length > 0) {
+      const hasAbsolute = this.orientationEvents.some((e) => e.absolute);
+      const hasCompass = this.orientationEvents.some((e) => e.alpha !== null);
+      orientationPatterns.push(`absolute_${hasAbsolute}`);
+      orientationPatterns.push(`compass_${hasCompass}`);
+    }
+
+    // Usage characteristics
+    const totalReadings =
+      this.accelerometerReadings.length +
+      this.gyroscopeReadings.length +
+      this.magnetometerReadings.length;
+    usageCharacteristics.push(
+      `total_readings_${Math.floor(totalReadings / 10) * 10}`
+    );
+    usageCharacteristics.push(`sampling_duration_${this.SAMPLING_DURATION}`);
+
+    return {
+      motionSignatures,
+      orientationPatterns,
+      usageCharacteristics,
+    };
+  }
+
+  /**
+   * Perform comprehensive sensor analysis
+   */
+  private performSensorAnalysis(): DeviceSensorFingerprint["analysis"] {
+    const stabilityScores: Record<string, number> = {};
+    const entropyMeasures: Record<string, number> = {};
+    const correlationMatrix: Record<string, Record<string, number>> = {};
+
+    // Calculate stability scores for each sensor
+    if (this.accelerometerReadings.length > 0) {
+      stabilityScores.accelerometer =
+        1 - this.calculateSensorPrecision(this.accelerometerReadings);
+      entropyMeasures.accelerometer = this.calculateEntropy(
+        this.accelerometerReadings
+      );
+    }
+
+    if (this.gyroscopeReadings.length > 0) {
+      stabilityScores.gyroscope =
+        1 - this.calculateSensorPrecision(this.gyroscopeReadings);
+      entropyMeasures.gyroscope = this.calculateEntropy(this.gyroscopeReadings);
+    }
+
+    if (this.magnetometerReadings.length > 0) {
+      stabilityScores.magnetometer =
+        1 - this.calculateSensorPrecision(this.magnetometerReadings);
+      entropyMeasures.magnetometer = this.calculateEntropy(
+        this.magnetometerReadings
+      );
+    }
+
+    // Build correlation matrix
+    if (
+      this.accelerometerReadings.length > 0 &&
+      this.gyroscopeReadings.length > 0
+    ) {
+      correlationMatrix.accelerometer = {
+        gyroscope: this.calculateAccelGyroCorrelation(),
+      };
+    }
+
+    return {
+      stabilityScores,
+      entropyMeasures,
+      correlationMatrix,
+    };
+  }
+
+  /**
+   * Generate multiple sensor fingerprints
+   */
+  private async generateSensorFingerprints(): Promise<
+    DeviceSensorFingerprint["fingerprints"]
+  > {
+    const sensorData = {
+      accelerometer: this.accelerometerReadings.slice(0, 5),
+      gyroscope: this.gyroscopeReadings.slice(0, 5),
+      magnetometer: this.magnetometerReadings.slice(0, 5),
+    };
+
+    const patternData = {
+      motionPatterns: this.generateSensorPatterns(),
+      hardwareSignature: this.extractHardwareSignature(),
+    };
+
+    const capabilityData = {
+      capabilities: this.analyzeSensorCapabilities(),
+      permissions: this.formatPermissions(),
+    };
+
+    const sensorHash = await calculateSHA256(JSON.stringify(sensorData));
+    const patternHash = await calculateSHA256(JSON.stringify(patternData));
+    const capabilityHash = await calculateSHA256(
+      JSON.stringify(capabilityData)
+    );
+
+    return {
+      sensorHash,
+      patternHash,
+      capabilityHash,
+    };
+  }
+
+  /**
+   * Calculate entropy for sensor readings
+   */
+  private calculateEntropy(readings: SensorReading[]): number {
+    if (readings.length === 0) return 0;
+
+    // Quantize readings into bins for entropy calculation
+    const bins = 50;
+    const allValues = readings.flatMap((r) => [r.x, r.y, r.z]);
+    const min = Math.min(...allValues);
+    const max = Math.max(...allValues);
+    const range = max - min;
+
+    if (range === 0) return 0;
+
+    const binCounts = new Array(bins).fill(0);
+
+    allValues.forEach((value) => {
+      const binIndex = Math.min(
+        bins - 1,
+        Math.floor(((value - min) / range) * bins)
+      );
+      binCounts[binIndex]++;
+    });
+
+    const total = allValues.length;
+    let entropy = 0;
+
+    binCounts.forEach((count) => {
+      if (count > 0) {
+        const probability = count / total;
+        entropy -= probability * Math.log2(probability);
+      }
+    });
+
+    return Math.round(entropy * 1000) / 1000;
   }
 
   /**
@@ -1251,6 +1504,10 @@ export class DeviceSensorFingerprinting {
       accelerometer: this.createUnavailableSensorCharacteristics(),
       gyroscope: this.createUnavailableSensorCharacteristics(),
       magnetometer: this.createUnavailableSensorCharacteristics(),
+      ambientLight: this.createUnavailableSensorCharacteristics(),
+      proximity: this.createUnavailableSensorCharacteristics(),
+      orientation: this.createUnavailableSensorCharacteristics(),
+      motion: this.createUnavailableSensorCharacteristics(),
       deviceMotion: {
         supported: false,
         interval: 0,
@@ -1284,6 +1541,27 @@ export class DeviceSensorFingerprinting {
         reducedPrecision: false,
         artificialReadings: false,
         spoofingDetected: false,
+      },
+      capabilities: {
+        maxFrequency: 0,
+        bufferSize: 0,
+        sensorTypes: [],
+        permissions: [],
+      },
+      patterns: {
+        motionSignatures: [],
+        orientationPatterns: [],
+        usageCharacteristics: [],
+      },
+      analysis: {
+        stabilityScores: {},
+        entropyMeasures: {},
+        correlationMatrix: {},
+      },
+      fingerprints: {
+        sensorHash: "unavailable",
+        patternHash: "unavailable",
+        capabilityHash: "unavailable",
       },
       sensorHash: "unavailable",
       hardwareHash: "unavailable",

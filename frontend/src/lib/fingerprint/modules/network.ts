@@ -430,6 +430,9 @@ export class NetworkTimingFingerprinting {
         jitter: 0,
         packetLoss: 0,
         stability: 0,
+        latencyVariation: 0,
+        throughputEstimate: 0,
+        jitterMeasurement: 0,
       };
     }
 
@@ -449,6 +452,15 @@ export class NetworkTimingFingerprinting {
     // Calculate stability score
     const stability = this.calculateStabilityScore(validRTTs);
 
+    // Calculate latency variation (coefficient of variation)
+    const latencyVariation = avgRTT > 0 ? (jitter / avgRTT) * 100 : 0;
+
+    // Estimate throughput based on bandwidth tests
+    const throughputEstimate = this.estimateThroughputFromBandwidth();
+
+    // Calculate jitter measurement (same as jitter but kept separate for interface compatibility)
+    const jitterMeasurement = jitter;
+
     return {
       avgRTT: Math.round(avgRTT * 100) / 100,
       minRTT: Math.round(minRTT * 100) / 100,
@@ -456,6 +468,9 @@ export class NetworkTimingFingerprinting {
       jitter: Math.round(jitter * 100) / 100,
       packetLoss: Math.round(packetLoss * 100) / 100,
       stability: Math.round(stability * 100) / 100,
+      latencyVariation: Math.round(latencyVariation * 100) / 100,
+      throughputEstimate: Math.round(throughputEstimate * 100) / 100,
+      jitterMeasurement: Math.round(jitterMeasurement * 100) / 100,
     };
   }
 
@@ -484,6 +499,32 @@ export class NetworkTimingFingerprinting {
     // Stability is inversely related to jitter relative to average RTT
     const normalizedJitter = avgRTT > 0 ? jitter / avgRTT : 1;
     return Math.max(0, Math.min(1, 1 - normalizedJitter));
+  }
+
+  /**
+   * Estimate throughput from bandwidth tests
+   */
+  private estimateThroughputFromBandwidth(): number {
+    if (this.bandwidthTests.length === 0) {
+      // Fallback estimation based on connection info if available
+      if (this.connectionInfo.downlink) {
+        return this.connectionInfo.downlink * 1000; // Convert Mbps to kbps
+      }
+      return 0;
+    }
+
+    const totalDownload = this.bandwidthTests.reduce(
+      (sum, test) => sum + test.downloadSpeed,
+      0
+    );
+    const totalUpload = this.bandwidthTests.reduce(
+      (sum, test) => sum + test.uploadSpeed,
+      0
+    );
+    const testCount = this.bandwidthTests.length;
+
+    // Return average of download and upload speeds
+    return (totalDownload + totalUpload) / (testCount * 2);
   }
 
   /**
@@ -630,7 +671,6 @@ export class NetworkTimingFingerprinting {
    */
   private detectVPN(): boolean {
     // VPNs often add encryption overhead and route through specific locations
-    const providers = this.endpoints.map((e) => e.provider);
     const avgRTT = this.endpoints
       .filter((e) => e.rtt > 0)
       .reduce((sum, e, _, arr) => sum + e.rtt / arr.length, 0);
@@ -843,6 +883,9 @@ export class NetworkTimingFingerprinting {
         jitter: 0,
         packetLoss: 0,
         stability: 0,
+        latencyVariation: 0,
+        throughputEstimate: 0,
+        jitterMeasurement: 0,
       },
       connection: {},
       timingPatterns: {
