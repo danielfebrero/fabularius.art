@@ -62,7 +62,11 @@ export class FingerprintDatabaseService {
     userId?: string
   ): string {
     // Use the fuzzy fingerprint hash for better similarity detection
-    return generateFuzzyFingerprintHash(coreFingerprint, advancedFingerprint, userId);
+    return generateFuzzyFingerprintHash(
+      coreFingerprint,
+      advancedFingerprint,
+      userId
+    );
   }
 
   /**
@@ -731,7 +735,11 @@ export class FingerprintDatabaseService {
   ): Promise<void> {
     try {
       // STEP 1: Perform triangular reconciliation
-      await this.performTriangularReconciliation(visitorId, fingerprintId, metadata);
+      await this.performTriangularReconciliation(
+        visitorId,
+        fingerprintId,
+        metadata
+      );
 
       // STEP 2: Store the association record (after reconciliation)
       const associationRecord = {
@@ -763,6 +771,16 @@ export class FingerprintDatabaseService {
       });
 
       await docClient.send(command);
+
+      // STEP 3: Ensure user-visitor relationship exists if userId is available
+      const fingerprint = await this.getFingerprintById(fingerprintId);
+      if (fingerprint?.userId) {
+        await this.createOrUpdateUserVisitorRelationship(
+          fingerprint.userId,
+          visitorId,
+          metadata.confidence
+        );
+      }
     } catch (error) {
       console.warn("Failed to store visitor-fingerprint association:", error);
       // Don't fail the entire request if this association storage fails
@@ -791,9 +809,13 @@ export class FingerprintDatabaseService {
       });
 
       // Get the current fingerprint to extract userId and fuzzy hashes
-      const currentFingerprint = await this.getFingerprintById(currentFingerprintId);
+      const currentFingerprint = await this.getFingerprintById(
+        currentFingerprintId
+      );
       if (!currentFingerprint) {
-        console.log("⚠️ Current fingerprint not found, skipping reconciliation");
+        console.log(
+          "⚠️ Current fingerprint not found, skipping reconciliation"
+        );
         return;
       }
 
@@ -822,10 +844,8 @@ export class FingerprintDatabaseService {
           continue;
         }
 
-        // Only consider fingerprints with the same userId
-        if (similarFingerprint.userId !== userId) {
-          continue;
-        }
+        // Don't filter by userId here - we want to find cross-user correlations
+        // The triangular reconciliation will handle user-visitor relationships
 
         // Find existing visitor associations for this fingerprint
         const associations = await this.getVisitorAssociationsForFingerprint(
@@ -850,8 +870,9 @@ export class FingerprintDatabaseService {
 
       console.log("🔍 Found candidate visitors for reconciliation:", {
         candidates: candidateVisitorIds.size,
-        visitorIds: Array.from(candidateVisitorIds)
-          .map(id => id.substring(0, 8) + "...")
+        visitorIds: Array.from(candidateVisitorIds).map(
+          (id) => id.substring(0, 8) + "..."
+        ),
       });
 
       // STEP 3: Determine the primary visitor ID (oldest one)
@@ -868,7 +889,9 @@ export class FingerprintDatabaseService {
 
       // If current visitor is already primary, no need to reconcile
       if (primaryVisitorId === currentVisitorId) {
-        console.log("✅ Current visitor is already primary, no reconciliation needed");
+        console.log(
+          "✅ Current visitor is already primary, no reconciliation needed"
+        );
         return;
       }
 
@@ -878,12 +901,385 @@ export class FingerprintDatabaseService {
       });
 
       // STEP 4: Merge all candidate visitors into the primary visitor
-      const allVisitorIds = [currentVisitorId, ...Array.from(candidateVisitorIds)];
-      await this.mergeVisitorsIntoPrimary(primaryVisitorId, allVisitorIds, userId);
+      const allVisitorIds = [
+        currentVisitorId,
+        ...Array.from(candidateVisitorIds),
+      ];
+      await this.mergeVisitorsIntoPrimary(
+        primaryVisitorId,
+        allVisitorIds,
+        userId
+      );
 
+      // STEP 5: Handle user-visitor relationships through triangular table
+      await this.reconcileUserVisitorRelationships(
+        primaryVisitorId,
+        allVisitorIds,
+        userId
+      );
     } catch (error) {
       console.error("❌ Triangular reconciliation failed:", error);
       // Don't throw - reconciliation failure shouldn't break fingerprint collection
+    }
+  }
+
+  /**
+   * Reconcile user-visitor relationships in the triangular table
+   * Supports many-to-many relationships:
+   * - One person with multiple accounts (many user_ids → one visitor_id)
+   * - Shared accounts (one user_id → many visitor_ids)
+   */
+  private static async reconcileUserVisitorRelationships(
+    primaryVisitorId: string,
+    allVisitorIds: string[],
+    currentUserId: string
+  ): Promise<void> {
+    console.log("🔺 Reconciling user-visitor relationships:", {
+      primaryVisitor: primaryVisitorId.substring(0, 8) + "...",
+      allVisitors: allVisitorIds.length,
+      currentUser: currentUserId.substring(0, 8) + "...",
+    });
+
+    // 1. Get all existing user-visitor relationships for these visitors
+    const existingRelationships = await this.getUserVisitorRelationships(
+      allVisitorIds
+    );
+
+    console.log("📊 Found existing relationships:", {
+      total: existingRelationships.length,
+      relationships: existingRelationships.map((r) => ({
+        user: r.userId.substring(0, 8) + "...",
+        visitor: r.visitorId.substring(0, 8) + "...",
+        confidence: r.confidence,
+      })),
+    });
+
+    // 2. Collect all unique user IDs from existing relationships
+    const allUserIds = new Set<string>();
+    allUserIds.add(currentUserId); // Always include current user
+
+    for (const relationship of existingRelationships) {
+      allUserIds.add(relationship.userId);
+    }
+
+    // 3. Create/update relationships for primary visitor with all users
+    for (const userId of allUserIds) {
+      await this.createOrUpdateUserVisitorRelationship(
+        userId,
+        primaryVisitorId,
+        this.calculateRelationshipConfidence(
+          userId,
+          allVisitorIds,
+          existingRelationships
+        )
+      );
+    }
+
+    // 4. Remove old relationships for secondary visitors
+    const secondaryVisitorIds = allVisitorIds.filter(
+      (id) => id !== primaryVisitorId
+    );
+    for (const secondaryVisitorId of secondaryVisitorIds) {
+      await this.removeVisitorRelationships(secondaryVisitorId);
+    }
+
+    console.log("✅ User-visitor relationships reconciled successfully");
+  }
+
+  /**
+   * Calculate confidence score for user-visitor relationship
+   */
+  private static calculateRelationshipConfidence(
+    userId: string,
+    visitorIds: string[],
+    existingRelationships: Array<{
+      userId: string;
+      visitorId: string;
+      confidence: number;
+    }>
+  ): number {
+    const userRelationships = existingRelationships.filter(
+      (r) => r.userId === userId
+    );
+
+    if (userRelationships.length === 0) {
+      return 0.8; // Default confidence for new relationship
+    }
+
+    // Higher confidence if user has relationships with multiple visitors being merged
+    const matchingVisitors = userRelationships.filter((r) =>
+      visitorIds.includes(r.visitorId)
+    );
+    const confidenceBoost = Math.min(matchingVisitors.length * 0.1, 0.2);
+
+    const avgConfidence =
+      userRelationships.reduce((sum, r) => sum + r.confidence, 0) /
+      userRelationships.length;
+    return Math.min(avgConfidence + confidenceBoost, 1.0);
+  }
+
+  /**
+   * Create or update user-visitor relationship in triangular table
+   */
+  private static async createOrUpdateUserVisitorRelationship(
+    userId: string,
+    visitorId: string,
+    confidence: number
+  ): Promise<void> {
+    const timestamp = new Date().toISOString();
+
+    // Store bidirectional relationship for efficient querying
+    const relationship = {
+      userId,
+      visitorId,
+      confidence,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      ttl: Math.floor((Date.now() + 365 * 24 * 60 * 60 * 1000) / 1000), // 1 year TTL
+    };
+
+    // Primary record: USER -> VISITOR (for finding visitors by user)
+    await docClient.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: {
+          PK: `USER_VISITOR#${userId}`,
+          SK: `VISITOR#${visitorId}`,
+          GSI1PK: `VISITOR_USER#${visitorId}`, // Reverse lookup
+          GSI1SK: `USER#${userId}`,
+          GSI2PK: `USER_CONFIDENCE#${userId}`,
+          GSI2SK: `${confidence.toFixed(3)}#${timestamp}`, // Sort by confidence
+          EntityType: "UserVisitorRelationship",
+          ...relationship,
+        },
+      })
+    );
+
+    console.log("🔗 Created/updated user-visitor relationship:", {
+      user: userId.substring(0, 8) + "...",
+      visitor: visitorId.substring(0, 8) + "...",
+      confidence,
+    });
+  }
+
+  /**
+   * Get all user-visitor relationships for given visitor IDs
+   */
+  private static async getUserVisitorRelationships(
+    visitorIds: string[]
+  ): Promise<Array<{ userId: string; visitorId: string; confidence: number }>> {
+    const relationships: Array<{
+      userId: string;
+      visitorId: string;
+      confidence: number;
+    }> = [];
+
+    // Query each visitor ID to find associated users
+    for (const visitorId of visitorIds) {
+      try {
+        const command = new QueryCommand({
+          TableName: TABLE_NAME,
+          IndexName: "GSI1",
+          KeyConditionExpression: "GSI1PK = :visitorPK",
+          ExpressionAttributeValues: {
+            ":visitorPK": `VISITOR_USER#${visitorId}`,
+          },
+        });
+
+        const result = await docClient.send(command);
+
+        if (result.Items) {
+          for (const item of result.Items) {
+            relationships.push({
+              userId: item["userId"],
+              visitorId: item["visitorId"],
+              confidence: item["confidence"] || 0.8,
+            });
+          }
+        }
+      } catch (error) {
+        console.error(
+          `Error querying relationships for visitor ${visitorId}:`,
+          error
+        );
+      }
+    }
+
+    return relationships;
+  }
+
+  /**
+   * Remove all relationships for a visitor (used when merging visitors)
+   */
+  private static async removeVisitorRelationships(
+    visitorId: string
+  ): Promise<void> {
+    try {
+      // Find all relationships for this visitor
+      const command = new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :visitorPK",
+        ExpressionAttributeValues: {
+          ":visitorPK": `VISITOR_USER#${visitorId}`,
+        },
+      });
+
+      const result = await docClient.send(command);
+
+      if (result.Items && result.Items.length > 0) {
+        // Delete each relationship
+        const deletePromises = result.Items.map((item) =>
+          docClient.send(
+            new DeleteCommand({
+              TableName: TABLE_NAME,
+              Key: {
+                PK: `USER_VISITOR#${item["userId"]}`,
+                SK: `VISITOR#${visitorId}`,
+              },
+            })
+          )
+        );
+
+        await Promise.all(deletePromises);
+
+        console.log("🗑️ Removed relationships for visitor:", {
+          visitorId: visitorId.substring(0, 8) + "...",
+          count: result.Items.length,
+        });
+      }
+    } catch (error) {
+      console.error("Error removing visitor relationships:", error);
+    }
+  }
+
+  // ============ TRIANGULAR TABLE QUERY METHODS ============
+
+  /**
+   * Get all visitors associated with a user (for finding all identities using one shared account)
+   */
+  static async getVisitorsByUserId(
+    userId: string,
+    minConfidence = 0.5
+  ): Promise<
+    Array<{ visitorId: string; confidence: number; createdAt: string }>
+  > {
+    try {
+      const command = new QueryCommand({
+        TableName: TABLE_NAME,
+        KeyConditionExpression: "PK = :userPK",
+        FilterExpression: "confidence >= :minConfidence",
+        ExpressionAttributeValues: {
+          ":userPK": `USER_VISITOR#${userId}`,
+          ":minConfidence": minConfidence,
+        },
+      });
+
+      const result = await docClient.send(command);
+
+      return (result.Items || []).map((item) => ({
+        visitorId: item["visitorId"],
+        confidence: item["confidence"],
+        createdAt: item["createdAt"],
+      }));
+    } catch (error) {
+      console.error("Error getting visitors by user ID:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Get all users associated with a visitor (for multiple accounts used by the same identity)
+   */
+  static async getUsersByVisitorId(
+    visitorId: string,
+    minConfidence = 0.5
+  ): Promise<Array<{ userId: string; confidence: number; createdAt: string }>> {
+    try {
+      const command = new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :visitorPK",
+        FilterExpression: "confidence >= :minConfidence",
+        ExpressionAttributeValues: {
+          ":visitorPK": `VISITOR_USER#${visitorId}`,
+          ":minConfidence": minConfidence,
+        },
+      });
+
+      const result = await docClient.send(command);
+
+      return (result.Items || []).map((item) => ({
+        userId: item["userId"],
+        confidence: item["confidence"],
+        createdAt: item["createdAt"],
+      }));
+    } catch (error) {
+      console.error("Error getting users by visitor ID:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Get high-confidence visitors for a user (sorted by confidence)
+   */
+  static async getHighConfidenceVisitorsByUserId(
+    userId: string,
+    limit = 10
+  ): Promise<Array<{ visitorId: string; confidence: number }>> {
+    try {
+      const command = new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI2",
+        KeyConditionExpression: "GSI2PK = :userPK",
+        ExpressionAttributeValues: {
+          ":userPK": `USER_CONFIDENCE#${userId}`,
+        },
+        ScanIndexForward: false, // Sort by confidence DESC
+        Limit: limit,
+      });
+
+      const result = await docClient.send(command);
+
+      return (result.Items || []).map((item) => ({
+        visitorId: item["visitorId"],
+        confidence: item["confidence"],
+      }));
+    } catch (error) {
+      console.error("Error getting high-confidence visitors:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Check if user and visitor are associated
+   */
+  static async isUserVisitorAssociated(
+    userId: string,
+    visitorId: string
+  ): Promise<{ associated: boolean; confidence?: number }> {
+    try {
+      const command = new GetCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `USER_VISITOR#${userId}`,
+          SK: `VISITOR#${visitorId}`,
+        },
+      });
+
+      const result = await docClient.send(command);
+
+      if (result.Item) {
+        return {
+          associated: true,
+          confidence: result.Item["confidence"],
+        };
+      }
+
+      return { associated: false };
+    } catch (error) {
+      console.error("Error checking user-visitor association:", error);
+      return { associated: false };
     }
   }
 
@@ -904,7 +1300,7 @@ export class FingerprintDatabaseService {
       });
 
       const result = await docClient.send(command);
-      return (result.Items || []).map(item => ({
+      return (result.Items || []).map((item) => ({
         visitorId: item["visitorId"],
         associatedAt: item["associatedAt"],
       }));
@@ -929,12 +1325,16 @@ export class FingerprintDatabaseService {
       userId: userId.substring(0, 8) + "...",
     });
 
-    const secondaryVisitorIds = allVisitorIds.filter(id => id !== primaryVisitorId);
+    const secondaryVisitorIds = allVisitorIds.filter(
+      (id) => id !== primaryVisitorId
+    );
 
     for (const secondaryVisitorId of secondaryVisitorIds) {
       try {
         // 1. Get all fingerprint associations for secondary visitor
-        const secondaryAssociations = await this.getAssociationsForVisitor(secondaryVisitorId);
+        const secondaryAssociations = await this.getAssociationsForVisitor(
+          secondaryVisitorId
+        );
 
         // 2. Re-associate all fingerprints to primary visitor
         for (const association of secondaryAssociations) {
@@ -955,7 +1355,6 @@ export class FingerprintDatabaseService {
           secondary: secondaryVisitorId.substring(0, 8) + "...",
           associations: secondaryAssociations.length,
         });
-
       } catch (error) {
         console.error("❌ Failed to merge visitor:", secondaryVisitorId, error);
         // Continue with other visitors even if one fails
@@ -974,7 +1373,8 @@ export class FingerprintDatabaseService {
     try {
       const command = new QueryCommand({
         TableName: TABLE_NAME,
-        KeyConditionExpression: "PK = :visitorPK AND begins_with(SK, :fingerprintPrefix)",
+        KeyConditionExpression:
+          "PK = :visitorPK AND begins_with(SK, :fingerprintPrefix)",
         ExpressionAttributeValues: {
           ":visitorPK": `VISITOR#${visitorId}`,
           ":fingerprintPrefix": "FINGERPRINT#",
@@ -982,7 +1382,7 @@ export class FingerprintDatabaseService {
       });
 
       const result = await docClient.send(command);
-      return (result.Items || []).map(item => ({
+      return (result.Items || []).map((item) => ({
         fingerprintId: item["fingerprintId"],
         fingerprintHash: item["fingerprintHash"],
       }));
@@ -1002,17 +1402,18 @@ export class FingerprintDatabaseService {
   ): Promise<void> {
     try {
       // Delete old association
-      await docClient.send(new DeleteCommand({
-        TableName: TABLE_NAME,
-        Key: {
-          PK: `VISITOR#${secondaryVisitorId}`,
-          SK: `FINGERPRINT#${fingerprintId}`,
-        },
-      }));
+      await docClient.send(
+        new DeleteCommand({
+          TableName: TABLE_NAME,
+          Key: {
+            PK: `VISITOR#${secondaryVisitorId}`,
+            SK: `FINGERPRINT#${fingerprintId}`,
+          },
+        })
+      );
 
       // The new association will be created by the calling function
       // We just need to clean up the old one here
-
     } catch (error) {
       console.error("Error reassociating fingerprint:", error);
     }
@@ -1037,45 +1438,53 @@ export class FingerprintDatabaseService {
 
       // Merge visit counts and session times
       const mergedData = {
-        visitCount: (primaryVisitor.visitCount || 0) + (secondaryVisitor.visitCount || 0),
-        totalSessionTime: (primaryVisitor.totalSessionTime || 0) + (secondaryVisitor.totalSessionTime || 0),
+        visitCount:
+          (primaryVisitor.visitCount || 0) + (secondaryVisitor.visitCount || 0),
+        totalSessionTime:
+          (primaryVisitor.totalSessionTime || 0) +
+          (secondaryVisitor.totalSessionTime || 0),
         associatedFingerprints: [
           ...new Set([
             ...(primaryVisitor.associatedFingerprints || []),
             ...(secondaryVisitor.associatedFingerprints || []),
-          ])
+          ]),
         ],
         // Use the earlier creation date
-        createdAt: primaryVisitor.createdAt < secondaryVisitor.createdAt ? 
-          primaryVisitor.createdAt : secondaryVisitor.createdAt,
+        createdAt:
+          primaryVisitor.createdAt < secondaryVisitor.createdAt
+            ? primaryVisitor.createdAt
+            : secondaryVisitor.createdAt,
         // Use the latest last seen date
-        lastSeenAt: primaryVisitor.lastSeenAt > secondaryVisitor.lastSeenAt ? 
-          primaryVisitor.lastSeenAt : secondaryVisitor.lastSeenAt,
+        lastSeenAt:
+          primaryVisitor.lastSeenAt > secondaryVisitor.lastSeenAt
+            ? primaryVisitor.lastSeenAt
+            : secondaryVisitor.lastSeenAt,
       };
 
       // Update primary visitor with merged data
-      await docClient.send(new UpdateCommand({
-        TableName: TABLE_NAME,
-        Key: {
-          PK: `VISITOR#${primaryVisitorId}`,
-          SK: "PROFILE",
-        },
-        UpdateExpression: `
+      await docClient.send(
+        new UpdateCommand({
+          TableName: TABLE_NAME,
+          Key: {
+            PK: `VISITOR#${primaryVisitorId}`,
+            SK: "PROFILE",
+          },
+          UpdateExpression: `
           SET visitCount = :visitCount,
               totalSessionTime = :totalSessionTime,
               associatedFingerprints = :fingerprints,
               createdAt = :createdAt,
               lastSeenAt = :lastSeenAt
         `,
-        ExpressionAttributeValues: {
-          ":visitCount": mergedData.visitCount,
-          ":totalSessionTime": mergedData.totalSessionTime,
-          ":fingerprints": mergedData.associatedFingerprints,
-          ":createdAt": mergedData.createdAt,
-          ":lastSeenAt": mergedData.lastSeenAt,
-        },
-      }));
-
+          ExpressionAttributeValues: {
+            ":visitCount": mergedData.visitCount,
+            ":totalSessionTime": mergedData.totalSessionTime,
+            ":fingerprints": mergedData.associatedFingerprints,
+            ":createdAt": mergedData.createdAt,
+            ":lastSeenAt": mergedData.lastSeenAt,
+          },
+        })
+      );
     } catch (error) {
       console.error("Error merging visitor profiles:", error);
     }
@@ -1084,21 +1493,24 @@ export class FingerprintDatabaseService {
   /**
    * Clean up secondary visitor record after merge
    */
-  private static async cleanupSecondaryVisitor(secondaryVisitorId: string): Promise<void> {
+  private static async cleanupSecondaryVisitor(
+    secondaryVisitorId: string
+  ): Promise<void> {
     try {
       // Delete visitor profile
-      await docClient.send(new DeleteCommand({
-        TableName: TABLE_NAME,
-        Key: {
-          PK: `VISITOR#${secondaryVisitorId}`,
-          SK: "PROFILE",
-        },
-      }));
+      await docClient.send(
+        new DeleteCommand({
+          TableName: TABLE_NAME,
+          Key: {
+            PK: `VISITOR#${secondaryVisitorId}`,
+            SK: "PROFILE",
+          },
+        })
+      );
 
       console.log("🗑️ Cleaned up secondary visitor:", {
         visitorId: secondaryVisitorId.substring(0, 8) + "...",
       });
-
     } catch (error) {
       console.error("Error cleaning up secondary visitor:", error);
     }
@@ -1493,5 +1905,138 @@ export class FingerprintDatabaseService {
     });
 
     await docClient.send(command);
+  }
+
+  // ================= HELPER METHODS =================
+
+  /**
+   * Gets all user-visitor relationships for a given user with detailed metadata
+   */
+  static async getUserVisitorRelationshipsWithDetails(userId: string): Promise<Array<{
+    visitorId: string;
+    confidence: number;
+    firstSeen: string;
+    lastSeen: string;
+    associationCount: number;
+  }>> {
+    try {
+      const command = new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI3",
+        KeyConditionExpression: "GSI3PK = :userPk",
+        ExpressionAttributeValues: {
+          ":userPk": `USER_VISITOR#${userId}`
+        }
+      });
+
+      const result = await docClient.send(command);
+      return result.Items?.map(item => ({
+        visitorId: item['visitorId'] as string,
+        confidence: item['confidence'] as number,
+        firstSeen: item['firstSeen'] as string,
+        lastSeen: item['lastSeen'] as string,
+        associationCount: item['associationCount'] as number
+      })) || [];
+    } catch (error) {
+      console.error("Error getting user-visitor relationships with details:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Gets all visitor-user relationships for a given visitor with detailed metadata
+   */
+  static async getVisitorUserRelationshipsWithDetails(visitorId: string): Promise<Array<{
+    userId: string;
+    confidence: number;
+    firstSeen: string;
+    lastSeen: string;
+    associationCount: number;
+  }>> {
+    try {
+      const command = new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI3",
+        KeyConditionExpression: "GSI3PK = :visitorPk",
+        ExpressionAttributeValues: {
+          ":visitorPk": `VISITOR_USER#${visitorId}`
+        }
+      });
+
+      const result = await docClient.send(command);
+      return result.Items?.map(item => ({
+        userId: item['userId'] as string,
+        confidence: item['confidence'] as number,
+        firstSeen: item['firstSeen'] as string,
+        lastSeen: item['lastSeen'] as string,
+        associationCount: item['associationCount'] as number
+      })) || [];
+    } catch (error) {
+      console.error("Error getting visitor-user relationships with details:", error);
+      return [];
+    }
+  }
+
+  /**
+   * Bulk update user-visitor relationships for visitor merging scenarios
+   */
+  static async bulkUpdateUserVisitorRelationships(
+    oldVisitorId: string,
+    newVisitorId: string
+  ): Promise<void> {
+    try {
+      // Get all user relationships for the old visitor
+      const oldRelationships = await this.getVisitorUserRelationshipsWithDetails(oldVisitorId);
+      
+      // Update each relationship to point to the new visitor
+      for (const relationship of oldRelationships) {
+        // Create new relationship with new visitor
+        await this.createOrUpdateUserVisitorRelationship(
+          relationship.userId,
+          newVisitorId,
+          relationship.confidence
+        );
+        
+        // Remove old relationship
+        await this.removeUserVisitorRelationship(relationship.userId, oldVisitorId);
+      }
+      
+      console.log(`🔄 Bulk updated ${oldRelationships.length} user-visitor relationships from ${oldVisitorId} to ${newVisitorId}`);
+    } catch (error) {
+      console.error("Error in bulk update user-visitor relationships:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Remove a specific user-visitor relationship
+   */
+  static async removeUserVisitorRelationship(userId: string, visitorId: string): Promise<void> {
+    try {
+      const batch = [
+        // Remove USER_VISITOR record
+        new DeleteCommand({
+          TableName: TABLE_NAME,
+          Key: {
+            PK: `USER_VISITOR#${userId}`,
+            SK: `VISITOR#${visitorId}`
+          }
+        }),
+        // Remove VISITOR_USER record
+        new DeleteCommand({
+          TableName: TABLE_NAME,
+          Key: {
+            PK: `VISITOR_USER#${visitorId}`,
+            SK: `USER#${userId}`
+          }
+        })
+      ];
+
+      await Promise.all(batch.map(command => docClient.send(command)));
+      console.log(`🗑️ Removed user-visitor relationship: ${userId} <-> ${visitorId}`);
+    } catch (error) {
+      console.error("Error removing user-visitor relationship:", error);
+      throw error;
+    }
   }
 }
