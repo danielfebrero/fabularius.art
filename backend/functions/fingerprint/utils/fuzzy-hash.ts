@@ -3,8 +3,8 @@
  *
  * This module implements locality-sensitive hashing (LSH) to enable
  * similarity detection between fingerprints that are nearly identical
- * but not exact matches. 
- * 
+ * but not exact matches.
+ *
  * Refactored to directly use complete fingerprint interface objects
  * instead of extracting stable features.
  */
@@ -41,7 +41,11 @@ const LSH_BUCKET_CONFIGS: LSHBucketConfig[] = [
         webglRenderer: core.webgl?.renderer || "",
         audioContext: core.audio?.contextHash?.substring(0, 16) || "",
       };
-      return crypto.createHash("md5").update(JSON.stringify(data)).digest("hex").substring(0, 16);
+      return crypto
+        .createHash("md5")
+        .update(JSON.stringify(data))
+        .digest("hex")
+        .substring(0, 16);
     },
     entropy: 0.95,
     weight: 1.0,
@@ -52,11 +56,17 @@ const LSH_BUCKET_CONFIGS: LSHBucketConfig[] = [
     extractor: (core) => {
       // Use webgl parameters and canvas as screen substitute
       const data = {
-        webglParams: core.webgl?.parameters ? JSON.stringify(core.webgl.parameters).substring(0, 100) : "",
+        webglParams: core.webgl?.parameters
+          ? JSON.stringify(core.webgl.parameters).substring(0, 100)
+          : "",
         canvasHash: core.canvas?.substring(0, 32) || "",
         renderHash: core.webgl?.renderHash || "",
       };
-      return crypto.createHash("md5").update(JSON.stringify(data)).digest("hex").substring(0, 16);
+      return crypto
+        .createHash("md5")
+        .update(JSON.stringify(data))
+        .digest("hex")
+        .substring(0, 16);
     },
     entropy: 0.7,
     weight: 0.8,
@@ -73,7 +83,11 @@ const LSH_BUCKET_CONFIGS: LSHBucketConfig[] = [
         // Remove navigator reference for server-side compatibility
         audioTiming: core.timing?.cryptoTiming?.toString() || "0",
       };
-      return crypto.createHash("md5").update(JSON.stringify(data)).digest("hex").substring(0, 16);
+      return crypto
+        .createHash("md5")
+        .update(JSON.stringify(data))
+        .digest("hex")
+        .substring(0, 16);
     },
     entropy: 0.85,
     weight: 0.9,
@@ -83,14 +97,19 @@ const LSH_BUCKET_CONFIGS: LSHBucketConfig[] = [
     name: "networkProfile",
     extractor: (_core, advanced) => {
       const data = {
-        webrtcIPs: advanced.webrtc?.localIPs?.slice(0, 3).sort().join(",") || "",
+        webrtcIPs:
+          advanced.webrtc?.localIPs?.slice(0, 3).sort().join(",") || "",
         candidateTypes: advanced.webrtc?.candidateTypes?.sort().join(",") || "",
         connectionType: advanced.network?.connection?.type || "unknown",
-        rttRange: advanced.network?.analysis?.avgRTT 
-          ? Math.floor(advanced.network.analysis.avgRTT / 50) * 50 
+        rttRange: advanced.network?.analysis?.avgRTT
+          ? Math.floor(advanced.network.analysis.avgRTT / 50) * 50
           : 0,
       };
-      return crypto.createHash("md5").update(JSON.stringify(data)).digest("hex").substring(0, 16);
+      return crypto
+        .createHash("md5")
+        .update(JSON.stringify(data))
+        .digest("hex")
+        .substring(0, 16);
     },
     entropy: 0.6,
     weight: 0.7,
@@ -100,13 +119,25 @@ const LSH_BUCKET_CONFIGS: LSHBucketConfig[] = [
     name: "hardwareCapabilities",
     extractor: (core, advanced) => {
       const data = {
-        webglParams: core.webgl?.parameters ? JSON.stringify(core.webgl.parameters).substring(0, 100) : "",
+        webglParams: core.webgl?.parameters
+          ? JSON.stringify(core.webgl.parameters).substring(0, 100)
+          : "",
         audioHash: core.audio?.contextHash || "",
-        mediaDeviceCount: (advanced.mediaDevices?.videoInputs || 0) + (advanced.mediaDevices?.audioInputs || 0) + (advanced.mediaDevices?.audioOutputs || 0),
+        mediaDeviceCount:
+          (advanced.mediaDevices?.videoInputs || 0) +
+          (advanced.mediaDevices?.audioInputs || 0) +
+          (advanced.mediaDevices?.audioOutputs || 0),
         batteryPresent: !!(advanced.battery?.level !== undefined),
-        sensorsAvailable: advanced.sensors?.accelerometer?.available || advanced.sensors?.gyroscope?.available || false,
+        sensorsAvailable:
+          advanced.sensors?.accelerometer?.available ||
+          advanced.sensors?.gyroscope?.available ||
+          false,
       };
-      return crypto.createHash("md5").update(JSON.stringify(data)).digest("hex").substring(0, 16);
+      return crypto
+        .createHash("md5")
+        .update(JSON.stringify(data))
+        .digest("hex")
+        .substring(0, 16);
     },
     entropy: 0.8,
     weight: 0.85,
@@ -117,12 +148,22 @@ const LSH_BUCKET_CONFIGS: LSHBucketConfig[] = [
     extractor: (core) => {
       const timing = core.timing || {};
       const data = {
-        cryptoRange: timing.cryptoTiming ? Math.floor(timing.cryptoTiming / 10) * 10 : 0,
-        regexRange: timing.regexTiming ? Math.floor(timing.regexTiming / 5) * 5 : 0,
-        sortRange: timing.sortTiming ? Math.floor(timing.sortTiming / 5) * 5 : 0,
+        cryptoRange: timing.cryptoTiming
+          ? Math.floor(timing.cryptoTiming / 10) * 10
+          : 0,
+        regexRange: timing.regexTiming
+          ? Math.floor(timing.regexTiming / 5) * 5
+          : 0,
+        sortRange: timing.sortTiming
+          ? Math.floor(timing.sortTiming / 5) * 5
+          : 0,
         wasmSupported: !!timing.wasmTiming,
       };
-      return crypto.createHash("md5").update(JSON.stringify(data)).digest("hex").substring(0, 16);
+      return crypto
+        .createHash("md5")
+        .update(JSON.stringify(data))
+        .digest("hex")
+        .substring(0, 16);
     },
     entropy: 0.75,
     weight: 0.6,
@@ -138,7 +179,11 @@ const LSH_BUCKET_CONFIGS: LSHBucketConfig[] = [
         touchAvailable: !!behavioral.touchBehavior,
         scrollPatterns: behavioral.scrollBehavior?.patterns?.length || 0,
       };
-      return crypto.createHash("md5").update(JSON.stringify(data)).digest("hex").substring(0, 16);
+      return crypto
+        .createHash("md5")
+        .update(JSON.stringify(data))
+        .digest("hex")
+        .substring(0, 16);
     },
     entropy: 0.9,
     weight: 1.2,
@@ -153,7 +198,11 @@ const LSH_BUCKET_CONFIGS: LSHBucketConfig[] = [
         canvas: core.canvas?.substring(0, 16) || "",
         webglVendor: core.webgl?.vendor || "",
       };
-      return crypto.createHash("md5").update(JSON.stringify(data)).digest("hex").substring(0, 16);
+      return crypto
+        .createHash("md5")
+        .update(JSON.stringify(data))
+        .digest("hex")
+        .substring(0, 16);
     },
     entropy: 1.0,
     weight: 1.5,
@@ -171,7 +220,12 @@ export function generateLocalitySensitiveHashes(
   userId?: string
 ): string[] {
   return LSH_BUCKET_CONFIGS.map((config) =>
-    config.extractor(coreFingerprint, advancedFingerprint, behavioralData, userId)
+    config.extractor(
+      coreFingerprint,
+      advancedFingerprint,
+      behavioralData,
+      userId
+    )
   );
 }
 
@@ -282,22 +336,32 @@ export function generateFuzzyFingerprintHash(
   const reducedData = {
     core: {
       canvas: coreFingerprint.canvas?.substring(0, 32) || "",
-      webgl: `${coreFingerprint.webgl?.vendor || ""}-${coreFingerprint.webgl?.renderer || ""}`,
+      webgl: `${coreFingerprint.webgl?.vendor || ""}-${
+        coreFingerprint.webgl?.renderer || ""
+      }`,
       audio: coreFingerprint.audio?.contextHash || "",
     },
     device: {
-      screen: coreFingerprint.webgl?.parameters ? JSON.stringify(coreFingerprint.webgl.parameters).substring(0, 50) : "",
+      screen: coreFingerprint.webgl?.parameters
+        ? JSON.stringify(coreFingerprint.webgl.parameters).substring(0, 50)
+        : "",
       timezone: new Date().getTimezoneOffset().toString(),
       // Remove navigator reference for server-side compatibility
       timing: coreFingerprint.timing?.cryptoTiming?.toString() || "0",
     },
     browser: {
-      extensions: coreFingerprint.webgl?.extensions?.slice(0, 10).sort().join(",") || "",
-      fonts: coreFingerprint.fonts?.systemFonts?.slice(0, 10).sort().join(",") || "",
-      cssFeatures: coreFingerprint.css?.supportedFeatures?.slice(0, 10).sort().join(",") || "",
+      extensions:
+        coreFingerprint.webgl?.extensions?.slice(0, 10).sort().join(",") || "",
+      fonts:
+        coreFingerprint.fonts?.systemFonts?.slice(0, 10).sort().join(",") || "",
+      cssFeatures:
+        coreFingerprint.css?.supportedFeatures?.slice(0, 10).sort().join(",") ||
+        "",
     },
     network: {
-      webrtcIPs: advancedFingerprint.webrtc?.localIPs?.slice(0, 3).sort().join(",") || "",
+      webrtcIPs:
+        advancedFingerprint.webrtc?.localIPs?.slice(0, 3).sort().join(",") ||
+        "",
     },
     user: {
       userId: userId || "", // Include userId in hash
