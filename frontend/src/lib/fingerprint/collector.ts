@@ -900,17 +900,14 @@ export class FingerprintCollector {
   private async sendToBackend(
     request: FingerprintCollectionRequest
   ): Promise<FingerprintCollectionResponse> {
-    const response = await fetch(
-      `${this.config.apiEndpoint}/fingerprint/collect`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(request),
-        signal: this.abortController?.signal,
-      }
-    );
+    const response = await fetch(`${this.config.apiEndpoint}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(request),
+      signal: this.abortController?.signal,
+    });
 
     if (!response.ok) {
       throw new FingerprintError(

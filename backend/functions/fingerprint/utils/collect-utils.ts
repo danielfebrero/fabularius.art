@@ -2,7 +2,7 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 import {
   FingerprintCollectionRequest,
   ServerEnhancementData,
-} from "../../../shared/types/fingerprint";
+} from "@shared/types/fingerprint";
 
 /**
  * Extract server-side enhancement data from the API Gateway event

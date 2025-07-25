@@ -12,6 +12,15 @@ class NoTag(yaml.SafeLoader):
 
 
 def unknown_tag(loader, tag_suffix, node):
+    # Handle scalar values (e.g., !Ref, !Sub with string values)
+    if isinstance(node, yaml.ScalarNode):
+        return loader.construct_scalar(node)
+    # Handle sequence values (e.g., !GetAtt with list values)
+    elif isinstance(node, yaml.SequenceNode):
+        return loader.construct_sequence(node)
+    # Handle mapping values (e.g., complex intrinsic functions)
+    elif isinstance(node, yaml.MappingNode):
+        return loader.construct_mapping(node)
     return None
 
 

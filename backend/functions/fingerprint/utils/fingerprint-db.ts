@@ -13,18 +13,18 @@ import {
   FingerprintSessionEntity,
   FingerprintAnalyticsEntity,
   FingerprintCollectionRequest,
-} from "../../../shared/types/fingerprint";
+} from "@shared/types/fingerprint";
 import {
   UniqueVisitor,
   BehavioralSignature,
   VisitSession,
   SessionBehavior,
-} from "../../../shared/types/visitor-analytics";
+} from "@shared/types/visitor-analytics";
 import {
   generateLocalitySensitiveHashes,
   generateFuzzyFingerprintHash,
 } from "./fuzzy-hash";
-import { DEFAULT_ENTROPY_WEIGHTS } from "../../../shared/config/fingerprint";
+import { DEFAULT_ENTROPY_WEIGHTS } from "./config";
 
 // Match the isLocal/clientConfig logic from dynamodb.ts
 const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
@@ -72,11 +72,24 @@ export class FingerprintDatabaseService {
     advancedFingerprint: any
   ): string[] {
     // Use the advanced LSH approach for better fuzzy matching
-    return generateLocalitySensitiveHashes(
+    const fuzzyHashes = generateLocalitySensitiveHashes(
       coreFingerprint,
       advancedFingerprint,
       4
     );
+    
+    console.log("🔍 Generated fuzzy hashes:", {
+      count: fuzzyHashes.length,
+      hashes: fuzzyHashes,
+      coreFeatures: {
+        hasCanvas: !!coreFingerprint?.canvas,
+        hasWebgl: !!coreFingerprint?.webgl,
+        hasAudio: !!coreFingerprint?.audio,
+        hasScreen: !!coreFingerprint?.screen
+      }
+    });
+    
+    return fuzzyHashes;
   }
 
   /**
@@ -396,12 +409,14 @@ export class FingerprintDatabaseService {
     await docClient.send(command);
 
     // Write one additional record per fuzzy hash for GSI4 indexing
-    // (Each will have the same fingerprintId but different GSI4PK and GSI4SK)
-    const fuzzyWritePromises = fuzzyHashes.map((fuzzyHash) => {
+    // (Each will have different GSI4PK but can share the same GSI4 index)
+    const fuzzyWritePromises = fuzzyHashes.map((fuzzyHash, index) => {
       const fuzzyEntity = {
         ...entity,
+        // Use a unique SK to avoid conflicts with main entity
+        SK: `FUZZY#${index}`,
         GSI4PK: `FINGERPRINT_FUZZY#${fuzzyHash}`,
-        GSI4SK: entity.fingerprintId,
+        GSI4SK: `${now.toISOString()}#${entity.fingerprintId}`,
       };
       return docClient.send(
         new PutCommand({
@@ -585,7 +600,7 @@ export class FingerprintDatabaseService {
   ): Promise<FingerprintEntity[]> {
     const command = new QueryCommand({
       TableName: TABLE_NAME,
-      IndexName: "GSI4",
+      IndexName: "GSI4", // Use GSI4 - it can handle both DEVICE_TYPE and FINGERPRINT_FUZZY patterns
       KeyConditionExpression: "GSI4PK = :fuzzyPK",
       ExpressionAttributeValues: {
         ":fuzzyPK": `FINGERPRINT_FUZZY#${fuzzyHash}`,

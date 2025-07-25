@@ -909,8 +909,7 @@ Resources:
                 - s3:DeleteObject
               Resource: !Sub "arn:aws:s3:::${MediaBucket}/*"
 
-  AdminStatsFunction:
-FingerprintCollectFunction:
+  FingerprintCollectFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-fingerprint-collect"
@@ -927,12 +926,22 @@ FingerprintCollectFunction:
             Method: POST
             Auth:
               Authorizer: NONE # Update as needed for your access control
+        OptionsFingerprintCollect:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /fingerprint/collect
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
       Environment:
         Variables:
           DYNAMODB_TABLE: !Ref MediaTable
+
+  AdminStatsFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-admin-stats"

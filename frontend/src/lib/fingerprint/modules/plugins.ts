@@ -610,16 +610,16 @@ export class PluginExtensionFingerprinting {
       }
 
       // Method 3: Debugger statement
-      try {
-        const debugStart = performance.now();
-        (function () {
-          debugger;
-        })();
-        const debugEnd = performance.now();
-        data.debuggerPresent = debugEnd - debugStart > 100;
-      } catch (error) {
-        // Debugger blocked or error
-      }
+      // try {
+      //   const debugStart = performance.now();
+      //   (function () {
+      //     debugger;
+      //   })();
+      //   const debugEnd = performance.now();
+      //   data.debuggerPresent = debugEnd - debugStart > 100;
+      // } catch (error) {
+      //   // Debugger blocked or error
+      // }
 
       // Method 4: Console modification detection
       data.consoleModified = this.detectConsoleModification();

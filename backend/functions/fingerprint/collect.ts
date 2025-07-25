@@ -70,6 +70,18 @@ export const handler = async (
     let visitorId = uuidv4();
 
     try {
+      // Generate fuzzy hashes to debug what we're looking for
+      const currentFuzzyHashes = FingerprintDatabaseService.generateFuzzyHashes(
+        fingerprintData.coreFingerprint,
+        fingerprintData.advancedFingerprint
+      );
+      
+      console.log("🔍 Generated fuzzy hashes for current fingerprint:", {
+        count: currentFuzzyHashes.length,
+        hashes: currentFuzzyHashes.map(h => h.substring(0, 8) + "..."),
+        fingerprintHash: fingerprintHash.substring(0, 8) + "..."
+      });
+
       // Try to find similar fingerprints using the advanced fuzzy matching
       const similarFingerprints =
         await FingerprintDatabaseService.findSimilarFingerprintsAdvanced(
@@ -78,19 +90,62 @@ export const handler = async (
           5
         );
 
+      console.log("🔍 Fuzzy matching results:", {
+        found: similarFingerprints.length,
+        matches: similarFingerprints.map(fp => ({
+          id: fp.fingerprintId.substring(0, 8) + "...",
+          hash: fp.fingerprintHash.substring(0, 8) + "...",
+          fuzzyHashes: fp.fuzzyHashes?.map(h => h.substring(0, 8) + "...") || [],
+          created: fp.createdAt,
+          lastSeen: fp.lastSeenAt
+        }))
+      });
+
       if (similarFingerprints.length > 0) {
         // Calculate similarity with the best match
         const bestMatch = similarFingerprints[0];
         if (bestMatch) {
-          // For simplicity, just treat any similar fingerprint as a returning visitor
-          isNewVisitor = false;
-          confidence = 0.8; // Base confidence for fuzzy matches
-          // Use the fingerprint ID as a visitor identifier for simplicity
-          visitorId = bestMatch.fingerprintId;
-          console.log(
-            "🔄 Found similar fingerprint, treating as returning visitor"
+          // Calculate actual similarity score
+          const similarity = FingerprintDatabaseService.calculateSimilarity(
+            {
+              fingerprintId: "temp-id", // Temporary ID for comparison
+              fingerprintHash,
+              coreFingerprint: fingerprintData.coreFingerprint,
+              advancedFingerprint: fingerprintData.advancedFingerprint,
+              fuzzyHashes: currentFuzzyHashes
+            } as any,
+            bestMatch
           );
+
+          console.log("🔍 Similarity calculation:", {
+            similarity,
+            threshold: 0.7,
+            willMatch: similarity >= 0.7
+          });
+
+          // Only treat as returning visitor if similarity is high enough
+          if (similarity >= 0.7) {
+            isNewVisitor = false;
+            confidence = similarity;
+            // Use the best match's fingerprint ID as visitor identifier
+            visitorId = bestMatch.fingerprintId;
+            console.log(
+              "🔄 Found similar fingerprint, treating as returning visitor",
+              {
+                similarity,
+                confidence,
+                matchedFingerprintId: bestMatch.fingerprintId.substring(0, 8) + "..."
+              }
+            );
+          } else {
+            console.log("🆕 Similarity too low, treating as new visitor", {
+              similarity,
+              threshold: 0.7
+            });
+          }
         }
+      } else {
+        console.log("🆕 No similar fingerprints found, treating as new visitor");
       }
     } catch (error) {
       console.warn(

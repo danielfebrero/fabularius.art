@@ -11,7 +11,7 @@ import {
   SessionBehavior,
   VisitorAnalytics,
   VisitorTrackingConfig,
-} from "../../../shared/types/visitor-analytics";
+} from "@shared/types/visitor-analytics";
 import { FingerprintDatabaseService } from "./fingerprint-db";
 
 /**
