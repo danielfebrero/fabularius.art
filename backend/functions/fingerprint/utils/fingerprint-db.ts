@@ -24,6 +24,8 @@ import {
 import {
   generateLocalitySensitiveHashes,
   generateFuzzyFingerprintHash,
+  calculateLSHSimilarity,
+  getLSHBucketConfigs,
 } from "./fuzzy-hash";
 import { DEFAULT_ENTROPY_WEIGHTS } from "./config";
 
@@ -187,13 +189,36 @@ export class FingerprintDatabaseService {
   }
 
   /**
-   * Calculate similarity between two fingerprints
+   * Calculate entropy-weighted similarity between two fingerprints using LSH buckets
    */
   static calculateSimilarity(
     fp1: FingerprintEntity,
     fp2: FingerprintEntity,
     weights = DEFAULT_ENTROPY_WEIGHTS
-  ): number {
+  ): {
+    similarity: number;
+    confidence: number;
+    signals: number;
+    matchedComponents: string[];
+  } {
+    // If both fingerprints have fuzzy hashes, use the advanced LSH similarity
+    if (fp1.fuzzyHashes && fp2.fuzzyHashes && fp1.fuzzyHashes.length > 0 && fp2.fuzzyHashes.length > 0) {
+      const lshResult = calculateLSHSimilarity(fp1.fuzzyHashes, fp2.fuzzyHashes);
+      
+      // Extract matched components from bucket matches
+      const matchedComponents = lshResult.bucketMatches
+        .filter(bucket => bucket.matched)
+        .map(bucket => bucket.bucketName);
+
+      return {
+        similarity: lshResult.similarity,
+        confidence: lshResult.confidence,
+        signals: lshResult.signals,
+        matchedComponents
+      };
+    }
+
+    // Fallback to legacy similarity calculation if no fuzzy hashes
     let totalSimilarity = 0;
     let totalWeight = 0;
     const matchedComponents: string[] = [];
@@ -287,7 +312,14 @@ export class FingerprintDatabaseService {
       if (batterySimilarity > 0.8) matchedComponents.push("battery");
     }
 
-    return totalWeight > 0 ? totalSimilarity / totalWeight : 0;
+    const similarity = totalWeight > 0 ? totalSimilarity / totalWeight : 0;
+    
+    return {
+      similarity,
+      confidence: similarity, // For legacy compatibility
+      signals: matchedComponents.length,
+      matchedComponents
+    };
   }
 
   /**
@@ -548,15 +580,22 @@ export class FingerprintDatabaseService {
   }
 
   /**
-   * Enhanced fuzzy matching with actual hash comparison
+   * Enhanced fuzzy matching with entropy-weighted scoring and reconciliation
    * This method generates fuzzy hashes for the current fingerprint and finds matches
+   * with confidence scoring based on signal quality and collision probabilities
    */
   static async findSimilarFingerprintsAdvanced(
     coreFingerprint: any,
     advancedFingerprint: any,
     userId?: string,
-    limit = 10
-  ): Promise<FingerprintEntity[]> {
+    limit = 10,
+    confidenceThreshold = 0.7
+  ): Promise<Array<FingerprintEntity & {
+    similarity: number;
+    confidence: number;
+    signals: number;
+    matchedComponents: string[];
+  }>> {
     // Generate fuzzy hashes for the current fingerprint
     const currentFuzzyHashes = this.generateFuzzyHashes(
       coreFingerprint,
@@ -564,7 +603,13 @@ export class FingerprintDatabaseService {
       userId
     );
 
-    // Try exact matches first
+    console.log("🎯 Enhanced similarity search:", {
+      fuzzyHashCount: currentFuzzyHashes.length,
+      confidenceThreshold,
+      limit
+    });
+
+    // Try exact matches first (highest confidence)
     const mainHash = this.generateFingerprintHash(
       coreFingerprint,
       advancedFingerprint,
@@ -572,36 +617,98 @@ export class FingerprintDatabaseService {
     );
     const exactMatches = await this.findExactHashMatches(mainHash, limit);
 
-    if (exactMatches.length >= limit) {
-      return exactMatches.slice(0, limit);
+    // Process exact matches with perfect confidence
+    const candidatesWithScores: Array<FingerprintEntity & {
+      similarity: number;
+      confidence: number;
+      signals: number;
+      matchedComponents: string[];
+    }> = exactMatches.map(match => ({
+      ...match,
+      similarity: 1.0,
+      confidence: 1.0,
+      signals: 8, // All LSH buckets would match for exact matches
+      matchedComponents: ['exact_match']
+    }));
+
+    if (candidatesWithScores.length >= limit) {
+      return candidatesWithScores.slice(0, limit);
     }
 
-    // Find fuzzy matches by checking each fuzzy hash
-    const allMatches = [...exactMatches];
+    // Find fuzzy matches using entropy-weighted scoring
+    const allCandidates = [...candidatesWithScores];
     const existingIds = new Set(exactMatches.map((fp) => fp.fingerprintId));
-    const remainingLimit = limit - exactMatches.length;
+    const remainingLimit = Math.max(limit - exactMatches.length, 10); // Get more candidates for scoring
 
-    // Query each fuzzy hash to find potential matches
-    for (const fuzzyHash of currentFuzzyHashes) {
-      if (allMatches.length >= limit) break;
+    // Collect potential matches from all fuzzy hash buckets
+    const bucketConfigs = getLSHBucketConfigs();
+    const potentialMatches: Map<string, FingerprintEntity> = new Map();
 
-      // Use the new fuzzy GSI for each bucket!
+    for (let i = 0; i < currentFuzzyHashes.length && i < bucketConfigs.length; i++) {
+      const fuzzyHash = currentFuzzyHashes[i];
+      const bucketConfig = bucketConfigs[i];
+      
+      if (!bucketConfig || !fuzzyHash) continue;
+
+      // Weight the search by bucket entropy (focus on high-entropy buckets first)
+      const bucketLimit = Math.ceil(remainingLimit * (bucketConfig.entropy || 0.5));
+      
       const fuzzyMatches = await this.findFuzzyHashMatches(
         fuzzyHash,
-        remainingLimit
+        bucketLimit
       );
+
+      console.log(`🔍 Bucket ${bucketConfig.name}: found ${fuzzyMatches.length} matches (entropy: ${bucketConfig.entropy})`);
+
       for (const match of fuzzyMatches) {
-        if (
-          !existingIds.has(match.fingerprintId) &&
-          allMatches.length < limit
-        ) {
-          allMatches.push(match);
-          existingIds.add(match.fingerprintId);
+        if (!existingIds.has(match.fingerprintId)) {
+          potentialMatches.set(match.fingerprintId, match);
         }
       }
     }
 
-    return allMatches.slice(0, limit);
+    // Score all potential matches using entropy-weighted similarity
+    const currentFingerprint = {
+      fingerprintId: "temp-current",
+      fingerprintHash: mainHash,
+      coreFingerprint,
+      advancedFingerprint,
+      fuzzyHashes: currentFuzzyHashes,
+    } as FingerprintEntity;
+
+    for (const candidate of potentialMatches.values()) {
+      const similarityResult = this.calculateSimilarity(currentFingerprint, candidate);
+      
+      // Only include candidates that meet the confidence threshold
+      if (similarityResult.confidence >= confidenceThreshold) {
+        allCandidates.push({
+          ...candidate,
+          similarity: similarityResult.similarity,
+          confidence: similarityResult.confidence,
+          signals: similarityResult.signals,
+          matchedComponents: similarityResult.matchedComponents
+        });
+
+        console.log(`✅ Qualified candidate: ${candidate.fingerprintId.substring(0, 8)}... (confidence: ${similarityResult.confidence.toFixed(3)}, signals: ${similarityResult.signals})`);
+      } else {
+        console.log(`❌ Rejected candidate: ${candidate.fingerprintId.substring(0, 8)}... (confidence: ${similarityResult.confidence.toFixed(3)} < ${confidenceThreshold})`);
+      }
+    }
+
+    // Sort by confidence (entropy-weighted), then by signals count, then by similarity
+    allCandidates.sort((a, b) => {
+      if (Math.abs(a.confidence - b.confidence) > 0.01) {
+        return b.confidence - a.confidence; // Higher confidence first
+      }
+      if (a.signals !== b.signals) {
+        return b.signals - a.signals; // More signals first
+      }
+      return b.similarity - a.similarity; // Higher similarity first
+    });
+
+    console.log(`🎯 Final results: ${allCandidates.length} candidates, top confidence: ${allCandidates[0]?.confidence.toFixed(3) || 'none'}`);
+
+    return allCandidates.slice(0, limit);
   }
 
   /**

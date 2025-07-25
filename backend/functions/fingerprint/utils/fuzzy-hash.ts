@@ -22,10 +22,13 @@ type FeatureName =
   | 'userAgent'
   | 'userId'; // Add userId as a stable feature
 
-// LSH bucket configuration type
+// LSH bucket configuration type with entropy weighting
 interface LSHBucketConfig {
   name: string;
   features: FeatureName[];
+  entropy?: number; // Calculated entropy weight (0-1, higher = more unique)
+  weight?: number; // Final weight for similarity calculations
+  collisionProbability?: number; // Estimated collision probability
 }
 
 // Stable features extracted from fingerprints
@@ -43,39 +46,63 @@ interface StableFeatures {
   userId: string; // Add userId as a stable feature
 }
 
-// Predefined LSH bucket configurations
+// Predefined LSH bucket configurations with entropy weights
 const LSH_BUCKET_CONFIGS: LSHBucketConfig[] = [
   {
     name: 'coreHardware',
-    features: ['canvas', 'webglVendor', 'webglRenderer', 'audioContext']
+    features: ['canvas', 'webglVendor', 'webglRenderer', 'audioContext'],
+    entropy: 0.95, // Very high uniqueness - hardware combinations are highly diverse
+    weight: 1.0,
+    collisionProbability: 0.001
   },
   {
     name: 'deviceEnvironment',
-    features: ['screenResolution', 'timezone', 'language', 'webglVendor']
+    features: ['screenResolution', 'timezone', 'language', 'webglVendor'],
+    entropy: 0.75, // Good uniqueness - but common resolutions/timezones exist
+    weight: 0.85,
+    collisionProbability: 0.05
   },
   {
     name: 'browserCapabilities',
-    features: ['canvas', 'webglExtensions', 'fontSample']
+    features: ['canvas', 'webglExtensions', 'fontSample'],
+    entropy: 0.85, // High uniqueness - browser/font combinations diverse
+    weight: 0.9,
+    collisionProbability: 0.02
   },
   {
     name: 'mixedStability',
-    features: ['webglRenderer', 'audioContext', 'screenResolution', 'userAgent']
+    features: ['webglRenderer', 'audioContext', 'screenResolution', 'userAgent'],
+    entropy: 0.70, // Medium uniqueness - userAgent/resolution more common
+    weight: 0.75,
+    collisionProbability: 0.08
   },
   {
     name: 'displayAudio',
-    features: ['canvas', 'audioContext', 'screenResolution']
+    features: ['canvas', 'audioContext', 'screenResolution'],
+    entropy: 0.80, // Good uniqueness - canvas+audio combination unique
+    weight: 0.85,
+    collisionProbability: 0.03
   },
   {
     name: 'webglProfile',
-    features: ['webglVendor', 'webglRenderer', 'webglExtensions']
+    features: ['webglVendor', 'webglRenderer', 'webglExtensions'],
+    entropy: 0.90, // Very high uniqueness - GPU profiles highly specific
+    weight: 0.95,
+    collisionProbability: 0.005
   },
   {
     name: 'userProfile',
-    features: ['userId', 'timezone', 'language', 'screenResolution']
+    features: ['userId', 'timezone', 'language', 'screenResolution'],
+    entropy: 0.98, // Highest uniqueness when userId available
+    weight: 1.0,
+    collisionProbability: 0.0001
   },
   {
     name: 'userDevice',
-    features: ['userId', 'webglVendor', 'webglRenderer', 'canvas']
+    features: ['userId', 'webglVendor', 'webglRenderer', 'canvas'],
+    entropy: 0.99, // Maximum uniqueness - user + hardware combination
+    weight: 1.0,
+    collisionProbability: 0.00005
   }
 ];
 
@@ -281,25 +308,92 @@ function extractUserAgentFeatures(advancedFingerprint: any): string {
 }
 
 /**
- * Calculate similarity between two sets of LSH hashes
- * Returns a score between 0 and 1
+ * Get LSH bucket configurations for external analysis
+ */
+export function getLSHBucketConfigs(): LSHBucketConfig[] {
+  return LSH_BUCKET_CONFIGS;
+}
+
+/**
+ * Calculate entropy-weighted similarity between two sets of LSH hashes
+ * Returns both raw similarity and confidence score with signal analysis
  */
 export function calculateLSHSimilarity(
   hashes1: string[],
   hashes2: string[]
-): number {
-  if (!hashes1.length || !hashes2.length) return 0;
+): {
+  similarity: number;
+  confidence: number;
+  signals: number;
+  bucketMatches: Array<{
+    bucketName: string;
+    matched: boolean;
+    weight: number;
+    entropy: number;
+  }>;
+} {
+  if (!hashes1.length || !hashes2.length) {
+    return { similarity: 0, confidence: 0, signals: 0, bucketMatches: [] };
+  }
 
-  let matches = 0;
-  const totalBuckets = Math.max(hashes1.length, hashes2.length);
+  let weightedMatches = 0;
+  let totalWeight = 0;
+  let signals = 0;
+  const bucketMatches: Array<{
+    bucketName: string;
+    matched: boolean;
+    weight: number;
+    entropy: number;
+  }> = [];
 
-  for (let i = 0; i < Math.min(hashes1.length, hashes2.length); i++) {
-    if (hashes1[i] === hashes2[i]) {
-      matches++;
+  // Compare each bucket with entropy weighting
+  for (let i = 0; i < Math.min(hashes1.length, hashes2.length, LSH_BUCKET_CONFIGS.length); i++) {
+    const config = LSH_BUCKET_CONFIGS[i];
+    if (!config) continue; // Safety check
+    
+    const matched = hashes1[i] === hashes2[i];
+    const weight = config.weight || 1.0;
+    const entropy = config.entropy || 0.5;
+
+    bucketMatches.push({
+      bucketName: config.name,
+      matched,
+      weight,
+      entropy
+    });
+
+    totalWeight += weight;
+
+    if (matched) {
+      // Weight the match by both the bucket weight and entropy
+      // Higher entropy buckets (more unique) get more weight when they match
+      weightedMatches += weight * entropy;
+      signals++;
     }
   }
 
-  return matches / totalBuckets;
+  // Raw similarity based on weighted matches
+  const similarity = totalWeight > 0 ? weightedMatches / totalWeight : 0;
+
+  // Confidence calculation factors in:
+  // 1. Number of matching signals (more signals = higher confidence)
+  // 2. Quality of signals (high-entropy matches = higher confidence)
+  // 3. Consistency across bucket types
+  const signalBonus = Math.min(signals / LSH_BUCKET_CONFIGS.length, 1.0);
+  const entropyBonus = similarity; // Already entropy-weighted
+  const consistencyBonus = signals >= 3 ? 0.1 : 0; // Bonus for multiple consistent signals
+
+  const confidence = Math.min(
+    similarity * signalBonus * 1.2 + entropyBonus * 0.3 + consistencyBonus,
+    1.0
+  );
+
+  return {
+    similarity,
+    confidence,
+    signals,
+    bucketMatches
+  };
 }
 
 /**

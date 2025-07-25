@@ -95,62 +95,59 @@ export const handler = async (
           fingerprintData.coreFingerprint,
           fingerprintData.advancedFingerprint,
           userId,
-          5
+          5,
+          0.7 // Confidence threshold for reconciliation
         );
 
-      console.log("🔍 Fuzzy matching results:", {
+      console.log("🔍 Enhanced fuzzy matching results:", {
         found: similarFingerprints.length,
         matches: similarFingerprints.map((fp) => ({
           id: fp.fingerprintId.substring(0, 8) + "...",
           hash: fp.fingerprintHash.substring(0, 8) + "...",
-          fuzzyHashes:
-            fp.fuzzyHashes?.map((h) => h.substring(0, 8) + "...") || [],
+          similarity: fp.similarity.toFixed(3),
+          confidence: fp.confidence.toFixed(3),
+          signals: fp.signals,
+          components: fp.matchedComponents.join(', '),
           created: fp.createdAt,
           lastSeen: fp.lastSeenAt,
         })),
       });
 
       if (similarFingerprints.length > 0) {
-        // Calculate similarity with the best match
+        // Get the best match (already sorted by confidence)
         const bestMatch = similarFingerprints[0];
         if (bestMatch) {
-          // Calculate actual similarity score
-          const similarity = FingerprintDatabaseService.calculateSimilarity(
-            {
-              fingerprintId: "temp-id", // Temporary ID for comparison
-              fingerprintHash,
-              coreFingerprint: fingerprintData.coreFingerprint,
-              advancedFingerprint: fingerprintData.advancedFingerprint,
-              fuzzyHashes: currentFuzzyHashes,
-            } as any,
-            bestMatch
-          );
-
-          console.log("🔍 Similarity calculation:", {
-            similarity,
+          console.log("🔍 Best match analysis:", {
+            similarity: bestMatch.similarity.toFixed(3),
+            confidence: bestMatch.confidence.toFixed(3),
+            signals: bestMatch.signals,
+            components: bestMatch.matchedComponents.join(', '),
             threshold: 0.7,
-            willMatch: similarity >= 0.7,
+            willReconcile: bestMatch.confidence >= 0.7,
           });
 
-          // Only treat as returning visitor if similarity is high enough
-          if (similarity >= 0.7) {
+          // Use confidence threshold for reconciliation decision
+          if (bestMatch.confidence >= 0.7) {
             isNewVisitor = false;
-            confidence = similarity;
+            confidence = bestMatch.confidence;
             // Use the best match's fingerprint ID as visitor identifier
             visitorId = bestMatch.fingerprintId;
             console.log(
-              "🔄 Found similar fingerprint, treating as returning visitor",
+              "🔄 High-confidence match found, reconciling as returning visitor",
               {
-                similarity,
-                confidence,
+                similarity: bestMatch.similarity.toFixed(3),
+                confidence: bestMatch.confidence.toFixed(3),
+                signals: bestMatch.signals,
                 matchedFingerprintId:
                   bestMatch.fingerprintId.substring(0, 8) + "...",
+                components: bestMatch.matchedComponents.join(', ')
               }
             );
           } else {
-            console.log("🆕 Similarity too low, treating as new visitor", {
-              similarity,
+            console.log("🆕 Confidence below reconciliation threshold, treating as new visitor", {
+              confidence: bestMatch.confidence.toFixed(3),
               threshold: 0.7,
+              signals: bestMatch.signals
             });
           }
         }
