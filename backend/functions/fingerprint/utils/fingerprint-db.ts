@@ -1151,7 +1151,7 @@ export class FingerprintDatabaseService {
     behavioralData?: BehavioralFingerprint,
     userId?: string,
     limit = 10,
-    confidenceThreshold = 0.7
+    confidenceThreshold = 0.45
   ): Promise<
     Array<
       FingerprintEntity & {
@@ -1210,8 +1210,17 @@ export class FingerprintDatabaseService {
     const remainingLimit = Math.max(limit - exactMatches.length, 10); // Get more candidates for scoring
 
     // Collect potential matches from all fuzzy hash buckets
+    // Track visitor_id matches across buckets for stronger signal correlation
     const bucketConfigs = getLSHBucketConfigs();
     const potentialMatches: Map<string, FingerprintEntity> = new Map();
+    const visitorBucketMatches: Map<
+      string,
+      {
+        buckets: Set<string>;
+        fingerprints: Set<string>;
+        totalMatches: number;
+      }
+    > = new Map();
 
     for (
       let i = 0;
@@ -1240,9 +1249,75 @@ export class FingerprintDatabaseService {
       for (const match of fuzzyMatches) {
         if (!existingIds.has(match.fingerprintId)) {
           potentialMatches.set(match.fingerprintId, match);
+          existingIds.add(match.fingerprintId); // Add to existingIds to prevent duplicates across buckets
+
+          // Track visitor_id correlations across buckets
+          const visitorAssociations =
+            await this.getVisitorAssociationsForFingerprint(
+              match.fingerprintId
+            );
+          for (const association of visitorAssociations) {
+            const visitorId = association.visitorId;
+            if (!visitorBucketMatches.has(visitorId)) {
+              visitorBucketMatches.set(visitorId, {
+                buckets: new Set(),
+                fingerprints: new Set(),
+                totalMatches: 0,
+              });
+            }
+            const visitorData = visitorBucketMatches.get(visitorId)!;
+            visitorData.buckets.add(bucketConfig.name);
+            visitorData.fingerprints.add(match.fingerprintId);
+            visitorData.totalMatches++;
+          }
+
+          console.log(
+            `🔍 Added potential match from ${
+              bucketConfig.name
+            }: ${match.fingerprintId.substring(0, 8)}... (visitors: ${
+              visitorAssociations.length
+            })`
+          );
+        } else {
+          console.log(
+            `🔍 Skipped duplicate from ${
+              bucketConfig.name
+            }: ${match.fingerprintId.substring(
+              0,
+              8
+            )}... (already in existingIds)`
+          );
         }
       }
     }
+
+    // Analyze visitor correlations for enhanced confidence scoring
+    const strongVisitorMatches = Array.from(visitorBucketMatches.entries())
+      .filter(([_, data]) => data.buckets.size >= 2) // Visitor found in 2+ buckets
+      .sort((a, b) => b[1].buckets.size - a[1].buckets.size);
+
+    console.log(`🎯 Fuzzy matching summary:`, {
+      totalBucketsSearched: Math.min(
+        currentFuzzyHashes.length,
+        bucketConfigs.length
+      ),
+      potentialMatchesFound: potentialMatches.size,
+      existingIdsCount: existingIds.size,
+      remainingLimit,
+      confidenceThreshold,
+      visitorCorrelations: {
+        totalVisitors: visitorBucketMatches.size,
+        strongCorrelations: strongVisitorMatches.length,
+        top3Visitors: strongVisitorMatches
+          .slice(0, 3)
+          .map(([visitorId, data]) => ({
+            visitorId: visitorId.substring(0, 8) + "...",
+            bucketsMatched: data.buckets.size,
+            fingerprintsCount: data.fingerprints.size,
+            totalMatches: data.totalMatches,
+          })),
+      },
+    });
 
     // Score all potential matches using entropy-weighted similarity
     const currentFingerprint = {
@@ -1253,36 +1328,113 @@ export class FingerprintDatabaseService {
       fuzzyHashes: currentFuzzyHashes,
     } as FingerprintEntity;
 
+    console.log(
+      `🔄 Starting similarity scoring for ${potentialMatches.size} potential matches...`
+    );
+
     for (const candidate of potentialMatches.values()) {
       const similarityResult = this.calculateSimilarity(
         currentFingerprint,
         candidate
       );
 
-      // Only include candidates that meet the confidence threshold
-      if (similarityResult.confidence >= confidenceThreshold) {
+      // Enhanced confidence scoring with visitor_id correlation
+      let enhancedConfidence = similarityResult.confidence;
+      let visitorCorrelationBonus = 0;
+
+      // Get visitor associations for this candidate fingerprint
+      const candidateVisitorAssociations =
+        await this.getVisitorAssociationsForFingerprint(
+          candidate.fingerprintId
+        );
+
+      // Check if any of the candidate's visitors have strong bucket correlations
+      for (const association of candidateVisitorAssociations) {
+        const visitorId = association.visitorId;
+        const visitorData = visitorBucketMatches.get(visitorId);
+
+        if (visitorData) {
+          // Calculate visitor correlation bonus based on bucket matches
+          const bucketMatchRatio =
+            visitorData.buckets.size /
+            Math.min(currentFuzzyHashes.length, bucketConfigs.length);
+          const crossBucketBonus = Math.min(bucketMatchRatio * 0.3, 0.3); // Max 30% bonus
+
+          // Additional bonus for multiple fingerprints from same visitor
+          const multipleFingerprintBonus =
+            visitorData.fingerprints.size > 1 ? 0.1 : 0;
+
+          visitorCorrelationBonus = Math.max(
+            visitorCorrelationBonus,
+            crossBucketBonus + multipleFingerprintBonus
+          );
+
+          console.log(
+            `🔗 Visitor correlation for ${candidate.fingerprintId.substring(
+              0,
+              8
+            )}... (visitor: ${visitorId.substring(0, 8)}...): ` +
+              `bucketsMatched=${visitorData.buckets.size}/${Math.min(
+                currentFuzzyHashes.length,
+                bucketConfigs.length
+              )}, ` +
+              `fingerprintsCount=${visitorData.fingerprints.size}, ` +
+              `bonus=${(crossBucketBonus + multipleFingerprintBonus).toFixed(
+                3
+              )}`
+          );
+        }
+      }
+
+      // Apply visitor correlation bonus to confidence
+      enhancedConfidence = Math.min(
+        similarityResult.confidence + visitorCorrelationBonus,
+        1.0
+      );
+
+      console.log(
+        `📊 Similarity result for ${candidate.fingerprintId.substring(
+          0,
+          8
+        )}...: ` +
+          `similarity=${similarityResult.similarity.toFixed(3)}, ` +
+          `baseConfidence=${similarityResult.confidence.toFixed(3)}, ` +
+          `visitorBonus=${visitorCorrelationBonus.toFixed(3)}, ` +
+          `enhancedConfidence=${enhancedConfidence.toFixed(3)}, ` +
+          `signals=${similarityResult.signals}, ` +
+          `threshold=${confidenceThreshold}`
+      );
+
+      // Only include candidates that meet the confidence threshold (using enhanced confidence)
+      if (enhancedConfidence >= confidenceThreshold) {
         allCandidates.push({
           ...candidate,
           similarity: similarityResult.similarity,
-          confidence: similarityResult.confidence,
-          signals: similarityResult.signals,
-          matchedComponents: similarityResult.matchedComponents,
+          confidence: enhancedConfidence, // Use enhanced confidence
+          signals:
+            similarityResult.signals + (visitorCorrelationBonus > 0 ? 1 : 0), // Add visitor signal if bonus applied
+          matchedComponents: [
+            ...similarityResult.matchedComponents,
+            ...(visitorCorrelationBonus > 0 ? ["visitor_correlation"] : []),
+          ],
         });
 
         console.log(
           `✅ Qualified candidate: ${candidate.fingerprintId.substring(
             0,
             8
-          )}... (confidence: ${similarityResult.confidence.toFixed(
+          )}... (enhanced confidence: ${enhancedConfidence.toFixed(
             3
-          )}, signals: ${similarityResult.signals})`
+          )}, signals: ${
+            similarityResult.signals + (visitorCorrelationBonus > 0 ? 1 : 0)
+          })`
         );
       } else {
         console.log(
           `❌ Rejected candidate: ${candidate.fingerprintId.substring(
             0,
             8
-          )}... (confidence: ${similarityResult.confidence.toFixed(
+          )}... (enhanced confidence: ${enhancedConfidence.toFixed(
             3
           )} < ${confidenceThreshold})`
         );
@@ -1301,9 +1453,11 @@ export class FingerprintDatabaseService {
     });
 
     console.log(
-      `🎯 Final results: ${allCandidates.length} candidates, top confidence: ${
-        allCandidates[0]?.confidence.toFixed(3) || "none"
-      }`
+      `🎯 Final results with visitor correlation: ${allCandidates.length} candidates, ` +
+        `top confidence: ${
+          allCandidates[0]?.confidence.toFixed(3) || "none"
+        }, ` +
+        `visitor correlations: ${strongVisitorMatches.length} strong matches`
     );
 
     return allCandidates.slice(0, limit);
