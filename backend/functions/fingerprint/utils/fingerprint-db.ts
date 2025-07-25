@@ -202,19 +202,27 @@ export class FingerprintDatabaseService {
     matchedComponents: string[];
   } {
     // If both fingerprints have fuzzy hashes, use the advanced LSH similarity
-    if (fp1.fuzzyHashes && fp2.fuzzyHashes && fp1.fuzzyHashes.length > 0 && fp2.fuzzyHashes.length > 0) {
-      const lshResult = calculateLSHSimilarity(fp1.fuzzyHashes, fp2.fuzzyHashes);
-      
+    if (
+      fp1.fuzzyHashes &&
+      fp2.fuzzyHashes &&
+      fp1.fuzzyHashes.length > 0 &&
+      fp2.fuzzyHashes.length > 0
+    ) {
+      const lshResult = calculateLSHSimilarity(
+        fp1.fuzzyHashes,
+        fp2.fuzzyHashes
+      );
+
       // Extract matched components from bucket matches
       const matchedComponents = lshResult.bucketMatches
-        .filter(bucket => bucket.matched)
-        .map(bucket => bucket.bucketName);
+        .filter((bucket) => bucket.matched)
+        .map((bucket) => bucket.bucketName);
 
       return {
         similarity: lshResult.similarity,
         confidence: lshResult.confidence,
         signals: lshResult.signals,
-        matchedComponents
+        matchedComponents,
       };
     }
 
@@ -313,12 +321,12 @@ export class FingerprintDatabaseService {
     }
 
     const similarity = totalWeight > 0 ? totalSimilarity / totalWeight : 0;
-    
+
     return {
       similarity,
       confidence: similarity, // For legacy compatibility
       signals: matchedComponents.length,
-      matchedComponents
+      matchedComponents,
     };
   }
 
@@ -590,12 +598,16 @@ export class FingerprintDatabaseService {
     userId?: string,
     limit = 10,
     confidenceThreshold = 0.7
-  ): Promise<Array<FingerprintEntity & {
-    similarity: number;
-    confidence: number;
-    signals: number;
-    matchedComponents: string[];
-  }>> {
+  ): Promise<
+    Array<
+      FingerprintEntity & {
+        similarity: number;
+        confidence: number;
+        signals: number;
+        matchedComponents: string[];
+      }
+    >
+  > {
     // Generate fuzzy hashes for the current fingerprint
     const currentFuzzyHashes = this.generateFuzzyHashes(
       coreFingerprint,
@@ -606,7 +618,7 @@ export class FingerprintDatabaseService {
     console.log("🎯 Enhanced similarity search:", {
       fuzzyHashCount: currentFuzzyHashes.length,
       confidenceThreshold,
-      limit
+      limit,
     });
 
     // Try exact matches first (highest confidence)
@@ -618,17 +630,19 @@ export class FingerprintDatabaseService {
     const exactMatches = await this.findExactHashMatches(mainHash, limit);
 
     // Process exact matches with perfect confidence
-    const candidatesWithScores: Array<FingerprintEntity & {
-      similarity: number;
-      confidence: number;
-      signals: number;
-      matchedComponents: string[];
-    }> = exactMatches.map(match => ({
+    const candidatesWithScores: Array<
+      FingerprintEntity & {
+        similarity: number;
+        confidence: number;
+        signals: number;
+        matchedComponents: string[];
+      }
+    > = exactMatches.map((match) => ({
       ...match,
       similarity: 1.0,
       confidence: 1.0,
       signals: 8, // All LSH buckets would match for exact matches
-      matchedComponents: ['exact_match']
+      matchedComponents: ["exact_match"],
     }));
 
     if (candidatesWithScores.length >= limit) {
@@ -644,21 +658,29 @@ export class FingerprintDatabaseService {
     const bucketConfigs = getLSHBucketConfigs();
     const potentialMatches: Map<string, FingerprintEntity> = new Map();
 
-    for (let i = 0; i < currentFuzzyHashes.length && i < bucketConfigs.length; i++) {
+    for (
+      let i = 0;
+      i < currentFuzzyHashes.length && i < bucketConfigs.length;
+      i++
+    ) {
       const fuzzyHash = currentFuzzyHashes[i];
       const bucketConfig = bucketConfigs[i];
-      
+
       if (!bucketConfig || !fuzzyHash) continue;
 
       // Weight the search by bucket entropy (focus on high-entropy buckets first)
-      const bucketLimit = Math.ceil(remainingLimit * (bucketConfig.entropy || 0.5));
-      
+      const bucketLimit = Math.ceil(
+        remainingLimit * (bucketConfig.entropy || 0.5)
+      );
+
       const fuzzyMatches = await this.findFuzzyHashMatches(
         fuzzyHash,
         bucketLimit
       );
 
-      console.log(`🔍 Bucket ${bucketConfig.name}: found ${fuzzyMatches.length} matches (entropy: ${bucketConfig.entropy})`);
+      console.log(
+        `🔍 Bucket ${bucketConfig.name}: found ${fuzzyMatches.length} matches (entropy: ${bucketConfig.entropy})`
+      );
 
       for (const match of fuzzyMatches) {
         if (!existingIds.has(match.fingerprintId)) {
@@ -677,8 +699,11 @@ export class FingerprintDatabaseService {
     } as FingerprintEntity;
 
     for (const candidate of potentialMatches.values()) {
-      const similarityResult = this.calculateSimilarity(currentFingerprint, candidate);
-      
+      const similarityResult = this.calculateSimilarity(
+        currentFingerprint,
+        candidate
+      );
+
       // Only include candidates that meet the confidence threshold
       if (similarityResult.confidence >= confidenceThreshold) {
         allCandidates.push({
@@ -686,12 +711,26 @@ export class FingerprintDatabaseService {
           similarity: similarityResult.similarity,
           confidence: similarityResult.confidence,
           signals: similarityResult.signals,
-          matchedComponents: similarityResult.matchedComponents
+          matchedComponents: similarityResult.matchedComponents,
         });
 
-        console.log(`✅ Qualified candidate: ${candidate.fingerprintId.substring(0, 8)}... (confidence: ${similarityResult.confidence.toFixed(3)}, signals: ${similarityResult.signals})`);
+        console.log(
+          `✅ Qualified candidate: ${candidate.fingerprintId.substring(
+            0,
+            8
+          )}... (confidence: ${similarityResult.confidence.toFixed(
+            3
+          )}, signals: ${similarityResult.signals})`
+        );
       } else {
-        console.log(`❌ Rejected candidate: ${candidate.fingerprintId.substring(0, 8)}... (confidence: ${similarityResult.confidence.toFixed(3)} < ${confidenceThreshold})`);
+        console.log(
+          `❌ Rejected candidate: ${candidate.fingerprintId.substring(
+            0,
+            8
+          )}... (confidence: ${similarityResult.confidence.toFixed(
+            3
+          )} < ${confidenceThreshold})`
+        );
       }
     }
 
@@ -706,7 +745,11 @@ export class FingerprintDatabaseService {
       return b.similarity - a.similarity; // Higher similarity first
     });
 
-    console.log(`🎯 Final results: ${allCandidates.length} candidates, top confidence: ${allCandidates[0]?.confidence.toFixed(3) || 'none'}`);
+    console.log(
+      `🎯 Final results: ${allCandidates.length} candidates, top confidence: ${
+        allCandidates[0]?.confidence.toFixed(3) || "none"
+      }`
+    );
 
     return allCandidates.slice(0, limit);
   }
@@ -926,18 +969,20 @@ export class FingerprintDatabaseService {
         return;
       }
 
-      // Extract userId from fingerprint data
+      // Extract userId from fingerprint data (optional - reconciliation works without it)
       const userId = currentFingerprint.userId;
-      if (!userId) {
-        console.log("⚠️ No userId in fingerprint, skipping reconciliation");
-        return;
-      }
+
+      console.log("🔺 Reconciliation context:", {
+        hasUserId: !!userId,
+        fingerprintId: currentFingerprintId.substring(0, 8) + "...",
+        approach: userId ? "user-guided" : "fingerprint-based",
+      });
 
       // STEP 1: Find all similar fingerprints using fuzzy matching
       const similarFingerprints = await this.findSimilarFingerprintsAdvanced(
         currentFingerprint.coreFingerprint,
         currentFingerprint.advancedFingerprint,
-        userId,
+        userId, // Pass userId if available for enhanced matching
         20 // Get more matches for comprehensive reconciliation
       );
 
@@ -951,8 +996,17 @@ export class FingerprintDatabaseService {
           continue;
         }
 
-        // Don't filter by userId here - we want to find cross-user correlations
-        // The triangular reconciliation will handle user-visitor relationships
+        // For fingerprint-based reconciliation, we look for any similar fingerprints
+        // regardless of userId match - the similarity itself is the signal
+        console.log("🔍 Evaluating similar fingerprint:", {
+          fingerprintId:
+            similarFingerprint.fingerprintId.substring(0, 8) + "...",
+          similarity: similarFingerprint.similarity?.toFixed(3),
+          confidence: similarFingerprint.confidence?.toFixed(3),
+          signals: similarFingerprint.signals,
+          hasUserId: !!similarFingerprint.userId,
+          userIdMatch: userId && similarFingerprint.userId === userId,
+        });
 
         // Find existing visitor associations for this fingerprint
         const associations = await this.getVisitorAssociationsForFingerprint(
@@ -986,13 +1040,33 @@ export class FingerprintDatabaseService {
       let primaryVisitorId = currentVisitorId;
       let earliestTimestamp = metadata.timestamp;
 
+      // Check current visitor's creation time
+      const currentVisitor = await this.getVisitorById(currentVisitorId);
+      if (currentVisitor && currentVisitor.createdAt) {
+        earliestTimestamp = currentVisitor.createdAt;
+      }
+
+      // Compare with candidate visitors to find the truly oldest one
       for (const candidateId of candidateVisitorIds) {
         const visitor = await this.getVisitorById(candidateId);
-        if (visitor && visitor.createdAt < earliestTimestamp) {
+        if (
+          visitor &&
+          visitor.createdAt &&
+          visitor.createdAt < earliestTimestamp
+        ) {
           primaryVisitorId = candidateId;
           earliestTimestamp = visitor.createdAt;
         }
       }
+
+      console.log("🏆 Primary visitor selection:", {
+        currentVisitor: currentVisitorId.substring(0, 8) + "...",
+        currentCreatedAt: currentVisitor?.createdAt || metadata.timestamp,
+        selectedPrimary: primaryVisitorId.substring(0, 8) + "...",
+        primaryCreatedAt: earliestTimestamp,
+        candidatesEvaluated: candidateVisitorIds.size,
+        willMerge: primaryVisitorId !== currentVisitorId,
+      });
 
       // If current visitor is already primary, no need to reconcile
       if (primaryVisitorId === currentVisitorId) {
@@ -1012,18 +1086,20 @@ export class FingerprintDatabaseService {
         currentVisitorId,
         ...Array.from(candidateVisitorIds),
       ];
-      await this.mergeVisitorsIntoPrimary(
-        primaryVisitorId,
-        allVisitorIds,
-        userId
-      );
+      await this.mergeVisitorsIntoPrimary(primaryVisitorId, allVisitorIds);
 
-      // STEP 5: Handle user-visitor relationships through triangular table
-      await this.reconcileUserVisitorRelationships(
-        primaryVisitorId,
-        allVisitorIds,
-        userId
-      );
+      // STEP 5: Handle user-visitor relationships through triangular table (only if userId available)
+      if (userId) {
+        await this.reconcileUserVisitorRelationships(
+          primaryVisitorId,
+          allVisitorIds,
+          userId
+        );
+      } else {
+        console.log(
+          "ℹ️ No userId available - skipping user-visitor relationship reconciliation"
+        );
+      }
     } catch (error) {
       console.error("❌ Triangular reconciliation failed:", error);
       // Don't throw - reconciliation failure shouldn't break fingerprint collection
@@ -1423,13 +1499,12 @@ export class FingerprintDatabaseService {
    */
   private static async mergeVisitorsIntoPrimary(
     primaryVisitorId: string,
-    allVisitorIds: string[],
-    userId: string
+    allVisitorIds: string[]
   ): Promise<void> {
     console.log("🔀 Merging visitors into primary:", {
       primary: primaryVisitorId.substring(0, 8) + "...",
       merging: allVisitorIds.length,
-      userId: userId.substring(0, 8) + "...",
+      approach: "fingerprint-based",
     });
 
     const secondaryVisitorIds = allVisitorIds.filter(
@@ -2019,33 +2094,40 @@ export class FingerprintDatabaseService {
   /**
    * Gets all user-visitor relationships for a given user with detailed metadata
    */
-  static async getUserVisitorRelationshipsWithDetails(userId: string): Promise<Array<{
-    visitorId: string;
-    confidence: number;
-    firstSeen: string;
-    lastSeen: string;
-    associationCount: number;
-  }>> {
+  static async getUserVisitorRelationshipsWithDetails(userId: string): Promise<
+    Array<{
+      visitorId: string;
+      confidence: number;
+      firstSeen: string;
+      lastSeen: string;
+      associationCount: number;
+    }>
+  > {
     try {
       const command = new QueryCommand({
         TableName: TABLE_NAME,
         IndexName: "GSI3",
         KeyConditionExpression: "GSI3PK = :userPk",
         ExpressionAttributeValues: {
-          ":userPk": `USER_VISITOR#${userId}`
-        }
+          ":userPk": `USER_VISITOR#${userId}`,
+        },
       });
 
       const result = await docClient.send(command);
-      return result.Items?.map(item => ({
-        visitorId: item['visitorId'] as string,
-        confidence: item['confidence'] as number,
-        firstSeen: item['firstSeen'] as string,
-        lastSeen: item['lastSeen'] as string,
-        associationCount: item['associationCount'] as number
-      })) || [];
+      return (
+        result.Items?.map((item) => ({
+          visitorId: item["visitorId"] as string,
+          confidence: item["confidence"] as number,
+          firstSeen: item["firstSeen"] as string,
+          lastSeen: item["lastSeen"] as string,
+          associationCount: item["associationCount"] as number,
+        })) || []
+      );
     } catch (error) {
-      console.error("Error getting user-visitor relationships with details:", error);
+      console.error(
+        "Error getting user-visitor relationships with details:",
+        error
+      );
       return [];
     }
   }
@@ -2053,33 +2135,42 @@ export class FingerprintDatabaseService {
   /**
    * Gets all visitor-user relationships for a given visitor with detailed metadata
    */
-  static async getVisitorUserRelationshipsWithDetails(visitorId: string): Promise<Array<{
-    userId: string;
-    confidence: number;
-    firstSeen: string;
-    lastSeen: string;
-    associationCount: number;
-  }>> {
+  static async getVisitorUserRelationshipsWithDetails(
+    visitorId: string
+  ): Promise<
+    Array<{
+      userId: string;
+      confidence: number;
+      firstSeen: string;
+      lastSeen: string;
+      associationCount: number;
+    }>
+  > {
     try {
       const command = new QueryCommand({
         TableName: TABLE_NAME,
         IndexName: "GSI3",
         KeyConditionExpression: "GSI3PK = :visitorPk",
         ExpressionAttributeValues: {
-          ":visitorPk": `VISITOR_USER#${visitorId}`
-        }
+          ":visitorPk": `VISITOR_USER#${visitorId}`,
+        },
       });
 
       const result = await docClient.send(command);
-      return result.Items?.map(item => ({
-        userId: item['userId'] as string,
-        confidence: item['confidence'] as number,
-        firstSeen: item['firstSeen'] as string,
-        lastSeen: item['lastSeen'] as string,
-        associationCount: item['associationCount'] as number
-      })) || [];
+      return (
+        result.Items?.map((item) => ({
+          userId: item["userId"] as string,
+          confidence: item["confidence"] as number,
+          firstSeen: item["firstSeen"] as string,
+          lastSeen: item["lastSeen"] as string,
+          associationCount: item["associationCount"] as number,
+        })) || []
+      );
     } catch (error) {
-      console.error("Error getting visitor-user relationships with details:", error);
+      console.error(
+        "Error getting visitor-user relationships with details:",
+        error
+      );
       return [];
     }
   }
@@ -2093,8 +2184,9 @@ export class FingerprintDatabaseService {
   ): Promise<void> {
     try {
       // Get all user relationships for the old visitor
-      const oldRelationships = await this.getVisitorUserRelationshipsWithDetails(oldVisitorId);
-      
+      const oldRelationships =
+        await this.getVisitorUserRelationshipsWithDetails(oldVisitorId);
+
       // Update each relationship to point to the new visitor
       for (const relationship of oldRelationships) {
         // Create new relationship with new visitor
@@ -2103,12 +2195,17 @@ export class FingerprintDatabaseService {
           newVisitorId,
           relationship.confidence
         );
-        
+
         // Remove old relationship
-        await this.removeUserVisitorRelationship(relationship.userId, oldVisitorId);
+        await this.removeUserVisitorRelationship(
+          relationship.userId,
+          oldVisitorId
+        );
       }
-      
-      console.log(`🔄 Bulk updated ${oldRelationships.length} user-visitor relationships from ${oldVisitorId} to ${newVisitorId}`);
+
+      console.log(
+        `🔄 Bulk updated ${oldRelationships.length} user-visitor relationships from ${oldVisitorId} to ${newVisitorId}`
+      );
     } catch (error) {
       console.error("Error in bulk update user-visitor relationships:", error);
       throw error;
@@ -2118,7 +2215,10 @@ export class FingerprintDatabaseService {
   /**
    * Remove a specific user-visitor relationship
    */
-  static async removeUserVisitorRelationship(userId: string, visitorId: string): Promise<void> {
+  static async removeUserVisitorRelationship(
+    userId: string,
+    visitorId: string
+  ): Promise<void> {
     try {
       const batch = [
         // Remove USER_VISITOR record
@@ -2126,21 +2226,23 @@ export class FingerprintDatabaseService {
           TableName: TABLE_NAME,
           Key: {
             PK: `USER_VISITOR#${userId}`,
-            SK: `VISITOR#${visitorId}`
-          }
+            SK: `VISITOR#${visitorId}`,
+          },
         }),
         // Remove VISITOR_USER record
         new DeleteCommand({
           TableName: TABLE_NAME,
           Key: {
             PK: `VISITOR_USER#${visitorId}`,
-            SK: `USER#${userId}`
-          }
-        })
+            SK: `USER#${userId}`,
+          },
+        }),
       ];
 
-      await Promise.all(batch.map(command => docClient.send(command)));
-      console.log(`🗑️ Removed user-visitor relationship: ${userId} <-> ${visitorId}`);
+      await Promise.all(batch.map((command) => docClient.send(command)));
+      console.log(
+        `🗑️ Removed user-visitor relationship: ${userId} <-> ${visitorId}`
+      );
     } catch (error) {
       console.error("Error removing user-visitor relationship:", error);
       throw error;

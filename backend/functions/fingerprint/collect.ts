@@ -107,7 +107,7 @@ export const handler = async (
           similarity: fp.similarity.toFixed(3),
           confidence: fp.confidence.toFixed(3),
           signals: fp.signals,
-          components: fp.matchedComponents.join(', '),
+          components: fp.matchedComponents.join(", "),
           created: fp.createdAt,
           lastSeen: fp.lastSeenAt,
         })),
@@ -121,7 +121,7 @@ export const handler = async (
             similarity: bestMatch.similarity.toFixed(3),
             confidence: bestMatch.confidence.toFixed(3),
             signals: bestMatch.signals,
-            components: bestMatch.matchedComponents.join(', '),
+            components: bestMatch.matchedComponents.join(", "),
             threshold: 0.7,
             willReconcile: bestMatch.confidence >= 0.7,
           });
@@ -140,15 +140,18 @@ export const handler = async (
                 signals: bestMatch.signals,
                 matchedFingerprintId:
                   bestMatch.fingerprintId.substring(0, 8) + "...",
-                components: bestMatch.matchedComponents.join(', ')
+                components: bestMatch.matchedComponents.join(", "),
               }
             );
           } else {
-            console.log("🆕 Confidence below reconciliation threshold, treating as new visitor", {
-              confidence: bestMatch.confidence.toFixed(3),
-              threshold: 0.7,
-              signals: bestMatch.signals
-            });
+            console.log(
+              "🆕 Confidence below reconciliation threshold, treating as new visitor",
+              {
+                confidence: bestMatch.confidence.toFixed(3),
+                threshold: 0.7,
+                signals: bestMatch.signals,
+              }
+            );
           }
         }
       } else {

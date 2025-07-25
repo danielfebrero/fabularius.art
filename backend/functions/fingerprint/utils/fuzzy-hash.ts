@@ -9,18 +9,18 @@
 import * as crypto from "crypto";
 
 // Define the possible feature types
-type FeatureName = 
-  | 'canvas'
-  | 'webglVendor'
-  | 'webglRenderer'
-  | 'audioContext'
-  | 'screenResolution'
-  | 'timezone'
-  | 'language'
-  | 'webglExtensions'
-  | 'fontSample'
-  | 'userAgent'
-  | 'userId'; // Add userId as a stable feature
+type FeatureName =
+  | "canvas"
+  | "webglVendor"
+  | "webglRenderer"
+  | "audioContext"
+  | "screenResolution"
+  | "timezone"
+  | "language"
+  | "webglExtensions"
+  | "fontSample"
+  | "userAgent"
+  | "userId"; // Add userId as a stable feature
 
 // LSH bucket configuration type with entropy weighting
 interface LSHBucketConfig {
@@ -49,61 +49,66 @@ interface StableFeatures {
 // Predefined LSH bucket configurations with entropy weights
 const LSH_BUCKET_CONFIGS: LSHBucketConfig[] = [
   {
-    name: 'coreHardware',
-    features: ['canvas', 'webglVendor', 'webglRenderer', 'audioContext'],
+    name: "coreHardware",
+    features: ["canvas", "webglVendor", "webglRenderer", "audioContext"],
     entropy: 0.95, // Very high uniqueness - hardware combinations are highly diverse
     weight: 1.0,
-    collisionProbability: 0.001
+    collisionProbability: 0.001,
   },
   {
-    name: 'deviceEnvironment',
-    features: ['screenResolution', 'timezone', 'language', 'webglVendor'],
+    name: "deviceEnvironment",
+    features: ["screenResolution", "timezone", "language", "webglVendor"],
     entropy: 0.75, // Good uniqueness - but common resolutions/timezones exist
     weight: 0.85,
-    collisionProbability: 0.05
+    collisionProbability: 0.05,
   },
   {
-    name: 'browserCapabilities',
-    features: ['canvas', 'webglExtensions', 'fontSample'],
+    name: "browserCapabilities",
+    features: ["canvas", "webglExtensions", "fontSample"],
     entropy: 0.85, // High uniqueness - browser/font combinations diverse
     weight: 0.9,
-    collisionProbability: 0.02
+    collisionProbability: 0.02,
   },
   {
-    name: 'mixedStability',
-    features: ['webglRenderer', 'audioContext', 'screenResolution', 'userAgent'],
-    entropy: 0.70, // Medium uniqueness - userAgent/resolution more common
+    name: "mixedStability",
+    features: [
+      "webglRenderer",
+      "audioContext",
+      "screenResolution",
+      "userAgent",
+    ],
+    entropy: 0.7, // Medium uniqueness - userAgent/resolution more common
     weight: 0.75,
-    collisionProbability: 0.08
+    collisionProbability: 0.08,
   },
   {
-    name: 'displayAudio',
-    features: ['canvas', 'audioContext', 'screenResolution'],
-    entropy: 0.80, // Good uniqueness - canvas+audio combination unique
+    name: "displayAudio",
+    features: ["canvas", "audioContext", "screenResolution"],
+    entropy: 0.8, // Good uniqueness - canvas+audio combination unique
     weight: 0.85,
-    collisionProbability: 0.03
+    collisionProbability: 0.03,
   },
   {
-    name: 'webglProfile',
-    features: ['webglVendor', 'webglRenderer', 'webglExtensions'],
-    entropy: 0.90, // Very high uniqueness - GPU profiles highly specific
+    name: "webglProfile",
+    features: ["webglVendor", "webglRenderer", "webglExtensions"],
+    entropy: 0.9, // Very high uniqueness - GPU profiles highly specific
     weight: 0.95,
-    collisionProbability: 0.005
+    collisionProbability: 0.005,
   },
   {
-    name: 'userProfile',
-    features: ['userId', 'timezone', 'language', 'screenResolution'],
+    name: "userProfile",
+    features: ["userId", "timezone", "language", "screenResolution"],
     entropy: 0.98, // Highest uniqueness when userId available
     weight: 1.0,
-    collisionProbability: 0.0001
+    collisionProbability: 0.0001,
   },
   {
-    name: 'userDevice',
-    features: ['userId', 'webglVendor', 'webglRenderer', 'canvas'],
+    name: "userDevice",
+    features: ["userId", "webglVendor", "webglRenderer", "canvas"],
     entropy: 0.99, // Maximum uniqueness - user + hardware combination
     weight: 1.0,
-    collisionProbability: 0.00005
-  }
+    collisionProbability: 0.00005,
+  },
 ];
 
 /**
@@ -170,7 +175,10 @@ function extractStableFeatures(
 /**
  * Generate a single LSH bucket using the specified feature configuration
  */
-function generateLSHBucket(features: StableFeatures, config: LSHBucketConfig): string {
+function generateLSHBucket(
+  features: StableFeatures,
+  config: LSHBucketConfig
+): string {
   const bucketData: Partial<StableFeatures> = {};
 
   // Extract only the specified features for this bucket
@@ -347,10 +355,14 @@ export function calculateLSHSimilarity(
   }> = [];
 
   // Compare each bucket with entropy weighting
-  for (let i = 0; i < Math.min(hashes1.length, hashes2.length, LSH_BUCKET_CONFIGS.length); i++) {
+  for (
+    let i = 0;
+    i < Math.min(hashes1.length, hashes2.length, LSH_BUCKET_CONFIGS.length);
+    i++
+  ) {
     const config = LSH_BUCKET_CONFIGS[i];
     if (!config) continue; // Safety check
-    
+
     const matched = hashes1[i] === hashes2[i];
     const weight = config.weight || 1.0;
     const entropy = config.entropy || 0.5;
@@ -359,7 +371,7 @@ export function calculateLSHSimilarity(
       bucketName: config.name,
       matched,
       weight,
-      entropy
+      entropy,
     });
 
     totalWeight += weight;
@@ -392,7 +404,7 @@ export function calculateLSHSimilarity(
     similarity,
     confidence,
     signals,
-    bucketMatches
+    bucketMatches,
   };
 }
 
