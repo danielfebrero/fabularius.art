@@ -615,6 +615,10 @@ export interface DeviceSensorFingerprint {
   accelerometer: SensorCharacteristics;
   gyroscope: SensorCharacteristics;
   magnetometer: SensorCharacteristics;
+  ambientLight: SensorCharacteristics;
+  proximity: SensorCharacteristics;
+  orientation: SensorCharacteristics;
+  motion: SensorCharacteristics;
 
   // Device motion and orientation
   deviceMotion: {
@@ -661,6 +665,34 @@ export interface DeviceSensorFingerprint {
     spoofingDetected: boolean;
   };
 
+  // Sensor capabilities
+  capabilities: {
+    maxFrequency: number;
+    bufferSize: number;
+    sensorTypes: string[];
+    permissions: string[];
+  };
+
+  // Sensor patterns and analysis
+  patterns: {
+    motionSignatures: string[];
+    orientationPatterns: string[];
+    usageCharacteristics: string[];
+  };
+
+  analysis: {
+    stabilityScores: Record<string, number>;
+    entropyMeasures: Record<string, number>;
+    correlationMatrix: Record<string, Record<string, number>>;
+  };
+
+  // Multiple fingerprint hashes
+  fingerprints: {
+    sensorHash: string;
+    patternHash: string;
+    capabilityHash: string;
+  };
+
   // Unique identifiers
   sensorHash: string;
   hardwareHash: string;
@@ -688,6 +720,9 @@ export interface NetworkAnalysis {
   jitter: number;
   packetLoss: number;
   stability: number;
+  latencyVariation: number;
+  throughputEstimate: number;
+  jitterMeasurement: number;
 }
 
 export interface ConnectionInfo {
@@ -770,32 +805,9 @@ export interface AdvancedFingerprintData {
   mediaDevices: MediaDeviceFingerprint;
   sensors: DeviceSensorFingerprint;
   network: NetworkFingerprint;
-  webassembly: {
-    supported: boolean;
-    simdSupported: boolean;
-    threadsSupported: boolean;
-    bulkMemorySupported: boolean;
-    wasmModules: string[];
-    instructionTiming: Record<string, number>;
-  };
-  storage: {
-    localStorage: boolean;
-    sessionStorage: boolean;
-    indexedDB: boolean;
-    webSQL: boolean;
-    serviceWorker: boolean;
-    cacheAPI: boolean;
-    persistentStorage: boolean;
-    storageQuota?: number;
-  };
-  plugins: {
-    extensions: string[];
-    plugins: string[];
-    mimeTypes: string[];
-    adBlocker: boolean;
-    devTools: boolean;
-    automation: boolean;
-  };
+  webassembly: WebAssemblyFingerprint;
+  storage: StorageFingerprint;
+  plugins: PluginFingerprint;
 }
 
 export interface BehavioralData {
