@@ -1,14 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Switch } from "@/components/ui/Switch";
 import { TagManager } from "@/components/ui/TagManager";
 import { Crown } from "lucide-react";
-import { Album } from "@/types";
+import { Album, Media } from "@/types";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { CoverImageSelector } from "./CoverImageSelector";
+import ResponsivePicture from "@/components/ui/ResponsivePicture";
+import {
+  composeThumbnailUrls,
+  getBestThumbnailUrl,
+  composeMediaUrl,
+} from "@/lib/urlUtils";
+import { mediaApi, albumsApi } from "@/lib/api";
+
+interface MediaWithSelection extends Media {
+  selected: boolean;
+}
 
 interface EditAlbumDialogProps {
   album: Album | null;
@@ -42,6 +53,48 @@ export function EditAlbumDialog({
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // Media selection state
+  const [userMedia, setUserMedia] = useState<MediaWithSelection[]>([]);
+  const [albumMedia, setAlbumMedia] = useState<Media[]>([]);
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [mediaError, setMediaError] = useState<string | null>(null);
+  const [initiallySelectedMediaIds, setInitiallySelectedMediaIds] = useState<Set<string>>(new Set());
+
+  // Fetch both user media and current album media
+  const fetchMediaData = useCallback(async () => {
+    if (!album) return;
+    
+    setMediaLoading(true);
+    setMediaError(null);
+
+    try {
+      // Fetch user's media and current album media in parallel
+      const [userMediaResponse, albumMediaResponse] = await Promise.all([
+        mediaApi.getUserMedia({ limit: 100 }),
+        mediaApi.getAlbumMedia(album.id, { limit: 100 })
+      ]);
+
+      // Track which media are currently in the album
+      const albumMediaIds = new Set(albumMediaResponse.media.map((m: Media) => m.id));
+      setAlbumMedia(albumMediaResponse.media);
+      setInitiallySelectedMediaIds(albumMediaIds);
+
+      // Mark user media as selected if they're in the album
+      const mediaWithSelection = userMediaResponse.media.map((media: Media) => ({
+        ...media,
+        selected: albumMediaIds.has(media.id),
+      }));
+      
+      setUserMedia(mediaWithSelection);
+    } catch (err) {
+      setMediaError(
+        err instanceof Error ? err.message : "Failed to fetch media"
+      );
+    } finally {
+      setMediaLoading(false);
+    }
+  }, [album]);
+
   // Reset form when album changes
   useEffect(() => {
     if (album) {
@@ -50,13 +103,60 @@ export function EditAlbumDialog({
       // If user can't make content private, force album to be public
       setIsPublic(canMakePrivate ? album.isPublic || false : true);
       setCoverImageUrl(album.coverImageUrl || "");
+      
+      // Fetch album media and user media when album is opened
+      if (open) {
+        fetchMediaData();
+      }
     } else {
       setTitle("");
       setTags([]);
       setIsPublic(true); // Default to public
       setCoverImageUrl("");
+      setUserMedia([]);
+      setAlbumMedia([]);
+      setInitiallySelectedMediaIds(new Set());
     }
-  }, [album, canMakePrivate]);
+  }, [album, canMakePrivate, open, fetchMediaData]);
+
+  // Toggle media selection
+  const toggleMediaSelection = (mediaId: string) => {
+    setUserMedia((prev) =>
+      prev.map((media) =>
+        media.id === mediaId ? { ...media, selected: !media.selected } : media
+      )
+    );
+  };
+
+  // Apply media changes (add/remove from album)
+  const applyMediaChanges = async () => {
+    if (!album) return;
+
+    // Find media to add and remove
+    const mediaToAdd = userMedia
+      .filter((m) => m.selected && !initiallySelectedMediaIds.has(m.id))
+      .map((m) => m.id);
+
+    const mediaToRemove = userMedia
+      .filter((m) => !m.selected && initiallySelectedMediaIds.has(m.id))
+      .map((m) => m.id);
+
+    const promises = [];
+    
+    // Add new media
+    for (const mediaId of mediaToAdd) {
+      promises.push(albumsApi.addMediaToAlbum(album.id, mediaId));
+    }
+    
+    // Remove media
+    for (const mediaId of mediaToRemove) {
+      promises.push(albumsApi.removeMediaFromAlbum(album.id, mediaId));
+    }
+
+    if (promises.length > 0) {
+      await Promise.all(promises);
+    }
+  };
 
   // Handle escape key
   useEffect(() => {
@@ -82,6 +182,10 @@ export function EditAlbumDialog({
 
     setSaving(true);
     try {
+      // Apply media changes first
+      await applyMediaChanges();
+      
+      // Then update album details
       await onSave(album.id, {
         title: title.trim(),
         tags,
@@ -189,6 +293,91 @@ export function EditAlbumDialog({
                   disabled={saving || loading || !canMakePrivate}
                 />
               </div>
+            </div>
+
+            {/* Media Selection Section */}
+            <div className="space-y-3">
+              <label className="block text-sm font-medium text-foreground">
+                Album Images
+              </label>
+              
+              {mediaLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-admin-primary"></div>
+                </div>
+              ) : mediaError ? (
+                <div className="text-red-500 text-sm">{mediaError}</div>
+              ) : (
+                <>
+                  <div className="text-sm text-muted-foreground mb-3">
+                    Select images to include in this album. You can select from your own images and images you&apos;ve added.
+                  </div>
+                  
+                  <div className="max-h-96 overflow-y-auto border rounded-lg p-3 bg-muted/30">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                      {userMedia.map((media) => {
+                        const isSelected = media.selected;
+                        const isFromAlbum = albumMedia.some(am => am.id === media.id);
+                        
+                        return (
+                          <div
+                            key={media.id}
+                            className={`relative cursor-pointer rounded-lg overflow-hidden transition-all duration-200 ${
+                              isSelected 
+                                ? 'ring-3 ring-admin-primary shadow-lg transform scale-105' 
+                                : 'ring-1 ring-border hover:ring-border/60 hover:shadow-md'
+                            }`}
+                            onClick={() => toggleMediaSelection(media.id)}
+                          >
+                            <div className="aspect-square">
+                              <ResponsivePicture
+                                thumbnailUrls={composeThumbnailUrls(
+                                  media.thumbnailUrls || {}
+                                )}
+                                fallbackUrl={getBestThumbnailUrl(
+                                  composeThumbnailUrls(media.thumbnailUrls || {}),
+                                  composeMediaUrl(media.url)
+                                )}
+                                alt={media.originalFilename || `Media ${media.id}`}
+                                className="w-full h-full object-cover"
+                                context="albums"
+                                columns={5}
+                                loading="lazy"
+                              />
+                            </div>
+                            
+                            {/* Selection Indicator */}
+                            <div className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
+                              isSelected 
+                                ? 'bg-admin-primary border-admin-primary' 
+                                : 'bg-background border-border'
+                            }`}>
+                              {isSelected && (
+                                <svg className="w-4 h-4 text-admin-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                              )}
+                            </div>
+
+                            {/* Album Badge */}
+                            {isFromAlbum && (
+                              <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                                In Album
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                      
+                      {userMedia.length === 0 && (
+                        <div className="col-span-full text-center py-8 text-muted-foreground">
+                          No media available
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 

@@ -602,12 +602,10 @@ export function ContentCard({
               )}
 
               <div className="flex items-center justify-between mt-1">
-                {album.mediaCount && (
-                  <p className="text-white/80 text-xs">
-                    {album.mediaCount}{" "}
-                    {album.mediaCount === 1 ? "item" : "items"}
-                  </p>
-                )}
+                <p className="text-white/80 text-xs">
+                  {album.mediaCount ?? 0}{" "}
+                  {album.mediaCount === 1 ? "item" : "items"}
+                </p>
                 {showCounts && (
                   <div className="flex items-center gap-3">
                     {canLike && (

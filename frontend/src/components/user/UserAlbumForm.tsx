@@ -15,6 +15,7 @@ import {
   getBestThumbnailUrl,
   composeMediaUrl,
 } from "@/lib/urlUtils";
+import { mediaApi } from "@/lib/api";
 
 interface UserAlbumFormData {
   title: string;
@@ -67,26 +68,13 @@ export function UserAlbumForm({
       setMediaError(null);
 
       try {
-        const apiUrl =
-          process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:3001";
-        const response = await fetch(`${apiUrl}/user/media`, {
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          throw new Error(tForm("failedToFetchImages"));
-        }
-
-        const data = await response.json();
-        if (data.success) {
-          const mediaWithSelection = data.data.media.map((media: Media) => ({
-            ...media,
-            selected: false,
-          }));
-          setUserMedia(mediaWithSelection);
-        } else {
-          throw new Error(data.error || tForm("failedToFetchImages"));
-        }
+        const response = await mediaApi.getUserMedia({ limit: 100 });
+        
+        const mediaWithSelection = response.media.map((media: Media) => ({
+          ...media,
+          selected: false,
+        }));
+        setUserMedia(mediaWithSelection);
       } catch (err) {
         setMediaError(
           err instanceof Error ? err.message : tForm("failedToFetchImages")

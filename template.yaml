@@ -451,14 +451,6 @@ Resources:
             Method: DELETE
             Auth:
               Authorizer: UserAuthorizer
-        OptionsDeleteAlbum:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /albums/{albumId}
-            Method: OPTIONS
-            Auth:
-              Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
@@ -545,6 +537,37 @@ Resources:
               Authorizer: NONE
       Policies:
         - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
+  RemoveMediaFromAlbumFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-remove-media-from-album"
+      CodeUri: backend/dist/functions/media/
+      Handler: remove.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        DeleteMediaFromAlbum:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /albums/{albumId}/media/{mediaId}
+            Method: DELETE
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsRemoveMedia:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /albums/{albumId}/media/{mediaId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
 
   GetAllMediaFunction:
