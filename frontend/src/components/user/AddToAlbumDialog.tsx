@@ -7,10 +7,9 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Switch } from "@/components/ui/Switch";
 import { TagManager } from "@/components/ui/TagManager";
-import { Media } from "@/types";
+import { Media, Album } from "@/types";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { cn } from "@/lib/utils";
-import { useAlbums } from "@/hooks/useAlbums";
 import { albumsApi } from "@/lib/api";
 
 interface AddToAlbumDialogProps {
@@ -26,8 +25,12 @@ export function AddToAlbumDialog({
 }: AddToAlbumDialogProps) {
   const t = useTranslations("album");
   const tCommon = useTranslations("common");
-  const { albums, loading: albumsLoading, createAlbum } = useAlbums();
   const { canCreatePrivateContent } = usePermissions();
+
+  // Local albums state - only fetched when dialog opens
+  const [albums, setAlbums] = useState<Album[]>([]);
+  const [albumsLoading, setAlbumsLoading] = useState(false);
+  const [albumsError, setAlbumsError] = useState<string | null>(null);
 
   // UI state
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -41,6 +44,40 @@ export function AddToAlbumDialog({
   const [newAlbumTags, setNewAlbumTags] = useState<string[]>([]);
   const [newAlbumIsPublic, setNewAlbumIsPublic] = useState(true);
   const [useAsCover, setUseAsCover] = useState(true);
+
+  // Fetch albums only when dialog opens
+  useEffect(() => {
+    if (isOpen && albums.length === 0 && !albumsLoading) {
+      fetchAlbums();
+    }
+  }, [isOpen, albums.length, albumsLoading]);
+
+  const fetchAlbums = async () => {
+    setAlbumsLoading(true);
+    setAlbumsError(null);
+    try {
+      const response = await albumsApi.getAlbums({ limit: 50 }); // Get more albums for selection
+      setAlbums(response.albums);
+    } catch (error) {
+      console.error("Failed to fetch albums:", error);
+      setAlbumsError(error instanceof Error ? error.message : "Failed to fetch albums");
+    } finally {
+      setAlbumsLoading(false);
+    }
+  };
+
+  const createAlbum = async (albumData: {
+    title: string;
+    tags?: string[];
+    isPublic: boolean;
+    mediaIds?: string[];
+    coverImageId?: string;
+  }) => {
+    const newAlbum = await albumsApi.createAlbum(albumData);
+    // Add the new album to local state
+    setAlbums(prev => [newAlbum, ...prev]);
+    return newAlbum;
+  };
 
   // Add media to album function using API
   const addMediaToAlbum = async (albumId: string, mediaId: string) => {
@@ -56,18 +93,12 @@ export function AddToAlbumDialog({
       setNewAlbumTags([]);
       setNewAlbumIsPublic(true);
       setUseAsCover(true);
+    } else {
+      // Clear albums when dialog closes to prevent stale data
+      setAlbums([]);
+      setAlbumsError(null);
     }
   }, [isOpen]);
-
-  // For now, we'll assume media is not in any album since we don't have
-  // mediaIds in the Album type. This could be enhanced later.
-  useEffect(() => {
-    if (isOpen && albums && media) {
-      // TODO: Check which albums contain this media
-      // This would require an API call or additional data structure
-      setSelectedAlbumIds(new Set());
-    }
-  }, [isOpen, albums, media]);
 
   const handleAlbumToggle = (albumId: string) => {
     const newSelected = new Set(selectedAlbumIds);
@@ -95,15 +126,13 @@ export function AddToAlbumDialog({
 
       // Create new album if form is shown
       if (showCreateForm && newAlbumTitle.trim()) {
-        const newAlbum =
-          createAlbum &&
-          (await createAlbum({
-            title: newAlbumTitle.trim(),
-            tags: newAlbumTags,
-            isPublic: newAlbumIsPublic,
-            mediaIds: [media.id],
-            ...(useAsCover && { coverImageId: media.id }),
-          }));
+        const newAlbum = await createAlbum({
+          title: newAlbumTitle.trim(),
+          tags: newAlbumTags,
+          isPublic: newAlbumIsPublic,
+          mediaIds: [media.id],
+          ...(useAsCover && { coverImageId: media.id }),
+        });
 
         if (newAlbum) {
           onClose();
@@ -224,6 +253,17 @@ export function AddToAlbumDialog({
                   <p className="text-sm text-muted-foreground mt-2">
                     {tCommon("loading")}...
                   </p>
+                </div>
+              ) : albumsError ? (
+                <div className="text-center py-8">
+                  <p className="text-sm text-red-500 mb-2">{albumsError}</p>
+                  <Button
+                    onClick={fetchAlbums}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Try Again
+                  </Button>
                 </div>
               ) : albums && albums.length > 0 ? (
                 <div className="space-y-2">

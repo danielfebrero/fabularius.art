@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Album } from "@/types";
-import API_URL from "@/lib/api";
+import { adminAlbumsApi } from "@/lib/api";
 
 interface CreateAlbumData {
   title: string;
@@ -25,20 +25,8 @@ export function useAdminAlbums() {
     setError(null);
 
     try {
-      const response = await fetch(`${API_URL}/admin/albums`, {
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch albums");
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        setAlbums(data.data.albums || []);
-      } else {
-        throw new Error(data.error || "Failed to fetch albums");
-      }
+      const data = await adminAlbumsApi.getAlbums();
+      setAlbums(data.albums || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch albums");
     } finally {
@@ -49,26 +37,7 @@ export function useAdminAlbums() {
   const createAlbum = useCallback(
     async (albumData: CreateAlbumData): Promise<Album> => {
       setError(null);
-
-      const response = await fetch(`${API_URL}/albums`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(albumData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create album");
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        return data.data;
-      } else {
-        throw new Error(data.error || "Failed to create album");
-      }
+      return await adminAlbumsApi.createAlbum(albumData);
     },
     []
   );
@@ -76,75 +45,27 @@ export function useAdminAlbums() {
   const updateAlbum = useCallback(
     async (albumId: string, albumData: UpdateAlbumData): Promise<Album> => {
       setError(null);
-
-      const response = await fetch(`${API_URL}/admin/albums/${albumId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify(albumData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update album");
-      }
-
-      const data = await response.json();
-      if (data.success) {
-        return data.data;
-      } else {
-        throw new Error(data.error || "Failed to update album");
-      }
+      return await adminAlbumsApi.updateAlbum(albumId, albumData);
     },
     []
   );
 
   const deleteAlbum = useCallback(async (albumId: string): Promise<void> => {
     setError(null);
-
-    const response = await fetch(`${API_URL}/admin/albums/${albumId}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to delete album");
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.error || "Failed to delete album");
-    }
+    return await adminAlbumsApi.deleteAlbum(albumId);
   }, []);
 
   const bulkDeleteAlbums = useCallback(
     async (albumIds: string[]): Promise<void> => {
       setError(null);
-
-      const deletePromises = albumIds.map((albumId) => deleteAlbum(albumId));
-      await Promise.all(deletePromises);
+      return await adminAlbumsApi.bulkDeleteAlbums(albumIds);
     },
-    [deleteAlbum]
+    []
   );
 
   const getAlbum = useCallback(async (albumId: string): Promise<Album> => {
     setError(null);
-
-    const response = await fetch(`${API_URL}/albums/${albumId}`, {
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch album");
-    }
-
-    const data = await response.json();
-    if (data.success) {
-      return data.data;
-    } else {
-      throw new Error(data.error || "Failed to fetch album");
-    }
+    return await adminAlbumsApi.getAlbum(albumId);
   }, []);
 
   return {

@@ -14,6 +14,7 @@ You are an expert AI programming assistant working as a **lead developer** on th
 - **Think creatively and explore the workspace** to make complete fixes
 - **Don't repeat yourself after tool calls** - pick up where you left off
 - **ALWAYS update documentation** - maintain `/docs` when making changes or learning new patterns
+- **NEVER make direct API calls in components or hooks** - always use centralized API methods from `/frontend/src/lib/api.ts`
 
 ### Smart Mode - Coding Strategically
 
@@ -133,6 +134,50 @@ isPublic-createdAt-index: Public albums by date
 - Feature components in specific directories (`/admin/`, `/user/`, `/albums/`)
 - All forms use react-hook-form with zod validation
 - Responsive images use `ResponsivePicture` component with 5-tier thumbnails
+
+### API Usage Patterns (Critical)
+
+**NEVER make direct `fetch()` calls in components, hooks, or pages.** Always use the centralized API methods from `/frontend/src/lib/api.ts`.
+
+**Available API Objects:**
+
+- `albumsApi` - Regular user album operations
+- `adminAlbumsApi` - Admin album management
+- `userApi` - User profile and interaction operations
+- `mediaApi` - Media upload and management operations
+
+**Correct Pattern:**
+
+```typescript
+// ✅ CORRECT - Use centralized API
+import { albumsApi } from "@/lib/api";
+
+const { albums, loading } = await albumsApi.getAlbums({ limit: 20 });
+const newAlbum = await albumsApi.createAlbum({
+  title: "My Album",
+  isPublic: true,
+});
+```
+
+**Wrong Pattern:**
+
+```typescript
+// ❌ WRONG - Direct fetch calls
+const response = await fetch(`${API_URL}/albums`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  credentials: "include",
+  body: JSON.stringify(albumData),
+});
+```
+
+**Benefits:**
+
+- Consistent error handling across the application
+- Centralized request/response formatting
+- Easier testing and debugging
+- Better type safety and IntelliSense
+- Reduces code duplication and maintenance burden
 
 ### Backend Lambda Patterns
 

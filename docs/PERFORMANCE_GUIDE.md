@@ -2,6 +2,42 @@
 
 This document provides a detailed overview of the performance optimization strategies implemented in the PornSpot.ai application.
 
+## API Call Optimization
+
+### Lazy Loading of Albums in Add to Album Dialog
+
+- **Issue**: Previously, the `AddToAlbumDialog` component was using the `useAlbums()` hook, which would fetch albums data immediately when the component was mounted. Since multiple ContentCard components render on album detail pages (one per media item), this caused the `/albums` API to be called multiple times simultaneously (50+ times), creating unnecessary server load.
+
+- **Solution**: Refactored the `AddToAlbumDialog` to use local state management and only fetch albums when the dialog is actually opened. This ensures:
+
+  - Albums are fetched only when needed (dialog opens)
+  - Each dialog instance doesn't create its own hook
+  - API calls are eliminated for unused dialog instances
+  - Performance is significantly improved on pages with many media items
+
+- **Implementation**: The component now manages its own `albums` state and uses `useEffect` to trigger `fetchAlbums()` only when `isOpen` becomes `true` and no albums are cached.
+
+### API Call Centralization
+
+- **Issue**: Previously, many components and hooks were making direct `fetch()` calls, leading to inconsistent error handling, duplicate code, and maintenance challenges.
+
+- **Solution**: Centralized all API calls into `/frontend/src/lib/api.ts` with dedicated objects for different domains:
+
+  - `albumsApi` - Regular user album operations
+  - `adminAlbumsApi` - Admin album management
+  - `userApi` - User profile and interaction operations
+  - `mediaApi` - Media upload and management operations
+
+- **Benefits**:
+
+  - Consistent error handling across the application
+  - Centralized request/response formatting
+  - Easier testing and debugging
+  - Better type safety and IntelliSense
+  - Reduces code duplication and maintenance burden
+
+- **Implementation**: Updated `AddToAlbumDialog` and `useAdminAlbums` hook to use centralized API methods. Additional hooks should be migrated to this pattern over time.
+
 ## Image Optimization
 
 Image optimization is a critical aspect of the application's performance. Instead of relying on Next.js's built-in image optimization, the application uses a powerful custom thumbnail generation system.
