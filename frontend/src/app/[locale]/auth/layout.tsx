@@ -23,9 +23,7 @@ export default async function AuthLayout({ children }: AuthLayoutProps) {
               </p>
             </div>
 
-            <AuthLayoutContent>
-              {children}
-            </AuthLayoutContent>
+            <AuthLayoutContent>{children}</AuthLayoutContent>
           </div>
         </div>
       </div>
