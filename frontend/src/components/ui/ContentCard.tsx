@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { Media, Album, ThumbnailContext, ThumbnailSize } from "@/types";
 import { LikeButton } from "@/components/user/LikeButton";
 import { BookmarkButton } from "@/components/user/BookmarkButton";
+import { AddToAlbumDialog } from "@/components/user/AddToAlbumDialog";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { cn } from "@/lib/utils";
@@ -88,6 +89,7 @@ export function ContentCard({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [showMobileActions, setShowMobileActions] = useState(false);
+  const [addToAlbumDialogOpen, setAddToAlbumDialogOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const isMedia = type === "media";
@@ -163,10 +165,12 @@ export function ContentCard({
   const handleAddToAlbum = () => {
     if (onAddToAlbum) {
       onAddToAlbum();
+    } else if (isMedia && media) {
+      // Default behavior: show add to album dialog for media items
+      setAddToAlbumDialogOpen(true);
     } else {
-      // Default behavior: show add to album modal/functionality
+      // For albums or other items, just log for now
       console.log("Add to album:", item.id);
-      // TODO: Implement default add to album functionality
     }
   };
 
@@ -684,6 +688,15 @@ export function ContentCard({
               setLightboxIndex(lightboxIndex - 1);
             }
           }}
+        />
+      )}
+
+      {/* Add to Album Dialog */}
+      {isMedia && media && (
+        <AddToAlbumDialog
+          isOpen={addToAlbumDialogOpen}
+          onClose={() => setAddToAlbumDialogOpen(false)}
+          media={media}
         />
       )}
     </>

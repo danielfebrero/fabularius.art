@@ -2,6 +2,8 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { ResponseUtil } from "@shared/utils/response";
 import { RevalidationService } from "@shared/utils/revalidation";
+import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { PlanUtil } from "@shared/utils/plan";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -16,10 +18,37 @@ export const handler = async (
       return ResponseUtil.badRequest(event, "Album ID is required");
     }
 
-    // Get user from authorizer context
-    const userId = event.requestContext.authorizer?.["userId"];
+    // Determine user context - check if admin authorizer or user authorizer
+    let userId = event.requestContext.authorizer?.["userId"];
+    let userRole = "user"; // default to user
+
+    console.log("👤 UserId from authorizer:", userId);
+
+    // If no userId from authorizer, try session-based validation
     if (!userId) {
-      return ResponseUtil.unauthorized(event, "User authentication required");
+      console.log(
+        "⚠️ No userId from authorizer, falling back to session validation"
+      );
+      const validation = await UserAuthMiddleware.validateSession(event);
+
+      if (!validation.isValid || !validation.user) {
+        console.log("❌ Session validation failed");
+        return ResponseUtil.unauthorized(event, "No user session found");
+      }
+
+      userId = validation.user.userId;
+      console.log("✅ Got userId from session validation:", userId);
+
+      // Check if user has admin privileges
+      userRole = await PlanUtil.getUserRole(
+        validation.user.userId,
+        validation.user.email
+      );
+      console.log("✅ User role:", userRole);
+    } else {
+      // If userId came from authorizer, check if it's admin context
+      // This would be set by admin authorizer vs user authorizer
+      userRole = event.requestContext.authorizer?.["role"] || "user";
     }
 
     // Check if album exists
@@ -28,8 +57,8 @@ export const handler = async (
       return ResponseUtil.notFound(event, "Album not found");
     }
 
-    // Check if user owns the album
-    if (existingAlbum.createdBy !== userId) {
+    // Check if user owns the album (or is admin)
+    if (existingAlbum.createdBy !== userId && userRole !== "admin") {
       return ResponseUtil.forbidden(
         event,
         "You can only delete your own albums"

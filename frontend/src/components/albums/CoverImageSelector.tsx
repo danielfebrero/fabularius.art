@@ -81,7 +81,6 @@ export function CoverImageSelector({
           </div>
           <div className="relative w-20 h-20 border border-border rounded overflow-hidden bg-muted">
             <ResponsivePicture
-              thumbnailUrls={composeThumbnailUrls({})}
               fallbackUrl={composeMediaUrl(selectedCoverUrl)}
               alt="Current cover"
               className="w-full h-full object-cover"
