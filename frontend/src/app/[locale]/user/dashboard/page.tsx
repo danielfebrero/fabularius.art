@@ -199,6 +199,8 @@ const UserDashboard: React.FC = () => {
                       item={media || album!}
                       type={like.targetType as "media" | "album"}
                       mediaList={likesMediaItems}
+                      canFullscreen={!album}
+                      canAddToAlbum={!album}
                       className="aspect-square"
                     />
                   );
@@ -264,6 +266,8 @@ const UserDashboard: React.FC = () => {
                       item={media || album!}
                       type={bookmark.targetType as "media" | "album"}
                       mediaList={bookmarksMediaItems}
+                      canFullscreen={!album}
+                      canAddToAlbum={!album}
                       className="aspect-square"
                     />
                   );
