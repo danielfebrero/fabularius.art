@@ -1,20 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import {
-  FolderOpen,
-  Grid,
-  List,
-  Calendar,
-  Plus,
-  Edit,
-  Trash2,
-  MoreVertical,
-} from "lucide-react";
+import { useState } from "react";
+import { FolderOpen, Grid, List, Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import LocaleLink from "@/components/ui/LocaleLink";
+import { ContentCard } from "@/components/ui/ContentCard";
 import { cn } from "@/lib/utils";
-import { useUser } from "@/hooks/useUser";
 import { useUserAlbums } from "@/hooks/useUserAlbums";
 import { EditAlbumDialog } from "@/components/albums/EditAlbumDialog";
 import { DeleteAlbumDialog } from "@/components/albums/DeleteAlbumDialog";
@@ -25,12 +16,8 @@ const UserAlbumsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
   const [deletingAlbum, setDeletingAlbum] = useState<Album | null>(null);
-  const [albumActionsOpen, setAlbumActionsOpen] = useState<{
-    [key: string]: boolean;
-  }>({});
-  const { user } = useUser();
 
-  // Use the proper user albums hook
+  // Use the proper user albums hook - rely on session authentication
   const {
     albums,
     loading: isLoading,
@@ -38,7 +25,7 @@ const UserAlbumsPage: React.FC = () => {
     totalCount,
     updateAlbum,
     deleteAlbum,
-  } = useUserAlbums(user?.userId);
+  } = useUserAlbums();
 
   // Filter albums based on search term
   const filteredAlbums = albums.filter(
@@ -69,32 +56,6 @@ const UserAlbumsPage: React.FC = () => {
       setDeletingAlbum(null);
     }
   };
-
-  // Toggle album actions dropdown
-  const toggleAlbumActions = (albumId: string, event?: React.MouseEvent) => {
-    if (event) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    setAlbumActionsOpen((prev) => ({
-      ...prev,
-      [albumId]: !prev[albumId],
-    }));
-  };
-
-  // Close dropdowns when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      // Only close if clicking outside any dropdown area
-      const target = event.target as Element;
-      if (!target.closest("[data-dropdown-container]")) {
-        setAlbumActionsOpen({});
-      }
-    };
-
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
-  }, []);
 
   if (isLoading) {
     return (
@@ -244,88 +205,25 @@ const UserAlbumsPage: React.FC = () => {
             )}
           >
             {filteredAlbums.map((album, index) => (
-              <div
+              <ContentCard
                 key={`${album.id}-${index}`}
-                className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 overflow-hidden hover:shadow-xl hover:border-admin-primary/30 transition-all duration-300 group relative"
-              >
-                {/* Album Actions Dropdown */}
-                <div
-                  className="absolute top-3 right-3 z-10"
-                  data-dropdown-container
-                >
-                  <div className="relative">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => toggleAlbumActions(album.id, e)}
-                      className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 w-8 h-8 p-0 bg-black/20 hover:bg-black/40 backdrop-blur-sm"
-                      aria-label="Album actions"
-                    >
-                      <MoreVertical className="h-4 w-4 text-white" />
-                    </Button>
-
-                    {albumActionsOpen[album.id] && (
-                      <div
-                        className="absolute right-0 top-full mt-1 w-32 bg-card border border-border rounded-lg shadow-lg py-1 z-20 backdrop-blur-sm"
-                        data-dropdown-content
-                      >
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleEditAlbum(album);
-                            setAlbumActionsOpen((prev) => ({
-                              ...prev,
-                              [album.id]: false,
-                            }));
-                          }}
-                          className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted flex items-center gap-2 transition-colors"
-                        >
-                          <Edit className="h-3 w-3" />
-                          Edit
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleDeleteAlbum(album);
-                            setAlbumActionsOpen((prev) => ({
-                              ...prev,
-                              [album.id]: false,
-                            }));
-                          }}
-                          className="w-full px-3 py-2 text-left text-sm text-destructive hover:bg-muted flex items-center gap-2 transition-colors"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                          Delete
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Album Link */}
-                <LocaleLink href={`/albums/${album.id}`} className="block">
-                  {/* Album content */}
-                  <div className="aspect-video bg-gradient-to-br from-admin-primary/10 to-admin-secondary/10 flex items-center justify-center group-hover:from-admin-primary/20 group-hover:to-admin-secondary/20 transition-all duration-300">
-                    <FolderOpen className="h-12 w-12 text-admin-primary group-hover:scale-110 transition-transform duration-300" />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-foreground line-clamp-2 mb-2 group-hover:text-admin-primary transition-colors duration-200">
-                      {album.title || `Album ${album.id}`}
-                    </h3>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground">
-                      <span className="bg-admin-accent/20 text-admin-accent px-2 py-1 rounded-md font-medium">
-                        {album.mediaCount || 0} items
-                      </span>
-                      <span className="flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" />
-                        {new Date(album.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
-                </LocaleLink>
-              </div>
+                item={album}
+                type="album"
+                title={album.title || `Album ${album.id}`}
+                customActions={[
+                  {
+                    label: "Edit",
+                    icon: <Edit className="h-3 w-3" />,
+                    onClick: () => handleEditAlbum(album),
+                  },
+                  {
+                    label: "Delete",
+                    icon: <Trash2 className="h-3 w-3" />,
+                    onClick: () => handleDeleteAlbum(album),
+                    variant: "destructive" as const,
+                  },
+                ]}
+              />
             ))}
           </div>
         </div>

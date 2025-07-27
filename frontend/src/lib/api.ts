@@ -397,7 +397,13 @@ export const albumsApi = {
 
   // Get user's albums (convenience method)
   getUserAlbums: async (
-    userId: string,
+    userIdOrParams?:
+      | string
+      | {
+          limit?: number;
+          cursor?: string;
+          tag?: string;
+        },
     params?: {
       limit?: number;
       cursor?: string;
@@ -408,9 +414,17 @@ export const albumsApi = {
     nextCursor?: string;
     hasNext: boolean;
   }> => {
+    // If first parameter is a string, it's a userId for fetching specific user's albums
+    if (typeof userIdOrParams === "string") {
+      return albumsApi.getAlbums({
+        createdBy: userIdOrParams,
+        ...params,
+      });
+    }
+
+    // If first parameter is an object or undefined, fetch current user's albums via session
     return albumsApi.getAlbums({
-      createdBy: userId,
-      ...params,
+      ...userIdOrParams,
     });
   },
 
@@ -477,6 +491,36 @@ export const albumsApi = {
     const data = await response.json();
     if (!data.success) {
       throw new Error(data.message || "Failed to delete album");
+    }
+  },
+
+  // Add existing media to album
+  addMediaToAlbum: async (albumId: string, mediaId: string): Promise<void> => {
+    const response = await fetch(`${API_URL}/albums/${albumId}/media`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ mediaId }),
+    });
+
+    if (!response.ok) {
+      let errorData = null;
+      try {
+        errorData = await response.json();
+      } catch {
+        // response body is not JSON
+      }
+      const errorMessage =
+        (errorData && (errorData.error || errorData.message)) ||
+        `Failed to add media to album: ${response.statusText}`;
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || "Failed to add media to album");
     }
   },
 };

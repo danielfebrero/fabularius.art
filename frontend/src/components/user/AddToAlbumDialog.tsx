@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Switch } from "@/components/ui/Switch";
 import { Media } from "@/types";
-import { useUserAlbums } from "@/hooks/useUserAlbums";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { cn } from "@/lib/utils";
+import { useAlbums } from "@/hooks/useAlbums";
+import { albumsApi } from "@/lib/api";
 
 interface AddToAlbumDialogProps {
   isOpen: boolean;
@@ -24,7 +25,7 @@ export function AddToAlbumDialog({
 }: AddToAlbumDialogProps) {
   const t = useTranslations("album");
   const tCommon = useTranslations("common");
-  const { albums, loading: albumsLoading, createAlbum } = useUserAlbums();
+  const { albums, loading: albumsLoading, createAlbum } = useAlbums();
   const { canCreatePrivateContent } = usePermissions();
 
   // UI state
@@ -36,33 +37,14 @@ export function AddToAlbumDialog({
 
   // New album form state
   const [newAlbumTitle, setNewAlbumTitle] = useState("");
-  const [newAlbumTags, setNewAlbumTags] = useState("");
+  const [newAlbumTags, setNewAlbumTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
   const [newAlbumIsPublic, setNewAlbumIsPublic] = useState(true);
   const [useAsCover, setUseAsCover] = useState(true);
 
-  // Add media to album function
+  // Add media to album function using API
   const addMediaToAlbum = async (albumId: string, mediaId: string) => {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/albums/${albumId}/media`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({ mediaId }),
-      }
-    );
-
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      throw new Error(data.error || "Failed to add media to album");
-    }
-
-    const data = await response.json();
-    if (!data.success) {
-      throw new Error(data.error || "Failed to add media to album");
-    }
+    await albumsApi.addMediaToAlbum(albumId, mediaId);
   };
 
   // Reset state when dialog opens/closes
@@ -71,7 +53,8 @@ export function AddToAlbumDialog({
       setShowCreateForm(false);
       setSelectedAlbumIds(new Set());
       setNewAlbumTitle("");
-      setNewAlbumTags("");
+      setNewAlbumTags([]);
+      setTagInput("");
       setNewAlbumIsPublic(true);
       setUseAsCover(true);
     }
@@ -105,6 +88,27 @@ export function AddToAlbumDialog({
     setShowCreateForm(false);
   };
 
+  const addTag = () => {
+    const tag = tagInput.trim();
+    if (tag && !newAlbumTags.includes(tag) && tag.length <= 50) {
+      if (newAlbumTags.length < 20) {
+        setNewAlbumTags([...newAlbumTags, tag]);
+        setTagInput("");
+      }
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setNewAlbumTags(newAlbumTags.filter((tag) => tag !== tagToRemove));
+  };
+
+  const handleTagInputKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addTag();
+    }
+  };
+
   const handleSubmit = async () => {
     if (isSubmitting) return;
 
@@ -113,18 +117,15 @@ export function AddToAlbumDialog({
 
       // Create new album if form is shown
       if (showCreateForm && newAlbumTitle.trim()) {
-        const tagsArray = newAlbumTags
-          .split(",")
-          .map((tag) => tag.trim())
-          .filter((tag) => tag.length > 0);
-
-        const newAlbum = await createAlbum({
-          title: newAlbumTitle.trim(),
-          tags: tagsArray,
-          isPublic: newAlbumIsPublic,
-          mediaIds: [media.id],
-          ...(useAsCover && { coverImageId: media.id }),
-        });
+        const newAlbum =
+          createAlbum &&
+          (await createAlbum({
+            title: newAlbumTitle.trim(),
+            tags: newAlbumTags,
+            isPublic: newAlbumIsPublic,
+            mediaIds: [media.id],
+            ...(useAsCover && { coverImageId: media.id }),
+          }));
 
         if (newAlbum) {
           onClose();
@@ -192,13 +193,51 @@ export function AddToAlbumDialog({
                 required
               />
 
-              <Input
-                label={t("tags")}
-                value={newAlbumTags}
-                onChange={(e) => setNewAlbumTags(e.target.value)}
-                placeholder={t("enterTags")}
-                helperText={t("separateWithCommas")}
-              />
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-foreground">
+                  {t("tags")}
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyPress={handleTagInputKeyPress}
+                    placeholder={t("enterTags")}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addTag}
+                    disabled={!tagInput.trim() || newAlbumTags.length >= 20}
+                    size="sm"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
+                {newAlbumTags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {newAlbumTags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary border border-primary/20"
+                      >
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => removeTag(tag)}
+                          className="ml-1 hover:text-destructive transition-colors"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Press Enter to add tag • {newAlbumTags.length}/20 tags
+                </p>
+              </div>
 
               {canCreatePrivateContent() && (
                 <div className="flex items-center justify-between">

@@ -7,7 +7,7 @@ import {
   createCursor,
 } from "../../../helpers/api-gateway";
 import {
-  mockAlbumsList,
+  mockAlbumsListForAPI,
   mockPaginationResponse,
 } from "../../../fixtures/albums";
 
@@ -18,15 +18,27 @@ const mockListAlbums = DynamoDBService.listAlbums as jest.MockedFunction<
   typeof DynamoDBService.listAlbums
 >;
 
+const mockListAlbumsByPublicStatus =
+  DynamoDBService.listAlbumsByPublicStatus as jest.MockedFunction<
+    typeof DynamoDBService.listAlbumsByPublicStatus
+  >;
+
+const mockListAlbumsByCreator =
+  DynamoDBService.listAlbumsByCreator as jest.MockedFunction<
+    typeof DynamoDBService.listAlbumsByCreator
+  >;
+
 describe("Albums Get Handler", () => {
   beforeEach(() => {
     mockListAlbums.mockClear();
+    mockListAlbumsByPublicStatus.mockClear();
+    mockListAlbumsByCreator.mockClear();
   });
 
   describe("successful requests", () => {
-    it("should return albums with default pagination", async () => {
+    it("should return albums with default pagination when no query params provided", async () => {
       mockListAlbums.mockResolvedValue({
-        albums: mockAlbumsList,
+        albums: mockAlbumsListForAPI,
       });
 
       const event = createGetAlbumsEvent();
@@ -35,38 +47,79 @@ describe("Albums Get Handler", () => {
       const data = expectSuccessResponse(result);
       expect(data.albums).toHaveLength(3);
       expect(data.albums[0]).toEqual({
-        id: mockAlbumsList[0]!.id,
-        title: mockAlbumsList[0]!.title,
-        tags: mockAlbumsList[0]!.tags,
-        coverImageUrl: mockAlbumsList[0]!.coverImageUrl,
-        createdAt: mockAlbumsList[0]!.createdAt,
-        updatedAt: mockAlbumsList[0]!.updatedAt,
-        mediaCount: mockAlbumsList[0]!.mediaCount,
-        isPublic: mockAlbumsList[0]!.isPublic,
+        id: mockAlbumsListForAPI[0]!.id,
+        title: mockAlbumsListForAPI[0]!.title,
+        tags: mockAlbumsListForAPI[0]!.tags,
+        coverImageUrl: mockAlbumsListForAPI[0]!.coverImageUrl,
+        createdAt: mockAlbumsListForAPI[0]!.createdAt,
+        updatedAt: mockAlbumsListForAPI[0]!.updatedAt,
+        mediaCount: mockAlbumsListForAPI[0]!.mediaCount,
+        isPublic: mockAlbumsListForAPI[0]!.isPublic,
       });
-      expect(data.pagination.hasNext).toBe(false);
-      expect(data.pagination.cursor).toBeNull();
+      expect(data.nextCursor).toBeNull();
+      expect(data.hasNext).toBe(false);
 
-      expect(mockListAlbums).toHaveBeenCalledWith(20, undefined);
+      expect(mockListAlbums).toHaveBeenCalledWith(20, undefined, undefined);
     });
 
-    it("should return albums with custom limit", async () => {
-      mockListAlbums.mockResolvedValue({
-        albums: mockAlbumsList.slice(0, 2),
+    it("should return albums filtered by isPublic=true", async () => {
+      mockListAlbumsByPublicStatus.mockResolvedValue({
+        albums: mockAlbumsListForAPI.slice(0, 2),
       });
 
-      const event = createGetAlbumsEvent({ limit: "2" });
+      const event = createGetAlbumsEvent({ isPublic: "true", limit: "2" });
       const result = await handler(event);
 
       const data = expectSuccessResponse(result);
       expect(data.albums).toHaveLength(2);
-      expect(mockListAlbums).toHaveBeenCalledWith(2, undefined);
+      expect(mockListAlbumsByPublicStatus).toHaveBeenCalledWith(
+        true,
+        2,
+        undefined,
+        undefined
+      );
+    });
+
+    it("should return albums filtered by isPublic=false", async () => {
+      mockListAlbumsByPublicStatus.mockResolvedValue({
+        albums: [mockAlbumsListForAPI[2]!],
+      });
+
+      const event = createGetAlbumsEvent({ isPublic: "false" });
+      const result = await handler(event);
+
+      const data = expectSuccessResponse(result);
+      expect(data.albums).toHaveLength(1);
+      expect(mockListAlbumsByPublicStatus).toHaveBeenCalledWith(
+        false,
+        20,
+        undefined,
+        undefined
+      );
+    });
+
+    it("should return albums filtered by creator", async () => {
+      mockListAlbumsByCreator.mockResolvedValue({
+        albums: mockAlbumsListForAPI.slice(0, 2),
+      });
+
+      const event = createGetAlbumsEvent({ createdBy: "test-user-123" });
+      const result = await handler(event);
+
+      const data = expectSuccessResponse(result);
+      expect(data.albums).toHaveLength(2);
+      expect(mockListAlbumsByCreator).toHaveBeenCalledWith(
+        "test-user-123",
+        20,
+        undefined,
+        undefined
+      );
     });
 
     it("should return albums with pagination cursor", async () => {
       const lastEvaluatedKey = mockPaginationResponse.lastEvaluatedKey;
       mockListAlbums.mockResolvedValue({
-        albums: mockAlbumsList,
+        albums: mockAlbumsListForAPI,
         lastEvaluatedKey,
       });
 
@@ -74,8 +127,8 @@ describe("Albums Get Handler", () => {
       const result = await handler(event);
 
       const data = expectSuccessResponse(result);
-      expect(data.pagination.hasNext).toBe(true);
-      expect(data.pagination.cursor).toBe(createCursor(lastEvaluatedKey));
+      expect(data.hasNext).toBe(true);
+      expect(data.nextCursor).toBe(createCursor(lastEvaluatedKey));
     });
 
     it("should handle cursor from query parameters", async () => {
@@ -83,21 +136,25 @@ describe("Albums Get Handler", () => {
       const cursor = createCursor(lastEvaluatedKey);
 
       mockListAlbums.mockResolvedValue({
-        albums: mockAlbumsList,
+        albums: mockAlbumsListForAPI,
       });
 
       const event = createGetAlbumsEvent({ cursor, limit: "10" });
       const result = await handler(event);
 
       const data = expectSuccessResponse(result);
-      expect(data.pagination.hasNext).toBe(false);
-      expect(mockListAlbums).toHaveBeenCalledWith(10, lastEvaluatedKey);
+      expect(data.hasNext).toBe(false);
+      expect(mockListAlbums).toHaveBeenCalledWith(
+        10,
+        lastEvaluatedKey,
+        undefined
+      );
     });
 
     it("should handle albums without optional fields", async () => {
       const minimalAlbums = [
         {
-          ...mockAlbumsList[2]!,
+          ...mockAlbumsListForAPI[2]!,
           tags: undefined,
           coverImageUrl: undefined,
         },
@@ -127,61 +184,89 @@ describe("Albums Get Handler", () => {
 
       const data = expectSuccessResponse(result);
       expect(data.albums).toHaveLength(0);
-      expect(data.pagination.hasNext).toBe(false);
+      expect(data.hasNext).toBe(false);
+    });
+
+    it("should handle tag filtering with listAlbums", async () => {
+      mockListAlbums.mockResolvedValue({
+        albums: mockAlbumsListForAPI.filter((a) => a.tags?.includes("test")),
+      });
+
+      const event = createGetAlbumsEvent({ tag: "test" });
+      const result = await handler(event);
+
+      const data = expectSuccessResponse(result);
+      expect(data.albums.length).toBeGreaterThan(0);
+      expect(mockListAlbums).toHaveBeenCalledWith(20, undefined, "test");
+    });
+
+    it("should handle tag filtering with isPublic filter", async () => {
+      mockListAlbumsByPublicStatus.mockResolvedValue({
+        albums: mockAlbumsListForAPI.filter(
+          (a) => a.isPublic && a.tags?.includes("second")
+        ),
+      });
+
+      const event = createGetAlbumsEvent({ isPublic: "true", tag: "second" });
+      const result = await handler(event);
+
+      const data = expectSuccessResponse(result);
+      expect(mockListAlbumsByPublicStatus).toHaveBeenCalledWith(
+        true,
+        20,
+        undefined,
+        "second"
+      );
     });
   });
 
   describe("query parameter handling", () => {
     it("should use default limit when limit is not provided", async () => {
       mockListAlbums.mockResolvedValue({
-        albums: mockAlbumsList,
+        albums: mockAlbumsListForAPI,
       });
 
       const event = createGetAlbumsEvent();
       const result = await handler(event);
 
       expectSuccessResponse(result);
-      expect(mockListAlbums).toHaveBeenCalledWith(20, undefined);
+      expect(mockListAlbums).toHaveBeenCalledWith(20, undefined, undefined);
     });
 
     it("should parse limit from query parameters", async () => {
       mockListAlbums.mockResolvedValue({
-        albums: mockAlbumsList,
+        albums: mockAlbumsListForAPI,
       });
 
       const event = createGetAlbumsEvent({ limit: "5" });
       const result = await handler(event);
 
       expectSuccessResponse(result);
-      expect(mockListAlbums).toHaveBeenCalledWith(5, undefined);
+      expect(mockListAlbums).toHaveBeenCalledWith(5, undefined, undefined);
     });
 
     it("should handle invalid limit gracefully", async () => {
       mockListAlbums.mockResolvedValue({
-        albums: mockAlbumsList,
+        albums: mockAlbumsListForAPI,
       });
 
       const event = createGetAlbumsEvent({ limit: "invalid" });
       const result = await handler(event);
 
       expectSuccessResponse(result);
-      expect(mockListAlbums).toHaveBeenCalledWith(NaN, undefined);
+      expect(mockListAlbums).toHaveBeenCalledWith(NaN, undefined, undefined);
     });
 
     it("should handle invalid cursor gracefully", async () => {
-      mockListAlbums.mockResolvedValue({
-        albums: mockAlbumsList,
-      });
-
       const event = createGetAlbumsEvent({ cursor: "invalid-base64" });
 
-      // This should return a 500 error when trying to parse the cursor
+      // This should return an error when trying to parse the cursor
       const result = await handler(event);
       expect(result.statusCode).toBe(500);
 
       const body = JSON.parse(result.body);
       expect(body.success).toBe(false);
-      expect(body.error).toBe("Failed to fetch albums");
+      expect(body.error).toBe("Invalid cursor");
     });
   });
 
@@ -193,7 +278,7 @@ describe("Albums Get Handler", () => {
       const event = createGetAlbumsEvent();
       const result = await handler(event);
 
-      expectInternalErrorResponse(result, "Failed to fetch albums");
+      expectInternalErrorResponse(result, "Error fetching albums");
       expect(mockListAlbums).toHaveBeenCalled();
     });
 
@@ -203,7 +288,7 @@ describe("Albums Get Handler", () => {
       const event = createGetAlbumsEvent();
       const result = await handler(event);
 
-      expectInternalErrorResponse(result, "Failed to fetch albums");
+      expectInternalErrorResponse(result, "Error fetching albums");
     });
 
     it("should log error to console", async () => {
@@ -222,7 +307,7 @@ describe("Albums Get Handler", () => {
   describe("response format", () => {
     it("should return correct response structure", async () => {
       mockListAlbums.mockResolvedValue({
-        albums: mockAlbumsList,
+        albums: mockAlbumsListForAPI,
         lastEvaluatedKey: mockPaginationResponse.lastEvaluatedKey,
       });
 
@@ -231,15 +316,14 @@ describe("Albums Get Handler", () => {
 
       const data = expectSuccessResponse(result);
       expect(data).toHaveProperty("albums");
-      expect(data).toHaveProperty("pagination");
-      expect(data.pagination).toHaveProperty("hasNext");
-      expect(data.pagination).toHaveProperty("cursor");
+      expect(data).toHaveProperty("nextCursor");
+      expect(data).toHaveProperty("hasNext");
       expect(Array.isArray(data.albums)).toBe(true);
     });
 
     it("should include all required album fields", async () => {
       mockListAlbums.mockResolvedValue({
-        albums: [mockAlbumsList[0]!],
+        albums: [mockAlbumsListForAPI[0]!],
       });
 
       const event = createGetAlbumsEvent();

@@ -8,9 +8,7 @@ interface DiscoverClientProps {
   initialAlbums: Album[];
   initialPagination: {
     hasNext: boolean;
-    hasPrev: boolean;
     cursor: string | null;
-    page?: number;
   } | null;
   initialError: string | null;
 }

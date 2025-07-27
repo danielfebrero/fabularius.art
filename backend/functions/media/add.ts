@@ -61,9 +61,47 @@ export const handler = async (
       return ResponseUtil.badRequest(event, "Request body is required");
     }
 
-    const request: UploadMediaRequest = JSON.parse(event.body);
+    const request = JSON.parse(event.body);
 
-    if (!request.filename || !request.mimeType) {
+    // Check if this is a media-to-album association request
+    if (request.mediaId) {
+      // Association operation: Add existing media to album
+      const { mediaId } = request;
+
+      if (!mediaId) {
+        return ResponseUtil.badRequest(
+          event,
+          "Media ID is required for association"
+        );
+      }
+
+      // Verify album exists
+      const album = await DynamoDBService.getAlbum(albumId);
+      if (!album) {
+        return ResponseUtil.notFound(event, "Album not found");
+      }
+
+      // Verify media exists
+      const media = await DynamoDBService.getMedia(mediaId);
+      if (!media) {
+        return ResponseUtil.notFound(event, "Media not found");
+      }
+
+      // Add media to album
+      await DynamoDBService.addMediaToAlbum(albumId, mediaId, userId);
+
+      return ResponseUtil.success(event, {
+        success: true,
+        message: "Media added to album successfully",
+        albumId,
+        mediaId,
+      });
+    }
+
+    // Upload operation: Create new media and add to album
+    const uploadRequest: UploadMediaRequest = request;
+
+    if (!uploadRequest.filename || !uploadRequest.mimeType) {
       return ResponseUtil.badRequest(
         event,
         "Filename and mimeType are required"
@@ -79,8 +117,8 @@ export const handler = async (
     // Generate presigned upload URL
     const { uploadUrl, key } = await S3Service.generatePresignedUploadUrl(
       albumId,
-      request.filename,
-      request.mimeType
+      uploadRequest.filename,
+      uploadRequest.mimeType
     );
 
     const mediaId = uuidv4();
@@ -97,9 +135,9 @@ export const handler = async (
       EntityType: "Media" as const,
       id: mediaId,
       filename: key,
-      originalFilename: request.filename,
-      mimeType: request.mimeType,
-      size: request.size || 0,
+      originalFilename: uploadRequest.filename,
+      mimeType: uploadRequest.mimeType,
+      size: uploadRequest.size || 0,
       url: S3Service.getRelativePath(key),
       createdAt: now,
       updatedAt: now,

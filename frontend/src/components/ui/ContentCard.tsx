@@ -8,7 +8,15 @@ import { Lightbox } from "@/components/ui/Lightbox";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { cn } from "@/lib/utils";
 import { composeMediaUrl } from "@/lib/urlUtils";
-import { Maximize2, Plus, Download, Trash2, PlayCircle } from "lucide-react";
+import {
+  Maximize2,
+  Plus,
+  Download,
+  Trash2,
+  PlayCircle,
+  MoreVertical,
+  Folder,
+} from "lucide-react";
 import ResponsivePicture from "./ResponsivePicture";
 import { composeThumbnailUrls } from "@/lib/urlUtils";
 
@@ -38,6 +46,14 @@ interface ContentCardProps {
 
   // Layout controls
   useAllAvailableSpace?: boolean; // When true, extends to edge of screen without cropping
+
+  // Custom dropdown actions (replaces default action buttons when provided)
+  customActions?: {
+    label: string;
+    icon: React.ReactNode;
+    onClick: () => void;
+    variant?: "default" | "destructive";
+  }[];
 
   // Event handlers (optional - if not provided, default behavior will be used)
   onClick?: () => void;
@@ -74,6 +90,7 @@ export function ContentCard({
   showCounts = true,
   disableHoverEffects = false,
   useAllAvailableSpace = false,
+  customActions,
   onClick,
   onFullscreen,
   onAddToAlbum,
@@ -90,6 +107,7 @@ export function ContentCard({
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [addToAlbumDialogOpen, setAddToAlbumDialogOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const isMedia = type === "media";
@@ -124,6 +142,24 @@ export function ContentCard({
       clearTimeout(timeoutId);
     };
   }, [isMobile, showMobileActions]);
+
+  // Handle dropdown outside clicks
+  useEffect(() => {
+    const handleClickOutside = (event: Event) => {
+      if (
+        cardRef.current &&
+        !cardRef.current.contains(event.target as Node) &&
+        !(event.target as Element).closest("[data-dropdown-container]")
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+
+    if (dropdownOpen) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  }, [dropdownOpen]);
 
   // Handle click events based on content type
   const handleClick = (e: React.MouseEvent) => {
@@ -493,31 +529,37 @@ export function ContentCard({
           </div>
         ) : album ? (
           <div className="relative w-full h-full">
-            <ResponsivePicture
-              thumbnailUrls={
-                preferredThumbnailSize
-                  ? undefined
-                  : composeThumbnailUrls(album.thumbnailUrls)
-              }
-              fallbackUrl={composeMediaUrl(
-                preferredThumbnailSize
-                  ? album.thumbnailUrls?.[preferredThumbnailSize] ??
-                      album.coverImageUrl
-                  : album.coverImageUrl
-              )}
-              alt={title || album.title}
-              className={cn(
-                "w-full h-full transition-transform duration-200",
-                useAllAvailableSpace ? "object-contain" : "object-cover",
-                !disableHoverEffects &&
-                  !useAllAvailableSpace &&
-                  "group-hover:scale-105",
-                imageClassName
-              )}
-              context={context}
-              columns={columns}
-              loading="lazy"
-            />
+            {(!album.coverImageUrl && (!album.thumbnailUrls || Object.keys(album.thumbnailUrls).length === 0)) ? (
+              <div className="flex items-center justify-center w-full h-full bg-muted/50">
+                <Folder className="w-16 h-16 text-muted-foreground opacity-60" />
+              </div>
+            ) : (
+              <ResponsivePicture
+                thumbnailUrls={
+                  preferredThumbnailSize
+                    ? undefined
+                    : composeThumbnailUrls(album.thumbnailUrls)
+                }
+                fallbackUrl={composeMediaUrl(
+                  preferredThumbnailSize
+                    ? album.thumbnailUrls?.[preferredThumbnailSize] ??
+                        album.coverImageUrl
+                    : album.coverImageUrl
+                )}
+                alt={title || album.title}
+                className={cn(
+                  "w-full h-full transition-transform duration-200",
+                  useAllAvailableSpace ? "object-contain" : "object-cover",
+                  !disableHoverEffects &&
+                    !useAllAvailableSpace &&
+                    "group-hover:scale-105",
+                  imageClassName
+                )}
+                context={context}
+                columns={columns}
+                loading="lazy"
+              />
+            )}
 
             {/* Album overlay with title */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
@@ -606,7 +648,54 @@ export function ContentCard({
             </div>
 
             {/* Right column - Action buttons over image */}
-            {(canFullscreen || canAddToAlbum || canDownload || canDelete) && (
+            {customActions ? (
+              <div
+                className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10"
+                data-dropdown-container
+              >
+                <div className="relative">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setDropdownOpen(!dropdownOpen);
+                    }}
+                    className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 w-8 h-8 p-0 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-lg flex items-center justify-center"
+                    aria-label="Album actions"
+                  >
+                    <MoreVertical className="h-4 w-4 text-white" />
+                  </button>
+
+                  {dropdownOpen && (
+                    <div
+                      className="absolute right-0 top-full mt-1 w-32 bg-card border border-border rounded-lg shadow-lg py-1 z-20 backdrop-blur-sm"
+                      data-dropdown-content
+                    >
+                      {customActions.map((action, index) => (
+                        <button
+                          key={index}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            action.onClick();
+                            setDropdownOpen(false);
+                          }}
+                          className={cn(
+                            "w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center gap-2 transition-colors",
+                            action.variant === "destructive"
+                              ? "text-destructive"
+                              : "text-foreground"
+                          )}
+                        >
+                          {action.icon}
+                          {action.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : canFullscreen || canAddToAlbum || canDownload || canDelete ? (
               <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex flex-col gap-1 sm:gap-2">
                 {canFullscreen && (
                   <Tooltip content="View fullscreen" side="left">
@@ -665,7 +754,7 @@ export function ContentCard({
                   </Tooltip>
                 )}
               </div>
-            )}
+            ) : null}
           </div>
         ) : null}
       </div>

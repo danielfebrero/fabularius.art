@@ -173,6 +173,17 @@ describe("DynamoDBService", () => {
         expect(mockSend).toHaveBeenCalledTimes(1);
         expect(mockSend).toHaveBeenCalledWith(expect.any(QueryCommand));
       });
+
+      it("should return albums with tag filtering", async () => {
+        mockSend.mockResolvedValue({ Items: mockAlbumsList });
+
+        const result = await DynamoDBService.listAlbums(20, undefined, "test");
+
+        expect(result.albums).toEqual(mockAlbumsList);
+        expect(result.lastEvaluatedKey).toBeUndefined();
+        expect(mockSend).toHaveBeenCalledTimes(1);
+        expect(mockSend).toHaveBeenCalledWith(expect.any(QueryCommand));
+      });
     });
 
     describe("incrementAlbumMediaCount", () => {

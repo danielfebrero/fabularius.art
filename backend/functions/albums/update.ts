@@ -15,8 +15,7 @@ export const handler = async (
 
   // Import heavy dependencies only when needed (after OPTIONS check)
   const { DynamoDBService } = await import("@shared/utils/dynamodb");
-  const { S3Service } = await import("@shared/utils/s3");
-  const { ThumbnailService } = await import("@shared/utils/thumbnail");
+  const { CoverThumbnailUtil } = await import("@shared/utils/cover-thumbnail");
 
   try {
     const albumId = event.pathParameters?.["albumId"];
@@ -101,56 +100,19 @@ export const handler = async (
 
       // Generate thumbnails when cover image is updated
       if (request.coverImageUrl) {
-        try {
-          console.log(
-            `Generating thumbnails for album ${albumId} cover image: ${request.coverImageUrl}`
+        const thumbnailUrls =
+          await CoverThumbnailUtil.processCoverImageThumbnails(
+            request.coverImageUrl,
+            albumId
           );
 
-          // Extract S3 key from URL
-          const s3Key = S3Service.extractKeyFromUrl(request.coverImageUrl);
-          if (!s3Key) {
-            console.warn(
-              `Could not extract S3 key from URL: ${request.coverImageUrl}`
-            );
-          } else {
-            // Download cover image from S3
-            const coverImageBuffer = await S3Service.downloadBuffer(s3Key);
-
-            // Determine content type from URL extension or use default
-            const contentType =
-              s3Key.toLowerCase().endsWith(".jpg") ||
-              s3Key.toLowerCase().endsWith(".jpeg")
-                ? "image/jpeg"
-                : s3Key.toLowerCase().endsWith(".png")
-                ? "image/png"
-                : s3Key.toLowerCase().endsWith(".webp")
-                ? "image/webp"
-                : "image/jpeg"; // default
-
-            // Generate thumbnails using ThumbnailService
-            const thumbnailUrls =
-              await ThumbnailService.generateAlbumCoverThumbnails(
-                coverImageBuffer,
-                albumId,
-                contentType
-              );
-
-            // Add thumbnailUrls to the updates
-            updates.thumbnailUrls = thumbnailUrls;
-
-            console.log(
-              `Successfully generated ${
-                Object.keys(thumbnailUrls).length
-              } thumbnail sizes for album ${albumId}`
-            );
-          }
-        } catch (error) {
-          // Log error but don't block the update - graceful failure
-          console.error(
-            `Failed to generate thumbnails for album ${albumId}:`,
-            error
+        if (thumbnailUrls) {
+          // Add thumbnailUrls to the updates
+          updates.thumbnailUrls = thumbnailUrls;
+        } else {
+          console.warn(
+            `Failed to generate thumbnails for album ${albumId}, continuing without them`
           );
-          console.log(`Continuing with album update without thumbnails`);
         }
       } else {
         // If coverImageUrl is being cleared, also clear thumbnailUrls

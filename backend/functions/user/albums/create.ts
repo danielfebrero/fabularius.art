@@ -5,6 +5,7 @@ import { ResponseUtil } from "@shared/utils/response";
 import { RevalidationService } from "@shared/utils/revalidation";
 import { CreateAlbumRequest, AlbumEntity, Album } from "@shared/types";
 import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { CoverThumbnailUtil } from "@shared/utils/cover-thumbnail";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -68,6 +69,44 @@ export const handler = async (
     const albumId = uuidv4();
     const now = new Date().toISOString();
 
+    // Validate cover image ID if provided and generate thumbnails
+    let coverImageUrl: string | undefined;
+    let thumbnailUrls:
+      | {
+          cover?: string;
+          small?: string;
+          medium?: string;
+          large?: string;
+          xlarge?: string;
+        }
+      | undefined;
+
+    if (request.coverImageId) {
+      const coverMedia = await DynamoDBService.getMedia(request.coverImageId);
+      if (!coverMedia) {
+        return ResponseUtil.badRequest(
+          event,
+          `Cover image ${request.coverImageId} not found`
+        );
+      }
+      coverImageUrl = coverMedia.url;
+
+      // Generate thumbnails before creating the album
+      const generatedThumbnails =
+        await CoverThumbnailUtil.processCoverImageThumbnails(
+          coverImageUrl,
+          albumId
+        );
+
+      if (generatedThumbnails) {
+        thumbnailUrls = generatedThumbnails;
+      } else {
+        console.warn(
+          `Failed to generate thumbnails for album ${albumId}, continuing without them`
+        );
+      }
+    }
+
     const albumEntity: AlbumEntity = {
       PK: `ALBUM#${albumId}`,
       SK: "METADATA",
@@ -88,6 +127,8 @@ export const handler = async (
       viewCount: 0,
       createdBy: userId,
       createdByType: "user" as const,
+      ...(coverImageUrl && { coverImageUrl }),
+      ...(thumbnailUrls && { thumbnailUrls }),
     };
 
     await DynamoDBService.createAlbum(albumEntity);
@@ -99,6 +140,7 @@ export const handler = async (
       }
     }
 
+    // Prepare the album response using the data we already have
     const album: Album = {
       id: albumEntity.id,
       title: albumEntity.title,
@@ -117,6 +159,10 @@ export const handler = async (
 
     if (albumEntity.coverImageUrl !== undefined) {
       album.coverImageUrl = albumEntity.coverImageUrl;
+    }
+
+    if (albumEntity.thumbnailUrls !== undefined) {
+      album.thumbnailUrls = albumEntity.thumbnailUrls;
     }
 
     // Trigger revalidation

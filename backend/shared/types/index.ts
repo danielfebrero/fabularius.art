@@ -60,6 +60,7 @@ export interface CreateAlbumRequest {
   tags?: string[] | undefined;
   isPublic?: boolean | undefined;
   mediaIds?: string[] | undefined; // For user album creation with selected media
+  coverImageId?: string | undefined; // Media ID to use as cover image
 }
 
 export interface UpdateAlbumRequest {

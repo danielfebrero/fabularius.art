@@ -163,28 +163,39 @@ export class DynamoDBService {
 
   static async listAlbums(
     limit: number = 20,
-    lastEvaluatedKey?: Record<string, any>
+    lastEvaluatedKey?: Record<string, any>,
+    tag?: string
   ): Promise<{
     albums: Album[];
     lastEvaluatedKey?: Record<string, any>;
   }> {
     console.log("🔄 About to call DynamoDBService.listAlbums");
     console.log("📋 Using table name:", TABLE_NAME);
-    console.log("🔍 Query parameters:", { limit, lastEvaluatedKey });
+    console.log("🔍 Query parameters:", { limit, lastEvaluatedKey, tag });
 
-    const result = await docClient.send(
-      new QueryCommand({
-        TableName: TABLE_NAME,
-        IndexName: "GSI1",
-        KeyConditionExpression: "GSI1PK = :gsi1pk",
-        ExpressionAttributeValues: {
-          ":gsi1pk": "ALBUM",
-        },
-        ScanIndexForward: false, // Most recent first
-        Limit: limit,
-        ExclusiveStartKey: lastEvaluatedKey,
-      })
-    );
+    // Build query parameters
+    const queryParams: any = {
+      TableName: TABLE_NAME,
+      IndexName: "GSI1",
+      KeyConditionExpression: "GSI1PK = :gsi1pk",
+      ExpressionAttributeValues: {
+        ":gsi1pk": "ALBUM",
+      },
+      ScanIndexForward: false, // Most recent first
+      Limit: limit,
+      ExclusiveStartKey: lastEvaluatedKey,
+    };
+
+    // Add tag filtering if specified
+    if (tag) {
+      queryParams.FilterExpression = "contains(#tags, :tag)";
+      queryParams.ExpressionAttributeNames = {
+        "#tags": "tags",
+      };
+      queryParams.ExpressionAttributeValues[":tag"] = tag;
+    }
+
+    const result = await docClient.send(new QueryCommand(queryParams));
 
     const albumEntities = (result.Items as AlbumEntity[]) || [];
 

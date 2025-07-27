@@ -1,57 +1,85 @@
 import { useState, useEffect, useCallback } from "react";
 import { Album } from "../types/index";
+import { albumsApi } from "@/lib/api";
+
+interface CreateUserAlbumData {
+  title: string;
+  tags?: string[];
+  isPublic: boolean;
+  mediaIds?: string[];
+  coverImageId?: string;
+}
+
+interface UpdateUserAlbumData {
+  title?: string;
+  tags?: string[];
+  isPublic?: boolean;
+  coverImageUrl?: string;
+}
 
 interface UseAlbumsOptions {
-  isPublic?: boolean;
-  publicOnly?: boolean;
+  // User-specific options
+  createdBy?: string; // If provided, fetch albums by this specific user
+
+  // Filtering options
+  isPublic?: boolean; // Filter by public status (optional)
   limit?: number;
   cursor?: string;
-  page?: number;
-  tag?: string; // New tag filter option
+  tag?: string;
+
+  // Initial data for SSR/SSG
   initialAlbums?: Album[];
   initialPagination?: {
     hasNext: boolean;
-    hasPrev: boolean;
     cursor: string | null;
-    page?: number;
   } | null;
 }
 
 interface UseAlbumsReturn {
+  // Data
   albums: Album[];
   loading: boolean;
   error: string | null;
+  totalCount: number;
+
+  // Pagination
   pagination: {
     hasNext: boolean;
-    hasPrev: boolean;
     cursor: string | null;
-    page?: number;
   } | null;
+
+  // Actions for fetching
   refetch: () => void;
   refresh: () => void;
   loadMore: () => void;
+
+  // Actions for authenticated users (only available when no createdBy is specified)
+  createAlbum?: (_data: CreateUserAlbumData) => Promise<Album>;
+  updateAlbum?: (
+    _albumId: string,
+    _data: UpdateUserAlbumData
+  ) => Promise<Album>;
+  deleteAlbum?: (_albumId: string) => Promise<void>;
 }
 
 export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
   const {
+    createdBy,
     isPublic,
-    publicOnly,
     limit = 12,
-    page,
-    tag, // Extract tag option
+    tag,
     initialAlbums = [],
     initialPagination = null,
   } = options;
-  const effectiveIsPublic = isPublic !== undefined ? isPublic : publicOnly;
+
   const [albums, setAlbums] = useState<Album[]>(initialAlbums);
   const [loading, setLoading] = useState(initialAlbums.length === 0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(initialAlbums.length);
   const [pagination, setPagination] = useState<{
     hasNext: boolean;
-    hasPrev: boolean;
     cursor: string | null;
-    page?: number;
   } | null>(initialPagination);
 
   const fetchAlbums = useCallback(
@@ -61,10 +89,11 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
           cursor,
           append,
           limit,
-          isPublic: effectiveIsPublic,
-          page,
+          createdBy,
+          isPublic,
           tag,
         });
+
         if (append) {
           setLoadingMore(true);
         } else {
@@ -72,73 +101,57 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
           setError(null);
         }
 
-        const params = new URLSearchParams({
-          limit: limit.toString(),
-        });
+        const params: any = {
+          limit,
+        };
 
-        if (effectiveIsPublic !== undefined) {
-          params.append("isPublic", effectiveIsPublic.toString());
+        if (createdBy) {
+          params.createdBy = createdBy;
         }
 
-        if (page !== undefined) {
-          params.append("page", page.toString());
+        if (isPublic !== undefined) {
+          params.isPublic = isPublic;
         }
 
         if (cursor) {
-          params.append("cursor", cursor);
+          params.cursor = cursor;
         }
 
         if (tag) {
-          params.append("tag", tag);
-          console.log("[useAlbums] Adding tag to request:", tag);
+          params.tag = tag;
         }
 
-        const apiUrl =
-          process.env["NEXT_PUBLIC_API_URL"] || "http://localhost:3001/api";
-        const response = await fetch(`${apiUrl}/albums?${params}`);
+        const response = await albumsApi.getAlbums(params);
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch albums: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        console.log("[useAlbums] fetch result", data);
-
-        if (tag) {
-          console.log(
-            "[useAlbums] Filtered by tag:",
-            tag,
-            "Results:",
-            data.data?.albums?.length || 0
-          );
-        }
-
-        if (data.success) {
-          // Backend returns {success: true, data: {albums: Album[], pagination: {...}}}
-          const newAlbums = data.data.albums;
-          const newPagination = data.data.pagination;
-
-          if (append) {
-            setAlbums((prev) => {
-              const updated = [...prev, ...newAlbums];
-              console.log("[useAlbums] setAlbums (append)", updated.length);
-              return updated;
-            });
-          } else {
-            setAlbums(() => {
-              console.log("[useAlbums] setAlbums (replace)", newAlbums.length);
-              return newAlbums;
-            });
-          }
-          setPagination(() => {
-            console.log("[useAlbums] setPagination", newPagination);
-            return newPagination;
+        if (append) {
+          setAlbums((prev) => {
+            const updated = [...prev, ...response.albums];
+            console.log("[useAlbums] setAlbums (append)", updated.length);
+            return updated;
           });
         } else {
-          throw new Error(data.error || "Failed to fetch albums");
+          setAlbums(() => {
+            console.log(
+              "[useAlbums] setAlbums (replace)",
+              response.albums.length
+            );
+            return response.albums;
+          });
+          setTotalCount(response.albums.length);
         }
+
+        setPagination(() => {
+          const newPagination = {
+            hasNext: response.hasNext,
+            cursor: response.nextCursor || null,
+          };
+          console.log("[useAlbums] setPagination", newPagination);
+          return newPagination;
+        });
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to fetch albums";
+        setError(errorMessage);
         if (!append) {
           setAlbums([]);
           setPagination(null);
@@ -148,7 +161,7 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
         setLoadingMore(false);
       }
     },
-    [effectiveIsPublic, limit, page, tag]
+    [createdBy, isPublic, limit, tag]
   );
 
   const loadMore = useCallback(() => {
@@ -171,22 +184,135 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
     }
   }, [initialAlbums.length, fetchAlbums]);
 
-  useEffect(() => {
-    console.log(
-      "[useAlbums] state change: albums",
-      albums.length,
-      "pagination",
-      pagination
-    );
-  }, [albums, pagination]);
+  // CRUD operations - only available when not fetching specific user's albums
+  const createAlbum = useCallback(
+    async (albumData: CreateUserAlbumData): Promise<Album> => {
+      if (createdBy) {
+        throw new Error(
+          "Cannot create albums when viewing another user's albums"
+        );
+      }
 
-  return {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/albums`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify(albumData),
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to create album");
+        }
+
+        const data = await response.json();
+        if (data.success) {
+          // Refetch albums after creating a new one
+          setTimeout(() => fetchAlbums(), 100);
+          return data.data;
+        } else {
+          throw new Error(data.error || "Failed to create album");
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to create album";
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [createdBy, fetchAlbums]
+  );
+
+  const updateAlbum = useCallback(
+    async (albumId: string, albumData: UpdateUserAlbumData): Promise<Album> => {
+      if (createdBy) {
+        throw new Error(
+          "Cannot update albums when viewing another user's albums"
+        );
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await albumsApi.updateAlbum(albumId, albumData);
+
+        // Update the album in the local state
+        setAlbums((prev) =>
+          prev.map((album) =>
+            album.id === albumId ? { ...album, ...response } : album
+          )
+        );
+
+        return response;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to update album";
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [createdBy]
+  );
+
+  const deleteAlbum = useCallback(
+    async (albumId: string): Promise<void> => {
+      if (createdBy) {
+        throw new Error(
+          "Cannot delete albums when viewing another user's albums"
+        );
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        await albumsApi.deleteAlbum(albumId);
+
+        // Remove the album from the local state
+        setAlbums((prev) => prev.filter((album) => album.id !== albumId));
+        setTotalCount((prev) => prev - 1);
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to delete album";
+        setError(errorMessage);
+        throw new Error(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [createdBy]
+  );
+
+  const result: UseAlbumsReturn = {
     albums,
     loading: loading || loadingMore,
     error,
+    totalCount,
     pagination,
     refetch: useCallback(() => fetchAlbums(), [fetchAlbums]),
     refresh: useCallback(() => fetchAlbums(), [fetchAlbums]),
     loadMore,
   };
+
+  // Only add CRUD operations when not viewing a specific user's albums
+  if (!createdBy) {
+    result.createAlbum = createAlbum;
+    result.updateAlbum = updateAlbum;
+    result.deleteAlbum = deleteAlbum;
+  }
+
+  return result;
 }

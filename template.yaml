@@ -477,7 +477,7 @@ Resources:
     Properties:
       FunctionName: !Sub "${Environment}-pornspot-upload-media"
       CodeUri: backend/dist/functions/media/
-      Handler: upload.handler
+      Handler: add.handler
       Layers:
         - !Ref SharedLayer
       Events:

@@ -70,6 +70,29 @@ export const mockAlbumMinimal: Album = {
   isPublic: false,
 };
 
+export const mockAlbumsListForAPI: Album[] = [
+  mockAlbum,
+  {
+    id: "album-2",
+    title: "Second Album",
+    tags: ["test", "second"],
+    coverImageUrl:
+      "https://test.cloudfront.net/albums/test-album-123/cover.jpg",
+    createdAt: "2023-01-02T00:00:00.000Z",
+    updatedAt: "2023-01-02T00:00:00.000Z",
+    mediaCount: 3,
+    isPublic: true,
+  },
+  {
+    id: "album-3",
+    title: "Third Album",
+    createdAt: "2023-01-03T00:00:00.000Z",
+    updatedAt: "2023-01-03T00:00:00.000Z",
+    mediaCount: 0,
+    isPublic: false,
+  },
+];
+
 export const mockAlbumsList: AlbumEntity[] = [
   mockAlbumEntity,
   {
