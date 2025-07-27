@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { ConditionalWhyRegisterSection } from "@/components/user/ConditionalWhyRegisterSection";
+import { AuthLayoutContent } from "@/components/user/AuthLayoutContent";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -23,19 +23,9 @@ export default async function AuthLayout({ children }: AuthLayoutProps) {
               </p>
             </div>
 
-            <div className="lg:flex lg:gap-12 lg:items-start">
-              {/* Form Card */}
-              <div className="lg:w-96 lg:flex-shrink-0">
-                <div className="bg-card border border-border rounded-lg shadow-lg p-6">
-                  {children}
-                </div>
-              </div>
-
-              {/* Why Register Section */}
-              <div className="lg:flex-1 mt-8 lg:mt-0">
-                <ConditionalWhyRegisterSection />
-              </div>
-            </div>
+            <AuthLayoutContent>
+              {children}
+            </AuthLayoutContent>
           </div>
         </div>
       </div>
