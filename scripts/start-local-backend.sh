@@ -183,7 +183,7 @@ fi
 cd "$ORIGINAL_DIR" || exit 1
 
 # Step 2.1: Restore S3 bucket if dump exists and bucket is empty
-print_status "Checking if S3 bucket needs to be restored from dump..."
+print_status "Checking if S3 bucket needs to be restored from PROD dump..."
 
 # Check if bucket is empty and dump exists
 BUCKET_EMPTY=false
@@ -192,19 +192,38 @@ aws --region us-east-1 --endpoint-url="http://localhost:4566" \
 s3api list-objects-v2 --bucket "local-pornspot-media" --max-items 1 >/dev/null 2>&1 || BUCKET_EMPTY=true
 
 OBJECT_COUNT=$(AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test \
-aws --region us-east-1 --endpoint-url="http://localhost:4566" \
+aws --region us-east-1 --endpoint-url "http://localhost:4566" \
 s3api list-objects-v2 --bucket "local-pornspot-media" --query 'length(Contents)' --output text 2>/dev/null || echo "0")
 
 if [ "$OBJECT_COUNT" = "0" ] || [ "$OBJECT_COUNT" = "None" ] || [ "$BUCKET_EMPTY" = true ]; then
-    if [ -d "./backups/s3/local" ] && [ -d "./backups/s3/local/objects" ]; then
-        print_status "S3 bucket is empty but dump exists, restoring from backup..."
-        if ./scripts/restore-s3-bucket.sh --env=local; then
-            print_success "S3 bucket restored from dump successfully"
+    # First, try to restore from PROD backup
+    if [ -d "./backups/s3/prod" ] && [ -d "./backups/s3/prod/objects" ]; then
+        print_status "S3 bucket is empty but PROD dump exists, restoring PROD data to local..."
+        if ./scripts/restore-s3-bucket.sh --env local --source ./backups/s3/prod; then
+            print_success "S3 bucket restored from PROD dump successfully"
         else
-            print_warning "Failed to restore S3 bucket from dump, continuing with empty bucket..."
+            print_warning "Failed to restore S3 bucket from PROD dump, trying local dump..."
+            # Fallback to local dump if prod restore fails
+            if [ -d "./backups/s3/local" ] && [ -d "./backups/s3/local/objects" ]; then
+                if ./scripts/restore-s3-bucket.sh --env local; then
+                    print_success "S3 bucket restored from local dump successfully"
+                else
+                    print_warning "Failed to restore S3 bucket from local dump, continuing with empty bucket..."
+                fi
+            else
+                print_warning "No local S3 dump found either, continuing with empty bucket..."
+            fi
+        fi
+    elif [ -d "./backups/s3/local" ] && [ -d "./backups/s3/local/objects" ]; then
+        print_status "No PROD S3 dump found, but local dump exists, restoring from local backup..."
+        if ./scripts/restore-s3-bucket.sh --env local; then
+            print_success "S3 bucket restored from local dump successfully"
+        else
+            print_warning "Failed to restore S3 bucket from local dump, continuing with empty bucket..."
         fi
     else
-        print_status "S3 bucket is empty and no dump found, starting with empty bucket"
+        print_status "S3 bucket is empty and no dumps found (PROD or local), starting with empty bucket"
+        print_status "💡 Tip: Run './scripts/dump-s3-bucket.sh --env prod' to create a PROD backup for future use"
     fi
 else
     print_success "S3 bucket already contains $OBJECT_COUNT objects"
@@ -231,6 +250,59 @@ else
     print_error "Failed to setup database or create missing indexes"
     exit 1
 fi
+
+# Step 3.1: Restore DynamoDB table if dump exists and table is empty
+print_status "Checking if DynamoDB table needs to be restored from PROD dump..."
+
+# Go back to root directory to run the scripts
+cd ..
+
+# Check if table is empty
+TABLE_EMPTY=false
+ITEM_COUNT=$(AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test \
+aws --region us-east-1 --endpoint-url "http://localhost:4566" \
+dynamodb describe-table --table-name "local-pornspot-media" --query 'Table.ItemCount' --output text 2>/dev/null || echo "0")
+
+if [ "$ITEM_COUNT" = "0" ] || [ "$ITEM_COUNT" = "None" ]; then
+    TABLE_EMPTY=true
+fi
+
+if [ "$TABLE_EMPTY" = true ]; then
+    # First, try to restore from PROD backup
+    if [ -f "./backups/dynamodb/prod/table-data.json" ]; then
+        print_status "DynamoDB table is empty but PROD dump exists, restoring PROD data to local..."
+        if ./scripts/restore-dynamodb-table.sh --env local --source ./backups/dynamodb/prod; then
+            print_success "DynamoDB table restored from PROD dump successfully"
+        else
+            print_warning "Failed to restore DynamoDB table from PROD dump, trying local dump..."
+            # Fallback to local dump if prod restore fails
+            if [ -f "./backups/dynamodb/local/table-data.json" ]; then
+                if ./scripts/restore-dynamodb-table.sh --env local; then
+                    print_success "DynamoDB table restored from local dump successfully"
+                else
+                    print_warning "Failed to restore DynamoDB table from local dump, continuing with empty table..."
+                fi
+            else
+                print_warning "No local DynamoDB dump found either, continuing with empty table..."
+            fi
+        fi
+    elif [ -f "./backups/dynamodb/local/table-data.json" ]; then
+        print_status "No PROD DynamoDB dump found, but local dump exists, restoring from local backup..."
+        if ./scripts/restore-dynamodb-table.sh --env local; then
+            print_success "DynamoDB table restored from local dump successfully"
+        else
+            print_warning "Failed to restore DynamoDB table from local dump, continuing with empty table..."
+        fi
+    else
+        print_status "DynamoDB table is empty and no dumps found (PROD or local), starting with empty table"
+        print_status "💡 Tip: Run './scripts/dump-dynamodb-table.sh --env prod' to create a PROD backup for future use"
+    fi
+else
+    print_success "DynamoDB table already contains $ITEM_COUNT items"
+fi
+
+# Go back to scripts directory for the remaining steps
+cd scripts || exit 1
 
 # Step 4: Create Admin User (Legacy - removing this)
 print_status "Setting up user-based admin system..."
@@ -267,6 +339,11 @@ echo "  • DynamoDB: http://localhost:4566"
 echo "  • S3: http://localhost:4566"
 echo "  • OAuth Admin Email: $OAUTH_ADMIN_EMAIL (login with Google)"
 echo "  • Database Table: local-pornspot-media"
+echo ""
+echo "🔄 Auto-Restore Feature:"
+echo "  • S3: Automatically restores PROD data if local bucket is empty"
+echo "  • DynamoDB: Automatically restores PROD data if local table is empty"
+echo "  • Create PROD backups with: ./scripts/dump-s3-bucket.sh --env=prod && ./scripts/dump-dynamodb-table.sh --env=prod"
 echo ""
 
 # Step 5: Build Backend Components
@@ -400,4 +477,10 @@ echo "  • Restart infrastructure: ./start-local-backend.sh"
 echo "  • View LocalStack logs: docker-compose -f docker-compose.local.yml logs -f"
 echo "  • Stop LocalStack: docker-compose -f docker-compose.local.yml down"
 echo "  • Health check: curl http://localhost:4566/_localstack/health"
+echo ""
+echo "📦 Backup Commands (for PROD auto-restore):"
+echo "  • Create PROD S3 backup: ./scripts/dump-s3-bucket.sh --env=prod"
+echo "  • Create PROD DynamoDB backup: ./scripts/dump-dynamodb-table.sh --env=prod"
+echo "  • Manual restore from PROD: ./scripts/restore-s3-bucket.sh --env=local --source ./backups/s3/prod"
+echo "  • Manual restore from PROD: ./scripts/restore-dynamodb-table.sh --env=local --source ./backups/dynamodb/prod"
 echo ""

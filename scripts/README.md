@@ -165,6 +165,62 @@ Examples:
 
 See [`docs/S3_BACKUP_RESTORE.md`](../docs/S3_BACKUP_RESTORE.md) for detailed documentation.
 
+### [`dump-dynamodb-table.sh`](dump-dynamodb-table.sh)
+
+Dumps DynamoDB table contents to local filesystem for backup/restore purposes.
+
+**Usage:**
+
+```bash
+./scripts/dump-dynamodb-table.sh [OPTIONS]
+
+Options:
+  -e, --env ENVIRONMENT     Source environment (local, dev, staging, prod) [default: local]
+  -o, --output DIRECTORY    Output directory for dump [default: auto-generated]
+  -h, --help               Show help message
+
+Examples:
+  ./scripts/dump-dynamodb-table.sh                     # Dump local environment table
+  ./scripts/dump-dynamodb-table.sh --env prod          # Dump production table
+```
+
+**Features:**
+
+- Environment-aware (reads from `/scripts/.env.{environment}`)
+- Creates complete backup with schema and metadata
+- Handles large tables with batch processing
+- Generates human-readable summary
+
+### [`restore-dynamodb-table.sh`](restore-dynamodb-table.sh)
+
+Restores DynamoDB table contents from local filesystem dump.
+
+**Usage:**
+
+```bash
+./scripts/restore-dynamodb-table.sh [OPTIONS]
+
+Options:
+  -e, --env ENVIRONMENT     Target environment (local, dev, staging, prod) [default: local]
+  -s, --source DIRECTORY    Source directory for restore [default: auto-detected]
+  -h, --help               Show help message
+
+Examples:
+  ./scripts/restore-dynamodb-table.sh                  # Restore to local environment
+  ./scripts/restore-dynamodb-table.sh --env staging    # Restore to staging environment
+  ./scripts/restore-dynamodb-table.sh --env local --source ./prod-backup # Cross-environment restore
+```
+
+**Features:**
+
+- Auto-creates table if it doesn't exist (using schema from dump)
+- Preserves Global and Local Secondary Indexes
+- Batch processing for large datasets
+- Cross-environment restore support with warnings
+- Verifies restore integrity
+
+See [`docs/DYNAMODB_BACKUP_RESTORE.md`](../docs/DYNAMODB_BACKUP_RESTORE.md) for detailed documentation.
+
 ## Environment Support
 
 Both scripts support three environments:
