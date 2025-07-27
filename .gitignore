@@ -189,3 +189,6 @@ temp/
 .vercel.json
 *.vercel.app
 scripts/.env.dev
+
+# Backups
+backups/

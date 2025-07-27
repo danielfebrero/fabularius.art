@@ -113,6 +113,58 @@ Examples:
 - Redeploys the stack using the deploy script
 - **Recommended first approach** as it preserves data
 
+### [`dump-s3-bucket.sh`](dump-s3-bucket.sh)
+
+Dumps S3 bucket contents to local filesystem for backup/restore purposes.
+
+**Usage:**
+
+```bash
+./scripts/dump-s3-bucket.sh [OPTIONS]
+
+Options:
+  -e, --env ENVIRONMENT   Target environment (local, dev, staging, prod) [default: local]
+  -h, --help             Show help message
+
+Examples:
+  ./scripts/dump-s3-bucket.sh                     # Dump local environment bucket
+  ./scripts/dump-s3-bucket.sh --env prod          # Dump production bucket
+```
+
+**Features:**
+
+- Environment-aware (local, dev, staging, prod)
+- Creates complete backup with metadata
+- Stores objects with original directory structure
+- Generates human-readable summary
+
+### [`restore-s3-bucket.sh`](restore-s3-bucket.sh)
+
+Restores S3 bucket contents from local filesystem dump.
+
+**Usage:**
+
+```bash
+./scripts/restore-s3-bucket.sh [OPTIONS]
+
+Options:
+  -e, --env ENVIRONMENT   Target environment (local, dev, staging, prod) [default: local]
+  -h, --help             Show help message
+
+Examples:
+  ./scripts/restore-s3-bucket.sh                  # Restore to local environment
+  ./scripts/restore-s3-bucket.sh --env staging    # Restore to staging environment
+```
+
+**Features:**
+
+- Auto-creates bucket if it doesn't exist
+- Verifies upload integrity
+- Applies CORS policy for local environment
+- **Auto-restore**: `start-local-backend.sh` automatically restores if local bucket is empty
+
+See [`docs/S3_BACKUP_RESTORE.md`](../docs/S3_BACKUP_RESTORE.md) for detailed documentation.
+
 ## Environment Support
 
 Both scripts support three environments:

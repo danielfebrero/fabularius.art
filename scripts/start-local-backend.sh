@@ -182,6 +182,34 @@ fi
 # Return to original directory
 cd "$ORIGINAL_DIR" || exit 1
 
+# Step 2.1: Restore S3 bucket if dump exists and bucket is empty
+print_status "Checking if S3 bucket needs to be restored from dump..."
+
+# Check if bucket is empty and dump exists
+BUCKET_EMPTY=false
+AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test \
+aws --region us-east-1 --endpoint-url="http://localhost:4566" \
+s3api list-objects-v2 --bucket "local-pornspot-media" --max-items 1 >/dev/null 2>&1 || BUCKET_EMPTY=true
+
+OBJECT_COUNT=$(AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test \
+aws --region us-east-1 --endpoint-url="http://localhost:4566" \
+s3api list-objects-v2 --bucket "local-pornspot-media" --query 'length(Contents)' --output text 2>/dev/null || echo "0")
+
+if [ "$OBJECT_COUNT" = "0" ] || [ "$OBJECT_COUNT" = "None" ] || [ "$BUCKET_EMPTY" = true ]; then
+    if [ -d "./backups/s3/local" ] && [ -d "./backups/s3/local/objects" ]; then
+        print_status "S3 bucket is empty but dump exists, restoring from backup..."
+        if ./scripts/restore-s3-bucket.sh --env=local; then
+            print_success "S3 bucket restored from dump successfully"
+        else
+            print_warning "Failed to restore S3 bucket from dump, continuing with empty bucket..."
+        fi
+    else
+        print_status "S3 bucket is empty and no dump found, starting with empty bucket"
+    fi
+else
+    print_success "S3 bucket already contains $OBJECT_COUNT objects"
+fi
+
 # Step 3: Setup Local Database
 print_status "Setting up local database and ensuring all indexes exist..."
 
