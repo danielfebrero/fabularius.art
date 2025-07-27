@@ -59,6 +59,7 @@ export interface CreateAlbumRequest {
   title: string;
   tags?: string[] | undefined;
   isPublic?: boolean | undefined;
+  mediaIds?: string[] | undefined; // For user album creation with selected media
 }
 
 export interface UpdateAlbumRequest {
@@ -118,6 +119,8 @@ export interface AlbumEntity {
   likeCount?: number;
   bookmarkCount?: number;
   viewCount?: number;
+  createdBy?: string | undefined; // User ID who created the album
+  createdByType?: "user" | "admin" | undefined; // Type of creator
 }
 
 export interface MediaEntity {

@@ -475,6 +475,35 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
 
+  UserMediaListFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-media-list"
+      CodeUri: backend/dist/functions/user/media/
+      Handler: list.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        GetUserMedia:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/media
+            Method: GET
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsUserMedia:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/media
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
   ProcessUploadFunction:
     Type: AWS::Serverless::Function
     Properties:

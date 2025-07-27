@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { FolderOpen, Search, Grid, List, Calendar, Plus } from "lucide-react";
+import { FolderOpen, Grid, List, Calendar, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
 
 const UserAlbumsPage: React.FC = () => {
@@ -97,18 +98,6 @@ const UserAlbumsPage: React.FC = () => {
             </Button>
           </div>
         </div>
-
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-admin-primary/60" />
-          <input
-            type="text"
-            placeholder="Search your albums..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 border border-admin-primary/20 rounded-xl focus:ring-2 focus:ring-admin-primary/50 focus:border-admin-primary/50 bg-card/50 backdrop-blur-sm transition-all duration-200"
-          />
-        </div>
       </div>
 
       {/* Content */}
@@ -171,10 +160,12 @@ const UserAlbumsPage: React.FC = () => {
                 Clear Search
               </Button>
             )}
-            <Button className="bg-gradient-to-r from-admin-primary to-admin-secondary hover:from-admin-primary/90 hover:to-admin-secondary/90 text-admin-primary-foreground shadow-lg flex items-center space-x-2">
-              <Plus className="h-4 w-4" />
-              <span>Create Album</span>
-            </Button>
+            <LocaleLink href="/user/albums/create">
+              <Button className="bg-gradient-to-r from-admin-primary to-admin-secondary hover:from-admin-primary/90 hover:to-admin-secondary/90 text-admin-primary-foreground shadow-lg flex items-center space-x-2">
+                <Plus className="h-4 w-4" />
+                <span>Create Album</span>
+              </Button>
+            </LocaleLink>
           </div>
         </div>
       )}

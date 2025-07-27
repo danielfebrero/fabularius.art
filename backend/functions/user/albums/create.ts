@@ -5,7 +5,6 @@ import { ResponseUtil } from "@shared/utils/response";
 import { RevalidationService } from "@shared/utils/revalidation";
 import { CreateAlbumRequest, AlbumEntity, Album } from "@shared/types";
 import { UserAuthMiddleware } from "@shared/auth/user-middleware";
-import { PlanUtil } from "@shared/utils/plan";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -15,13 +14,12 @@ export const handler = async (
   }
 
   try {
-    // Determine user context - check if admin authorizer or user authorizer
+    // Get user ID from request context (set by the user authorizer)
     let userId = event.requestContext.authorizer?.["userId"];
-    let userRole = "user"; // default to user
 
     console.log("👤 UserId from authorizer:", userId);
 
-    // If no userId from authorizer, try session-based validation
+    // Fallback for local development or when authorizer context is missing
     if (!userId) {
       console.log(
         "⚠️ No userId from authorizer, falling back to session validation"
@@ -35,17 +33,6 @@ export const handler = async (
 
       userId = validation.user.userId;
       console.log("✅ Got userId from session validation:", userId);
-
-      // Check if user has admin privileges
-      userRole = await PlanUtil.getUserRole(
-        validation.user.userId,
-        validation.user.email
-      );
-      console.log("✅ User role:", userRole);
-    } else {
-      // If userId came from authorizer, check if it's admin context
-      // This would be set by admin authorizer vs user authorizer
-      userRole = event.requestContext.authorizer?.["role"] || "user";
     }
 
     if (!event.body) {
@@ -58,15 +45,21 @@ export const handler = async (
       return ResponseUtil.badRequest(event, "Album title is required");
     }
 
-    // Validate selected media IDs if provided (for user albums)
+    // Validate selected media IDs if provided
     if (request.mediaIds && request.mediaIds.length > 0) {
-      // Verify all media items exist and belong to the user (unless admin)
+      // Verify all media items exist and belong to the user
       for (const mediaId of request.mediaIds) {
         const media = await DynamoDBService.getMedia(mediaId);
         if (!media) {
           return ResponseUtil.badRequest(
             event,
             `Media item ${mediaId} not found`
+          );
+        }
+        if (media.createdBy !== userId) {
+          return ResponseUtil.forbidden(
+            event,
+            `Media item ${mediaId} does not belong to you`
           );
         }
       }
@@ -87,15 +80,12 @@ export const handler = async (
       createdAt: now,
       updatedAt: now,
       mediaCount: request.mediaIds?.length || 0,
-      isPublic: (userRole === "user"
-        ? true
-        : request.isPublic ?? false
-      ).toString(),
+      isPublic: (request.isPublic ?? false).toString(),
       likeCount: 0,
       bookmarkCount: 0,
       viewCount: 0,
       createdBy: userId,
-      createdByType: userRole === "admin" ? "admin" : "user",
+      createdByType: "user" as const,
     };
 
     await DynamoDBService.createAlbum(albumEntity);
@@ -132,7 +122,7 @@ export const handler = async (
 
     return ResponseUtil.created(event, album);
   } catch (error) {
-    console.error("Error creating album:", error);
+    console.error("Error creating user album:", error);
     return ResponseUtil.internalError(event, "Failed to create album");
   }
 };
