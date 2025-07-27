@@ -7,8 +7,12 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 jest.mock("../../../../shared/utils/dynamodb");
 jest.mock("../../../../shared/auth/user-middleware");
 
-const mockDynamoDBService = DynamoDBService as jest.Mocked<typeof DynamoDBService>;
-const mockUserAuthMiddleware = UserAuthMiddleware as jest.Mocked<typeof UserAuthMiddleware>;
+const mockDynamoDBService = DynamoDBService as jest.Mocked<
+  typeof DynamoDBService
+>;
+const mockUserAuthMiddleware = UserAuthMiddleware as jest.Mocked<
+  typeof UserAuthMiddleware
+>;
 
 describe("Remove Media from Album Handler", () => {
   const mockEvent: Partial<APIGatewayProxyEvent> = {
@@ -95,7 +99,9 @@ describe("Remove Media from Album Handler", () => {
     const result = await handler(mockEvent as APIGatewayProxyEvent);
 
     expect(result.statusCode).toBe(403);
-    expect(JSON.parse(result.body).error).toBe("You can only edit your own albums");
+    expect(JSON.parse(result.body).error).toBe(
+      "You can only edit your own albums"
+    );
   });
 
   it("should return 404 if media does not exist", async () => {
@@ -140,20 +146,26 @@ describe("Remove Media from Album Handler", () => {
       "test-album-id",
       "test-media-id"
     );
-    
+
     const responseBody = JSON.parse(result.body);
     expect(responseBody.success).toBe(true);
-    expect(responseBody.data.message).toBe("Media removed from album successfully");
+    expect(responseBody.data.message).toBe(
+      "Media removed from album successfully"
+    );
     expect(responseBody.data.albumId).toBe("test-album-id");
     expect(responseBody.data.mediaId).toBe("test-media-id");
   });
 
   it("should handle errors gracefully", async () => {
-    mockUserAuthMiddleware.validateSession.mockRejectedValue(new Error("Database error"));
+    mockUserAuthMiddleware.validateSession.mockRejectedValue(
+      new Error("Database error")
+    );
 
     const result = await handler(mockEvent as APIGatewayProxyEvent);
 
     expect(result.statusCode).toBe(500);
-    expect(JSON.parse(result.body).error).toBe("Failed to remove media from album");
+    expect(JSON.parse(result.body).error).toBe(
+      "Failed to remove media from album"
+    );
   });
 });

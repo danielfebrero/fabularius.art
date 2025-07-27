@@ -218,11 +218,17 @@ export const albumsApi = {
   },
 
   // Remove media from album
-  removeMediaFromAlbum: async (albumId: string, mediaId: string): Promise<void> => {
-    const response = await fetch(`${API_URL}/albums/${albumId}/media/${mediaId}`, {
-      method: "DELETE",
-      credentials: "include",
-    });
+  removeMediaFromAlbum: async (
+    albumId: string,
+    mediaId: string
+  ): Promise<void> => {
+    const response = await fetch(
+      `${API_URL}/albums/${albumId}/media/${mediaId}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    );
 
     if (!response.ok) {
       let errorData = null;
