@@ -24,7 +24,7 @@ A premium adult content gallery platform for creators and enthusiasts. Built wit
 - 🤖 **AI-Powered Generation**: Advanced AI image generation with prompt support
 - ⭐ **Negative Prompts**: Pro users can specify what to exclude from generated images
 - 🔧 **LoRA Models**: Customizable AI models for specialized content (Pro)
-- � **Bulk Generation**: Generate multiple variations at once (Pro)
+- 🛠️ **Bulk Generation**: Generate multiple variations at once (Pro)
 - 📐 **Custom Sizes**: Control exact image dimensions (Pro only)
 - 🎚️ **Plan-Based Limits**: Tiered usage limits based on subscription plan
 
@@ -383,7 +383,7 @@ The project supports multiple environments (dev, staging, prod) with automated d
 2. **Deploy backend to production**
 
    ```bash
-   ./scripts/deploy.sh --env prod --guided
+   npm run deploy:backend:prod
    ```
 
 3. **Prepare frontend for deployment**
@@ -396,7 +396,7 @@ The project supports multiple environments (dev, staging, prod) with automated d
 
 - **Development**: `./scripts/deploy.sh --env dev`
 - **Staging**: `./scripts/deploy.sh --env staging`
-- **Production**: `./scripts/deploy.sh --env prod --guided`
+- **Production**: `npm run deploy:backend:prod`
 
 ### Manual Deployment
 
@@ -455,7 +455,7 @@ PornSpot.ai/
 │   └── package.json
 ├── scripts/                # Testing and deployment scripts
 │   ├── start-local-backend.sh  # Local backend startup script
-│   ├── deploy.sh           # Deployment script
+│   ├── deploy.sh           # Deployment script (deprecated - use npm run deploy:backend:*)
 │   ├── setup-testing.sh    # Test environment setup
 │   └── ...                 # Additional utility scripts
 ├── docs/                   # Documentation

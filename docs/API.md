@@ -8,18 +8,32 @@ The API follows REST principles and returns JSON responses. All endpoints suppor
 
 ### Base URLs
 
-- **Production**: `https://api.pornspot.ai`
-- **Staging**: `https://staging-api.pornspot.ai`
-- **Development**: `https://dev-api.pornspot.ai`
+The API is deployed using AWS API Gateway with the following structure:
+
+- **Production**: `https://{api-gateway-id}.execute-api.{region}.amazonaws.com/prod`
+- **Staging**: `https://{api-gateway-id}.execute-api.{region}.amazonaws.com/staging`
+- **Development**: `https://{api-gateway-id}.execute-api.{region}.amazonaws.com/dev`
 
 ### Authentication
 
-Currently uses AWS IAM authentication. Future versions may support API keys or OAuth.
+The API supports multiple authentication methods:
+
+1. **Session-based Authentication** - For user operations (login/logout with cookies)
+2. **Admin Authorization** - For administrative operations
+3. **User Authorization** - For user-specific operations
+4. **Public Access** - For reading public albums and media
 
 ```bash
-# Example with AWS CLI credentials
-curl -H "Authorization: AWS4-HMAC-SHA256 ..." \
-     https://api.pornspot.ai/albums
+# Public endpoints (no authentication)
+curl https://api.pornspot.ai/albums
+
+# User authenticated endpoints (requires session cookie)
+curl -H "Cookie: sessionId=..." \
+     https://api.pornspot.ai/user/media
+
+# Admin endpoints (requires admin session)
+curl -H "Cookie: adminSessionId=..." \
+     https://api.pornspot.ai/admin/stats
 ```
 
 ## Data Models
@@ -29,10 +43,9 @@ curl -H "Authorization: AWS4-HMAC-SHA256 ..." \
 ```typescript
 interface Media {
   id: string; // Unique media identifier
-  albumId: string; // Parent album ID
+  albumId?: string; // Parent album ID (when part of album context)
   filename: string; // Stored filename
-  originalName?: string; // Original upload filename (legacy)
-  originalFilename?: string; // Original upload filename
+  originalFilename: string; // Original upload filename
   mimeType: string; // MIME type (image/jpeg, image/png, etc.)
   size: number; // File size in bytes
   width?: number; // Image width in pixels
@@ -49,12 +62,23 @@ interface Media {
     medium?: string; // 300×300px (85% quality) - General purpose
     large?: string; // 365×365px (85% quality) - High quality
     xlarge?: string; // 600×600px (90% quality) - Small screens
+    originalSize?: string; // Original size thumbnail
   };
 
   status?: "pending" | "uploaded" | "failed"; // Processing status
   createdAt: string; // ISO 8601 timestamp
   updatedAt: string; // ISO 8601 timestamp
   metadata?: Record<string, any>; // Additional metadata
+
+  // User interaction fields
+  likeCount?: number; // Number of likes
+  bookmarkCount?: number; // Number of bookmarks
+  viewCount?: number; // Number of views
+
+  // Creator tracking
+  createdBy?: string; // User ID who uploaded
+  createdByType?: "user" | "admin"; // Type of creator
+  albums?: string[]; // Array of album IDs (when querying across albums)
 }
 ```
 
@@ -66,10 +90,30 @@ interface Album {
   title: string; // Album title
   tags?: string[]; // Optional tags
   coverImageUrl?: string; // Cover image URL (from media)
+
+  // New 5-size thumbnail system for covers
+  thumbnailUrls?: {
+    cover?: string; // 128×128px (75% quality) - Album covers
+    small?: string; // 240×240px (80% quality) - Dense grids
+    medium?: string; // 300×300px (85% quality) - General purpose
+    large?: string; // 365×365px (85% quality) - High quality
+    xlarge?: string; // 600×600px (90% quality) - Small screens
+  };
+
   isPublic: boolean; // Public visibility
   mediaCount: number; // Number of media items
   createdAt: string; // ISO 8601 timestamp
   updatedAt: string; // ISO 8601 timestamp
+
+  // User interaction fields
+  likeCount?: number; // Number of likes
+  bookmarkCount?: number; // Number of bookmarks
+  viewCount?: number; // Number of views
+
+  // Creator tracking
+  createdBy?: string; // User ID who created the album
+  createdByType?: "user" | "admin"; // Type of creator
+
   media?: Media[]; // Populated media (when requested)
 }
 ```
@@ -78,55 +122,68 @@ interface Album {
 
 ## Albums Endpoint (`/albums`)
 
-Retrieves a paginated list of albums. Supports server-side filtering by public/private status, DynamoDB-native pagination, and returns a new, simplified response shape.
+Retrieves a paginated list of albums with intelligent filtering based on user permissions and DynamoDB-native pagination.
 
 ### Request
 
 - **GET** `/albums`
 - **Query Parameters**:
   - `isPublic` (optional, boolean): Filter albums by public visibility.
+  - `createdBy` (optional, string): Filter albums by creator user ID.
+  - `tag` (optional, string): Filter albums by tag.
   - `limit` (optional, integer): Maximum number of results to return per page (default: 20, max: 100).
-  - `nextCursor` (optional, string): Opaque cursor from the previous response for DynamoDB pagination.
+  - `cursor` (optional, string): Base64-encoded cursor from the previous response for DynamoDB pagination.
+
+#### Permission Logic
+
+- **If `createdBy` is provided and user IS the creator**: Show all albums (public and private)
+- **If `createdBy` is provided and user is NOT the creator**: Only show public albums
+- **If no `createdBy` is provided**: Show all public albums from everyone
 
 #### Example
 
 ```
-GET /albums?isPublic=true&limit=20
+GET /albums?isPublic=true&limit=20&createdBy=user123
 ```
 
 ### Response
 
 ```json
 {
-  "albums": [
-    {
-      "id": "abc123",
-      "title": "Example Album",
-      "tags": ["summer", "beach"],
-      "coverImageUrl": "...",
-      "isPublic": true,
-      "mediaCount": 15,
-      "createdAt": "2025-06-01T12:05:47.400Z",
-      "updatedAt": "2025-06-01T12:05:47.400Z"
-      // ...additional album fields
-    }
-  ],
-  "pagination": {
+  "success": true,
+  "data": {
+    "albums": [
+      {
+        "id": "abc123",
+        "title": "Example Album",
+        "tags": ["summer", "beach"],
+        "coverImageUrl": "...",
+        "isPublic": true,
+        "mediaCount": 15,
+        "createdAt": "2025-06-01T12:05:47.400Z",
+        "updatedAt": "2025-06-01T12:05:47.400Z",
+        "likeCount": 42,
+        "bookmarkCount": 8,
+        "viewCount": 256,
+        "createdBy": "user123",
+        "createdByType": "user"
+      }
+    ],
     "nextCursor": "eyJpYXQiOjE2...",
-    "hasNextPage": true
+    "hasNext": true
   }
 }
 ```
 
 - **albums**: List of album objects (see schema above).
-- **pagination.nextCursor**: Pass this token to retrieve the next page. Omit or set to null to fetch the first page.
-- **pagination.hasNextPage**: Boolean indicating if additional pages are available.
+- **nextCursor**: Pass this token to retrieve the next page. Omit or set to null to fetch the first page.
+- **hasNext**: Boolean indicating if additional pages are available.
 
 **Notes:**
 
-- Filtering by `isPublic` is implemented entirely server-side for efficiency.
-- Pagination is native to DynamoDB (no traditional offset/limit; always use `nextCursor`).
-- The response shape is always `{ albums, pagination }`.
+- Filtering by `isPublic` and `createdBy` is implemented server-side for efficiency.
+- Pagination uses DynamoDB's native LastEvaluatedKey system (no traditional offset/limit).
+- The response shape is always `{ success, data: { albums, nextCursor, hasNext } }`.
 
 ---
 
@@ -140,13 +197,13 @@ interface ApiResponse<T = any> {
   message?: string; // Additional information
 }
 
-interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
-  pagination: {
-    page: number; // Current page (1-based)
-    limit: number; // Items per page
-    total: number; // Total items
-    hasNext: boolean; // Has next page
-    hasPrev: boolean; // Has previous page
+// Note: The API does NOT use traditional page-based pagination
+// Instead, it uses DynamoDB-native cursor-based pagination
+interface CursorPaginatedResponse<T = any> extends ApiResponse<T[]> {
+  data: {
+    items: T[]; // The actual data items
+    nextCursor?: string; // Base64-encoded cursor for next page
+    hasNext: boolean; // Has next page available
   };
 }
 ```
@@ -155,44 +212,47 @@ interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
 
 ### List Albums
 
-Get all albums with optional filtering and pagination.
+Get all albums with intelligent filtering and cursor-based pagination.
 
 ```http
-GET /albums?page=1&limit=20&public=true
+GET /albums?isPublic=true&limit=20&createdBy=user123&tag=nature
 ```
 
 **Query Parameters:**
 
-| Parameter | Type    | Default | Description                 |
-| --------- | ------- | ------- | --------------------------- |
-| `page`    | number  | 1       | Page number (1-based)       |
-| `limit`   | number  | 20      | Items per page (max 100)    |
-| `public`  | boolean | -       | Filter by public visibility |
-| `tags`    | string  | -       | Comma-separated tags filter |
+| Parameter   | Type    | Default | Description                          |
+| ----------- | ------- | ------- | ------------------------------------ |
+| `limit`     | number  | 20      | Items per page (max 100)             |
+| `isPublic`  | boolean | -       | Filter by public visibility          |
+| `createdBy` | string  | -       | Filter by creator user ID            |
+| `tag`       | string  | -       | Filter by tag                        |
+| `cursor`    | string  | -       | Base64-encoded cursor for pagination |
 
 **Response:**
 
 ```json
 {
   "success": true,
-  "data": [
-    {
-      "id": "album-123",
-      "title": "Nature Photography",
-      "tags": ["nature", "landscape"],
-      "coverImageUrl": "https://cdn.example.com/covers/album-123.jpg",
-      "isPublic": true,
-      "mediaCount": 25,
-      "createdAt": "2024-01-15T10:30:00.000Z",
-      "updatedAt": "2024-01-15T15:45:00.000Z"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 45,
-    "hasNext": true,
-    "hasPrev": false
+  "data": {
+    "albums": [
+      {
+        "id": "album-123",
+        "title": "Nature Photography",
+        "tags": ["nature", "landscape"],
+        "coverImageUrl": "https://cdn.example.com/covers/album-123.jpg",
+        "isPublic": true,
+        "mediaCount": 25,
+        "createdAt": "2024-01-15T10:30:00.000Z",
+        "updatedAt": "2024-01-15T15:45:00.000Z",
+        "likeCount": 42,
+        "bookmarkCount": 8,
+        "viewCount": 256,
+        "createdBy": "user123",
+        "createdByType": "user"
+      }
+    ],
+    "nextCursor": "eyJpYXQiOjE2...",
+    "hasNext": true
   }
 }
 ```
@@ -313,7 +373,7 @@ Content-Type: application/json
 Get media items for a specific album.
 
 ```http
-GET /albums/{albumId}/media?page=1&limit=50
+GET /albums/{albumId}/media?limit=50&cursor=...
 ```
 
 **Path Parameters:**
@@ -324,60 +384,76 @@ GET /albums/{albumId}/media?page=1&limit=50
 
 **Query Parameters:**
 
-| Parameter  | Type   | Default | Description              |
-| ---------- | ------ | ------- | ------------------------ |
-| `page`     | number | 1       | Page number (1-based)    |
-| `limit`    | number | 50      | Items per page (max 100) |
-| `mimeType` | string | -       | Filter by MIME type      |
+| Parameter | Type   | Default | Description                          |
+| --------- | ------ | ------- | ------------------------------------ |
+| `limit`   | number | 50      | Items per page (max 100)             |
+| `cursor`  | string | -       | Base64-encoded cursor for pagination |
 
 **Response:**
 
 ```json
 {
   "success": true,
-  "data": [
-    {
-      "id": "media-456",
-      "albumId": "album-123",
-      "filename": "beach-sunset.jpg",
-      "originalFilename": "vacation_beach_2024.jpg",
-      "mimeType": "image/jpeg",
-      "size": 1923840,
-      "width": 2560,
-      "height": 1440,
-      "url": "https://cdn.example.com/albums/album-123/media/beach-sunset.jpg",
+  "data": {
+    "media": [
+      {
+        "id": "media-456",
+        "filename": "beach-sunset.jpg",
+        "originalFilename": "vacation_beach_2024.jpg",
+        "mimeType": "image/jpeg",
+        "size": 1923840,
+        "width": 2560,
+        "height": 1440,
+        "url": "https://cdn.example.com/albums/album-123/media/beach-sunset.jpg",
 
-      // Legacy thumbnail (points to small size)
-      "thumbnailUrl": "https://cdn.example.com/albums/album-123/thumbnails/beach-sunset_thumb_small.jpg",
+        // Legacy thumbnail (points to small size)
+        "thumbnailUrl": "https://cdn.example.com/albums/album-123/thumbnails/beach-sunset_thumb_small.jpg",
 
-      // Complete 5-size thumbnail set
-      "thumbnailUrls": {
-        "cover": "https://cdn.example.com/albums/album-123/thumbnails/beach-sunset_thumb_cover.jpg",
-        "small": "https://cdn.example.com/albums/album-123/thumbnails/beach-sunset_thumb_small.jpg",
-        "medium": "https://cdn.example.com/albums/album-123/thumbnails/beach-sunset_thumb_medium.jpg",
-        "large": "https://cdn.example.com/albums/album-123/thumbnails/beach-sunset_thumb_large.jpg",
-        "xlarge": "https://cdn.example.com/albums/album-123/thumbnails/beach-sunset_thumb_xlarge.jpg"
-      },
+        // Complete 5-size thumbnail set
+        "thumbnailUrls": {
+          "cover": "https://cdn.example.com/albums/album-123/thumbnails/beach-sunset_thumb_cover.jpg",
+          "small": "https://cdn.example.com/albums/album-123/thumbnails/beach-sunset_thumb_small.jpg",
+          "medium": "https://cdn.example.com/albums/album-123/thumbnails/beach-sunset_thumb_medium.jpg",
+          "large": "https://cdn.example.com/albums/album-123/thumbnails/beach-sunset_thumb_large.jpg",
+          "xlarge": "https://cdn.example.com/albums/album-123/thumbnails/beach-sunset_thumb_xlarge.jpg"
+        },
 
-      "status": "uploaded",
-      "createdAt": "2024-01-15T12:00:00.000Z",
-      "updatedAt": "2024-01-15T12:03:00.000Z",
-      "metadata": {
-        "camera": "Canon EOS R5",
-        "lens": "RF 24-70mm F2.8L IS USM",
-        "settings": "1/250s f/8.0 ISO 100"
+        "status": "uploaded",
+        "createdAt": "2024-01-15T12:00:00.000Z",
+        "updatedAt": "2024-01-15T12:03:00.000Z",
+        "likeCount": 15,
+        "bookmarkCount": 3,
+        "viewCount": 128,
+        "createdBy": "user123",
+        "createdByType": "user",
+        "metadata": {
+          "camera": "Canon EOS R5",
+          "lens": "RF 24-70mm F2.8L IS USM"
+        }
       }
+    ],
+    "pagination": {
+      "hasNext": false,
+      "cursor": null
     }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 50,
-    "total": 25,
-    "hasNext": false,
-    "hasPrev": false
   }
 }
 ```
+
+### Get All Media
+
+Get all media items across all albums (admin/power user endpoint).
+
+```http
+GET /media?limit=50&cursor=...
+```
+
+**Query Parameters:**
+
+| Parameter | Type   | Default | Description                          |
+| --------- | ------ | ------- | ------------------------------------ |
+| `limit`   | number | 50      | Items per page (max 100)             |
+| `cursor`  | string | -       | Base64-encoded cursor for pagination |
 
 ### Get Media Item
 
@@ -400,7 +476,6 @@ GET /media/{mediaId}
   "success": true,
   "data": {
     "id": "media-456",
-    "albumId": "album-123",
     "filename": "portrait-session.jpg",
     "originalFilename": "portrait_final_edit.jpg",
     "mimeType": "image/jpeg",
@@ -423,18 +498,22 @@ GET /media/{mediaId}
 
     "status": "uploaded",
     "createdAt": "2024-01-15T14:00:00.000Z",
-    "updatedAt": "2024-01-15T14:05:00.000Z"
+    "updatedAt": "2024-01-15T14:05:00.000Z",
+    "likeCount": 89,
+    "bookmarkCount": 12,
+    "viewCount": 445
   }
 }
 ```
 
 ### Upload Media
 
-Upload a new media file to an album.
+Upload a new media file to an album (requires admin authentication).
 
 ```http
-POST /albums/{albumId}/media/upload
+POST /albums/{albumId}/media
 Content-Type: application/json
+Cookie: adminSessionId=...
 
 {
   "filename": "new-photo.jpg",
@@ -472,33 +551,10 @@ Content-Type: application/json
 
 **Upload Flow:**
 
-1. **Request upload URL** - POST to `/albums/{albumId}/media/upload`
+1. **Request upload URL** - POST to `/albums/{albumId}/media`
 2. **Upload file** - PUT to the returned `uploadUrl`
 3. **Automatic processing** - S3 triggers Lambda to generate 5 thumbnail sizes
 4. **Database update** - Media record updated with complete `thumbnailUrls` object
-
-### Delete Media
-
-Delete a media item and all associated thumbnails.
-
-```http
-DELETE /media/{mediaId}
-```
-
-**Path Parameters:**
-
-| Parameter | Type   | Required | Description      |
-| --------- | ------ | -------- | ---------------- |
-| `mediaId` | string | Yes      | Media identifier |
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "message": "Media item and all thumbnails deleted successfully"
-}
-```
 
 ## Thumbnail System API
 
@@ -543,14 +599,20 @@ The frontend automatically selects optimal thumbnail sizes based on:
 - Legacy clients continue working with `thumbnailUrl`
 - Gradual migration path supported
 
-## Admin API
+## User Authentication API
 
-### Get Media Statistics
+### Login
 
-Get thumbnail generation statistics and health metrics.
+Authenticate a user and create a session.
 
 ```http
-GET /admin/stats/thumbnails
+POST /user/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "userpassword"
+}
 ```
 
 **Response:**
@@ -559,25 +621,251 @@ GET /admin/stats/thumbnails
 {
   "success": true,
   "data": {
-    "totalMedia": 1234,
-    "withThumbnails": 1189,
-    "withComplete5Sizes": 1150,
-    "withLegacyOnly": 39,
-    "processingFailed": 45,
-    "sizesGenerated": {
-      "cover": 1150,
-      "small": 1189,
-      "medium": 1175,
-      "large": 1160,
-      "xlarge": 1155
+    "user": {
+      "userId": "user123",
+      "email": "user@example.com",
+      "username": "johndoe",
+      "role": "user"
     },
-    "storageUsage": {
-      "originals": "12.4 GB",
-      "thumbnails": "2.1 GB",
-      "compressionRatio": "83%"
+    "sessionId": "session-token-here"
+  }
+}
+```
+
+### Register
+
+Create a new user account.
+
+```http
+POST /user/auth/register
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "username": "johndoe",
+  "password": "userpassword"
+}
+```
+
+### Logout
+
+End the current user session.
+
+```http
+POST /user/auth/logout
+Cookie: sessionId=session-token-here
+```
+
+### Get Current User
+
+Get the currently authenticated user's information.
+
+```http
+GET /user/auth/me
+Cookie: sessionId=session-token-here
+```
+
+## User Interactions API
+
+### Like Media
+
+Like or unlike a media item.
+
+```http
+POST /user/interactions/like
+Content-Type: application/json
+Cookie: sessionId=session-token-here
+
+{
+  "mediaId": "media123",
+  "action": "like" // or "unlike"
+}
+```
+
+### Bookmark Media
+
+Bookmark or unbookmark a media item.
+
+```http
+POST /user/interactions/bookmark
+Content-Type: application/json
+Cookie: sessionId=session-token-here
+
+{
+  "mediaId": "media123",
+  "action": "bookmark" // or "unbookmark"
+}
+```
+
+### Get User Likes
+
+Get all media items liked by the current user.
+
+```http
+GET /user/interactions/likes?limit=20&cursor=...
+Cookie: sessionId=session-token-here
+```
+
+### Get User Bookmarks
+
+Get all media items bookmarked by the current user.
+
+```http
+GET /user/interactions/bookmarks?limit=20&cursor=...
+Cookie: sessionId=session-token-here
+```
+
+### Get Interaction Status
+
+Get the current user's interaction status for multiple media items.
+
+```http
+POST /user/interactions/status
+Content-Type: application/json
+Cookie: sessionId=session-token-here
+
+{
+  "mediaIds": ["media123", "media456", "media789"]
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "media123": {
+      "liked": true,
+      "bookmarked": false
+    },
+    "media456": {
+      "liked": false,
+      "bookmarked": true
     }
   }
 }
+```
+
+## User Media API
+
+### List User Media
+
+Get all media uploaded by the current user.
+
+```http
+GET /user/media?limit=50&cursor=...
+Cookie: sessionId=session-token-here
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "media": [
+      {
+        "id": "media123",
+        "filename": "my-photo.jpg",
+        "originalFilename": "vacation.jpg",
+        "url": "https://...",
+        "thumbnailUrls": { ... },
+        "albums": ["album1", "album2"]
+      }
+    ],
+    "pagination": {
+      "hasNext": true,
+      "cursor": "next-page-cursor"
+    }
+  }
+}
+```
+
+## Admin API
+
+### Admin Authentication
+
+#### Admin Login
+
+```http
+POST /admin/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "adminpassword"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "admin": {
+      "adminId": "admin123",
+      "username": "admin",
+      "isActive": true
+    },
+    "sessionId": "admin-session-token"
+  }
+}
+```
+
+### Get Admin Statistics
+
+Get comprehensive statistics about the system.
+
+```http
+GET /admin/stats
+Cookie: adminSessionId=admin-session-token
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "totalAlbums": 1234,
+    "totalMedia": 5678,
+    "publicAlbums": 890,
+    "storageUsed": "12.4 GB",
+    "storageUsedBytes": 13312345678,
+    "thumbnails": {
+      "totalMedia": 5678,
+      "withThumbnails": 5432,
+      "withComplete5Sizes": 5100,
+      "withLegacyOnly": 332,
+      "processingFailed": 246,
+      "sizesGenerated": {
+        "cover": 5100,
+        "small": 5432,
+        "medium": 5200,
+        "large": 5150,
+        "xlarge": 5120
+      }
+    }
+  }
+}
+```
+
+### Admin Media Management
+
+#### Add Media to Album (Admin)
+
+```http
+DELETE /admin/albums/{albumId}/media/{mediaId}
+Cookie: adminSessionId=admin-session-token
+```
+
+#### Remove Media from Album (Admin)
+
+```http
+DELETE /admin/albums/{albumId}/media/{mediaId}
+Cookie: adminSessionId=admin-session-token
 ```
 
 ### Regenerate Thumbnails
@@ -681,10 +969,10 @@ X-RateLimit-Reset: 1642262400
 ### JavaScript/TypeScript
 
 ```typescript
-// Example using fetch API
-const response = await fetch("https://api.pornspot.ai/albums/album-123", {
+// Example using fetch API with session authentication
+const response = await fetch("https://api-gateway-url/albums/album-123", {
+  credentials: "include", // Include cookies
   headers: {
-    Authorization: "AWS4-HMAC-SHA256 ...",
     "Content-Type": "application/json",
   },
 });
@@ -700,54 +988,111 @@ if (success && data.media) {
     console.log(`Displaying ${media.originalFilename} at ${thumbnailUrl}`);
   });
 }
+
+// User authentication example
+const loginResponse = await fetch("https://api-gateway-url/user/auth/login", {
+  method: "POST",
+  credentials: "include",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({
+    email: "user@example.com",
+    password: "password",
+  }),
+});
+
+const { success, data: userData } = await loginResponse.json();
+if (success) {
+  console.log("Logged in as:", userData.user.username);
+  // Session cookie is now set automatically
+}
 ```
 
 ### cURL Examples
 
 ```bash
-# List albums
-curl -H "Authorization: AWS4-HMAC-SHA256 ..." \
-     "https://api.pornspot.ai/albums?page=1&limit=10"
+# List public albums (no authentication)
+curl "https://api-gateway-url/albums?limit=10&isPublic=true"
 
-# Get album with media
-curl -H "Authorization: AWS4-HMAC-SHA256 ..." \
-     "https://api.pornspot.ai/albums/album-123?includeMedia=true"
+# Get album by ID
+curl "https://api-gateway-url/albums/album-123"
 
-# Upload media
-curl -X POST \
-     -H "Authorization: AWS4-HMAC-SHA256 ..." \
+# User login (sets session cookie)
+curl -c cookies.txt \
+     -X POST \
      -H "Content-Type: application/json" \
-     -d '{"filename":"photo.jpg","mimeType":"image/jpeg","size":2048000}' \
-     "https://api.pornspot.ai/albums/album-123/media/upload"
+     -d '{"email":"user@example.com","password":"password"}' \
+     "https://api-gateway-url/user/auth/login"
+
+# List user's bookmarks (requires authentication)
+curl -b cookies.txt \
+     "https://api-gateway-url/user/interactions/bookmarks?limit=20"
+
+# Admin login
+curl -c admin-cookies.txt \
+     -X POST \
+     -H "Content-Type: application/json" \
+     -d '{"username":"admin","password":"adminpassword"}' \
+     "https://api-gateway-url/admin/auth/login"
+
+# Get admin stats
+curl -b admin-cookies.txt \
+     "https://api-gateway-url/admin/stats"
 ```
 
 ## Migration Notes
 
 ### From Legacy API
 
-**Changes in v2.0:**
+**Changes in Current Version:**
 
-1. **New Field**: `thumbnailUrls` object with 5 sizes
-2. **Maintained**: `thumbnailUrl` for backward compatibility
-3. **Enhanced**: Intelligent size selection on frontend
-4. **Added**: Complete thumbnail regeneration capabilities
+1. **Authentication**: Moved from AWS IAM to session-based authentication
+2. **Pagination**: Uses DynamoDB-native cursors instead of page-based pagination
+3. **Response Format**: Consistent `{success, data, error}` wrapper for all responses
+4. **User System**: Added comprehensive user authentication and interactions
+5. **New Fields**: Added user interaction fields (`likeCount`, `bookmarkCount`, `viewCount`)
+6. **Creator Tracking**: Added `createdBy` and `createdByType` fields
+7. **Intelligent Filtering**: Album queries respect user permissions automatically
 
 **Migration Checklist:**
 
-- [ ] Update clients to use `thumbnailUrls` when available
-- [ ] Implement fallback to `thumbnailUrl` for compatibility
-- [ ] Test responsive thumbnail selection
-- [ ] Verify performance improvements
-- [ ] Monitor thumbnail generation success rates
+- [ ] Update authentication from IAM to session cookies
+- [ ] Replace page-based pagination with cursor-based pagination
+- [ ] Update response parsing to handle `{success, data}` wrapper
+- [ ] Implement user authentication flows
+- [ ] Update album queries to use new filtering parameters
+- [ ] Handle new user interaction fields in UI
+- [ ] Test permission-based album visibility
+
+### API Endpoint Changes
+
+**Updated Endpoints:**
+
+- `GET /albums` - Now supports `createdBy`, `tag`, and cursor pagination
+- `GET /albums/{id}/media` - Uses cursor pagination instead of pages
+- `POST /albums/{id}/media` - Now requires admin authentication
+- `GET /media` - New endpoint for cross-album media queries
+
+**New Endpoints:**
+
+- `POST /user/auth/login` - User authentication
+- `GET /user/interactions/likes` - User's liked media
+- `GET /user/interactions/bookmarks` - User's bookmarked media
+- `POST /user/interactions/like` - Like/unlike media
+- `POST /user/interactions/bookmark` - Bookmark/unbookmark media
+- `GET /admin/stats` - System statistics
+- `POST /admin/auth/login` - Admin authentication
 
 ### Best Practices
 
-1. **Always check** `thumbnailUrls` first, fallback to `thumbnailUrl`
-2. **Use appropriate sizes** based on display context
-3. **Implement lazy loading** for thumbnail images
-4. **Cache thumbnails** on client side for performance
-5. **Monitor API usage** and respect rate limits
-6. **Handle errors gracefully** with fallback to original images
+1. **Always handle the response wrapper** - Check `success` field before accessing `data`
+2. **Use cursor pagination** - Store and pass `nextCursor` for pagination
+3. **Implement proper authentication** - Handle session cookies for user operations
+4. **Respect permissions** - Use `createdBy` parameter appropriately for user-specific queries
+5. **Cache thumbnails** - Use appropriate thumbnail sizes based on display context
+6. **Handle errors gracefully** - All endpoints return consistent error format
+7. **Monitor rate limits** - Respect API usage limits and implement backoff strategies
 
 ## Support
 
