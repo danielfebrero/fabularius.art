@@ -63,6 +63,10 @@ Resources:
           AttributeType: S
         - AttributeName: GSI3SK
           AttributeType: S
+        - AttributeName: GSI4PK
+          AttributeType: S
+        - AttributeName: GSI4SK
+          AttributeType: S
         - AttributeName: isPublic
           AttributeType: S
         - AttributeName: createdAt
@@ -94,6 +98,14 @@ Resources:
             - AttributeName: GSI3PK
               KeyType: HASH
             - AttributeName: GSI3SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        - IndexName: GSI4
+          KeySchema:
+            - AttributeName: GSI4PK
+              KeyType: HASH
+            - AttributeName: GSI4SK
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
@@ -376,6 +388,89 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
+
+  UpdateAlbumFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-update-album"
+      CodeUri: backend/dist/functions/albums/
+      Handler: update.handler
+      Layers:
+        - !Ref SharedLayer
+        - !Ref SharpLayer
+      MemorySize: 1024
+      Timeout: 60
+      Events:
+        PutUpdateAlbum:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /albums/{albumId}
+            Method: PUT
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsUpdateAlbum:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /albums/{albumId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+        - S3ReadPolicy:
+            BucketName: !Ref MediaBucket
+        - S3WritePolicy:
+            BucketName: !Ref MediaBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParameter
+              Resource:
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/pornspot-ai/${Environment}/revalidate-secret"
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/pornspot-ai/${Environment}/frontend-url"
+
+  DeleteAlbumFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-delete-album"
+      CodeUri: backend/dist/functions/albums/
+      Handler: delete.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        DeleteAlbum:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /albums/{albumId}
+            Method: DELETE
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsDeleteAlbum:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /albums/{albumId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParameter
+              Resource:
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/pornspot-ai/${Environment}/revalidate-secret"
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/pornspot-ai/${Environment}/frontend-url"
 
   UploadMediaFunction:
     Type: AWS::Serverless::Function

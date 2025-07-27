@@ -3,11 +3,16 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import Image from "next/image";
 import { Media } from "@/types";
 import { useTranslations } from "next-intl";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { Crown } from "lucide-react";
+import ResponsivePicture from "@/components/ui/ResponsivePicture";
+import {
+  composeThumbnailUrls,
+  getBestThumbnailUrl,
+  composeMediaUrl,
+} from "@/lib/urlUtils";
 
 interface UserAlbumFormData {
   title: string;
@@ -373,12 +378,18 @@ export function UserAlbumForm({
                 }`}
                 onClick={() => toggleMediaSelection(media.id)}
               >
-                <Image
-                  src={media.thumbnailUrls?.small || media.url}
+                <ResponsivePicture
+                  thumbnailUrls={composeThumbnailUrls(
+                    media.thumbnailUrls || {}
+                  )}
+                  fallbackUrl={getBestThumbnailUrl(
+                    composeThumbnailUrls(media.thumbnailUrls || {}),
+                    composeMediaUrl(media.url)
+                  )}
                   alt={media.originalFilename || "User image"}
-                  width={200}
-                  height={200}
                   className="w-full h-full object-cover"
+                  loading="lazy"
+                  context="create-album"
                 />
                 {media.selected && (
                   <div className="absolute top-2 right-2 w-5 h-5 bg-admin-primary rounded-full flex items-center justify-center">

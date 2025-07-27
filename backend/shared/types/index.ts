@@ -98,6 +98,8 @@ export interface AlbumEntity {
   SK: string; // METADATA
   GSI1PK: string; // ALBUM
   GSI1SK: string; // {createdAt}#{albumId}
+  GSI4PK: string; // ALBUM_BY_CREATOR
+  GSI4SK: string; // {createdBy}#{createdAt}#{albumId}
   EntityType: "Album";
   id: string;
   title: string;

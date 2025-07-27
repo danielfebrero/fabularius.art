@@ -17,24 +17,17 @@ export const handler = async (
   try {
     const limit = parseInt(event.queryStringParameters?.["limit"] || "20");
     const isPublicParam = event.queryStringParameters?.["isPublic"];
+    const createdBy = event.queryStringParameters?.["createdBy"];
     const rawCursor = event.queryStringParameters?.["cursor"];
     const tag = event.queryStringParameters?.["tag"]; // New tag filter parameter
 
     console.log("[Albums API] Request params:", {
       limit,
       isPublicParam,
+      createdBy,
       tag,
       cursor: rawCursor ? "present" : "none",
     });
-
-    // Enforce 'isPublic' parameter: required for GSI
-    if (typeof isPublicParam === "undefined") {
-      return ResponseUtil.error(
-        event,
-        "Missing required 'isPublic' query parameter"
-      );
-    }
-    const isPublicBool = isPublicParam === "true";
 
     // Parse DynamoDB native LastEvaluatedKey as the cursor (base64-encoded JSON)
     let lastEvaluatedKey: any = undefined;
@@ -48,13 +41,34 @@ export const handler = async (
       }
     }
 
-    // Use the shared DynamoDBService method
-    const result = await DynamoDBService.listAlbumsByPublicStatus(
-      isPublicBool,
-      limit,
-      lastEvaluatedKey,
-      tag // Pass tag filter to service
-    );
+    let result;
+
+    // If createdBy is specified, use the creator-specific query
+    if (createdBy) {
+      result = await DynamoDBService.listAlbumsByCreator(
+        createdBy,
+        limit,
+        lastEvaluatedKey,
+        tag
+      );
+    } else {
+      // Fall back to the existing isPublic-based query
+      // Enforce 'isPublic' parameter when not filtering by creator
+      if (typeof isPublicParam === "undefined") {
+        return ResponseUtil.error(
+          event,
+          "Missing required 'isPublic' query parameter (required when 'createdBy' is not specified)"
+        );
+      }
+      const isPublicBool = isPublicParam === "true";
+
+      result = await DynamoDBService.listAlbumsByPublicStatus(
+        isPublicBool,
+        limit,
+        lastEvaluatedKey,
+        tag
+      );
+    }
 
     const nextCursor = result.lastEvaluatedKey
       ? Buffer.from(JSON.stringify(result.lastEvaluatedKey)).toString("base64")

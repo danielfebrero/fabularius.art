@@ -261,6 +261,66 @@ export class DynamoDBService {
     return response;
   }
 
+  static async listAlbumsByCreator(
+    createdBy: string,
+    limit: number = 20,
+    lastEvaluatedKey?: Record<string, any>,
+    tag?: string
+  ): Promise<{
+    albums: Album[];
+    lastEvaluatedKey?: Record<string, any>;
+  }> {
+    // Use GSI4 for efficient querying of albums by creator
+    // GSI4PK = "ALBUM_BY_CREATOR", GSI4SK = "<createdBy>#<createdAt>#<albumId>"
+
+    const queryParams: any = {
+      TableName: TABLE_NAME,
+      IndexName: "GSI4",
+      KeyConditionExpression:
+        "#gsi4pk = :gsi4pk AND begins_with(#gsi4sk, :createdBy)",
+      ExpressionAttributeNames: {
+        "#gsi4pk": "GSI4PK",
+        "#gsi4sk": "GSI4SK",
+      },
+      ExpressionAttributeValues: {
+        ":gsi4pk": "ALBUM_BY_CREATOR",
+        ":createdBy": `${createdBy}#`,
+      },
+      ScanIndexForward: false, // Most recent first
+      Limit: limit,
+      ExclusiveStartKey: lastEvaluatedKey,
+    };
+
+    // Add tag filtering if specified
+    if (tag) {
+      queryParams.FilterExpression = "contains(#tags, :tag)";
+      queryParams.ExpressionAttributeNames["#tags"] = "tags";
+      queryParams.ExpressionAttributeValues[":tag"] = tag;
+    }
+
+    const result = await docClient.send(new QueryCommand(queryParams));
+
+    const albumEntities = (result.Items as AlbumEntity[]) || [];
+
+    // Convert AlbumEntity to Album format for API response
+    const albums: Album[] = albumEntities.map((entity) =>
+      this.convertAlbumEntityToAlbum(entity)
+    );
+
+    const response: {
+      albums: Album[];
+      lastEvaluatedKey?: Record<string, any>;
+    } = {
+      albums,
+    };
+
+    if (result.LastEvaluatedKey) {
+      response.lastEvaluatedKey = result.LastEvaluatedKey;
+    }
+
+    return response;
+  }
+
   // Album counter operations
   static async incrementAlbumLikeCount(
     albumId: string,

@@ -24,6 +24,9 @@ The table uses Global Secondary Indexes (GSIs) to support additional query patte
 - **GSI3**: Used for querying users by their username.
   - `GSI3PK`: The partition key for GSI3.
   - `GSI3SK`: The sort key for GSI3.
+- **GSI4**: Used for querying albums by creator.
+  - `GSI4PK`: The partition key for GSI4.
+  - `GSI4SK`: The sort key for GSI4.
 
 ## New Global Secondary Index: isPublic-createdAt-index
 
@@ -37,6 +40,16 @@ Every album **must** have the `isPublic` attribute (boolean, required for all re
 
 **Migration:** Existing album items without `isPublic` must be backfilled using the script at [`backend/scripts/backfill-isPublic.ts`](../backend/scripts/backfill-isPublic.ts:1). This script only updates items missing `isPublic`, defaulting them to `true`.
 
+## New Global Secondary Index: GSI4 for Albums by Creator
+
+To efficiently support querying albums by creator, the following GSI has been added:
+
+- **GSI4**
+  - **Partition Key**: `GSI4PK = "ALBUM_BY_CREATOR"`
+  - **Sort Key**: `GSI4SK = "<createdBy>#<createdAt>#<albumId>"`
+
+**Migration:** Existing album items without GSI4 fields must be backfilled using the script at [`backend/scripts/backfill-gsi4-albums.ts`](../backend/scripts/backfill-gsi4-albums.ts). This script adds the GSI4PK and GSI4SK fields to all existing albums that have a `createdBy` field.
+
 ## Entity Schemas
 
 ### Album Entity
@@ -47,6 +60,8 @@ Represents a collection of media items.
 - **SK**: `METADATA`
 - **GSI1PK**: `ALBUM`
 - **GSI1SK**: `<createdAt>#<albumId>`
+- **GSI4PK**: `ALBUM_BY_CREATOR`
+- **GSI4SK**: `<createdBy>#<createdAt>#<albumId>`
 - **EntityType**: `Album`
 
 | Attribute       | Type       | Description                                |
@@ -60,6 +75,8 @@ Represents a collection of media items.
 | `updatedAt`     | `string`   | The ISO 8601 timestamp of the last update. |
 | `mediaCount`    | `number`   | The number of media items in the album.    |
 | `isPublic`      | `boolean`  | Whether the album is public.               |
+| `createdBy`     | `string`   | User ID or admin ID who created the album. |
+| `createdByType` | `string`   | Type of creator: "user" or "admin".        |
 
 ### Media Entity
 
@@ -115,6 +132,12 @@ Represents the relationship between an album and a media item, allowing one medi
 | `addedBy` | `string` | Optional: who added the media to this album. |
 
 ## Access Patterns
+
+### Album Access Patterns
+
+1. **Get all albums (chronological)**: Use GSI1 with `GSI1PK = "ALBUM"` sorted by `GSI1SK = "<createdAt>#<albumId>"`
+2. **Get albums by creator**: Use GSI4 with `GSI4PK = "ALBUM_BY_CREATOR"` and `GSI4SK begins_with "<createdBy>#"`
+3. **Get public/private albums**: Use `isPublic-createdAt-index` with `isPublic = "true"` or `"false"`
 
 ### Media Access Patterns
 

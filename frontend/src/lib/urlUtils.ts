@@ -78,13 +78,13 @@ export function composeThumbnailUrls(
 export function getBestThumbnailUrl(
   thumbnailUrls: { [size: string]: string } | null | undefined,
   fallbackUrl: string | null | undefined,
-  preferredSize: string
+  preferredSize?: string
 ): string {
   const composedThumbnails = composeThumbnailUrls(thumbnailUrls);
 
   if (composedThumbnails) {
     // Try preferred size first
-    if (composedThumbnails[preferredSize]) {
+    if (preferredSize && composedThumbnails[preferredSize]) {
       return composedThumbnails[preferredSize];
     }
 

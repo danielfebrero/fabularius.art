@@ -116,6 +116,7 @@ export type ThumbnailSize =
   | "originalSize";
 export type ThumbnailContext =
   | "cover-selector"
+  | "create-album"
   | "discover"
   | "albums"
   | "admin"

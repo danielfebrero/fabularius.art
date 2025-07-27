@@ -126,6 +126,12 @@ function generatePictureSources(
         ? [{ media: "", srcSet: thumbnailUrls.cover }]
         : [];
 
+    case "create-album":
+      // Create album: Use cover size for album cover selection
+      return thumbnailUrls.cover
+        ? [{ media: "", srcSet: thumbnailUrls.cover }]
+        : [];
+
     default:
       // Default responsive behavior
       if (thumbnailUrls.small) {

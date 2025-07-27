@@ -80,6 +80,8 @@ export const handler = async (
       SK: "METADATA",
       GSI1PK: "ALBUM",
       GSI1SK: `${now}#${albumId}`,
+      GSI4PK: "ALBUM_BY_CREATOR",
+      GSI4SK: `${userId}#${now}#${albumId}`,
       EntityType: "Album",
       id: albumId,
       title: request.title.trim(),

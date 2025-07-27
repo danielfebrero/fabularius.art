@@ -28,7 +28,9 @@
     "test:ci": "jest --coverage --watchAll=false",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "migrate:gsi4-albums": "npm run build && node dist/scripts/backfill-gsi4-albums.js",
+    "migrate:gsi4-albums:dry-run": "npm run build && node dist/scripts/backfill-gsi4-albums.js --dry-run"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.450.0",

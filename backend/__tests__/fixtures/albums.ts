@@ -2,6 +2,9 @@ import { Album, AlbumEntity, CreateAlbumRequest } from "../../shared/types";
 
 export const mockAlbumId = "test-album-123";
 export const mockTimestamp = "2023-01-01T00:00:00.000Z";
+export const mockUserId = "test-user-123";
+export const mockUserId2 = "test-user-456";
+export const mockAdminId = "test-user-789";
 
 export const mockCreateAlbumRequest: CreateAlbumRequest = {
   title: "Test Album",
@@ -14,6 +17,8 @@ export const mockAlbumEntity: AlbumEntity = {
   SK: "METADATA",
   GSI1PK: "ALBUM",
   GSI1SK: `${mockTimestamp}#${mockAlbumId}`,
+  GSI4PK: "ALBUM_BY_CREATOR",
+  GSI4SK: `${mockUserId}#${mockTimestamp}#${mockAlbumId}`,
   EntityType: "Album",
   id: mockAlbumId,
   title: "Test Album",
@@ -23,6 +28,8 @@ export const mockAlbumEntity: AlbumEntity = {
   updatedAt: mockTimestamp,
   mediaCount: 5,
   isPublic: "true",
+  createdBy: mockUserId,
+  createdByType: "user",
 };
 
 export const mockAlbum: Album = {
@@ -41,6 +48,8 @@ export const mockAlbumEntityMinimal: AlbumEntity = {
   SK: "METADATA",
   GSI1PK: "ALBUM",
   GSI1SK: `${mockTimestamp}#${mockAlbumId}`,
+  GSI4PK: "ALBUM_BY_CREATOR",
+  GSI4SK: `${mockUserId2}#${mockTimestamp}#${mockAlbumId}`,
   EntityType: "Album",
   id: mockAlbumId,
   title: "Minimal Album",
@@ -48,6 +57,8 @@ export const mockAlbumEntityMinimal: AlbumEntity = {
   updatedAt: mockTimestamp,
   mediaCount: 0,
   isPublic: "false",
+  createdBy: mockUserId2,
+  createdByType: "user",
 };
 
 export const mockAlbumMinimal: Album = {
@@ -66,20 +77,26 @@ export const mockAlbumsList: AlbumEntity[] = [
     id: "album-2",
     PK: "ALBUM#album-2",
     GSI1SK: "2023-01-02T00:00:00.000Z#album-2",
+    GSI4SK: `${mockUserId}#2023-01-02T00:00:00.000Z#album-2`,
     title: "Second Album",
     tags: ["test", "second"],
     mediaCount: 3,
+    createdAt: "2023-01-02T00:00:00.000Z",
   },
   {
     ...mockAlbumEntity,
     id: "album-3",
     PK: "ALBUM#album-3",
     GSI1SK: "2023-01-03T00:00:00.000Z#album-3",
+    GSI4SK: `${mockAdminId}#2023-01-03T00:00:00.000Z#album-3`,
     title: "Third Album",
     mediaCount: 0,
     isPublic: "false",
     tags: undefined,
     coverImageUrl: undefined,
+    createdAt: "2023-01-03T00:00:00.000Z",
+    createdBy: mockAdminId,
+    createdByType: "admin" as const,
   },
 ];
 
@@ -90,5 +107,7 @@ export const mockPaginationResponse = {
     SK: "METADATA",
     GSI1PK: "ALBUM",
     GSI1SK: "2023-01-03T00:00:00.000Z#album-3",
+    GSI4PK: "ALBUM_BY_CREATOR",
+    GSI4SK: `${mockAdminId}#2023-01-03T00:00:00.000Z#album-3`,
   },
 };
