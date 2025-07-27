@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Share2, ArrowLeft } from "lucide-react";
 import { Album, Media } from "@/types";
+import { Tag } from "@/components/ui/Tag";
 import { ShareDropdown } from "@/components/ui/ShareDropdown";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { ViewTracker } from "@/components/ui/ViewTracker";
@@ -100,9 +101,13 @@ export function AlbumDetailClient({
                 <LocaleLink
                   key={index}
                   href={`/?tag=${encodeURIComponent(tag)}`}
-                  className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-black/20 text-gray-500 border border-gray-300/60 backdrop-blur-sm hover:bg-black/30 hover:text-gray-600 hover:border-gray-400/70 hover:scale-105 transition-all duration-200 cursor-pointer"
                 >
-                  {tag}
+                  <Tag
+                    size="md"
+                    className="hover:scale-105 transition-transform cursor-pointer bg-black/20 text-gray-500 border-gray-300/60 backdrop-blur-sm hover:bg-black/30 hover:text-gray-600 hover:border-gray-400/70"
+                  >
+                    {tag}
+                  </Tag>
                 </LocaleLink>
               ))}
             </div>

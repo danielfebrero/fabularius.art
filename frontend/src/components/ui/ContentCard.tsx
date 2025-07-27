@@ -17,6 +17,7 @@ import {
   MoreVertical,
   Folder,
 } from "lucide-react";
+import { Tag } from "@/components/ui/Tag";
 import ResponsivePicture from "./ResponsivePicture";
 import { composeThumbnailUrls } from "@/lib/urlUtils";
 
@@ -40,6 +41,9 @@ interface ContentCardProps {
   showLikeCount?: boolean;
   showBookmarkCount?: boolean;
   showCounts?: boolean;
+
+  // Show tags
+  showTags?: boolean;
 
   // Disable hover effects
   disableHoverEffects?: boolean;
@@ -88,6 +92,7 @@ export function ContentCard({
   canDownload = false,
   canDelete = false,
   showCounts = true,
+  showTags = true,
   disableHoverEffects = false,
   useAllAvailableSpace = false,
   customActions,
@@ -529,7 +534,9 @@ export function ContentCard({
           </div>
         ) : album ? (
           <div className="relative w-full h-full">
-            {(!album.coverImageUrl && (!album.thumbnailUrls || Object.keys(album.thumbnailUrls).length === 0)) ? (
+            {!album.coverImageUrl &&
+            (!album.thumbnailUrls ||
+              Object.keys(album.thumbnailUrls).length === 0) ? (
               <div className="flex items-center justify-center w-full h-full bg-muted/50">
                 <Folder className="w-16 h-16 text-muted-foreground opacity-60" />
               </div>
@@ -569,7 +576,7 @@ export function ContentCard({
               </h3>
 
               {/* Tags */}
-              {album.tags && album.tags.length > 0 && (
+              {showTags && album.tags && album.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2 -ml-2">
                   {album.tags.slice(0, 3).map((tag, index) => (
                     <button

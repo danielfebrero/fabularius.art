@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Switch } from "@/components/ui/Switch";
-import { Badge } from "@/components/ui/Badge";
-import { X, Plus, Crown } from "lucide-react";
+import { TagManager } from "@/components/ui/TagManager";
+import { Crown } from "lucide-react";
 import { Album } from "@/types";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { CoverImageSelector } from "./CoverImageSelector";
@@ -38,7 +38,6 @@ export function EditAlbumDialog({
 
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState<string[]>([]);
-  const [newTag, setNewTag] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [saving, setSaving] = useState(false);
@@ -77,24 +76,6 @@ export function EditAlbumDialog({
       document.body.style.overflow = "unset";
     };
   }, [open, onClose]);
-
-  const handleAddTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      setTags([...tags, newTag.trim()]);
-      setNewTag("");
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((tag) => tag !== tagToRemove));
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      handleAddTag();
-    }
-  };
 
   const handleSave = async () => {
     if (!album || !title.trim()) return;
@@ -152,56 +133,19 @@ export function EditAlbumDialog({
             </div>
 
             {/* Tags */}
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-foreground">
-                Tags
-              </label>
-
-              {/* Existing tags */}
-              {tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {tags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="secondary"
-                      className="bg-admin-primary/10 text-admin-primary border-admin-primary/20 hover:bg-admin-primary/20"
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTag(tag)}
-                        className="ml-2 hover:text-red-500"
-                        disabled={saving || loading}
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-
-              {/* Add new tag */}
-              <div className="flex gap-2">
-                <Input
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Add a tag..."
-                  className="flex-1"
-                  disabled={saving || loading}
-                />
-                <Button
-                  type="button"
-                  onClick={handleAddTag}
-                  variant="outline"
-                  size="sm"
-                  disabled={!newTag.trim() || saving || loading}
-                  className="border-admin-primary/30 text-admin-primary hover:bg-admin-primary/10"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+            <TagManager
+              tags={tags}
+              onTagsChange={setTags}
+              label="Tags"
+              placeholder="Add a tag..."
+              helpText="Add tags to help users discover your album"
+              maxTags={20}
+              maxTagLength={50}
+              showCounter={true}
+              disabled={saving || loading}
+              inputClassName="flex-1"
+              buttonClassName="border-admin-primary/30 text-admin-primary hover:bg-admin-primary/10"
+            />
 
             {/* Cover Image Selector - only show for existing albums */}
             {album && (

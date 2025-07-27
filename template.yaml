@@ -348,7 +348,7 @@ Resources:
             Path: /albums
             Method: POST
             Auth:
-              Authorizer: AdminAuthorizer
+              Authorizer: UserAuthorizer
         OptionsCreateAlbum:
           Type: Api
           Properties:

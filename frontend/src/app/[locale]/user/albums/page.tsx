@@ -209,7 +209,7 @@ const UserAlbumsPage: React.FC = () => {
                 key={`${album.id}-${index}`}
                 item={album}
                 type="album"
-                title={album.title || `Album ${album.id}`}
+                showTags={false}
                 customActions={[
                   {
                     label: "Edit",

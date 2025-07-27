@@ -3,11 +3,13 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { TagManager } from "@/components/ui/TagManager";
 import { Media } from "@/types";
 import { useTranslations } from "next-intl";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { Crown } from "lucide-react";
 import ResponsivePicture from "@/components/ui/ResponsivePicture";
+import { CoverImageSelector } from "./CoverImageSelector";
 import {
   composeThumbnailUrls,
   getBestThumbnailUrl,
@@ -19,6 +21,7 @@ interface UserAlbumFormData {
   tags?: string[];
   isPublic: boolean;
   mediaIds?: string[];
+  coverImageId?: string;
 }
 
 interface UserAlbumFormProps {
@@ -49,10 +52,10 @@ export function UserAlbumForm({
     tags: [],
     isPublic: true, // Default to public - private content is Pro-only
     mediaIds: [],
+    coverImageId: undefined,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [tagInput, setTagInput] = useState("");
   const [userMedia, setUserMedia] = useState<MediaWithSelection[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
@@ -133,30 +136,8 @@ export function UserAlbumForm({
       onSubmit({
         ...formData,
         mediaIds: selectedMediaIds.length > 0 ? selectedMediaIds : undefined,
+        coverImageId: formData.coverImageId,
       });
-    }
-  };
-
-  const addTag = () => {
-    const tag = tagInput.trim();
-    if (tag && !formData.tags?.includes(tag) && tag.length <= 50) {
-      const newTags = [...(formData.tags || []), tag];
-      if (newTags.length <= 20) {
-        handleInputChange("tags", newTags);
-        setTagInput("");
-      }
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    const newTags = formData.tags?.filter((tag) => tag !== tagToRemove) || [];
-    handleInputChange("tags", newTags);
-  };
-
-  const handleTagInputKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addTag();
     }
   };
 
@@ -166,6 +147,10 @@ export function UserAlbumForm({
         media.id === mediaId ? { ...media, selected: !media.selected } : media
       )
     );
+  };
+
+  const handleCoverSelect = (coverImageId?: string) => {
+    handleInputChange("coverImageId", coverImageId);
   };
 
   const selectedCount = userMedia.filter((media) => media.selected).length;
@@ -212,96 +197,24 @@ export function UserAlbumForm({
       </div>
 
       {/* Tags */}
-      <div>
-        <label
-          htmlFor="tags"
-          className="block text-sm font-semibold text-foreground mb-2"
-        >
-          {tForm("tags")}
-        </label>
-        <div className="flex gap-3">
-          <Input
-            id="tags"
-            type="text"
-            value={tagInput}
-            onChange={(e) => setTagInput(e.target.value)}
-            onKeyPress={handleTagInputKeyPress}
-            placeholder={tForm("tagsPlaceholder")}
-            className={
-              errors["tags"]
-                ? "border-destructive focus:border-destructive focus:ring-destructive"
-                : "focus:border-admin-primary focus:ring-admin-primary"
-            }
-            disabled={loading}
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={addTag}
-            disabled={
-              loading || !tagInput.trim() || (formData.tags?.length || 0) >= 20
-            }
-            className="border-admin-primary/30 text-admin-primary hover:bg-admin-primary/10"
-          >
-            {tForm("addTag")}
-          </Button>
-        </div>
-        {errors["tags"] && (
-          <p className="mt-2 text-sm text-destructive flex items-center">
-            <svg
-              className="w-4 h-4 mr-1"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                clipRule="evenodd"
-              />
-            </svg>
-            {errors["tags"]}
-          </p>
-        )}
-        <div className="flex items-center justify-between mt-2">
-          <p className="text-sm text-muted-foreground">
-            {tForm("tagsHelpText")}
-          </p>
-          <span className="text-xs font-medium text-admin-primary bg-admin-primary/10 px-2 py-1 rounded-full">
-            {tForm("tagsCount", { count: formData.tags?.length || 0 })}
-          </span>
-        </div>
-
-        {formData.tags && formData.tags.length > 0 && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {formData.tags.map((tag, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-gradient-to-r from-admin-primary/10 to-admin-secondary/10 text-admin-primary border border-admin-primary/20"
-              >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => removeTag(tag)}
-                  disabled={loading}
-                  className="ml-2 hover:text-destructive transition-colors"
-                >
-                  <svg
-                    className="w-3 h-3"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
+      <TagManager
+        tags={formData.tags || []}
+        onTagsChange={(newTags) => handleInputChange("tags", newTags)}
+        label={tForm("tags")}
+        placeholder={tForm("tagsPlaceholder")}
+        helpText={tForm("tagsHelpText")}
+        maxTags={20}
+        maxTagLength={50}
+        showCounter={true}
+        disabled={loading}
+        error={errors["tags"]}
+        inputClassName={
+          errors["tags"]
+            ? "border-destructive focus:border-destructive focus:ring-destructive"
+            : "focus:border-admin-primary focus:ring-admin-primary"
+        }
+        buttonClassName="border-admin-primary/30 text-admin-primary hover:bg-admin-primary/10"
+      />
 
       {/* Public/Private Toggle */}
       <div className={`space-y-3 ${!canMakePrivate ? "opacity-50" : ""}`}>
@@ -411,6 +324,14 @@ export function UserAlbumForm({
           </div>
         )}
       </div>
+
+      {/* Cover Image Selector */}
+      <CoverImageSelector
+        selectedMedia={userMedia}
+        currentCoverImageId={formData.coverImageId}
+        onCoverSelect={handleCoverSelect}
+        disabled={loading}
+      />
 
       {/* Action buttons */}
       <div className="flex gap-4 pt-4">

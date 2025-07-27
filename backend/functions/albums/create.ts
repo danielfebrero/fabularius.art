@@ -7,6 +7,7 @@ import { CreateAlbumRequest, AlbumEntity, Album } from "@shared/types";
 import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 import { PlanUtil } from "@shared/utils/plan";
 import { CoverThumbnailUtil } from "@shared/utils/cover-thumbnail";
+import { getPlanPermissions } from "@shared/utils/permissions";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -18,9 +19,10 @@ export const handler = async (
   try {
     // Determine user context - check if admin authorizer or user authorizer
     let userId = event.requestContext.authorizer?.["userId"];
-    let userRole = "user"; // default to user
+    let userRole = event.requestContext.authorizer?.["role"] || "user"; // Try to get role from authorizer first
 
     console.log("👤 UserId from authorizer:", userId);
+    console.log("👤 UserRole from authorizer:", userRole);
 
     // If no userId from authorizer, try session-based validation
     if (!userId) {
@@ -37,16 +39,23 @@ export const handler = async (
       userId = validation.user.userId;
       console.log("✅ Got userId from session validation:", userId);
 
-      // Check if user has admin privileges
+      // Check if user has admin privileges through PlanUtil
       userRole = await PlanUtil.getUserRole(
         validation.user.userId,
         validation.user.email
       );
-      console.log("✅ User role:", userRole);
+      console.log("✅ User role from PlanUtil:", userRole);
     } else {
-      // If userId came from authorizer, check if it's admin context
-      // This would be set by admin authorizer vs user authorizer
-      userRole = event.requestContext.authorizer?.["role"] || "user";
+      // If userId came from authorizer but no role was provided, check through PlanUtil as fallback
+      if (!event.requestContext.authorizer?.["role"]) {
+        console.log("⚠️ No role from authorizer, checking through PlanUtil");
+        // We need user email for PlanUtil.getUserRole, let's try to get it from authorizer or fetch user data
+        const userEmail = event.requestContext.authorizer?.["email"];
+        if (userEmail) {
+          userRole = await PlanUtil.getUserRole(userId, userEmail);
+          console.log("✅ User role from PlanUtil fallback:", userRole);
+        }
+      }
     }
 
     if (!event.body) {
@@ -99,6 +108,32 @@ export const handler = async (
     const albumId = uuidv4();
     const now = new Date().toISOString();
 
+    // Determine isPublic value based on user role and permissions
+    let isPublicValue: boolean;
+    if (userRole === "admin") {
+      // Admins can set any isPublic value they want
+      isPublicValue = request.isPublic ?? false;
+    } else {
+      // For regular users, check if they have permission to create private content
+      const userPlanInfo = await PlanUtil.getUserPlanInfo(userId);
+      const planPermissions = getPlanPermissions(userPlanInfo.plan);
+
+      if (planPermissions.canCreatePrivateContent) {
+        // User has permission to create private content, so they can set isPublic
+        isPublicValue = request.isPublic ?? true;
+      } else {
+        // User doesn't have permission to create private content, force to public
+        isPublicValue = true;
+
+        // Log a warning if user tried to set isPublic to false
+        if (request.isPublic === false) {
+          console.warn(
+            `User ${userId} with plan ${userPlanInfo.plan} attempted to create private album but lacks permission`
+          );
+        }
+      }
+    }
+
     // Generate thumbnails if cover image is set, before creating the album
     if (coverImageUrl) {
       const generatedThumbnails =
@@ -129,11 +164,8 @@ export const handler = async (
       tags: request.tags?.filter((tag) => tag.trim()).map((tag) => tag.trim()),
       createdAt: now,
       updatedAt: now,
-      mediaCount: request.mediaIds?.length || 0,
-      isPublic: (userRole === "user"
-        ? true
-        : request.isPublic ?? false
-      ).toString(),
+      mediaCount: 0,
+      isPublic: isPublicValue.toString(),
       likeCount: 0,
       bookmarkCount: 0,
       viewCount: 0,
@@ -159,7 +191,7 @@ export const handler = async (
       createdAt: albumEntity.createdAt,
       updatedAt: albumEntity.updatedAt,
       mediaCount: albumEntity.mediaCount,
-      isPublic: albumEntity.isPublic === "true",
+      isPublic: isPublicValue,
       likeCount: albumEntity.likeCount || 0,
       bookmarkCount: albumEntity.bookmarkCount || 0,
       viewCount: albumEntity.viewCount || 0,

@@ -119,7 +119,6 @@ export const handler = async (
           userId: userValidation.user.userId,
           email: userValidation.user.email,
           role: userRole,
-          sessionType: "user",
         };
 
         // Reconstruct the ARN to grant access to admin endpoints

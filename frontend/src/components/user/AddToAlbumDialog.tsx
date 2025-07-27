@@ -6,6 +6,7 @@ import { X, Plus, Folder, FolderPlus, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Switch } from "@/components/ui/Switch";
+import { TagManager } from "@/components/ui/TagManager";
 import { Media } from "@/types";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { cn } from "@/lib/utils";
@@ -38,7 +39,6 @@ export function AddToAlbumDialog({
   // New album form state
   const [newAlbumTitle, setNewAlbumTitle] = useState("");
   const [newAlbumTags, setNewAlbumTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
   const [newAlbumIsPublic, setNewAlbumIsPublic] = useState(true);
   const [useAsCover, setUseAsCover] = useState(true);
 
@@ -54,7 +54,6 @@ export function AddToAlbumDialog({
       setSelectedAlbumIds(new Set());
       setNewAlbumTitle("");
       setNewAlbumTags([]);
-      setTagInput("");
       setNewAlbumIsPublic(true);
       setUseAsCover(true);
     }
@@ -86,27 +85,6 @@ export function AddToAlbumDialog({
 
   const handleBackToList = () => {
     setShowCreateForm(false);
-  };
-
-  const addTag = () => {
-    const tag = tagInput.trim();
-    if (tag && !newAlbumTags.includes(tag) && tag.length <= 50) {
-      if (newAlbumTags.length < 20) {
-        setNewAlbumTags([...newAlbumTags, tag]);
-        setTagInput("");
-      }
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setNewAlbumTags(newAlbumTags.filter((tag) => tag !== tagToRemove));
-  };
-
-  const handleTagInputKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      addTag();
-    }
   };
 
   const handleSubmit = async () => {
@@ -193,51 +171,16 @@ export function AddToAlbumDialog({
                 required
               />
 
-              <div className="space-y-3">
-                <label className="block text-sm font-medium text-foreground">
-                  {t("tags")}
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    value={tagInput}
-                    onChange={(e) => setTagInput(e.target.value)}
-                    onKeyPress={handleTagInputKeyPress}
-                    placeholder={t("enterTags")}
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addTag}
-                    disabled={!tagInput.trim() || newAlbumTags.length >= 20}
-                    size="sm"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </div>
-                {newAlbumTags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {newAlbumTags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-primary/10 text-primary border border-primary/20"
-                      >
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => removeTag(tag)}
-                          className="ml-1 hover:text-destructive transition-colors"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  Press Enter to add tag • {newAlbumTags.length}/20 tags
-                </p>
-              </div>
+              <TagManager
+                tags={newAlbumTags}
+                onTagsChange={setNewAlbumTags}
+                label={t("tags")}
+                placeholder={t("enterTags")}
+                helpText="Press Enter to add tag"
+                maxTags={20}
+                maxTagLength={50}
+                showCounter={true}
+              />
 
               {canCreatePrivateContent() && (
                 <div className="flex items-center justify-between">

@@ -111,7 +111,7 @@ export const handler = async (
       const userContext = {
         userId: userValidation.user.userId,
         email: userValidation.user.email,
-        sessionType: "user",
+        role: "user",
       };
       console.log("🎯 Setting user context:", userContext);
 
