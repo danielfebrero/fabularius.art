@@ -358,18 +358,24 @@ export default function ProfileComponent({
         content: "Amazing composition and lighting!",
         contentTitle: "Sunset Beach",
         timestamp: "5 hours ago",
+        targetType: "media",
+        targetId: "media1",
       },
       {
         id: "comment2",
         content: "Love the colors in this series.",
         contentTitle: "Abstract Art",
         timestamp: "1 day ago",
+        targetType: "album",
+        targetId: "album2",
       },
       {
         id: "comment3",
         content: "Great perspective on urban life.",
         contentTitle: "City Streets",
         timestamp: "2 days ago",
+        targetType: "media",
+        targetId: "media3",
       },
     ],
   };
@@ -714,25 +720,31 @@ export default function ProfileComponent({
               <CardContent>
                 <div className="space-y-3">
                   {mockData.recentComments.map((comment) => (
-                    <div
+                    <LocaleLink
                       key={comment.id}
-                      className="p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                      href={
+                        comment.targetType === "media"
+                          ? `/media/${comment.targetId}`
+                          : `/albums/${comment.targetId}`
+                      }
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
-                          {initials}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-foreground">
-                            &ldquo;{comment.content}&rdquo;
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            On &ldquo;{comment.contentTitle}&rdquo; •{" "}
-                            {comment.timestamp}
-                          </p>
+                      <div className="p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                        <div className="flex items-start gap-3">
+                          <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
+                            {initials}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-foreground">
+                              &ldquo;{comment.content}&rdquo;
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              On &ldquo;{comment.contentTitle}&rdquo; •{" "}
+                              {comment.timestamp}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </LocaleLink>
                   ))}
                   <div className="text-center pt-2">
                     <LocaleLink href={`/profile/${displayName}/comments`}>

@@ -221,19 +221,48 @@ export const handler = async (
 ### Internationalization (i18n)
 
 - All text uses `next-intl`: `const t = useTranslations('common');`
-- Translation keys in `/frontend/messages/` (en.json, etc.)
+- Translation keys in `frontend/src/locales` (en.json, etc.)
 - Namespace patterns: `common`, `user.userAlbumForm`, `admin.userManagement`
 
-### Testing Patterns
+### Navigation (Critical - Locale Handling)
 
-```bash
-# Comprehensive test suite with 99%+ coverage:
-npm run test:all                    # All tests
-npm run test:coverage:combined      # Combined coverage report
+**ALWAYS use LocaleLink component or useLocaleRouter for navigation** - never use Next.js Link or router directly:
 
-# Backend: Jest with LocalStack integration
-# Frontend: Jest + React Testing Library + Playwright E2E
+```typescript
+// ✅ CORRECT - Use LocaleLink for links
+import LocaleLink from "@/components/ui/LocaleLink";
+
+<LocaleLink href="/albums" className="nav-link">
+  Albums
+</LocaleLink>;
+
+// ✅ CORRECT - Use useLocaleRouter for programmatic navigation
+import { useLocaleRouter } from "@/lib/navigation";
+
+const router = useLocaleRouter();
+router.push("/user/dashboard");
+router.replace("/auth/login");
 ```
+
+**Wrong Pattern:**
+
+```typescript
+// ❌ WRONG - Direct Next.js Link/router usage
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+<Link href="/albums">Albums</Link>;
+const router = useRouter();
+router.push("/user/dashboard"); // Missing locale prefix
+```
+
+**Benefits:**
+
+- Automatic locale prefixing for all internal routes
+- Preserves current locale across navigation
+- Handles external links and API routes correctly
+- Consistent internationalization throughout the app
+- No manual locale management required
 
 ### Frontend Development Patterns
 
