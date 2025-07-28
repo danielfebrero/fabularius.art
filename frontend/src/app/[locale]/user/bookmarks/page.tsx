@@ -121,7 +121,32 @@ const UserBookmarksPage: React.FC = () => {
       <div className="space-y-6">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-500/10 to-admin-secondary/10 rounded-xl border border-blue-500/20 shadow-lg p-6">
-          <div className="flex items-center justify-between mb-4">
+          {/* Mobile Layout */}
+          <div className="block sm:hidden space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-admin-secondary rounded-lg flex items-center justify-center">
+                  <Bookmark className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">
+                    Bookmarks
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    Your saved favorites
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <span className="bg-blue-500/20 text-blue-600 text-sm font-semibold px-3 py-1.5 rounded-full">
+                {totalCount.toLocaleString()} bookmarks
+              </span>
+            </div>
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden sm:flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-admin-secondary rounded-lg flex items-center justify-center">
                 <Bookmark className="h-6 w-6 text-white" />

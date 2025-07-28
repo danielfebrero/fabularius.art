@@ -121,7 +121,30 @@ const UserLikesPage: React.FC = () => {
       <div className="space-y-6">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-500/10 to-admin-secondary/10 rounded-xl border border-red-500/20 shadow-lg p-6">
-          <div className="flex items-center justify-between mb-4">
+          {/* Mobile Layout */}
+          <div className="block sm:hidden space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-admin-secondary rounded-lg flex items-center justify-center">
+                  <Heart className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-foreground">Likes</h1>
+                  <p className="text-sm text-muted-foreground">
+                    Your liked content
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <span className="bg-red-500/20 text-red-600 text-sm font-semibold px-3 py-1.5 rounded-full">
+                {totalCount.toLocaleString()} likes
+              </span>
+            </div>
+          </div>
+
+          {/* Desktop Layout */}
+          <div className="hidden sm:flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-admin-secondary rounded-lg flex items-center justify-center">
                 <Heart className="h-6 w-6 text-white" />

@@ -143,7 +143,36 @@ const UserAlbumsPage: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div className="bg-gradient-to-r from-admin-primary/10 to-admin-secondary/10 rounded-xl border border-admin-primary/20 shadow-lg p-6">
-        <div className="flex items-center justify-between mb-4">
+        {/* Mobile Layout */}
+        <div className="block sm:hidden space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-admin-primary to-admin-secondary rounded-lg flex items-center justify-center">
+                <FolderOpen className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-foreground">Albums</h1>
+                <p className="text-sm text-muted-foreground">
+                  Your personal collections
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="bg-admin-primary/20 text-admin-primary text-sm font-semibold px-3 py-1.5 rounded-full">
+              {totalCount.toLocaleString()} albums
+            </span>
+            <LocaleLink href="/user/albums/create">
+              <Button className="bg-gradient-to-r from-admin-primary to-admin-secondary hover:from-admin-primary/90 hover:to-admin-secondary/90 text-admin-primary-foreground shadow-lg flex items-center space-x-2">
+                <Plus className="h-4 w-4" />
+                <span>Create</span>
+              </Button>
+            </LocaleLink>
+          </div>
+        </div>
+
+        {/* Desktop Layout */}
+        <div className="hidden sm:flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-br from-admin-primary to-admin-secondary rounded-lg flex items-center justify-center">
               <FolderOpen className="h-6 w-6 text-white" />
@@ -170,11 +199,12 @@ const UserAlbumsPage: React.FC = () => {
               variant={viewMode === "grid" ? "default" : "ghost"}
               size="sm"
               onClick={() => setViewMode("grid")}
-              className={
+              className={cn(
+                "hidden sm:inline-flex",
                 viewMode === "grid"
                   ? "bg-admin-primary text-admin-primary-foreground hover:bg-admin-primary/90"
                   : ""
-              }
+              )}
             >
               <Grid className="h-4 w-4" />
             </Button>
@@ -182,11 +212,12 @@ const UserAlbumsPage: React.FC = () => {
               variant={viewMode === "list" ? "default" : "ghost"}
               size="sm"
               onClick={() => setViewMode("list")}
-              className={
+              className={cn(
+                "hidden sm:inline-flex",
                 viewMode === "list"
                   ? "bg-admin-primary text-admin-primary-foreground hover:bg-admin-primary/90"
                   : ""
-              }
+              )}
             >
               <List className="h-4 w-4" />
             </Button>
