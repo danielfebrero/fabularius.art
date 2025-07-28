@@ -567,11 +567,6 @@ export default function ProfileComponent({
                         key={item.id}
                         item={item}
                         type={"filename" in item ? "media" : "album"}
-                        canLike={false}
-                        canBookmark={false}
-                        canFullscreen={false}
-                        canAddToAlbum={false}
-                        showCounts={false}
                         showTags={false}
                       />
                     ))}
@@ -624,11 +619,6 @@ export default function ProfileComponent({
                       key={item.id}
                       item={item}
                       type={"filename" in item ? "media" : "album"}
-                      canLike={false}
-                      canBookmark={false}
-                      canFullscreen={false}
-                      canAddToAlbum={false}
-                      showCounts={false}
                       showTags={false}
                     />
                   ))}
@@ -692,11 +682,8 @@ export default function ProfileComponent({
                         key={album.id}
                         item={album}
                         type="album"
-                        canLike={false}
-                        canBookmark={false}
                         canFullscreen={false}
                         canAddToAlbum={false}
-                        showCounts={false}
                         showTags={false}
                       />
                     ))}
