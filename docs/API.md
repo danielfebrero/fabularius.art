@@ -124,9 +124,12 @@ interface Album {
 
 Retrieves a paginated list of albums with intelligent filtering based on user permissions and DynamoDB-native pagination.
 
+**Authentication**: Optional - supports both authenticated and anonymous requests
+
 ### Request
 
 - **GET** `/albums`
+- **Authentication**: Optional (session cookie)
 - **Query Parameters**:
   - `isPublic` (optional, boolean): Filter albums by public visibility.
   - `createdBy` (optional, string): Filter albums by creator user ID.
@@ -137,10 +140,12 @@ Retrieves a paginated list of albums with intelligent filtering based on user pe
 
 #### Permission Logic
 
-- **If `user` parameter is provided**: Always show only public albums (public profile view)
-- **If `createdBy` parameter is provided and user IS the creator**: Show all albums (public and private)
-- **If `createdBy` parameter is provided and user is NOT the creator**: Only show public albums
-- **If no `createdBy` or `user` is provided**: Show all public albums from everyone
+- **Anonymous users**: Only see public albums regardless of other parameters
+- **Authenticated users**:
+  - **If `user` parameter is provided**: Always show only public albums (public profile view)
+  - **If `createdBy` parameter is provided and user IS the creator**: Show all albums (public and private)
+  - **If `createdBy` parameter is provided and user is NOT the creator**: Only show public albums
+  - **If no `createdBy` or `user` is provided**: Show all public albums from everyone
 
 #### Example
 

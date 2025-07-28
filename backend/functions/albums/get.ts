@@ -6,7 +6,9 @@ import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 /**
  * Albums GET endpoint with intelligent filtering based on user permissions:
  *
- * Authentication: Required - uses user authorizer context or session validation
+ * Authentication: Optional - supports both authenticated and anonymous requests
+ * - Authenticated users: userId available from authorizer context or session validation
+ * - Anonymous users: currentUserId is null, only public content accessible
  *
  * Logic:
  * - If user parameter is provided: always show only public albums (public profile view)
@@ -38,23 +40,24 @@ export const handler = async (
       JSON.stringify(event.requestContext.authorizer, null, 2)
     );
 
-    // Fallback for local development or when authorizer context is missing
+    // Optional authentication - try to get user ID if available
+    // This endpoint supports both authenticated and anonymous requests
     if (!currentUserId) {
       console.log(
-        "⚠️ No userId from authorizer, falling back to session validation"
+        "⚠️ No userId from authorizer, attempting session validation (optional)"
       );
       const validation = await UserAuthMiddleware.validateSession(event);
 
-      if (!validation.isValid || !validation.user) {
-        console.log("❌ Session validation failed");
-        return ResponseUtil.unauthorized(event, "No user session found");
+      if (validation.isValid && validation.user) {
+        currentUserId = validation.user.userId;
+        console.log(
+          "✅ Got currentUserId from session validation:",
+          currentUserId
+        );
+      } else {
+        console.log("ℹ️ No valid session - proceeding as anonymous user");
+        currentUserId = null;
       }
-
-      currentUserId = validation.user.userId;
-      console.log(
-        "✅ Got currentUserId from session validation:",
-        currentUserId
-      );
     }
     const limit = parseInt(event.queryStringParameters?.["limit"] || "20");
     const isPublicParam = event.queryStringParameters?.["isPublic"];
