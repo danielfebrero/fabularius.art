@@ -403,7 +403,7 @@ export default function ProfileComponent({
                     {initials}
                   </div>
                   {isOwner && isEditing && (
-                    <button className="absolute bottom-0 right-0 w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors shadow-lg">
+                    <button className="absolute -top-1 -right-1 w-8 h-8 bg-background text-foreground border-2 border-primary rounded-full flex items-center justify-center hover:bg-muted transition-colors shadow-lg">
                       <Camera className="w-4 h-4" />
                     </button>
                   )}

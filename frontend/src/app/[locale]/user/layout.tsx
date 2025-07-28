@@ -122,7 +122,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({
             <nav className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-4">
               <ul className="space-y-2">
                 {navigationItems.map((item) => {
-                  const isActive = pathname === item.href;
+                  const isActive = pathname.includes(item.href);
 
                   return (
                     <li key={item.href}>
