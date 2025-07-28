@@ -358,6 +358,8 @@ Resources:
             Auth:
               Authorizer: NONE
       Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
         - Statement:

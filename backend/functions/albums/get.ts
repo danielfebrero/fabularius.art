@@ -33,6 +33,10 @@ export const handler = async (
     let currentUserId = event.requestContext.authorizer?.["userId"];
 
     console.log("👤 CurrentUserId from authorizer:", currentUserId);
+    console.log(
+      "🔍 Event authorizer:",
+      JSON.stringify(event.requestContext.authorizer, null, 2)
+    );
 
     // Fallback for local development or when authorizer context is missing
     if (!currentUserId) {
