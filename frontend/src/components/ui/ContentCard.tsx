@@ -113,16 +113,28 @@ export function ContentCard({
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [addToAlbumDialogOpen, setAddToAlbumDialogOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const isMedia = type === "media";
   const media = isMedia ? (item as Media) : null;
   const album = !isMedia ? (item as Album) : null;
 
-  // Detect if user is on a mobile device
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-
   const isVideo = isMedia && media?.mimeType.startsWith("video/");
+
+  // Detect if user is on a mobile device - use state to avoid hydration mismatch
+  useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    // Set initial value
+    checkIsMobile();
+
+    // Listen for resize events
+    window.addEventListener("resize", checkIsMobile);
+    return () => window.removeEventListener("resize", checkIsMobile);
+  }, []);
 
   // Hide mobile actions when clicking outside or after timeout
   useEffect(() => {
