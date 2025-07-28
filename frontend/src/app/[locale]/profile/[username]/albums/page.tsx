@@ -9,12 +9,15 @@ import { ContentCard } from "@/components/ui/ContentCard";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
 import { useAlbums } from "@/hooks/useAlbums";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 export default function UserAlbumsPage() {
   const params = useParams();
   const username = params.username as string;
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  const isMobile = useIsMobile();
 
   // Use the custom hook to fetch albums data
   const { albums, loading, loadingMore, error, pagination, loadMore } =
@@ -29,7 +32,7 @@ export default function UserAlbumsPage() {
   if (loading && !loadingMore) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8 md:py-8">
           <div className="animate-pulse space-y-6">
             {/* Header skeleton */}
             <div className="bg-card rounded-xl p-6 border border-border">
@@ -77,62 +80,87 @@ export default function UserAlbumsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8 md:py-8">
         <div className="space-y-6">
           {/* Header */}
-          <Card className="border-border/50 shadow-lg">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-4">
-                {/* Back button */}
-                <LocaleLink href={`/profile/${displayName}`}>
-                  <Button variant="ghost" size="sm" className="p-2">
-                    <ArrowLeft className="w-4 h-4" />
-                  </Button>
-                </LocaleLink>
-
-                {/* User avatar and info */}
-                <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
-                  {initials}
-                </div>
-                <div className="flex-1">
+          <Card
+            className="border-border/50 shadow-lg"
+            hideBorder={isMobile}
+            hideMargin={isMobile}
+          >
+            <CardHeader className={cn("pb-4", isMobile && "p-0")}>
+              {isMobile ? (
+                // Mobile layout - simplified design
+                <div className="flex items-center gap-3">
+                  <LocaleLink href={`/profile/${displayName}`}>
+                    <Button variant="ghost" size="sm" className="p-2">
+                      <ArrowLeft className="w-4 h-4" />
+                    </Button>
+                  </LocaleLink>
                   <div className="flex items-center gap-2">
-                    <FolderOpen className="w-5 h-5 text-green-500" />
-                    <h1 className="text-2xl font-bold text-foreground">
+                    <FolderOpen className="w-4 h-4 text-green-500 shrink-0" />
+                    <h1 className="text-lg font-bold text-foreground">
                       {displayName}&apos;s Albums
                     </h1>
                   </div>
-                  <p className="text-muted-foreground">
-                    {albums.length} {albums.length === 1 ? "album" : "albums"} •
-                    Public collections
-                  </p>
                 </div>
+              ) : (
+                // Desktop layout - original horizontal design
+                <div className="flex items-center gap-4">
+                  {/* Back button */}
+                  <LocaleLink href={`/profile/${displayName}`}>
+                    <Button variant="ghost" size="sm" className="p-2">
+                      <ArrowLeft className="w-4 h-4" />
+                    </Button>
+                  </LocaleLink>
 
-                {/* View mode toggle */}
-                <div className="flex bg-muted/50 rounded-lg p-1">
-                  <Button
-                    variant={viewMode === "grid" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("grid")}
-                    className="px-3 py-1.5"
-                  >
-                    <Grid className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === "list" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("list")}
-                    className="px-3 py-1.5"
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
+                  {/* User avatar and info */}
+                  <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-bold shadow-lg">
+                    {initials}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <FolderOpen className="w-5 h-5 text-green-500" />
+                      <h1 className="text-2xl font-bold text-foreground">
+                        {displayName}&apos;s Albums
+                      </h1>
+                    </div>
+                    <p className="text-muted-foreground">
+                      {albums.length} {albums.length === 1 ? "album" : "albums"}
+                    </p>
+                  </div>
+
+                  {/* View mode toggle - only on desktop */}
+                  <div className="flex bg-muted/50 rounded-lg p-1">
+                    <Button
+                      variant={viewMode === "grid" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("grid")}
+                      className="px-3 py-1.5"
+                    >
+                      <Grid className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === "list" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("list")}
+                      className="px-3 py-1.5"
+                    >
+                      <List className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
             </CardHeader>
           </Card>
 
           {/* Albums content */}
           {albums.length === 0 ? (
-            <Card className="border-border/50">
+            <Card
+              className="border-border/50"
+              hideBorder={isMobile}
+              hideMargin={isMobile}
+            >
               <CardContent className="py-12 text-center">
                 <FolderOpen className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">
@@ -144,8 +172,12 @@ export default function UserAlbumsPage() {
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-border/50">
-              <CardContent className="p-6">
+            <Card
+              className="border-border/50"
+              hideBorder={isMobile}
+              hideMargin={isMobile}
+            >
+              <CardContent hidePadding={isMobile}>
                 <div
                   className={cn(
                     viewMode === "grid"

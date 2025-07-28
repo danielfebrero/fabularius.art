@@ -84,11 +84,7 @@ CardHeader.displayName = "CardHeader";
 
 export const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(
   ({ className, children, hidePadding = false, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(!hidePadding && "p-6 pt-0", className)}
-      {...props}
-    >
+    <div ref={ref} className={cn(!hidePadding && "p-6", className)} {...props}>
       {children}
     </div>
   )
@@ -99,7 +95,7 @@ export const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
   ({ className, children, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("flex items-center p-6 pt-0", className)}
+      className={cn("flex items-center p-6", className)}
       {...props}
     >
       {children}

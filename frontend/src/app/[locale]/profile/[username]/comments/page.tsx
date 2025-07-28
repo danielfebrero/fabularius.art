@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { ContentCard } from "@/components/ui/ContentCard";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { Media, Album } from "@/types";
 
 interface Comment {
@@ -99,6 +100,8 @@ export default function UserCommentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+
+  const isMobile = useIsMobile();
 
   const displayName = user?.username || user?.email?.split("@")[0] || username;
   const initials = displayName.slice(0, 2).toUpperCase();
@@ -237,7 +240,7 @@ export default function UserCommentsPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8 md:py-8">
           <div className="animate-pulse space-y-6">
             {/* Header skeleton */}
             <div className="bg-card rounded-xl p-6 border border-border">
@@ -294,54 +297,76 @@ export default function UserCommentsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8 md:py-8">
         <div className="space-y-6">
           {/* Header */}
-          <Card className="border-border/50 shadow-lg">
-            <CardHeader className="pb-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  {/* Back button */}
+          <Card
+            className="border-border/50 shadow-lg"
+            hideBorder={isMobile}
+            hideMargin={isMobile}
+          >
+            <CardHeader className={cn("pb-6", isMobile && "p-0")}>
+              {isMobile ? (
+                // Mobile layout - simplified design
+                <div className="flex items-center gap-3">
                   <LocaleLink href={`/profile/${username}`}>
                     <Button variant="ghost" size="sm" className="p-2">
                       <ArrowLeft className="w-4 h-4" />
                     </Button>
                   </LocaleLink>
-
-                  {/* User avatar */}
-                  <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-lg font-bold shadow-lg">
-                    {initials}
-                  </div>
-
-                  <div>
-                    <h1 className="text-2xl font-bold text-foreground">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-blue-500 shrink-0" />
+                    <h1 className="text-lg font-bold text-foreground">
                       {displayName}&apos;s Comments
                     </h1>
-                    <p className="text-muted-foreground">
-                      {comments.length} comment
-                      {comments.length !== 1 ? "s" : ""} made
-                    </p>
                   </div>
                 </div>
+              ) : (
+                // Desktop layout - original horizontal design
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    {/* Back button */}
+                    <LocaleLink href={`/profile/${username}`}>
+                      <Button variant="ghost" size="sm" className="p-2">
+                        <ArrowLeft className="w-4 h-4" />
+                      </Button>
+                    </LocaleLink>
 
-                {/* View mode toggle */}
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant={viewMode === "grid" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("grid")}
-                  >
-                    <Grid className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === "list" ? "default" : "ghost"}
-                    size="sm"
-                    onClick={() => setViewMode("list")}
-                  >
-                    <List className="h-4 w-4" />
-                  </Button>
+                    {/* User avatar */}
+                    <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-lg font-bold shadow-lg">
+                      {initials}
+                    </div>
+
+                    <div>
+                      <h1 className="text-2xl font-bold text-foreground">
+                        {displayName}&apos;s Comments
+                      </h1>
+                      <p className="text-muted-foreground">
+                        {comments.length} comment
+                        {comments.length !== 1 ? "s" : ""} made
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* View mode toggle - only on desktop */}
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant={viewMode === "grid" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("grid")}
+                    >
+                      <Grid className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === "list" ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => setViewMode("list")}
+                    >
+                      <List className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
             </CardHeader>
           </Card>
 
@@ -351,6 +376,8 @@ export default function UserCommentsPage() {
               className={cn(
                 viewMode === "grid"
                   ? "grid grid-cols-1 md:grid-cols-2 gap-6"
+                  : isMobile
+                  ? "space-y-8"
                   : "space-y-4"
               )}
             >
@@ -358,8 +385,10 @@ export default function UserCommentsPage() {
                 <Card
                   key={comment.id}
                   className="border-border/50 hover:shadow-md transition-shadow"
+                  hideBorder={isMobile}
+                  hideMargin={isMobile}
                 >
-                  <CardContent className="p-6">
+                  <CardContent hidePadding={isMobile}>
                     <div className="space-y-4">
                       {/* Comment metadata and user info */}
                       <div className="flex items-start gap-4">
@@ -377,26 +406,7 @@ export default function UserCommentsPage() {
                           </div>
 
                           {/* Comment metadata */}
-                          <div className="space-y-2 mb-4">
-                            <LocaleLink
-                              href={
-                                comment.targetType === "media"
-                                  ? `/media/${comment.targetId}`
-                                  : `/albums/${comment.targetId}`
-                              }
-                              className="block"
-                            >
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                                <Mail className="w-4 h-4" />
-                                <span className="font-medium">
-                                  On &ldquo;{comment.contentTitle}&rdquo;
-                                </span>
-                                <span className="text-xs">
-                                  ({comment.targetType})
-                                </span>
-                              </div>
-                            </LocaleLink>
-
+                          <div className="space-y-2">
                             <div className="text-xs text-muted-foreground">
                               {comment.timestamp}
                             </div>
@@ -430,7 +440,11 @@ export default function UserCommentsPage() {
             </div>
           ) : (
             /* Empty state */
-            <Card className="border-border/50">
+            <Card
+              className="border-border/50"
+              hideBorder={isMobile}
+              hideMargin={isMobile}
+            >
               <CardContent className="p-12 text-center">
                 <Mail className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">

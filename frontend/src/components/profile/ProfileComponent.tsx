@@ -268,12 +268,12 @@ export default function ProfileComponent({
             <CardHeader className="pb-6">
               <div className="flex flex-col sm:flex-row gap-6">
                 {/* Avatar Section */}
-                <div className="relative">
+                <div className="relative inline-block w-fit">
                   <div className="w-24 h-24 sm:w-32 sm:h-32 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl sm:text-3xl font-bold shadow-lg">
                     {initials}
                   </div>
                   {isOwner && isEditing && (
-                    <button className="absolute -top-1 -right-1 w-8 h-8 bg-background text-foreground border-2 border-primary rounded-full flex items-center justify-center hover:bg-muted transition-colors shadow-lg">
+                    <button className="absolute -top-1 -right-1 w-8 h-8 bg-background text-foreground border-2 border-primary rounded-full flex items-center justify-center hover:bg-muted transition-colors shadow-lg z-10">
                       <Camera className="w-4 h-4" />
                     </button>
                   )}
