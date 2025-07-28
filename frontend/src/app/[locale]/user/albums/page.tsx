@@ -27,13 +27,6 @@ const UserAlbumsPage: React.FC = () => {
     deleteAlbum,
   } = useAlbums();
 
-  // Filter albums based on search term
-  const filteredAlbums = albums.filter(
-    (album) =>
-      album.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      album.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   // Handle album edit
   const handleEditAlbum = (album: Album) => {
     setEditingAlbum(album);
@@ -226,7 +219,7 @@ const UserAlbumsPage: React.FC = () => {
       </div>
 
       {/* Content */}
-      {filteredAlbums.length > 0 ? (
+      {albums.length > 0 ? (
         <div className="space-y-6">
           <div
             className={cn(
@@ -235,7 +228,7 @@ const UserAlbumsPage: React.FC = () => {
                 : "space-y-4"
             )}
           >
-            {filteredAlbums.map((album, index) => (
+            {albums.map((album, index) => (
               <ContentCard
                 key={`${album.id}-${index}`}
                 item={album}

@@ -195,6 +195,66 @@ All profile pages follow established patterns for:
 - Loading skeletons and error states
 - Back navigation to parent profile page
 
+## AI Image Generation
+
+### GenerateClient Component
+
+- **File**: `/components/GenerateClient.tsx`
+- **Purpose**: Main interface for AI image generation with advanced controls
+
+#### Key Features
+
+- **Prompt Input**: Large textarea for detailed generation prompts
+- **Advanced Controls**: Professional-grade parameters for fine-tuning
+- **LoRA Models**: Specialized model enhancement system
+- **Permission-Based UI**: Features gated by user subscription level
+
+#### LoRA Strength Controls
+
+The LoRA (Low-Rank Adaptation) system includes sophisticated strength management:
+
+```typescript
+interface GenerationSettings {
+  // ... other settings
+  selectedLoras: string[];
+  loraStrengths: Record<string, { mode: "auto" | "manual"; value: number }>;
+}
+```
+
+**Strength Options**:
+
+- **Auto Mode**: Automatic strength based on model recommendations
+- **Manual Mode**: Slider control (0.0 to 1.5 range, default: 1.0, step: 0.05)
+
+**Permission Handling**:
+
+- LoRA controls are visible for all users but disabled for non-Pro users
+- Visual indicators (lock icons, opacity) show permission restrictions
+- Interactive elements disabled via `pointer-events-none` and `disabled` attributes
+- Summary section shows selected LoRAs with "(Pro feature)" indicator
+
+**UI Patterns**:
+
+- Expandable cards showing LoRA details and strength controls
+- Toggle buttons for Auto/Manual mode selection
+- Real-time value display with 2-decimal precision
+- Responsive slider component with proper accessibility
+
+#### Permission System Integration
+
+The component leverages the centralized permission system:
+
+```typescript
+const {
+  canGenerateImages,
+  canUseBulkGeneration,
+  canUseLoRAModels,
+  canUseNegativePrompt,
+} = useUserPermissions();
+```
+
+Features are gracefully degraded when permissions are insufficient, maintaining UI consistency while clearly indicating upgrade requirements.
+
 ## Routing
 
 The application uses the Next.js App Router for routing. Routes are defined by the directory structure in the `frontend/src/app` directory. Key routing patterns include:
