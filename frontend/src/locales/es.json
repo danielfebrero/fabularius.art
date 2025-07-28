@@ -76,7 +76,6 @@
     "bookmarks": "Marcadores",
     "likes": "Me gusta",
     "albums": "Álbumes",
-    "dashboard": "Panel",
     "profile": "Perfil",
     "menu": "Menú",
     "sidebar": "Barra lateral",
@@ -306,14 +305,6 @@
     }
   },
   "user": {
-    "dashboard": {
-      "welcome": "Bienvenido de nuevo",
-      "recentActivity": "Actividad reciente",
-      "quickActions": "Acciones rápidas",
-      "stats": "Tus estadísticas",
-      "favorites": "Favoritos",
-      "recommendations": "Recomendaciones"
-    },
     "albums": {
       "myAlbums": "Mis álbumes",
       "createAlbum": "Crear álbum",
@@ -379,7 +370,6 @@
     },
     "profile": {
       "profile": "Perfil",
-      "dashboard": "Panel",
       "settings": "Configuración",
       "unverified": "No verificado",
       "emailNotVerified": "Email no verificado",

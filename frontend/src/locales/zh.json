@@ -76,7 +76,6 @@
     "bookmarks": "收藏",
     "likes": "点赞",
     "albums": "相册",
-    "dashboard": "仪表板",
     "profile": "个人资料",
     "menu": "菜单",
     "sidebar": "侧边栏",
@@ -306,14 +305,6 @@
     }
   },
   "user": {
-    "dashboard": {
-      "welcome": "欢迎回来",
-      "recentActivity": "最近活动",
-      "quickActions": "快速操作",
-      "stats": "您的统计",
-      "favorites": "收藏",
-      "recommendations": "推荐"
-    },
     "albums": {
       "myAlbums": "我的相册",
       "createAlbum": "创建相册",
@@ -379,7 +370,6 @@
     },
     "profile": {
       "profile": "个人资料",
-      "dashboard": "仪表板",
       "settings": "设置",
       "unverified": "未验证",
       "emailNotVerified": "邮箱未验证",

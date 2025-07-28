@@ -6,14 +6,7 @@ import { useLocaleRouter } from "@/lib/navigation";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/hooks/useUser";
-import {
-  Heart,
-  Bookmark,
-  LayoutDashboard,
-  Image,
-  FolderOpen,
-  User,
-} from "lucide-react";
+import { Heart, Bookmark, Image, FolderOpen, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Skeleton,
@@ -82,32 +75,27 @@ const UserLayout: React.FC<UserLayoutProps> = ({
 
   const navigationItems = [
     {
-      href: `/${locale}/user/dashboard`,
-      label: t("dashboard"),
-      icon: LayoutDashboard,
-    },
-    {
-      href: `/${locale}/user/profile`,
+      href: `/user/profile`,
       label: t("profile"),
       icon: User,
     },
     {
-      href: `/${locale}/user/likes`,
+      href: `/user/likes`,
       label: t("likes"),
       icon: Heart,
     },
     {
-      href: `/${locale}/user/bookmarks`,
+      href: `/user/bookmarks`,
       label: t("bookmarks"),
       icon: Bookmark,
     },
     {
-      href: `/${locale}/user/images`,
+      href: `/user/images`,
       label: t("images"),
       icon: Image,
     },
     {
-      href: `/${locale}/user/albums`,
+      href: `/user/albums`,
       label: t("albums"),
       icon: FolderOpen,
     },

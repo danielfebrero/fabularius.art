@@ -39,8 +39,8 @@ export function EmailVerificationForm({ email }: EmailVerificationFormProps) {
     try {
       const response = await userApi.verifyEmail(data.code);
       if (response.success && response.data?.user) {
-        setSuccess("Email verified successfully! Redirecting to dashboard...");
-        router.push("/user/dashboard");
+        setSuccess("Email verified successfully! Redirecting to profile...");
+        router.push("/user/profile");
       }
     } catch (err: any) {
       setError(err.response?.data?.error || "Invalid verification code.");

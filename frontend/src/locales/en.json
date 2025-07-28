@@ -76,7 +76,6 @@
     "bookmarks": "Bookmarks",
     "likes": "Likes",
     "albums": "Albums",
-    "dashboard": "Dashboard",
     "profile": "Profile",
     "menu": "Menu",
     "sidebar": "Sidebar",
@@ -332,14 +331,6 @@
     }
   },
   "user": {
-    "dashboard": {
-      "welcome": "Welcome back",
-      "recentActivity": "Recent Activity",
-      "quickActions": "Quick Actions",
-      "stats": "Your Stats",
-      "favorites": "Favorites",
-      "recommendations": "Recommendations"
-    },
     "albums": {
       "myAlbums": "My Albums",
       "createAlbum": "Create Album",
@@ -405,7 +396,6 @@
     },
     "profile": {
       "profile": "Profile",
-      "dashboard": "Dashboard",
       "settings": "Settings",
       "unverified": "Unverified",
       "emailNotVerified": "Email not verified",
