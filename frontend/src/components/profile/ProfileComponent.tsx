@@ -198,7 +198,7 @@ export default function ProfileComponent({
         title: "City Lights",
       } as Media,
     ],
-    recentUploads: [
+    recentGeneratedMedias: [
       {
         id: "media4",
         filename: "my-latest-shot.jpg",
@@ -227,29 +227,6 @@ export default function ProfileComponent({
         title: "My Latest Shot",
       } as Media,
       {
-        id: "album5",
-        title: "Portfolio Update",
-        isPublic: true,
-        mediaCount: 8,
-        coverImageUrl: "/albums/album5/cover/portfolio-update-cover.jpg",
-        thumbnailUrls: {
-          cover:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
-          small:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
-          medium:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
-          large:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
-          xlarge:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
-        },
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-        updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        likeCount: 45,
-        viewCount: 123,
-      } as Album,
-      {
         id: "media6",
         filename: "street-photography.jpg",
         originalName: "Street Photography",
@@ -275,6 +252,33 @@ export default function ProfileComponent({
         likeCount: 67,
         viewCount: 145,
         title: "Street Photography",
+      } as Media,
+      {
+        id: "media7",
+        filename: "ai-generated-art.jpg",
+        originalName: "AI Generated Art",
+        mimeType: "image/jpeg",
+        size: 1856000,
+        width: 1600,
+        height: 900,
+        url: "/media/media7/ai-generated-art.jpg",
+        thumbnailUrls: {
+          cover:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
+          small:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
+          medium:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
+          large:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
+          xlarge:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
+        },
+        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(), // 4 days ago
+        updatedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+        likeCount: 45,
+        viewCount: 123,
+        title: "AI Generated Art",
       } as Media,
     ],
     recentAlbums: [
@@ -635,19 +639,19 @@ export default function ProfileComponent({
               </CardContent>
             </Card>
 
-            {/* Last Uploaded Content */}
+            {/* Last Generated Medias */}
             <Card className="border-border/50">
               <CardHeader>
                 <div className="flex items-center gap-2">
                   <ImageIcon className="w-5 h-5 text-blue-500" />
                   <h2 className="text-lg font-semibold text-foreground">
-                    Last Uploaded Content
+                    Last Generated Medias
                   </h2>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {mockData.recentUploads.map((item) => (
+                  {mockData.recentGeneratedMedias.map((item) => (
                     <ContentCard
                       key={item.id}
                       item={item}
@@ -662,9 +666,9 @@ export default function ProfileComponent({
                   ))}
                 </div>
                 <div className="text-center pt-4">
-                  <LocaleLink href={`/profile/${displayName}/uploads`}>
+                  <LocaleLink href={`/profile/${displayName}/media`}>
                     <Button variant="outline" size="sm" className="text-xs">
-                      View All Uploads
+                      View All Generated Medias
                     </Button>
                   </LocaleLink>
                 </div>
