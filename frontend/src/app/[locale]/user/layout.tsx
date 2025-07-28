@@ -90,8 +90,8 @@ const UserLayout: React.FC<UserLayoutProps> = ({
       icon: Bookmark,
     },
     {
-      href: `/user/images`,
-      label: t("images"),
+      href: `/user/medias`,
+      label: t("medias"),
       icon: Image,
     },
     {

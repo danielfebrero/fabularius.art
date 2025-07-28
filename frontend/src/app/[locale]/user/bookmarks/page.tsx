@@ -241,7 +241,7 @@ const UserBookmarksPage: React.FC = () => {
                       viewMode === "grid" ? "aspect-square" : undefined
                     }
                     preferredThumbnailSize={
-                      viewMode === "grid" ? "originalSize" : undefined
+                      viewMode === "grid" ? undefined : "originalSize"
                     }
                   />
                 );

@@ -87,12 +87,12 @@ export function Header() {
             {user && (
               <>
                 <LocaleLink
-                  href="/user/images"
+                  href="/user/medias"
                   className="flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <ImageIcon className="h-4 w-4 lg:hidden" />
-                  <span className="hidden lg:block">{tNav("images")}</span>
-                  <span className="lg:hidden sr-only">{tNav("images")}</span>
+                  <span className="hidden lg:block">{tNav("medias")}</span>
+                  <span className="lg:hidden sr-only">{tNav("medias")}</span>
                 </LocaleLink>
                 <LocaleLink
                   href="/user/bookmarks"

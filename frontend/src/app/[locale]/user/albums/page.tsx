@@ -254,6 +254,9 @@ const UserAlbumsPage: React.FC = () => {
                     variant: "destructive" as const,
                   },
                 ]}
+                preferredThumbnailSize={
+                  viewMode === "grid" ? undefined : "originalSize"
+                }
               />
             ))}
           </div>

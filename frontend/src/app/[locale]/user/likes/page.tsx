@@ -238,6 +238,9 @@ const UserLikesPage: React.FC = () => {
                     className={
                       viewMode === "grid" ? "aspect-square" : undefined
                     }
+                    preferredThumbnailSize={
+                      viewMode === "grid" ? undefined : "originalSize"
+                    }
                   />
                 );
               })}
