@@ -942,7 +942,7 @@ export function GenerateClient() {
                           className={cn(
                             "p-3 border border-border rounded-lg transition-all",
                             !canUseLoras
-                              ? "opacity-50 bg-muted/30 cursor-not-allowed"
+                              ? "bg-muted/30 cursor-not-allowed"
                               : "hover:border-primary/50 hover:bg-primary/5"
                           )}
                         >
