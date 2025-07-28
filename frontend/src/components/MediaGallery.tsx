@@ -73,12 +73,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
     setLoading(false);
   };
 
-  const handleMediaClick = (index: number) => {
-    const mediaItem = media[index];
-    // Navigate to the media detail page instead of opening lightbox
-    router.push(`/media/${mediaItem.id}`);
-  };
-
   const handleLightboxClose = () => {
     setLightboxOpen(false);
   };
@@ -156,7 +150,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
                 canAddToAlbum={true}
                 canDownload={true}
                 canDelete={false}
-                onClick={() => handleMediaClick(index)}
                 context="albums"
                 columns={getColumns()}
                 mediaList={media}

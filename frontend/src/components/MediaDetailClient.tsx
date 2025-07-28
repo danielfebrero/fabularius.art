@@ -28,6 +28,7 @@ import { ViewTracker } from "@/components/ui/ViewTracker";
 import { ContentCard } from "@/components/ui/ContentCard";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 // --- PROPS INTERFACES ---
 
@@ -205,6 +206,7 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
   const router = useLocaleRouter();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const metadata = useMediaMetadata(media);
+  const isMobile = useIsMobile();
 
   useUserInteractionStatus();
 
@@ -298,7 +300,7 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
               canAddToAlbum={true}
               canDownload={true}
               canDelete={false}
-              onClick={() => setLightboxOpen(true)}
+              onClick={isMobile ? undefined : () => setLightboxOpen(true)}
               onFullscreen={() => setLightboxOpen(true)}
             />
           </div>

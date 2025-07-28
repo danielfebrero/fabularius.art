@@ -9,6 +9,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { Tag } from "@/components/ui/Tag";
 import { cn } from "@/lib/utils";
 import { composeMediaUrl } from "@/lib/urlUtils";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   Maximize2,
   Plus,
@@ -113,7 +114,7 @@ export function ContentCard({
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [addToAlbumDialogOpen, setAddToAlbumDialogOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  const isMobile = useIsMobile();
   const cardRef = useRef<HTMLDivElement>(null);
 
   const isMedia = type === "media";
@@ -121,20 +122,6 @@ export function ContentCard({
   const album = !isMedia ? (item as Album) : null;
 
   const isVideo = isMedia && media?.mimeType.startsWith("video/");
-
-  // Detect if user is on a mobile device - use state to avoid hydration mismatch
-  useEffect(() => {
-    const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-
-    // Set initial value
-    checkIsMobile();
-
-    // Listen for resize events
-    window.addEventListener("resize", checkIsMobile);
-    return () => window.removeEventListener("resize", checkIsMobile);
-  }, []);
 
   // Hide mobile actions when clicking outside or after timeout
   useEffect(() => {
@@ -183,15 +170,26 @@ export function ContentCard({
     if (onClick) {
       onClick();
     } else {
-      // For media on mobile: taps only show actions, no navigation
-      if (isMedia && isMobile) {
-        e.preventDefault();
-        setShowMobileActions(true);
+      // On mobile: first tap shows actions, second tap navigates
+      if (isMobile) {
+        if (showMobileActions) {
+          // Actions are already showing, navigate to content page
+          if (isMedia && media) {
+            router.push(`/media/${media.id}`);
+          } else if (album) {
+            router.push(`/albums/${album.id}`);
+          }
+        } else {
+          // Actions are not showing, show them first
+          e.preventDefault();
+          e.stopPropagation();
+          setShowMobileActions(true);
+        }
         return;
       }
 
-      // Default behavior: navigate to content page (desktop only for media)
-      if (isMedia && media && !isMobile) {
+      // Default behavior: navigate to content page (desktop only)
+      if (isMedia && media) {
         router.push(`/media/${media.id}`);
       } else if (album) {
         router.push(`/albums/${album.id}`);
@@ -484,12 +482,7 @@ export function ContentCard({
                       <div
                         onClick={(e) => e.stopPropagation()}
                         className={cn(
-                          "transition-opacity duration-200",
-                          isMobile
-                            ? showMobileActions
-                              ? "opacity-100"
-                              : "opacity-0"
-                            : "opacity-0 group-hover:opacity-100"
+                          "transition-opacity duration-200 opacity-0 group-hover:opacity-100"
                         )}
                       >
                         <LikeButton
@@ -506,12 +499,7 @@ export function ContentCard({
                       <div
                         onClick={(e) => e.stopPropagation()}
                         className={cn(
-                          "transition-opacity duration-200",
-                          isMobile
-                            ? showMobileActions
-                              ? "opacity-100"
-                              : "opacity-0"
-                            : "opacity-0 group-hover:opacity-100"
+                          "transition-opacity duration-200 opacity-0 group-hover:opacity-100"
                         )}
                       >
                         <BookmarkButton
@@ -626,7 +614,12 @@ export function ContentCard({
                 {showCounts && (
                   <div className="flex items-center gap-3">
                     {canLike && (
-                      <div onClick={(e) => e.stopPropagation()}>
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className={cn(
+                          "transition-opacity duration-200 opacity-100"
+                        )}
+                      >
                         <LikeButton
                           targetType="album"
                           targetId={album.id}
@@ -638,7 +631,12 @@ export function ContentCard({
                       </div>
                     )}
                     {canBookmark && (
-                      <div onClick={(e) => e.stopPropagation()}>
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className={cn(
+                          "transition-opacity duration-200 opacity-100"
+                        )}
+                      >
                         <BookmarkButton
                           targetType="album"
                           targetId={album.id}
@@ -649,7 +647,11 @@ export function ContentCard({
                         />
                       </div>
                     )}
-                    <div className="flex items-center gap-1 text-white text-sm">
+                    <div
+                      className={cn(
+                        "flex items-center gap-1 text-white text-sm transition-opacity duration-200 opacity-100"
+                      )}
+                    >
                       <svg
                         className="w-4 h-4"
                         fill="currentColor"
@@ -682,7 +684,14 @@ export function ContentCard({
                       e.stopPropagation();
                       setDropdownOpen(!dropdownOpen);
                     }}
-                    className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 w-8 h-8 p-0 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-lg flex items-center justify-center"
+                    className={cn(
+                      "transition-opacity duration-200 w-8 h-8 p-0 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-lg flex items-center justify-center",
+                      isMobile
+                        ? showMobileActions
+                          ? "opacity-100"
+                          : "opacity-0 pointer-events-none"
+                        : "sm:opacity-0 sm:group-hover:opacity-100"
+                    )}
                     aria-label="Album actions"
                   >
                     <MoreVertical className="h-4 w-4 text-white" />
@@ -718,7 +727,16 @@ export function ContentCard({
                 </div>
               </div>
             ) : canFullscreen || canAddToAlbum || canDownload || canDelete ? (
-              <div className="absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex flex-col gap-1 sm:gap-2">
+              <div
+                className={cn(
+                  "absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
+                  isMobile
+                    ? showMobileActions
+                      ? "opacity-100"
+                      : "opacity-0 pointer-events-none"
+                    : "opacity-0 group-hover:opacity-100"
+                )}
+              >
                 {canFullscreen && (
                   <Tooltip content="View fullscreen" side="left">
                     <button
