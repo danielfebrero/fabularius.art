@@ -29,7 +29,7 @@ export default function UserAlbumsPage() {
   if (loading && !loadingMore) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse space-y-6">
             {/* Header skeleton */}
             <div className="bg-card rounded-xl p-6 border border-border">
@@ -77,7 +77,7 @@ export default function UserAlbumsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Header */}
           <Card className="border-border/50 shadow-lg">

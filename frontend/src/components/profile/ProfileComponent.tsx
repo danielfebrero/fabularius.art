@@ -88,7 +88,7 @@ export default function ProfileComponent({
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8 py-8">
           <div className="animate-pulse space-y-6">
             <div className="bg-card rounded-xl p-6 border border-border">
               <div className="flex flex-col sm:flex-row gap-6">
@@ -259,7 +259,7 @@ export default function ProfileComponent({
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Profile Header Card */}
           <Card className="border-border/50 shadow-lg">

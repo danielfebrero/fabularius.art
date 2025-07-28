@@ -203,7 +203,7 @@ export function GenerateClient() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col px-4 py-8">
+    <div className="min-h-screen flex flex-col md:px-4 py-8">
       <div className="w-full max-w-2xl mx-auto space-y-6">
         {/* Header */}
         {!isGenerating && generatedImages.length === 0 && (
