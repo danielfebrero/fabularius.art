@@ -5,6 +5,7 @@ import { Album } from "@/types";
 import { DiscoverClient } from "@/components/DiscoverClient";
 import { locales } from "@/i18n";
 import { generateHomepageMetadata } from "@/lib/opengraph";
+import EvilPrefetch from "@/components/EvilPrefetch";
 
 // Generate static pages for all locales at build time
 export async function generateStaticParams() {
@@ -70,6 +71,7 @@ export default async function DiscoverPage({
   return (
     <>
       {/* SEO-friendly hidden content for search engines */}
+      <EvilPrefetch data="test" />
       <div className="sr-only">
         <h1>{t("welcomeTitle")}</h1>
         <p>{t("welcomeDescription")}</p>
