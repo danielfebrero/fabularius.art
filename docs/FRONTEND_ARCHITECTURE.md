@@ -123,6 +123,46 @@ The application uses **Tailwind CSS** for styling. Utility classes are used to s
 
 The application has a collection of reusable UI components in the `frontend/src/components/ui` directory. These components are used throughout the application to ensure a consistent look and feel.
 
+## Profile Pages
+
+The application includes profile pages that display user-specific content accessible via `/profile/[username]/` routes:
+
+### Profile Albums Page
+
+- **File**: `/app/[locale]/profile/[username]/albums/page.tsx`
+- **Purpose**: Displays a user's public albums in a paginated view
+- **Features**:
+  - Grid and list view modes
+  - Loading states and error handling
+  - Mock data implementation with 6 sample albums
+  - Responsive design following app patterns
+  - Integration with existing ProfileComponent navigation
+
+### Profile Comments Page
+
+- **File**: `/app/[locale]/profile/[username]/comments/page.tsx`
+- **Purpose**: Displays user comments and activity
+
+Both pages follow established patterns for:
+
+- Locale-aware routing with `[locale]` parameter
+- Dynamic username routing with `[username]` parameter
+- Consistent styling using Tailwind CSS utility classes
+- ContentCard components for displaying album/media items
+- Button and Card UI components from the shared component library
+
 ## Routing
 
-The application uses the Next.js App Router for routing. Routes are defined by the directory structure in the `frontend/src/app` directory. For example, a file at `frontend/src/app/albums/[albumId]/page.tsx` will create a route at `/albums/:albumId`.
+The application uses the Next.js App Router for routing. Routes are defined by the directory structure in the `frontend/src/app` directory. Key routing patterns include:
+
+- Dynamic routes: `/albums/[albumId]/page.tsx` creates `/albums/:albumId`
+- Locale routing: `/[locale]/profile/[username]/albums/page.tsx` creates `/fr/profile/:username/albums`
+- Nested layouts: Layout files apply to all child routes in their directory
+
+### Locale-Aware Navigation
+
+All internal navigation uses:
+
+- `LocaleLink` component for links (preserves current locale)
+- `useLocaleRouter` hook for programmatic navigation
+- Automatic locale prefixing for internationalization support
