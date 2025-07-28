@@ -11,6 +11,7 @@ import { ContentCard } from "@/components/ui/ContentCard";
 import { Media } from "@/types";
 import { useProfileData } from "@/hooks/useProfileData";
 import { useAlbums } from "@/hooks/useAlbums";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   User,
   Mail,
@@ -63,6 +64,7 @@ export default function ProfileComponent({
   });
 
   const t = useTranslations("common");
+  const isMobile = useIsMobile();
 
   // Get real profile data
   const {
@@ -88,7 +90,7 @@ export default function ProfileComponent({
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
-        <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8">
           <div className="animate-pulse space-y-6">
             <div className="bg-card rounded-xl p-6 border border-border">
               <div className="flex flex-col sm:flex-row gap-6">
@@ -259,7 +261,7 @@ export default function ProfileComponent({
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8">
         <div className="space-y-6">
           {/* Profile Header Card */}
           <Card className="border-border/50 shadow-lg">
@@ -517,18 +519,28 @@ export default function ProfileComponent({
           {/* Recent Activity Sections */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Last Liked Content */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <div className="flex items-center gap-2">
+            <Card 
+              className="border-border/50" 
+              hideBorder={isMobile} 
+              hideMargin={isMobile}
+            >
+              <CardHeader hidePadding={isMobile}>
+                <div className={cn(
+                  "flex items-center gap-2",
+                  isMobile && "mb-4"
+                )}>
                   <Heart className="w-5 h-5 text-red-500" />
                   <h2 className="text-lg font-semibold text-foreground">
                     Last Liked Content
                   </h2>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent hidePadding={isMobile}>
                 {profileDataLoading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className={cn(
+                    "grid gap-4",
+                    isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"
+                  )}>
                     {[1, 2, 3].map((i) => (
                       <div key={i} className="animate-pulse">
                         <div className="aspect-square bg-muted rounded-lg"></div>
@@ -543,7 +555,10 @@ export default function ProfileComponent({
                     </p>
                   </div>
                 ) : recentLikes.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className={cn(
+                    "grid gap-4",
+                    isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"
+                  )}>
                     {recentLikes.map((item) => (
                       <ContentCard
                         key={item.id}
@@ -579,17 +594,27 @@ export default function ProfileComponent({
             </Card>
 
             {/* Last Generated Medias */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <div className="flex items-center gap-2">
+            <Card 
+              className="border-border/50" 
+              hideBorder={isMobile} 
+              hideMargin={isMobile}
+            >
+              <CardHeader hidePadding={isMobile}>
+                <div className={cn(
+                  "flex items-center gap-2",
+                  isMobile && "mb-4"
+                )}>
                   <ImageIcon className="w-5 h-5 text-blue-500" />
                   <h2 className="text-lg font-semibold text-foreground">
                     Last Generated Medias
                   </h2>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <CardContent hidePadding={isMobile}>
+                <div className={cn(
+                  "grid gap-4",
+                  isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"
+                )}>
                   {mockData.recentGeneratedMedias.map((item) => (
                     <ContentCard
                       key={item.id}
@@ -615,18 +640,28 @@ export default function ProfileComponent({
             </Card>
 
             {/* Last Created Albums */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <div className="flex items-center gap-2">
+            <Card 
+              className="border-border/50" 
+              hideBorder={isMobile} 
+              hideMargin={isMobile}
+            >
+              <CardHeader hidePadding={isMobile}>
+                <div className={cn(
+                  "flex items-center gap-2",
+                  isMobile && "mb-4"
+                )}>
                   <FolderOpen className="w-5 h-5 text-green-500" />
                   <h2 className="text-lg font-semibold text-foreground">
                     Last Created Albums
                   </h2>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent hidePadding={isMobile}>
                 {albumsLoading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className={cn(
+                    "grid gap-4",
+                    isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"
+                  )}>
                     {[1, 2, 3].map((i) => (
                       <div key={i} className="animate-pulse">
                         <div className="aspect-square bg-muted rounded-lg"></div>
@@ -641,7 +676,10 @@ export default function ProfileComponent({
                     </p>
                   </div>
                 ) : recentAlbums.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className={cn(
+                    "grid gap-4",
+                    isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"
+                  )}>
                     {recentAlbums.map((album) => (
                       <ContentCard
                         key={album.id}
@@ -677,16 +715,23 @@ export default function ProfileComponent({
             </Card>
 
             {/* Last Comments */}
-            <Card className="border-border/50">
-              <CardHeader>
-                <div className="flex items-center gap-2">
+            <Card 
+              className="border-border/50" 
+              hideBorder={isMobile} 
+              hideMargin={isMobile}
+            >
+              <CardHeader hidePadding={isMobile}>
+                <div className={cn(
+                  "flex items-center gap-2",
+                  isMobile && "mb-4"
+                )}>
                   <Mail className="w-5 h-5 text-purple-500" />
                   <h2 className="text-lg font-semibold text-foreground">
                     Last Comments
                   </h2>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent hidePadding={isMobile}>
                 <div className="space-y-3">
                   {mockData.recentComments.map((comment) => (
                     <LocaleLink

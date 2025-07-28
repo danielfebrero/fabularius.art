@@ -5,14 +5,18 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   variant?: "default" | "outlined";
   size?: "sm" | "md" | "lg";
+  hideBorder?: boolean;
+  hideMargin?: boolean;
 }
 
 interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
+  hidePadding?: boolean;
 }
 
 interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
+  hidePadding?: boolean;
 }
 
 interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -21,7 +25,15 @@ interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   (
-    { className, children, variant = "default", size = "md", ...props },
+    { 
+      className, 
+      children, 
+      variant = "default", 
+      size = "md", 
+      hideBorder = false,
+      hideMargin = false,
+      ...props 
+    },
     ref
   ) => {
     const variantClasses = {
@@ -35,15 +47,19 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
       lg: "p-6",
     };
 
+    // Apply conditional styles based on hideBorder and hideMargin
+    const conditionalClasses = cn(
+      "rounded-lg",
+      !hideBorder && variantClasses[variant],
+      !hideMargin && sizeClasses[size],
+      hideBorder && "bg-transparent shadow-none border-none",
+      hideMargin && "p-0"
+    );
+
     return (
       <div
         ref={ref}
-        className={cn(
-          "rounded-lg",
-          variantClasses[variant],
-          sizeClasses[size],
-          className
-        )}
+        className={cn(conditionalClasses, className)}
         {...props}
       >
         {children}
@@ -54,10 +70,14 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
 Card.displayName = "Card";
 
 export const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
-  ({ className, children, ...props }, ref) => (
+  ({ className, children, hidePadding = false, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("flex flex-col space-y-1.5 p-6", className)}
+      className={cn(
+        "flex flex-col space-y-1.5",
+        !hidePadding && "p-6",
+        className
+      )}
       {...props}
     >
       {children}
@@ -67,8 +87,15 @@ export const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
 CardHeader.displayName = "CardHeader";
 
 export const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(
-  ({ className, children, ...props }, ref) => (
-    <div ref={ref} className={cn("p-6 pt-0", className)} {...props}>
+  ({ className, children, hidePadding = false, ...props }, ref) => (
+    <div 
+      ref={ref} 
+      className={cn(
+        !hidePadding && "p-6 pt-0",
+        className
+      )} 
+      {...props}
+    >
       {children}
     </div>
   )
