@@ -26,6 +26,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { ViewTracker } from "@/components/ui/ViewTracker";
 import { ContentCard } from "@/components/ui/ContentCard";
+import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
 
 // --- PROPS INTERFACES ---
@@ -81,6 +82,8 @@ const useMediaMetadata = (media: Media) => {
 
     // Determine creator from multiple sources
     let creator = "Unknown";
+    let creatorUsername: string | null = null;
+    let isCreatorClickable = false;
 
     // Priority order:
     // 1. creatorUsername from metadata (fetched from backend)
@@ -88,6 +91,8 @@ const useMediaMetadata = (media: Media) => {
     // 3. Check if we have createdBy info
     if (metadata.creatorUsername) {
       creator = metadata.creatorUsername;
+      creatorUsername = metadata.creatorUsername;
+      isCreatorClickable = true;
     } else if (metadata.creator || metadata.artist) {
       creator = metadata.creator || metadata.artist;
     } else if (media.createdBy && media.createdByType === "user") {
@@ -98,6 +103,8 @@ const useMediaMetadata = (media: Media) => {
 
     return {
       creator,
+      creatorUsername,
+      isCreatorClickable,
       prompt: metadata.prompt || metadata.description,
       negativePrompt: metadata.negativePrompt,
       loraModels: metadata.loraModels || metadata.loras || [],
@@ -304,11 +311,26 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
               defaultOpen
             >
               <div className="space-y-3">
-                <InfoPill
-                  icon={<User className="w-4 h-4" />}
-                  label="Creator"
-                  value={metadata.creator}
-                />
+                {metadata.isCreatorClickable && metadata.creatorUsername ? (
+                  <div className="flex items-center justify-between py-2 px-3 rounded-md bg-muted/50 text-muted-foreground">
+                    <div className="flex items-center gap-2 text-sm">
+                      <User className="w-4 h-4" />
+                      <span>Creator</span>
+                    </div>
+                    <LocaleLink
+                      href={`/profile/${metadata.creatorUsername}`}
+                      className="font-medium text-sm text-foreground hover:text-primary transition-colors underline-offset-4 hover:underline"
+                    >
+                      {metadata.creator}
+                    </LocaleLink>
+                  </div>
+                ) : (
+                  <InfoPill
+                    icon={<User className="w-4 h-4" />}
+                    label="Creator"
+                    value={metadata.creator}
+                  />
+                )}
                 <InfoPill
                   icon={<Calendar className="w-4 h-4" />}
                   label="Created"
