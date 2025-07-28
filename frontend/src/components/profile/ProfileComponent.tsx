@@ -23,6 +23,8 @@ import {
   Image as ImageIcon,
   FolderOpen,
   Eye,
+  MapPin,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +32,9 @@ interface ProfileUser {
   userId: string;
   email: string;
   username?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
   createdAt: string;
   lastLoginAt?: string;
   plan?: string;
@@ -83,9 +88,9 @@ export default function ProfileComponent({
   const handleEditStart = () => {
     setFormData({
       username: user.username || "",
-      bio: "", // Placeholder - would come from user object
-      location: "", // Placeholder
-      website: "", // Placeholder
+      bio: user.bio || "",
+      location: user.location || "",
+      website: user.website || "",
     });
     setIsEditing(true);
   };
@@ -491,12 +496,52 @@ export default function ProfileComponent({
                               </div>
                             )}
 
-                            {/* Bio placeholder */}
-                            <p className="text-sm text-muted-foreground mt-3 italic">
-                              {isOwner
-                                ? "No bio yet. Add one by editing your profile!"
-                                : "This user hasn't added a bio yet."}
-                            </p>
+                            {/* User Information */}
+                            <div className="mt-4 space-y-2">
+                              {/* Location - only show if user has location */}
+                              {user.location && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <MapPin className="w-4 h-4 text-muted-foreground" />
+                                  <span className="text-foreground">
+                                    {user.location}
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Website - only show if user has website */}
+                              {user.website && (
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Globe className="w-4 h-4 text-muted-foreground" />
+                                  <a
+                                    href={
+                                      user.website.startsWith("http")
+                                        ? user.website
+                                        : `https://${user.website}`
+                                    }
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:underline"
+                                  >
+                                    {user.website}
+                                  </a>
+                                </div>
+                              )}
+
+                              {/* Bio - moved after location and website */}
+                              <div>
+                                {user.bio ? (
+                                  <p className="text-sm text-foreground">
+                                    {user.bio}
+                                  </p>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground italic">
+                                    {isOwner
+                                      ? "No bio yet. Add one by editing your profile!"
+                                      : "This user hasn't added a bio yet."}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       )}
