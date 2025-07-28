@@ -110,6 +110,7 @@ export function UserMenu({ user }: UserMenuProps) {
           <LocaleLink
             href="/user/profile"
             className="block p-4 border-b border-border"
+            onClick={() => setIsOpen(false)}
           >
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
