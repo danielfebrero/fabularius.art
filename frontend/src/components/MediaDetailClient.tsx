@@ -130,7 +130,7 @@ const MetaSection: FC<MetaSectionProps> = ({
   return (
     <div className="border border-border/10 rounded-lg bg-background/20 backdrop-blur-sm">
       <button
-        className="flex items-center justify-between w-full p-4"
+        className="flex items-center justify-between w-full md:p-4 py-4"
         onClick={() => setIsOpen(!isOpen)}
       >
         <div className="flex items-center gap-3">
@@ -144,7 +144,7 @@ const MetaSection: FC<MetaSectionProps> = ({
           )}
         />
       </button>
-      {isOpen && <div className="p-4 pt-0 space-y-4">{children}</div>}
+      {isOpen && <div className="md:p-4 py-4 pt-0 space-y-4">{children}</div>}
     </div>
   );
 };
@@ -215,7 +215,7 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
       <ViewTracker targetType="media" targetId={media.id} />
 
       {/* Header */}
-      <header className="sticky top-0 z-20 flex items-center h-16 gap-4 px-4 border-b bg-background/80 backdrop-blur-sm border-border">
+      <header className="sticky top-0 z-20 flex items-center h-16 gap-4 md:px-4 border-b bg-background/80 backdrop-blur-sm border-border">
         <Tooltip content="Go Back" side="bottom">
           <button
             onClick={() => router.back()}
@@ -283,7 +283,7 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto p-4 md:p-6 lg:p-8">
+      <main className="container mx-auto md:p-6 lg:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Media Display */}
           <div className="lg:col-span-2">

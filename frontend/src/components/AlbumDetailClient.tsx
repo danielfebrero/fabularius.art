@@ -31,7 +31,7 @@ export function AlbumDetailClient({
       <ViewTracker targetType="album" targetId={album.id} />
 
       {/* Header */}
-      <header className="sticky top-0 z-20 flex items-center h-16 gap-4 px-4 border-b bg-background/80 backdrop-blur-sm border-border">
+      <header className="sticky top-0 z-20 flex items-center h-16 gap-4 md:px-4 border-b bg-background/80 backdrop-blur-sm border-border">
         <Tooltip content="Go Back" side="bottom">
           <button
             onClick={() => router.back()}
@@ -93,10 +93,10 @@ export function AlbumDetailClient({
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto p-4 md:p-6 lg:p-8">
+      <main className="container mx-auto md:p-6 lg:p-8">
         <div className="space-y-4">
           {album.tags && album.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 mt-4">
               {album.tags.map((tag, index) => (
                 <LocaleLink
                   key={index}
