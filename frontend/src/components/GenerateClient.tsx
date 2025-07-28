@@ -15,7 +15,6 @@ import {
 import { Lightbox } from "@/components/ui/Lightbox";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
-import Image from "next/image";
 import {
   ImageIcon,
   Crown,
@@ -200,19 +199,9 @@ export function GenerateClient() {
     isPublic: false,
   });
 
-  // Open lightbox for current generated images
-  const openLightbox = (imageUrl: string) => {
-    const allImages =
-      generatedImages.length > 0 ? generatedImages : allGeneratedImages;
-    const index = allImages.findIndex((url) => url === imageUrl);
-    if (index !== -1) {
-      setLightboxIndex(index);
-      setLightboxOpen(true);
-    }
-  };
-
   // Open lightbox for thumbnail (from all generated images)
   const openThumbnailLightbox = (imageUrl: string) => {
+    console.log("Opening lightbox for image:", imageUrl);
     const index = allGeneratedImages.findIndex((url) => url === imageUrl);
     if (index !== -1) {
       setLightboxIndex(index);
@@ -346,8 +335,6 @@ export function GenerateClient() {
                       canAddToAlbum={true}
                       canDownload={true}
                       canDelete={true}
-                      onClick={() => openLightbox(generatedImages[0])}
-                      onFullscreen={() => openLightbox(generatedImages[0])}
                       mediaList={generatedImages.map((url, index) =>
                         createMediaFromUrl(url, index)
                       )}
@@ -376,8 +363,6 @@ export function GenerateClient() {
                         canAddToAlbum={true}
                         canDownload={true}
                         canDelete={true}
-                        onClick={() => openLightbox(image)}
-                        onFullscreen={() => openLightbox(image)}
                         mediaList={generatedImages.map((url, idx) =>
                           createMediaFromUrl(url, idx)
                         )}
@@ -486,15 +471,18 @@ export function GenerateClient() {
               </div>
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
                 {allGeneratedImages.slice(0, 10).map((image, index) => (
-                  <div key={index} className="flex-shrink-0 group">
+                  <div
+                    key={index}
+                    className="flex-shrink-0 group"
+                    onClick={() => openThumbnailLightbox(image)}
+                  >
                     <div className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-border group-hover:border-primary transition-colors cursor-pointer shadow-md hover:shadow-lg">
-                      <Image
+                      <img
                         src={image}
                         alt={`Previous ${index + 1}`}
                         width={80}
                         height={80}
                         className="w-full h-full object-cover transition-transform group-hover:scale-110"
-                        onClick={() => openThumbnailLightbox(image)}
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                         <div className="w-6 h-6 bg-white/0 group-hover:bg-white/20 rounded-full flex items-center justify-center transition-all">
