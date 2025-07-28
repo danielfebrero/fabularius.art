@@ -19,7 +19,7 @@ interface UpdateUserAlbumData {
 
 interface UseAlbumsOptions {
   // User-specific options
-  createdBy?: string; // If provided, fetch albums by this specific user
+  user?: string; // If provided, fetch albums by this username
 
   // Filtering options
   isPublic?: boolean; // Filter by public status (optional)
@@ -39,6 +39,7 @@ interface UseAlbumsReturn {
   // Data
   albums: Album[];
   loading: boolean;
+  loadingMore: boolean; // Add separate loadingMore state
   error: string | null;
   totalCount: number;
 
@@ -53,18 +54,15 @@ interface UseAlbumsReturn {
   refresh: () => void;
   loadMore: () => void;
 
-  // Actions for authenticated users (only available when no createdBy is specified)
-  createAlbum?: (_data: CreateUserAlbumData) => Promise<Album>;
-  updateAlbum?: (
-    _albumId: string,
-    _data: UpdateUserAlbumData
-  ) => Promise<Album>;
-  deleteAlbum?: (_albumId: string) => Promise<void>;
+  // Actions for authenticated users (only available when no user is specified)
+  createAlbum?: (data: CreateUserAlbumData) => Promise<Album>;
+  updateAlbum?: (albumId: string, data: UpdateUserAlbumData) => Promise<Album>;
+  deleteAlbum?: (albumId: string) => Promise<void>;
 }
 
 export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
   const {
-    createdBy,
+    user,
     isPublic,
     limit = 12,
     tag,
@@ -89,7 +87,7 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
           cursor,
           append,
           limit,
-          createdBy,
+          user,
           isPublic,
           tag,
         });
@@ -105,8 +103,8 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
           limit,
         };
 
-        if (createdBy) {
-          params.createdBy = createdBy;
+        if (user) {
+          params.user = user;
         }
 
         if (isPublic !== undefined) {
@@ -161,7 +159,7 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
         setLoadingMore(false);
       }
     },
-    [createdBy, isPublic, limit, tag]
+    [user, isPublic, limit, tag]
   );
 
   const loadMore = useCallback(() => {
@@ -187,7 +185,7 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
   // CRUD operations - only available when not fetching specific user's albums
   const createAlbum = useCallback(
     async (albumData: CreateUserAlbumData): Promise<Album> => {
-      if (createdBy) {
+      if (user) {
         throw new Error(
           "Cannot create albums when viewing another user's albums"
         );
@@ -197,30 +195,11 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
       setError(null);
 
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/albums`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify(albumData),
-          }
-        );
+        const response = await albumsApi.createAlbum(albumData);
 
-        if (!response.ok) {
-          throw new Error("Failed to create album");
-        }
-
-        const data = await response.json();
-        if (data.success) {
-          // Refetch albums after creating a new one
-          setTimeout(() => fetchAlbums(), 100);
-          return data.data;
-        } else {
-          throw new Error(data.error || "Failed to create album");
-        }
+        // Refetch albums after creating a new one
+        setTimeout(() => fetchAlbums(), 100);
+        return response;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to create album";
@@ -230,12 +209,12 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
         setLoading(false);
       }
     },
-    [createdBy, fetchAlbums]
+    [user, fetchAlbums]
   );
 
   const updateAlbum = useCallback(
     async (albumId: string, albumData: UpdateUserAlbumData): Promise<Album> => {
-      if (createdBy) {
+      if (user) {
         throw new Error(
           "Cannot update albums when viewing another user's albums"
         );
@@ -264,12 +243,12 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
         setLoading(false);
       }
     },
-    [createdBy]
+    [user]
   );
 
   const deleteAlbum = useCallback(
     async (albumId: string): Promise<void> => {
-      if (createdBy) {
+      if (user) {
         throw new Error(
           "Cannot delete albums when viewing another user's albums"
         );
@@ -293,12 +272,13 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
         setLoading(false);
       }
     },
-    [createdBy]
+    [user]
   );
 
   const result: UseAlbumsReturn = {
     albums,
-    loading: loading || loadingMore,
+    loading,
+    loadingMore, // Also provide separate loadingMore state
     error,
     totalCount,
     pagination,
@@ -308,7 +288,7 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
   };
 
   // Only add CRUD operations when not viewing a specific user's albums
-  if (!createdBy) {
+  if (!user) {
     result.createAlbum = createAlbum;
     result.updateAlbum = updateAlbum;
     result.deleteAlbum = deleteAlbum;

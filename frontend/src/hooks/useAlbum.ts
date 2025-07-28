@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Album } from "../types/index";
 import API_URL from "@/lib/api";
 
@@ -14,7 +14,7 @@ export function useAlbum(albumId: string): UseAlbumReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchAlbum = async () => {
+  const fetchAlbum = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -44,7 +44,7 @@ export function useAlbum(albumId: string): UseAlbumReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [albumId]);
 
   useEffect(() => {
     if (albumId) {

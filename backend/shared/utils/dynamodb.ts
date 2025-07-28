@@ -284,6 +284,14 @@ export class DynamoDBService {
     // Use GSI4 for efficient querying of albums by creator
     // GSI4PK = "ALBUM_BY_CREATOR", GSI4SK = "<createdBy>#<createdAt>#<albumId>"
 
+    console.log("[DynamoDB] listAlbumsByCreator called with:", {
+      createdBy,
+      limit,
+      tag,
+      tableName: TABLE_NAME,
+      lastEvaluatedKey: lastEvaluatedKey ? "present" : "none",
+    });
+
     const queryParams: any = {
       TableName: TABLE_NAME,
       IndexName: "GSI4",
@@ -1035,19 +1043,32 @@ export class DynamoDBService {
   }
 
   static async getUserByUsername(username: string): Promise<UserEntity | null> {
+    console.log("[DynamoDB] getUserByUsername called with:", username);
+    console.log("[DynamoDB] Table name:", TABLE_NAME);
+
     // Query using GSI3 to find user by username
-    const result = await docClient.send(
-      new QueryCommand({
-        TableName: TABLE_NAME,
-        IndexName: "GSI3",
-        KeyConditionExpression: "GSI3PK = :gsi3pk AND GSI3SK = :gsi3sk",
-        ExpressionAttributeValues: {
-          ":gsi3pk": "USER_USERNAME",
-          ":gsi3sk": username.toLowerCase(),
-        },
-        Limit: 1,
-      })
+    const queryParams = {
+      TableName: TABLE_NAME,
+      IndexName: "GSI3",
+      KeyConditionExpression: "GSI3PK = :gsi3pk AND GSI3SK = :gsi3sk",
+      ExpressionAttributeValues: {
+        ":gsi3pk": "USER_USERNAME",
+        ":gsi3sk": username.toLowerCase(),
+      },
+      Limit: 1,
+    };
+
+    console.log(
+      "[DynamoDB] GSI3 query params:",
+      JSON.stringify(queryParams, null, 2)
     );
+
+    const result = await docClient.send(new QueryCommand(queryParams));
+
+    console.log("[DynamoDB] GSI3 query result:", {
+      itemsCount: result.Items?.length || 0,
+      items: result.Items,
+    });
 
     return (result.Items?.[0] as UserEntity) || null;
   }

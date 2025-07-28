@@ -66,7 +66,7 @@ User interactions are stored in the same DynamoDB table as other entities, follo
 
 The frontend uses custom hooks to interact with the user interactions API. These hooks provide a simple interface for components to like, bookmark, and retrieve liked or bookmarked items.
 
-- `useLikes`: Manages the state for liked items.
-- `useBookmarks`: Manages the state for bookmarked items.
+- `useLikes`: Manages the state for liked items (supports both current user and profile views via `user` parameter)
+- `useBookmarks`: Manages the state for bookmarked items
 
-These hooks are then used in components to display like/bookmark buttons and to show lists of liked or bookmarked items in the user's dashboard.
+These hooks are then used in components to display like/bookmark buttons and to show lists of liked or bookmarked items in the user's dashboard and profile pages.

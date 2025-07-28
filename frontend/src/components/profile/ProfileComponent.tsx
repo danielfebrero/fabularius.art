@@ -10,7 +10,7 @@ import LocaleLink from "@/components/ui/LocaleLink";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { Media } from "@/types";
 import { useProfileData } from "@/hooks/useProfileData";
-import { useProfileAlbums } from "@/hooks/useProfileAlbums";
+import { useAlbums } from "@/hooks/useAlbums";
 import {
   User,
   Mail,
@@ -79,8 +79,8 @@ export default function ProfileComponent({
     albums: recentAlbums,
     loading: albumsLoading,
     error: albumsError,
-  } = useProfileAlbums({
-    username: user.username || "",
+  } = useAlbums({
+    user: user.username || "",
     limit: 3, // Only fetch 3 recent albums for the profile preview
   });
 

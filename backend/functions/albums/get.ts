@@ -10,14 +10,12 @@ import { UserAuthMiddleware } from "@shared/auth/user-middleware";
  *
  * Logic:
  * - If user parameter is provided: always show only public albums (public profile view)
- * - If createdBy parameter is provided and current user IS the creator: all albums (public and private)
- * - If createdBy parameter is provided and current user is NOT the creator: only public albums
- * - If no createdBy/user is provided: all public albums from everyone
+ * - If no user is provided: all public albums from everyone
  *
  * - Queries are DynamoDB-native with proper pagination using LastEvaluatedKey cursors
  * - No in-memory filtering or offset logic for optimal performance
  * - Tag filtering is applied server-side when supported by the query method
- * - Supports both createdBy (userId) and user (username) parameters
+ * - Supports user (username) parameter for profile views
  *
  * ⚠️ All album items MUST have the 'isPublic' attribute for the GSI to work properly.
  *   If some don't, a backfill is required to set this field on all items.
@@ -56,26 +54,33 @@ export const handler = async (
     }
     const limit = parseInt(event.queryStringParameters?.["limit"] || "20");
     const isPublicParam = event.queryStringParameters?.["isPublic"];
-    const createdBy = event.queryStringParameters?.["createdBy"];
     const rawCursor = event.queryStringParameters?.["cursor"];
-    const tag = event.queryStringParameters?.["tag"]; // New tag filter parameter
-    const userParam = event.queryStringParameters?.["user"]; // New user parameter
+    const tag = event.queryStringParameters?.["tag"]; // Tag filter parameter
+    const userParam = event.queryStringParameters?.["user"]; // User parameter for username lookup
 
     console.log("[Albums API] Request params:", {
       limit,
       isPublicParam,
-      createdBy,
       tag,
       userParam,
       cursor: rawCursor ? "present" : "none",
     });
 
     // Handle user parameter lookup
-    let finalCreatedBy = createdBy;
-    if (userParam && !createdBy) {
+    let finalCreatedBy = undefined;
+    if (userParam) {
+      console.log("[Albums API] Looking up user by username:", userParam);
       // Look up the target user by username
       const targetUser = await DynamoDBService.getUserByUsername(userParam);
+      console.log(
+        "[Albums API] Target user lookup result:",
+        targetUser
+          ? { userId: targetUser.userId, username: targetUser.username }
+          : null
+      );
+
       if (!targetUser) {
+        console.log("[Albums API] User not found for username:", userParam);
         return ResponseUtil.notFound(event, "User not found");
       }
       finalCreatedBy = targetUser.userId;
@@ -98,64 +103,31 @@ export const handler = async (
 
     // Implement the new logic based on user requirements
     if (finalCreatedBy) {
-      // Check if this is a public profile request (user parameter was used)
-      if (userParam) {
-        // Public profile view - always show only public albums regardless of ownership
-        result = await DynamoDBService.listAlbumsByCreator(
-          finalCreatedBy,
-          limit,
-          lastEvaluatedKey,
-          tag
-        );
-        // Filter to only show public albums
-        result.albums = result.albums.filter(
-          (album) => album.isPublic === true
-        );
-      } else {
-        // Private access via createdBy parameter - check ownership for permissions
-        const isOwner = currentUserId === finalCreatedBy;
+      console.log("[Albums API] Using finalCreatedBy:", finalCreatedBy);
 
-        if (isOwner) {
-          // User is the owner - show all their albums (public and private)
-          // If isPublicParam is explicitly provided, respect it, otherwise show all
-          if (isPublicParam !== undefined) {
-            const isPublicBool = isPublicParam === "true";
-            // Use listAlbumsByCreator with additional filter
-            result = await DynamoDBService.listAlbumsByCreator(
-              finalCreatedBy,
-              limit,
-              lastEvaluatedKey,
-              tag
-            );
-            // Filter the results by isPublic status
-            result.albums = result.albums.filter(
-              (album) => album.isPublic === isPublicBool
-            );
-          } else {
-            // Show all albums from this creator (public and private)
-            result = await DynamoDBService.listAlbumsByCreator(
-              finalCreatedBy,
-              limit,
-              lastEvaluatedKey,
-              tag
-            );
-          }
-        } else {
-          // User is NOT the owner - only show public albums from this creator
-          result = await DynamoDBService.listAlbumsByCreator(
-            finalCreatedBy,
-            limit,
-            lastEvaluatedKey,
-            tag
-          );
-          // Filter to only show public albums
-          result.albums = result.albums.filter(
-            (album) => album.isPublic === true
-          );
-        }
-      }
+      // Public profile view - always show only public albums
+      console.log(
+        "[Albums API] Public profile view - fetching albums by creator"
+      );
+      result = await DynamoDBService.listAlbumsByCreator(
+        finalCreatedBy,
+        limit,
+        lastEvaluatedKey,
+        tag
+      );
+      console.log(
+        "[Albums API] Raw albums from DB:",
+        result.albums?.length || 0
+      );
+
+      // Filter to only show public albums
+      result.albums = result.albums.filter((album) => album.isPublic === true);
+      console.log(
+        "[Albums API] Public albums after filtering:",
+        result.albums?.length || 0
+      );
     } else {
-      // No createdBy provided - show all public albums from everyone
+      // No user provided - show all public albums from everyone
       result = await DynamoDBService.listAlbumsByPublicStatus(
         true, // Only public albums
         limit,

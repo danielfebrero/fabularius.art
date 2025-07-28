@@ -157,7 +157,7 @@ The application includes profile pages that display user-specific content access
 - **Purpose**: Displays albums created by a specific user (public albums only unless viewing own profile)
 - **Features**:
   - Grid and list view toggle
-  - Real-time album fetching using `useProfileAlbums` hook
+  - Real-time album fetching using `useAlbums` hook with user parameter
   - Pagination with "Load More" functionality
   - Loading states and error handling
   - Responsive design with 1-3 column layout based on screen size

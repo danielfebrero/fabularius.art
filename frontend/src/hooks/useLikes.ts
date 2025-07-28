@@ -6,6 +6,20 @@ import { UserInteractionsResponse, UserInteraction } from "@/types/user";
 import { useUser } from "./useUser";
 import { useUserInteractionStatus } from "./useUserInteractionStatus";
 
+interface UseLikesOptions {
+  // User-specific options
+  user?: string; // If provided, fetch likes by this username
+
+  // Initial data for SSR/SSG
+  initialLikes?: UserInteraction[];
+
+  // Initial load flag
+  initialLoad?: boolean;
+
+  // Pagination options
+  limit?: number;
+}
+
 export interface UseLikesReturn {
   // Data
   likes: UserInteraction[];
@@ -26,13 +40,28 @@ export interface UseLikesReturn {
   clearError: () => void;
 }
 
-export const useLikes = (initialLoad: boolean = true): UseLikesReturn => {
-  const { user } = useUser();
+export const useLikes = (
+  optionsOrInitialLoad: UseLikesOptions | boolean = {}
+): UseLikesReturn => {
+  // Handle backward compatibility with boolean parameter
+  const options =
+    typeof optionsOrInitialLoad === "boolean"
+      ? { initialLoad: optionsOrInitialLoad }
+      : optionsOrInitialLoad;
+
+  const {
+    user: targetUser,
+    initialLikes = [],
+    initialLoad = true,
+    limit = 20,
+  } = options;
+
+  const { user: currentUser } = useUser();
   const { preloadStatuses } = useUserInteractionStatus();
-  const [likes, setLikes] = useState<UserInteraction[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
+  const [likes, setLikes] = useState<UserInteraction[]>(initialLikes);
+  const [totalCount, setTotalCount] = useState(initialLikes.length);
   const [hasMore, setHasMore] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(initialLikes.length === 0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,7 +73,9 @@ export const useLikes = (initialLoad: boolean = true): UseLikesReturn => {
 
   const fetchLikes = useCallback(
     async (page: number = 1, reset: boolean = true) => {
-      if (!user) {
+      // For profile views, we don't need to check currentUser authentication
+      // For authenticated user views, we do need currentUser
+      if (!targetUser && !currentUser) {
         return;
       }
 
@@ -56,8 +87,20 @@ export const useLikes = (initialLoad: boolean = true): UseLikesReturn => {
 
       try {
         const keyToUse = isFirstPage ? undefined : lastKey;
-        const response: UserInteractionsResponse =
-          await interactionApi.getLikes(page, 20, keyToUse);
+        let response: UserInteractionsResponse;
+
+        if (targetUser) {
+          // Fetch likes for specific user by username
+          response = await interactionApi.getLikesByUsername(
+            targetUser,
+            page,
+            limit,
+            keyToUse
+          );
+        } else {
+          // Fetch current user's likes
+          response = await interactionApi.getLikes(page, limit, keyToUse);
+        }
 
         if (response.data) {
           const { interactions, pagination } = response.data;
@@ -91,7 +134,7 @@ export const useLikes = (initialLoad: boolean = true): UseLikesReturn => {
         loading(false);
       }
     },
-    [user, lastKey, preloadStatuses]
+    [targetUser, currentUser, lastKey, preloadStatuses, limit]
   );
 
   const loadMore = useCallback(async () => {
@@ -110,21 +153,29 @@ export const useLikes = (initialLoad: boolean = true): UseLikesReturn => {
 
   // Initial load
   useEffect(() => {
-    if (initialLoad && user) {
+    console.log(
+      "[useLikes] Effect triggered - initialLikes.length:",
+      initialLikes.length
+    );
+    // Only fetch if we don't have initial data
+    if (initialLikes.length === 0 && initialLoad) {
+      console.log("[useLikes] Fetching likes because no initial data");
       fetchLikes();
+    } else {
+      console.log("[useLikes] Skipping fetch because we have initial data");
     }
-  }, [user, initialLoad, fetchLikes]);
+  }, [initialLikes.length, initialLoad, fetchLikes]);
 
-  // Reset when user changes
+  // Reset when user changes (only for authenticated user views)
   useEffect(() => {
-    if (!user) {
+    if (!targetUser && !currentUser) {
       setLikes([]);
       setTotalCount(0);
       setHasMore(false);
       setCurrentPage(1);
       setLastKey(undefined);
     }
-  }, [user]);
+  }, [targetUser, currentUser]);
 
   return {
     likes,

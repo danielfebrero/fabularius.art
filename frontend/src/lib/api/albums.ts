@@ -8,8 +8,7 @@ if (!API_URL) {
 export const albumsApi = {
   // Get albums with optional filtering
   getAlbums: async (params?: {
-    createdBy?: string;
-    user?: string; // New parameter for username lookup
+    user?: string; // Parameter for username lookup
     isPublic?: boolean;
     limit?: number;
     cursor?: string;
@@ -21,7 +20,6 @@ export const albumsApi = {
   }> => {
     const searchParams = new URLSearchParams();
 
-    if (params?.createdBy) searchParams.set("createdBy", params.createdBy);
     if (params?.user) searchParams.set("user", params.user);
     if (params?.isPublic !== undefined)
       searchParams.set("isPublic", params.isPublic.toString());
@@ -53,35 +51,18 @@ export const albumsApi = {
   },
 
   // Get user's albums (convenience method)
-  getUserAlbums: async (
-    userIdOrParams?:
-      | string
-      | {
-          limit?: number;
-          cursor?: string;
-          tag?: string;
-        },
-    params?: {
-      limit?: number;
-      cursor?: string;
-      tag?: string;
-    }
-  ): Promise<{
+  getUserAlbums: async (params?: {
+    limit?: number;
+    cursor?: string;
+    tag?: string;
+  }): Promise<{
     albums: any[];
     nextCursor?: string;
     hasNext: boolean;
   }> => {
-    // If first parameter is a string, it's a userId for fetching specific user's albums
-    if (typeof userIdOrParams === "string") {
-      return albumsApi.getAlbums({
-        createdBy: userIdOrParams,
-        ...params,
-      });
-    }
-
-    // If first parameter is an object or undefined, fetch current user's albums via session
+    // Fetch current user's albums via session (no user parameter = session-based lookup)
     return albumsApi.getAlbums({
-      ...userIdOrParams,
+      ...params,
     });
   },
 

@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { Lightbox } from "@/components/ui/Lightbox";
 import LocaleLink from "@/components/ui/LocaleLink";
-import { useUserLikes } from "@/hooks/useUserLikes";
+import { useLikes } from "@/hooks/useLikes";
 import { cn } from "@/lib/utils";
 import { Media, Album } from "@/types";
 
@@ -23,12 +23,12 @@ export default function UserLikesPage() {
   // Use the custom hook to fetch likes data
   const {
     likes,
-    loading: likesLoading,
+    isLoading: likesLoading,
     error: likesError,
-    hasNext,
+    hasMore: hasNext,
     loadMore,
-    loadingMore,
-  } = useUserLikes({ username, limit: 20 });
+    isLoadingMore: loadingMore,
+  } = useLikes({ user: username, limit: 20 });
 
   const displayName = username;
   const initials = displayName.slice(0, 2).toUpperCase();
@@ -215,7 +215,7 @@ export default function UserLikesPage() {
 
                     return (
                       <ContentCard
-                        key={like.id}
+                        key={`${like.userId}_${like.targetId}_${like.createdAt}`}
                         item={item}
                         type={like.targetType}
                         canFullscreen={like.targetType === "media"}

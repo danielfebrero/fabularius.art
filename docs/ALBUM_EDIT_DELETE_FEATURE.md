@@ -67,11 +67,12 @@ Users can now edit and delete their own albums from the `/user/albums` page. Thi
    - Mobile-friendly responsive behavior
    - Click-outside handler for dropdown menus
 
-2. **useUserAlbums Hook** (`src/hooks/useUserAlbums.ts`)
+2. **useAlbums Hook** (`src/hooks/useAlbums.ts`)
 
    - Added `updateAlbum` and `deleteAlbum` functions
    - Local state updates for immediate UI feedback
    - Error handling with user-friendly messages
+   - Consolidated hook that replaced `useUserAlbums` and `useProfileAlbums`
 
 3. **API Layer** (`src/lib/api.ts`)
    - Added `albumsApi.updateAlbum()` method

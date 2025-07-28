@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { ContentCard } from "@/components/ui/ContentCard";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
-import { useProfileAlbums } from "@/hooks/useProfileAlbums";
+import { useAlbums } from "@/hooks/useAlbums";
 
 export default function UserAlbumsPage() {
   const params = useParams();
@@ -17,14 +17,16 @@ export default function UserAlbumsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Use the custom hook to fetch albums data
-  const { albums, loading, error, hasNext, loadMore, loadingMore } =
-    useProfileAlbums({ username, limit: 12 });
+  const { albums, loading, loadingMore, error, pagination, loadMore } =
+    useAlbums({ user: username, limit: 12 });
+
+  const hasNext = pagination?.hasNext || false;
 
   const displayName = username;
   const initials = displayName.slice(0, 2).toUpperCase();
 
   // Loading state
-  if (loading) {
+  if (loading && !loadingMore) {
     return (
       <div className="min-h-screen bg-background">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
