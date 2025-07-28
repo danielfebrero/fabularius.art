@@ -25,14 +25,14 @@ interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   (
-    { 
-      className, 
-      children, 
-      variant = "default", 
-      size = "md", 
+    {
+      className,
+      children,
+      variant = "default",
+      size = "md",
       hideBorder = false,
       hideMargin = false,
-      ...props 
+      ...props
     },
     ref
   ) => {
@@ -57,11 +57,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     );
 
     return (
-      <div
-        ref={ref}
-        className={cn(conditionalClasses, className)}
-        {...props}
-      >
+      <div ref={ref} className={cn(conditionalClasses, className)} {...props}>
         {children}
       </div>
     );
@@ -88,12 +84,9 @@ CardHeader.displayName = "CardHeader";
 
 export const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(
   ({ className, children, hidePadding = false, ...props }, ref) => (
-    <div 
-      ref={ref} 
-      className={cn(
-        !hidePadding && "p-6 pt-0",
-        className
-      )} 
+    <div
+      ref={ref}
+      className={cn(!hidePadding && "p-6 pt-0", className)}
       {...props}
     >
       {children}
