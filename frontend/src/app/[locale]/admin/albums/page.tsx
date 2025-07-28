@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 import { Album } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { AlbumTable } from "@/components/admin/AlbumTable";
@@ -9,7 +9,7 @@ import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { useAdminAlbums } from "@/hooks/useAdminAlbums";
 
 export default function AdminAlbumsPage() {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const { albums, loading, error, fetchAlbums, deleteAlbum, bulkDeleteAlbums } =
     useAdminAlbums();
 

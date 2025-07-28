@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/hooks/useUser";
 import { useAdminContext } from "@/contexts/AdminContext";
+import { useLocaleRouter } from "@/lib/navigation";
 import { User } from "@/types/user";
 import { UserPlanBadge } from "@/components/UserPlanBadge";
 import {
@@ -25,7 +25,7 @@ export function UserMenu({ user }: UserMenuProps) {
   const { user: adminUser } = useAdminContext();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
+  const router = useLocaleRouter();
 
   const t = useTranslations("common");
   const tNav = useTranslations("navigation");
@@ -229,7 +229,9 @@ export function UserMenu({ user }: UserMenuProps) {
             </div>
 
             <button
-              onClick={() => handleMenuItemClick(() => router.push("/profile"))}
+              onClick={() =>
+                handleMenuItemClick(() => router.push("/user/profile"))
+              }
               className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
             >
               <div className="flex items-center space-x-2">

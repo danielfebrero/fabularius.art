@@ -1,16 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 import { UserAlbumForm } from "@/components/user/UserAlbumForm";
 import { useUserAlbums } from "@/hooks/useUserAlbums";
 import { FolderPlus } from "lucide-react";
-import { createLocalePath } from "@/lib/navigation";
 
 export default function CreateUserAlbumPage() {
-  const router = useRouter();
-  const params = useParams();
-  const locale = params.locale as string;
+  const router = useLocaleRouter();
   const { createAlbum } = useUserAlbums();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +23,7 @@ export default function CreateUserAlbumPage() {
 
     try {
       await createAlbum(data);
-      router.push(createLocalePath("/user/albums", locale));
+      router.push("/user/albums");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create album");
     } finally {
@@ -35,7 +32,7 @@ export default function CreateUserAlbumPage() {
   };
 
   const handleCancel = () => {
-    router.push(createLocalePath("/user/albums", locale));
+    router.push("/user/albums");
   };
 
   return (

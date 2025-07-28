@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 import { Button } from "@/components/ui/Button";
 import { useUserContext } from "@/contexts/UserContext";
 import LocaleLink from "@/components/ui/LocaleLink";
 
 export function AuthSuccessClient() {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const searchParams = useSearchParams();
   const { checkAuth, user } = useUserContext();
   const [isAnimated, setIsAnimated] = useState(false);

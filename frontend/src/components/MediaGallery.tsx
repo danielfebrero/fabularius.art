@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 import { Media } from "../types/index";
 import { ContentCard } from "./ui/ContentCard";
 import { Lightbox } from "./ui/Lightbox";
@@ -26,7 +26,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   initialPagination,
   className,
 }) => {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const [media, setMedia] = useState<Media[]>(initialMedia);
   const [pagination, setPagination] = useState(initialPagination);
   const [loading, setLoading] = useState(false);

@@ -7,7 +7,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { userApi } from "@/lib/api";
-import { useRouter } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 
 const verificationSchema = z.object({
   code: z.string().min(1, "Verification code is required"),
@@ -23,7 +23,7 @@ export function EmailVerificationForm({ email }: EmailVerificationFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
-  const router = useRouter();
+  const router = useLocaleRouter();
 
   const {
     register,

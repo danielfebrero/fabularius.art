@@ -1,7 +1,8 @@
 "use client";
 
 import { Suspense, useEffect, useState, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 import { Button } from "@/components/ui/Button";
 import { userApi } from "@/lib/api";
 import { useUser } from "@/hooks/useUser";
@@ -16,7 +17,7 @@ function OAuthCallbackContent() {
   const { checkAuth } = useUser();
   const { validateOAuthState, clearOAuthState } = useGoogleAuth();
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const router = useLocaleRouter();
   const isProcessingRef = useRef(false);
   const hasProcessedRef = useRef(false);
 

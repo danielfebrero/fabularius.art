@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 import { AlbumForm } from "@/components/admin/AlbumForm";
 import { useAdminAlbums } from "@/hooks/useAdminAlbums";
 
 export default function CreateAlbumPage() {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const { createAlbum } = useAdminAlbums();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

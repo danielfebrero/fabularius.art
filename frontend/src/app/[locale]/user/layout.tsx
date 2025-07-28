@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/hooks/useUser";
@@ -11,6 +12,7 @@ import {
   LayoutDashboard,
   Image,
   FolderOpen,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -29,7 +31,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({
   params: { locale },
 }) => {
   const { user, loading } = useUser();
-  const router = useRouter();
+  const router = useLocaleRouter();
   const pathname = usePathname();
   const t = useTranslations("navigation");
 
@@ -83,6 +85,11 @@ const UserLayout: React.FC<UserLayoutProps> = ({
       href: `/${locale}/user/dashboard`,
       label: t("dashboard"),
       icon: LayoutDashboard,
+    },
+    {
+      href: `/${locale}/user/profile`,
+      label: t("profile"),
+      icon: User,
     },
     {
       href: `/${locale}/user/likes`,

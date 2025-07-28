@@ -1,4 +1,5 @@
 import { locales, defaultLocale } from "@/i18n";
+import { useParams, useRouter } from "next/navigation";
 
 /**
  * Creates a locale-aware path
@@ -72,4 +73,67 @@ export function createLocaleNavigation(
     ...item,
     href: createLocalePath(paths[index], locale),
   }));
+}
+
+/**
+ * Hook that provides a locale-aware router.push function
+ * Works the same way as LocaleLink by automatically prefixing routes with locale
+ */
+export function useLocaleRouter() {
+  const router = useRouter();
+  const params = useParams();
+  const locale = params.locale as string;
+
+  /**
+   * Locale-aware push function that automatically prefixes paths with current locale
+   * @param href - The path to navigate to
+   * @param options - Optional router push options
+   */
+  const push = (href: string, options?: Parameters<typeof router.push>[1]) => {
+    // Check if this is an external link or already has locale
+    const isExternal =
+      href.startsWith("http") ||
+      href.startsWith("mailto:") ||
+      href.startsWith("tel:");
+    const hasLocale = href.startsWith(`/${locale}/`);
+
+    // If external or already has locale, use href as-is
+    // If it's an API route, use as-is (API routes should remain unlocalized)
+    const finalHref =
+      isExternal || hasLocale ? href : createLocalePath(href, locale);
+
+    return router.push(finalHref, options);
+  };
+
+  /**
+   * Locale-aware replace function that automatically prefixes paths with current locale
+   * @param href - The path to navigate to
+   * @param options - Optional router replace options
+   */
+  const replace = (
+    href: string,
+    options?: Parameters<typeof router.replace>[1]
+  ) => {
+    // Check if this is an external link or already has locale
+    const isExternal =
+      href.startsWith("http") ||
+      href.startsWith("mailto:") ||
+      href.startsWith("tel:");
+    const hasLocale = href.startsWith(`/${locale}/`);
+
+    // If external or already has locale, use href as-is
+    // If it's an API route, use as-is (API routes should remain unlocalized)
+    const finalHref =
+      isExternal || hasLocale || href.startsWith("/api/")
+        ? href
+        : createLocalePath(href, locale);
+
+    return router.replace(finalHref, options);
+  };
+
+  return {
+    ...router,
+    push,
+    replace,
+  };
 }

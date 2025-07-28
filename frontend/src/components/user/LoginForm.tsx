@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -31,7 +31,7 @@ export function LoginForm() {
   const { login, loading, error, clearError, emailVerificationRequired } =
     useUser();
   const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter();
+  const router = useLocaleRouter();
 
   const t = useTranslations("common");
   const tAuth = useTranslations("auth");

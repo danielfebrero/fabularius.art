@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 import { MediaManager } from "@/components/admin/MediaManager";
 import { useAdminAlbums } from "@/hooks/useAdminAlbums";
 import { useAdminMedia } from "@/hooks/useAdminMedia";
@@ -16,7 +16,7 @@ interface MediaManagementPageProps {
 export default function MediaManagementPage({
   params,
 }: MediaManagementPageProps) {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const { getAlbum, updateAlbum } = useAdminAlbums();
   const { media, fetchAlbumMedia } = useAdminMedia();
   const [album, setAlbum] = useState<Album | null>(null);

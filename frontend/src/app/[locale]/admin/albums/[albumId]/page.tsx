@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 import { AlbumForm } from "@/components/admin/AlbumForm";
 import { useAdminAlbums } from "@/hooks/useAdminAlbums";
 import { Album } from "@/types";
@@ -13,7 +13,7 @@ interface EditAlbumPageProps {
 }
 
 export default function EditAlbumPage({ params }: EditAlbumPageProps) {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const { updateAlbum, getAlbum } = useAdminAlbums();
   const [album, setAlbum] = useState<Album | null>(null);
   const [loading, setLoading] = useState(false);

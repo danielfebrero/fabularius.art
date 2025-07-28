@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 import { useAdminContext } from "../../contexts/AdminContext";
 
 interface ProtectedRouteProps {
@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAdminContext();
-  const router = useRouter();
+  const router = useLocaleRouter();
 
   useEffect(() => {
     if (!loading && !user) {

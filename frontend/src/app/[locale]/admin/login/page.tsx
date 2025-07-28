@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 import { useAdminContext } from "@/contexts/AdminContext";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 export default function AdminLoginPage() {
   const { user, loading, isAdmin, isModerator } = useAdminContext();
-  const router = useRouter();
+  const router = useLocaleRouter();
 
   // Redirect logic
   useEffect(() => {

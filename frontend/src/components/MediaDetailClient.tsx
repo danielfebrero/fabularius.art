@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, FC, ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 import {
   Share2,
   ArrowLeft,
@@ -195,7 +195,7 @@ const AlbumCard: FC<{ album: Album; router: any }> = ({ album, router }) => (
 // --- MAIN COMPONENT ---
 
 export function MediaDetailClient({ media }: MediaDetailClientProps) {
-  const router = useRouter();
+  const router = useLocaleRouter();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const metadata = useMediaMetadata(media);
 

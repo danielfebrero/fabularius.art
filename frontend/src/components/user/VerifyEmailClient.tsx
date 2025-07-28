@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 import { Button } from "@/components/ui/Button";
 import { useUser } from "@/hooks/useUser";
 
@@ -12,7 +13,7 @@ export function VerifyEmailClient() {
   const [message, setMessage] = useState("");
   const { verifyEmail, user, checkAuth } = useUser();
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const router = useLocaleRouter();
 
   useEffect(() => {
     const token = searchParams.get("token");

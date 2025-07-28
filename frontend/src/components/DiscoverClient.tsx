@@ -3,7 +3,8 @@
 import { AlbumGrid } from "./AlbumGrid";
 import { useAlbums } from "@/hooks/useAlbums";
 import { Album } from "@/types";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { useLocaleRouter } from "@/lib/navigation";
 import { useEffect, useRef } from "react";
 
 interface DiscoverClientProps {
@@ -23,7 +24,7 @@ export function DiscoverClient({
   initialTag,
 }: DiscoverClientProps) {
   const searchParams = useSearchParams();
-  const router = useRouter();
+  const router = useLocaleRouter();
   const tag = searchParams.get("tag") || initialTag || undefined;
   const prevTag = useRef<string | undefined>(tag);
 
