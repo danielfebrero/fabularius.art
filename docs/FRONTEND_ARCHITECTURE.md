@@ -209,34 +209,43 @@ All profile pages follow established patterns for:
 - **LoRA Models**: Specialized model enhancement system
 - **Permission-Based UI**: Features gated by user subscription level
 
-#### LoRA Strength Controls
+#### LoRA System Architecture
 
-The LoRA (Low-Rank Adaptation) system includes sophisticated strength management:
+The LoRA (Low-Rank Adaptation) system includes a global selection mode with sophisticated strength management:
 
 ```typescript
 interface GenerationSettings {
   // ... other settings
   selectedLoras: string[];
   loraStrengths: Record<string, { mode: "auto" | "manual"; value: number }>;
+  loraSelectionMode: "auto" | "manual"; // Global toggle
 }
 ```
 
-**Strength Options**:
+**Global Selection Modes**:
+
+- **Automatic Mode**: AI automatically selects and configures LoRA models based on prompt
+- **Manual Mode**: User manually selects and configures individual LoRA models (Pro only)
+
+**Individual LoRA Strength Options** (Manual Mode Only):
 
 - **Auto Mode**: Automatic strength based on model recommendations
 - **Manual Mode**: Slider control (0.0 to 1.5 range, default: 1.0, step: 0.05)
 
-**Permission Handling**:
+**Permission Handling & Teaser Strategy**:
 
-- LoRA controls are visible for all users but disabled for non-Pro users
-- Visual indicators (lock icons, opacity) show permission restrictions
-- Interactive elements disabled via `pointer-events-none` and `disabled` attributes
-- Summary section shows selected LoRAs with "(Pro feature)" indicator
+- **Global Toggle**: Available to all users, manual mode requires Pro subscription
+- **LoRA Preview**: Non-Pro users see all available LoRA models as teaser content
+- **Visual Indicators**: Lock icons, Pro badges, and opacity effects indicate restrictions
+- **Upgrade Prompts**: Clear call-to-action buttons encourage plan conversion
+- **Functional Degradation**: Automatic mode remains fully functional for all tiers
 
 **UI Patterns**:
 
-- Expandable cards showing LoRA details and strength controls
-- Toggle buttons for Auto/Manual mode selection
+- Global toggle with descriptive text explaining current mode
+- Conditional rendering: manual interface vs. teaser content
+- Expandable cards showing LoRA details and strength controls (Pro users)
+- Disabled preview cards with upgrade prompts (Free/Starter users)
 - Real-time value display with 2-decimal precision
 - Responsive slider component with proper accessibility
 
@@ -254,6 +263,20 @@ const {
 ```
 
 Features are gracefully degraded when permissions are insufficient, maintaining UI consistency while clearly indicating upgrade requirements.
+
+**LoRA Model Access Strategy**:
+
+- **All Users**: Can see available LoRA models in automatic mode as a teaser
+- **Free/Starter Users**: Limited to automatic LoRA selection with visual upgrade prompts
+- **Pro Users**: Full manual control over LoRA model selection and strength configuration
+- **Global Toggle**: Available to all users, with manual mode restricted to Pro subscribers
+
+**Teaser Implementation**:
+
+- Non-Pro users see all available LoRA models in a disabled state
+- Clear visual indicators (lock icons, Pro badges) show upgrade requirements
+- Upgrade call-to-action buttons encourage plan conversion
+- Automatic mode remains fully functional for all user tiers
 
 ## Routing
 

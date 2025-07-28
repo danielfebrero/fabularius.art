@@ -25,6 +25,7 @@ import {
   MinusCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLocaleRouter } from "@/lib/navigation";
 
 interface GenerationSettings {
   prompt: string;
@@ -35,6 +36,7 @@ interface GenerationSettings {
   batchCount: number;
   selectedLoras: string[];
   loraStrengths: Record<string, { mode: "auto" | "manual"; value: number }>;
+  loraSelectionMode: "auto" | "manual";
 }
 
 const IMAGE_SIZES = [
@@ -89,6 +91,7 @@ export function GenerateClient() {
     batchCount: 1,
     selectedLoras: [],
     loraStrengths: {},
+    loraSelectionMode: "auto",
   });
 
   const [isGenerating, setIsGenerating] = useState(false);
@@ -106,6 +109,8 @@ export function GenerateClient() {
     canUseNegativePrompt,
   } = useUserPermissions();
 
+  const router = useLocaleRouter();
+
   const { allowed, remaining } = checkGenerationLimits(settings.batchCount);
   const plan = getCurrentPlan();
 
@@ -119,6 +124,11 @@ export function GenerateClient() {
   };
 
   const toggleLora = (loraId: string) => {
+    // Only allow toggling in manual mode
+    if (settings.loraSelectionMode === "auto") {
+      return;
+    }
+
     setSettings((prev) => {
       const isCurrentlySelected = prev.selectedLoras.includes(loraId);
 
@@ -164,6 +174,14 @@ export function GenerateClient() {
         },
       },
     }));
+  };
+
+  const updateLoraSelectionMode = (mode: "auto" | "manual") => {
+    if (mode === "manual" && !canUseLoras) {
+      // Non-Pro users cannot use manual mode
+      return;
+    }
+    setSettings((prev) => ({ ...prev, loraSelectionMode: mode }));
   };
 
   // Convert image URLs to Media objects for the Lightbox component
@@ -669,21 +687,9 @@ export function GenerateClient() {
             </div>
 
             {/* LoRA Models */}
-            <div
-              className={cn(
-                "bg-card border border-border rounded-2xl shadow-lg p-6 transition-all",
-                !canUseLoras && "opacity-50"
-              )}
-            >
+            <div className="bg-card border border-border rounded-2xl shadow-lg p-6 transition-all opacity-50">
               <div className="flex items-center gap-3 mb-4">
-                <div
-                  className={cn(
-                    "w-10 h-10 rounded-xl flex items-center justify-center",
-                    canUseLoras
-                      ? "bg-primary/10 text-primary"
-                      : "bg-muted text-muted-foreground"
-                  )}
-                >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10 text-primary">
                   <Crown className="h-5 w-5" />
                 </div>
                 <div className="flex-1">
@@ -700,198 +706,328 @@ export function GenerateClient() {
                 )}
               </div>
 
-              <div className="grid gap-3">
-                {LORA_MODELS.map((lora) => {
-                  const isSelected = settings.selectedLoras.includes(lora.id);
-                  const strengthSettings = settings.loraStrengths[lora.id];
+              {/* Global LoRA Selection Mode Toggle */}
+              <div className="mb-6 p-4 bg-muted/30 border border-border/50 rounded-xl">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground">
+                      LoRA Selection
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      {settings.loraSelectionMode === "auto"
+                        ? "We will automatically choose the best LoRA models and settings for your image"
+                        : "Manually select and configure LoRA models"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => updateLoraSelectionMode("auto")}
+                    className={cn(
+                      "px-3 py-2 text-sm rounded-lg transition-colors font-medium",
+                      settings.loraSelectionMode === "auto"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-muted-foreground hover:bg-background/80 border border-border"
+                    )}
+                  >
+                    Automatic
+                  </button>
+                  <button
+                    onClick={() => updateLoraSelectionMode("manual")}
+                    disabled={!canUseLoras}
+                    className={cn(
+                      "px-3 py-2 text-sm rounded-lg transition-colors font-medium",
+                      settings.loraSelectionMode === "manual"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-muted-foreground hover:bg-background/80 border border-border",
+                      !canUseLoras &&
+                        "opacity-50 cursor-not-allowed hover:bg-background"
+                    )}
+                  >
+                    Manual
+                    {!canUseLoras && <Crown className="h-3 w-3 ml-1 inline" />}
+                  </button>
+                </div>
+              </div>
 
-                  return (
-                    <div
-                      key={lora.id}
-                      className={cn(
-                        "border-2 rounded-xl transition-all",
-                        isSelected && canUseLoras
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-border/80",
-                        !canUseLoras && "opacity-50"
-                      )}
-                    >
-                      {/* LoRA Header - Clickable to toggle selection */}
+              {settings.loraSelectionMode === "manual" ? (
+                <div className="grid gap-3">
+                  {LORA_MODELS.map((lora) => {
+                    const isSelected = settings.selectedLoras.includes(lora.id);
+                    const strengthSettings = settings.loraStrengths[lora.id];
+
+                    return (
                       <div
-                        className="p-4 cursor-pointer transition-all"
-                        onClick={() => toggleLora(lora.id)}
+                        key={lora.id}
+                        className={cn(
+                          "border-2 rounded-xl transition-all",
+                          isSelected && canUseLoras
+                            ? "border-primary bg-primary/5"
+                            : "border-border hover:border-border/80",
+                          !canUseLoras && "opacity-50"
+                        )}
                       >
-                        <div className="flex items-center justify-between">
-                          <div className="flex-1">
-                            <div className="font-medium text-sm text-foreground">
-                              {lora.name}
-                            </div>
-                            <div className="text-xs text-muted-foreground">
-                              {lora.description}
-                            </div>
-                          </div>
-                          <div className="ml-3 relative">
-                            {isSelected ? (
-                              <div
-                                className={cn(
-                                  "w-5 h-5 bg-primary rounded-full flex items-center justify-center",
-                                  !canUseLoras && "opacity-50"
-                                )}
-                              >
-                                <div className="w-2 h-2 bg-white rounded-full"></div>
+                        {/* LoRA Header - Clickable to toggle selection */}
+                        <div
+                          className="p-4 cursor-pointer transition-all"
+                          onClick={() => toggleLora(lora.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="font-medium text-sm text-foreground">
+                                {lora.name}
                               </div>
-                            ) : (
-                              <div
-                                className={cn(
-                                  "w-5 h-5 border-2 border-border rounded-full",
-                                  !canUseLoras && "opacity-50"
-                                )}
-                              ></div>
-                            )}
-                            {!canUseLoras && (
-                              <div className="absolute -top-1 -right-1 bg-card rounded-full p-0.5">
-                                <Lock className="h-3 w-3 text-muted-foreground" />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Strength Controls - Show when selected, disable when no permissions */}
-                      {isSelected && strengthSettings && (
-                        <div className="px-4 pb-4 border-t border-border/30">
-                          <div className="pt-3 space-y-3">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-medium text-foreground">
-                                Strength
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (canUseLoras) {
-                                      updateLoraStrength(lora.id, "auto");
-                                    }
-                                  }}
-                                  disabled={!canUseLoras}
-                                  className={cn(
-                                    "px-2 py-1 text-xs rounded-md transition-colors",
-                                    strengthSettings.mode === "auto"
-                                      ? "bg-primary text-primary-foreground"
-                                      : "bg-muted text-muted-foreground hover:bg-muted/80",
-                                    !canUseLoras &&
-                                      "opacity-50 cursor-not-allowed hover:bg-muted"
-                                  )}
-                                >
-                                  Auto
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (canUseLoras) {
-                                      updateLoraStrength(lora.id, "manual");
-                                    }
-                                  }}
-                                  disabled={!canUseLoras}
-                                  className={cn(
-                                    "px-2 py-1 text-xs rounded-md transition-colors",
-                                    strengthSettings.mode === "manual"
-                                      ? "bg-primary text-primary-foreground"
-                                      : "bg-muted text-muted-foreground hover:bg-muted/80",
-                                    !canUseLoras &&
-                                      "opacity-50 cursor-not-allowed hover:bg-muted"
-                                  )}
-                                >
-                                  Manual
-                                </button>
+                              <div className="text-xs text-muted-foreground">
+                                {lora.description}
                               </div>
                             </div>
-
-                            {strengthSettings.mode === "manual" && (
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs text-muted-foreground">
-                                    Value: {strengthSettings.value.toFixed(2)}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">
-                                    0.0 - 1.5
-                                  </span>
-                                </div>
+                            <div className="ml-3 relative">
+                              {isSelected ? (
                                 <div
                                   className={cn(
-                                    !canUseLoras &&
-                                      "opacity-50 pointer-events-none"
+                                    "w-5 h-5 bg-primary rounded-full flex items-center justify-center",
+                                    !canUseLoras && "opacity-50"
                                   )}
                                 >
-                                  <Slider
-                                    value={[strengthSettings.value]}
-                                    onValueChange={(values) => {
+                                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                                </div>
+                              ) : (
+                                <div
+                                  className={cn(
+                                    "w-5 h-5 border-2 border-border rounded-full",
+                                    !canUseLoras && "opacity-50"
+                                  )}
+                                ></div>
+                              )}
+                              {!canUseLoras && (
+                                <div className="absolute -top-1 -right-1 bg-card rounded-full p-0.5">
+                                  <Lock className="h-3 w-3 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Strength Controls - Show when selected, disable when no permissions */}
+                        {isSelected && strengthSettings && (
+                          <div className="px-4 pb-4 border-t border-border/30">
+                            <div className="pt-3 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-medium text-foreground">
+                                  Strength
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
                                       if (canUseLoras) {
-                                        updateLoraStrength(
-                                          lora.id,
-                                          "manual",
-                                          values[0]
-                                        );
+                                        updateLoraStrength(lora.id, "auto");
                                       }
                                     }}
-                                    min={0}
-                                    max={1.5}
-                                    step={0.05}
-                                    className="w-full"
-                                  />
+                                    disabled={!canUseLoras}
+                                    className={cn(
+                                      "px-2 py-1 text-xs rounded-md transition-colors",
+                                      strengthSettings.mode === "auto"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-muted text-muted-foreground hover:bg-muted/80",
+                                      !canUseLoras &&
+                                        "opacity-50 cursor-not-allowed hover:bg-muted"
+                                    )}
+                                  >
+                                    Auto
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (canUseLoras) {
+                                        updateLoraStrength(lora.id, "manual");
+                                      }
+                                    }}
+                                    disabled={!canUseLoras}
+                                    className={cn(
+                                      "px-2 py-1 text-xs rounded-md transition-colors",
+                                      strengthSettings.mode === "manual"
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-muted text-muted-foreground hover:bg-muted/80",
+                                      !canUseLoras &&
+                                        "opacity-50 cursor-not-allowed hover:bg-muted"
+                                    )}
+                                  >
+                                    Manual
+                                  </button>
                                 </div>
                               </div>
-                            )}
 
-                            {strengthSettings.mode === "auto" && (
-                              <div className="text-xs text-muted-foreground text-center py-1">
-                                Strength will be set automatically based on the
-                                prompt
-                              </div>
-                            )}
+                              {strengthSettings.mode === "manual" && (
+                                <div className="space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-xs text-muted-foreground">
+                                      Value: {strengthSettings.value.toFixed(2)}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      0.0 - 1.5
+                                    </span>
+                                  </div>
+                                  <div
+                                    className={cn(
+                                      !canUseLoras &&
+                                        "opacity-50 pointer-events-none"
+                                    )}
+                                  >
+                                    <Slider
+                                      value={[strengthSettings.value]}
+                                      onValueChange={(values) => {
+                                        if (canUseLoras) {
+                                          updateLoraStrength(
+                                            lora.id,
+                                            "manual",
+                                            values[0]
+                                          );
+                                        }
+                                      }}
+                                      min={0}
+                                      max={1.5}
+                                      step={0.05}
+                                      className="w-full"
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {strengthSettings.mode === "auto" && (
+                                <div className="text-xs text-muted-foreground text-center py-1">
+                                  Strength will be set automatically based on
+                                  the prompt
+                                </div>
+                              )}
+                            </div>
                           </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="p-4 text-center bg-primary/5 border border-primary/20 rounded-xl">
+                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Crown className="h-6 w-6 text-primary" />
+                    </div>
+                    <h4 className="font-medium text-foreground mb-2">
+                      Automatic LoRA Selection
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      We will automatically choose the best LoRA models and
+                      settings based on your prompt to create the perfect image.
+                    </p>
+                  </div>
+
+                  {/* Available LoRA Models Preview */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h5 className="text-sm font-medium text-foreground">
+                        Available LoRA Models
+                      </h5>
+                      {!canUseLoras && (
+                        <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-full">
+                          <Crown className="h-3 w-3" />
+                          <span className="text-xs font-medium">Pro</span>
                         </div>
                       )}
                     </div>
-                  );
-                })}
-              </div>
-
-              {settings.selectedLoras.length > 0 && (
-                <div
-                  className={cn(
-                    "mt-4 p-3 bg-primary/5 border border-primary/20 rounded-xl space-y-2",
-                    !canUseLoras && "opacity-50"
-                  )}
-                >
-                  <p className="text-xs text-primary font-medium text-center">
-                    {settings.selectedLoras.length} LoRA
-                    {settings.selectedLoras.length !== 1 ? "s" : ""} selected
-                    {!canUseLoras && " (Pro feature)"}
-                  </p>
-                  <div className="grid gap-1">
-                    {settings.selectedLoras.map((loraId) => {
-                      const lora = LORA_MODELS.find((l) => l.id === loraId);
-                      const strength = settings.loraStrengths[loraId];
-                      if (!lora || !strength) return null;
-
-                      return (
+                    <div className="grid gap-2">
+                      {LORA_MODELS.map((lora) => (
                         <div
-                          key={loraId}
-                          className="flex items-center justify-between text-xs"
+                          key={lora.id}
+                          className={cn(
+                            "p-3 border border-border rounded-lg transition-all",
+                            !canUseLoras
+                              ? "opacity-50 bg-muted/30 cursor-not-allowed"
+                              : "hover:border-primary/50 hover:bg-primary/5"
+                          )}
                         >
-                          <span className="text-primary/80">{lora.name}</span>
-                          <span className="text-primary/60">
-                            {strength.mode === "auto"
-                              ? "Auto"
-                              : `${strength.value.toFixed(2)}`}
-                          </span>
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <div className="font-medium text-sm text-foreground">
+                                  {lora.name}
+                                </div>
+                                {!canUseLoras && (
+                                  <Lock className="h-3 w-3 text-muted-foreground" />
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {lora.description}
+                              </div>
+                            </div>
+                            <div className="ml-3">
+                              <div
+                                className={cn(
+                                  "w-4 h-4 border-2 border-border rounded-full",
+                                  !canUseLoras && "opacity-50"
+                                )}
+                              ></div>
+                            </div>
+                          </div>
                         </div>
-                      );
-                    })}
+                      ))}
+                    </div>
+                    {!canUseLoras && (
+                      <div className="text-center pt-3">
+                        <p className="text-xs text-muted-foreground mb-3">
+                          Upgrade to Pro to manually select and configure LoRA
+                          models strengths
+                        </p>
+                        <Button
+                          onClick={() => router.push("/pricing")}
+                          size="sm"
+                          className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
+                        >
+                          <Crown className="h-3 w-3 mr-1" />
+                          Upgrade to Pro
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
+
+              {settings.loraSelectionMode === "manual" &&
+                settings.selectedLoras.length > 0 && (
+                  <div
+                    className={cn(
+                      "mt-4 p-3 bg-primary/5 border border-primary/20 rounded-xl space-y-2",
+                      !canUseLoras && "opacity-50"
+                    )}
+                  >
+                    <p className="text-xs text-primary font-medium text-center">
+                      {settings.selectedLoras.length} LoRA
+                      {settings.selectedLoras.length !== 1 ? "s" : ""} selected
+                      {!canUseLoras && " (Pro feature)"}
+                    </p>
+                    <div className="grid gap-1">
+                      {settings.selectedLoras.map((loraId) => {
+                        const lora = LORA_MODELS.find((l) => l.id === loraId);
+                        const strength = settings.loraStrengths[loraId];
+                        if (!lora || !strength) return null;
+
+                        return (
+                          <div
+                            key={loraId}
+                            className="flex items-center justify-between text-xs"
+                          >
+                            <span className="text-primary/80">{lora.name}</span>
+                            <span className="text-primary/60">
+                              {strength.mode === "auto"
+                                ? "Auto"
+                                : `${strength.value.toFixed(2)}`}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
             </div>
 
             {/* Negative Prompt */}
