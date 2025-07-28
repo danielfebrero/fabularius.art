@@ -6,6 +6,7 @@ import { BookmarkButton } from "@/components/user/BookmarkButton";
 import { AddToAlbumDialog } from "@/components/user/AddToAlbumDialog";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { Tooltip } from "@/components/ui/Tooltip";
+import { Tag } from "@/components/ui/Tag";
 import { cn } from "@/lib/utils";
 import { composeMediaUrl } from "@/lib/urlUtils";
 import {
@@ -17,7 +18,6 @@ import {
   MoreVertical,
   Folder,
 } from "lucide-react";
-import { Tag } from "@/components/ui/Tag";
 import ResponsivePicture from "./ResponsivePicture";
 import { composeThumbnailUrls } from "@/lib/urlUtils";
 
@@ -577,7 +577,7 @@ export function ContentCard({
 
               {/* Tags */}
               {showTags && album.tags && album.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2 -ml-2">
+                <div className="flex flex-wrap gap-1 mt-2">
                   {album.tags.slice(0, 3).map((tag, index) => (
                     <button
                       key={index}
@@ -587,10 +587,15 @@ export function ContentCard({
                         const url = `/?tag=${encodeURIComponent(tag)}`;
                         router.push(url);
                       }}
-                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white/20 text-white border border-white/30 backdrop-blur-sm hover:bg-white/30 hover:border-white/50 transition-all duration-200 cursor-pointer"
+                      className="transition-all duration-200 hover:scale-105"
                       title={`Filter by tag: ${tag}`}
                     >
-                      {tag}
+                      <Tag
+                        size="sm"
+                        className="bg-white/20 text-white border-white/30 backdrop-blur-sm hover:bg-white/30 hover:border-white/50 transition-all duration-200"
+                      >
+                        {tag}
+                      </Tag>
                     </button>
                   ))}
                   {album.tags.length > 3 && (

@@ -2,6 +2,7 @@
 
 import { Album } from "@/types";
 import { Button } from "@/components/ui/Button";
+import { Tag } from "@/components/ui/Tag";
 import { formatDate } from "@/lib/utils";
 import {
   composeMediaUrl,
@@ -141,12 +142,9 @@ export function AlbumTable({
                       {album.tags && album.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1 mt-2 max-w-xs">
                           {album.tags.slice(0, 2).map((tag, index) => (
-                            <span
-                              key={index}
-                              className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-admin-primary/10 to-admin-secondary/10 text-admin-primary border border-admin-primary/20"
-                            >
+                            <Tag key={index} size="sm">
                               {tag}
-                            </span>
+                            </Tag>
                           ))}
                           {album.tags.length > 2 && (
                             <span className="text-xs text-muted-foreground font-medium">

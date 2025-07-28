@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/Input";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { UserPlanBadge } from "@/components/UserPlanBadge";
 import LocaleLink from "@/components/ui/LocaleLink";
+import { ContentCard } from "@/components/ui/ContentCard";
+import { Media, Album } from "@/types";
 import {
   User,
   Mail,
@@ -120,62 +122,235 @@ export default function ProfileComponent({
     recentLikes: [
       {
         id: "media1",
-        type: "media",
+        filename: "beautiful-sunset.jpg",
+        originalName: "Beautiful Sunset",
+        mimeType: "image/jpeg",
+        size: 2048000,
+        width: 1920,
+        height: 1080,
+        url: "/media/media1/beautiful-sunset.jpg",
+        thumbnailUrls: {
+          cover:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
+          small:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
+          medium:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
+          large:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
+          xlarge:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
+        },
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+        updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        likeCount: 42,
+        viewCount: 156,
         title: "Beautiful Sunset",
-        timestamp: "2 hours ago",
-      },
+      } as Media,
       {
         id: "album2",
-        type: "album",
         title: "Nature Collection",
-        timestamp: "4 hours ago",
-      },
+        isPublic: true,
+        mediaCount: 12,
+        coverImageUrl: "/albums/album2/cover/nature-collection-cover.jpg",
+        thumbnailUrls: {
+          cover:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
+          small:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
+          medium:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
+          large:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
+          xlarge:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
+        },
+        createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
+        updatedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+        likeCount: 89,
+        viewCount: 234,
+      } as Album,
       {
         id: "media3",
-        type: "media",
+        filename: "city-lights.jpg",
+        originalName: "City Lights",
+        mimeType: "image/jpeg",
+        size: 1856000,
+        width: 1600,
+        height: 900,
+        url: "/media/media3/city-lights.jpg",
+        thumbnailUrls: {
+          cover:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
+          small:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
+          medium:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
+          large:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
+          xlarge:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
+        },
+        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+        updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        likeCount: 78,
+        viewCount: 198,
         title: "City Lights",
-        timestamp: "1 day ago",
-      },
+      } as Media,
     ],
     recentUploads: [
       {
         id: "media4",
-        type: "media",
+        filename: "my-latest-shot.jpg",
+        originalName: "My Latest Shot",
+        mimeType: "image/jpeg",
+        size: 3024000,
+        width: 2560,
+        height: 1440,
+        url: "/media/media4/my-latest-shot.jpg",
+        thumbnailUrls: {
+          cover:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
+          small:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
+          medium:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
+          large:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
+          xlarge:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
+        },
+        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+        updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        likeCount: 23,
+        viewCount: 87,
         title: "My Latest Shot",
-        timestamp: "1 day ago",
-      },
+      } as Media,
       {
         id: "album5",
-        type: "album",
         title: "Portfolio Update",
-        timestamp: "2 days ago",
-      },
+        isPublic: true,
+        mediaCount: 8,
+        coverImageUrl: "/albums/album5/cover/portfolio-update-cover.jpg",
+        thumbnailUrls: {
+          cover:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
+          small:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
+          medium:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
+          large:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
+          xlarge:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
+        },
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+        updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+        likeCount: 45,
+        viewCount: 123,
+      } as Album,
       {
         id: "media6",
-        type: "media",
+        filename: "street-photography.jpg",
+        originalName: "Street Photography",
+        mimeType: "image/jpeg",
+        size: 2256000,
+        width: 1800,
+        height: 1200,
+        url: "/media/media6/street-photography.jpg",
+        thumbnailUrls: {
+          cover:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
+          small:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
+          medium:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
+          large:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
+          xlarge:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
+        },
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+        updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        likeCount: 67,
+        viewCount: 145,
         title: "Street Photography",
-        timestamp: "3 days ago",
-      },
+      } as Media,
     ],
     recentAlbums: [
       {
         id: "album7",
         title: "Urban Exploration",
-        timestamp: "3 days ago",
-        itemCount: 12,
-      },
+        isPublic: true,
+        mediaCount: 12,
+        coverImageUrl: "/albums/album7/cover/urban-exploration-cover.jpg",
+        thumbnailUrls: {
+          cover:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
+          small:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
+          medium:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
+          large:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
+          xlarge:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
+        },
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+        updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        likeCount: 92,
+        viewCount: 287,
+      } as Album,
       {
         id: "album8",
         title: "Portrait Series",
-        timestamp: "1 week ago",
-        itemCount: 8,
-      },
+        isPublic: true,
+        mediaCount: 8,
+        coverImageUrl: "/albums/album8/cover/portrait-series-cover.jpg",
+        thumbnailUrls: {
+          cover:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
+          small:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
+          medium:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
+          large:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
+          xlarge:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
+        },
+        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week ago
+        updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        likeCount: 156,
+        viewCount: 456,
+      } as Album,
       {
         id: "album9",
         title: "Travel Memories",
-        timestamp: "2 weeks ago",
-        itemCount: 24,
-      },
+        isPublic: true,
+        mediaCount: 24,
+        coverImageUrl: "/albums/album9/cover/travel-memories-cover.jpg",
+        thumbnailUrls: {
+          cover:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
+          small:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
+          medium:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
+          large:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
+          xlarge:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
+        },
+        createdAt: new Date(
+          Date.now() - 14 * 24 * 60 * 60 * 1000
+        ).toISOString(), // 2 weeks ago
+        updatedAt: new Date(
+          Date.now() - 14 * 24 * 60 * 60 * 1000
+        ).toISOString(),
+        likeCount: 203,
+        viewCount: 789,
+      } as Album,
     ],
     recentComments: [
       {
@@ -429,43 +604,27 @@ export default function ProfileComponent({
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {mockData.recentLikes.map((item) => (
-                    <LocaleLink
+                    <ContentCard
                       key={item.id}
-                      href={
-                        item.type === "album"
-                          ? `/albums/${item.id}`
-                          : `/media/${item.id}`
-                      }
-                      className="block"
-                    >
-                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                        <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                          {item.type === "album" ? (
-                            <FolderOpen className="w-6 h-6 text-muted-foreground" />
-                          ) : (
-                            <ImageIcon className="w-6 h-6 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {item.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Liked {item.timestamp}
-                          </p>
-                        </div>
-                      </div>
-                    </LocaleLink>
+                      item={item}
+                      type={"filename" in item ? "media" : "album"}
+                      canLike={false}
+                      canBookmark={false}
+                      canFullscreen={false}
+                      canAddToAlbum={false}
+                      showCounts={false}
+                      showTags={false}
+                    />
                   ))}
-                  <div className="text-center pt-2">
-                    <LocaleLink href={`/user/likes`}>
-                      <Button variant="outline" size="sm" className="text-xs">
-                        View All Liked Content
-                      </Button>
-                    </LocaleLink>
-                  </div>
+                </div>
+                <div className="text-center pt-4">
+                  <LocaleLink href={`/profile/${displayName}/likes`}>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      View All Liked Content
+                    </Button>
+                  </LocaleLink>
                 </div>
               </CardContent>
             </Card>
@@ -481,43 +640,27 @@ export default function ProfileComponent({
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {mockData.recentUploads.map((item) => (
-                    <LocaleLink
+                    <ContentCard
                       key={item.id}
-                      href={
-                        item.type === "album"
-                          ? `/albums/${item.id}`
-                          : `/media/${item.id}`
-                      }
-                      className="block"
-                    >
-                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                        <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                          {item.type === "album" ? (
-                            <FolderOpen className="w-6 h-6 text-muted-foreground" />
-                          ) : (
-                            <ImageIcon className="w-6 h-6 text-muted-foreground" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {item.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Uploaded {item.timestamp}
-                          </p>
-                        </div>
-                      </div>
-                    </LocaleLink>
+                      item={item}
+                      type={"filename" in item ? "media" : "album"}
+                      canLike={false}
+                      canBookmark={false}
+                      canFullscreen={false}
+                      canAddToAlbum={false}
+                      showCounts={false}
+                      showTags={false}
+                    />
                   ))}
-                  <div className="text-center pt-2">
-                    <LocaleLink href={`/user/images`}>
-                      <Button variant="outline" size="sm" className="text-xs">
-                        View All Uploads
-                      </Button>
-                    </LocaleLink>
-                  </div>
+                </div>
+                <div className="text-center pt-4">
+                  <LocaleLink href={`/profile/${displayName}/uploads`}>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      View All Uploads
+                    </Button>
+                  </LocaleLink>
                 </div>
               </CardContent>
             </Card>
@@ -533,35 +676,27 @@ export default function ProfileComponent({
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {mockData.recentAlbums.map((album) => (
-                    <LocaleLink
+                    <ContentCard
                       key={album.id}
-                      href={`/albums/${album.id}`}
-                      className="block"
-                    >
-                      <div className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                        <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                          <FolderOpen className="w-6 h-6 text-muted-foreground" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {album.title}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Created {album.timestamp} • {album.itemCount} items
-                          </p>
-                        </div>
-                      </div>
-                    </LocaleLink>
+                      item={album}
+                      type="album"
+                      canLike={false}
+                      canBookmark={false}
+                      canFullscreen={false}
+                      canAddToAlbum={false}
+                      showCounts={false}
+                      showTags={false}
+                    />
                   ))}
-                  <div className="text-center pt-2">
-                    <LocaleLink href={`/user/albums`}>
-                      <Button variant="outline" size="sm" className="text-xs">
-                        View All Albums
-                      </Button>
-                    </LocaleLink>
-                  </div>
+                </div>
+                <div className="text-center pt-4">
+                  <LocaleLink href={`/profile/${displayName}/albums`}>
+                    <Button variant="outline" size="sm" className="text-xs">
+                      View All Albums
+                    </Button>
+                  </LocaleLink>
                 </div>
               </CardContent>
             </Card>
@@ -600,7 +735,7 @@ export default function ProfileComponent({
                     </div>
                   ))}
                   <div className="text-center pt-2">
-                    <LocaleLink href={`/user/comments`}>
+                    <LocaleLink href={`/profile/${displayName}/comments`}>
                       <Button variant="outline" size="sm" className="text-xs">
                         View All Comments
                       </Button>
