@@ -417,7 +417,7 @@ export default function UserMediaPage() {
                   </div>
                   <p className="text-muted-foreground">
                     {media.length} {media.length === 1 ? "image" : "images"} •
-                    Generated and uploaded content
+                    Generated content
                   </p>
                 </div>
 

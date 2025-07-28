@@ -151,6 +151,21 @@ The application includes profile pages that display user-specific content access
   - Responsive design with 1-4 column layout based on screen size
   - Navigation back to main profile page
 
+### Profile Likes Page
+
+- **File**: `/app/[locale]/profile/[username]/likes/page.tsx`
+- **Purpose**: Displays content that a user has liked (both media and albums)
+- **Features**:
+  - Grid and list view toggle
+  - Mixed content display (media and albums)
+  - Lightbox support for media items
+  - Interactive content cards with like/bookmark actions
+  - Loading states and error handling
+  - Mock data implementation with 8 sample likes (mix of media and albums)
+  - Responsive design with 1-3 column layout based on screen size
+  - Navigation back to main profile page
+  - Heart icon theming for likes context
+
 ### Profile Comments Page
 
 - **File**: `/app/[locale]/profile/[username]/comments/page.tsx`
