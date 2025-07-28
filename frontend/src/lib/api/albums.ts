@@ -9,6 +9,7 @@ export const albumsApi = {
   // Get albums with optional filtering
   getAlbums: async (params?: {
     createdBy?: string;
+    user?: string; // New parameter for username lookup
     isPublic?: boolean;
     limit?: number;
     cursor?: string;
@@ -21,6 +22,7 @@ export const albumsApi = {
     const searchParams = new URLSearchParams();
 
     if (params?.createdBy) searchParams.set("createdBy", params.createdBy);
+    if (params?.user) searchParams.set("user", params.user);
     if (params?.isPublic !== undefined)
       searchParams.set("isPublic", params.isPublic.toString());
     if (params?.limit) searchParams.set("limit", params.limit.toString());

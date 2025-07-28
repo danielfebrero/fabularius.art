@@ -130,20 +130,23 @@ Retrieves a paginated list of albums with intelligent filtering based on user pe
 - **Query Parameters**:
   - `isPublic` (optional, boolean): Filter albums by public visibility.
   - `createdBy` (optional, string): Filter albums by creator user ID.
+  - `user` (optional, string): Filter albums by creator username (alternative to createdBy).
   - `tag` (optional, string): Filter albums by tag.
   - `limit` (optional, integer): Maximum number of results to return per page (default: 20, max: 100).
   - `cursor` (optional, string): Base64-encoded cursor from the previous response for DynamoDB pagination.
 
 #### Permission Logic
 
-- **If `createdBy` is provided and user IS the creator**: Show all albums (public and private)
-- **If `createdBy` is provided and user is NOT the creator**: Only show public albums
-- **If no `createdBy` is provided**: Show all public albums from everyone
+- **If `user` parameter is provided**: Always show only public albums (public profile view)
+- **If `createdBy` parameter is provided and user IS the creator**: Show all albums (public and private)
+- **If `createdBy` parameter is provided and user is NOT the creator**: Only show public albums
+- **If no `createdBy` or `user` is provided**: Show all public albums from everyone
 
 #### Example
 
 ```
 GET /albums?isPublic=true&limit=20&createdBy=user123
+GET /albums?user=johnsmith&limit=12  // Always public albums only
 ```
 
 ### Response
@@ -212,10 +215,11 @@ interface CursorPaginatedResponse<T = any> extends ApiResponse<T[]> {
 
 ### List Albums
 
-Get all albums with intelligent filtering and cursor-based pagination.
+Get all albums with intelligent filtering and cursor-based pagination. **Authentication required.**
 
 ```http
 GET /albums?isPublic=true&limit=20&createdBy=user123&tag=nature
+Cookie: sessionId=session-token-here
 ```
 
 **Query Parameters:**

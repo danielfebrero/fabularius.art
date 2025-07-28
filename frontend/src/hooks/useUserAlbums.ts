@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useAlbums } from "./useAlbums";
 import { Album } from "@/types";
 
@@ -21,10 +22,10 @@ interface UseUserAlbumsReturn {
   loading: boolean;
   error: string | null;
   totalCount: number;
-  createAlbum: (_data: CreateUserAlbumData) => Promise<Album>;
-  updateAlbum: (_albumId: string, _data: UpdateUserAlbumData) => Promise<Album>;
-  deleteAlbum: (_albumId: string) => Promise<void>;
-  fetchUserAlbums: (_id?: string) => Promise<void>;
+  createAlbum: (data: CreateUserAlbumData) => Promise<Album>;
+  updateAlbum: (albumId: string, data: UpdateUserAlbumData) => Promise<Album>;
+  deleteAlbum: (albumId: string) => Promise<void>;
+  fetchUserAlbums: (id?: string) => Promise<void>;
   refetch: () => void;
 }
 
@@ -36,15 +37,27 @@ interface UseUserAlbumsReturn {
  * - useUserAlbums(userId) -> useAlbums({ createdBy: userId }) // For specific user's albums
  */
 export function useUserAlbums(userId?: string): UseUserAlbumsReturn {
-  const albumsHook = useAlbums({
-    createdBy: userId,
-  });
+  // Use the new useAlbums hook under the hood
+  const albumsHook = useAlbums(
+    userId
+      ? {
+          createdBy: userId,
+        }
+      : undefined
+  );
 
-  const fetchUserAlbums = async (_id?: string) => {
-    // This is a no-op since the new hook automatically handles refetching
-    // based on the createdBy parameter change
-    albumsHook.refetch();
-  };
+  // This is a stub function since fetching by ID is deprecated
+  const fetchUserAlbums = useCallback(
+    async (id?: string) => {
+      console.warn(
+        "[useUserAlbums] fetchUserAlbums is deprecated. Use useAlbums({ createdBy: userId }) instead."
+      );
+      // This would need to be implemented if we still need it
+      // For now, just call refetch
+      albumsHook.refetch();
+    },
+    [albumsHook]
+  );
 
   return {
     albums: albumsHook.albums,

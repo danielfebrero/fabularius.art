@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { cn } from "@/lib/utils";
-import { useUserAlbums } from "@/hooks/useUserAlbums";
+import { useAlbums } from "@/hooks/useAlbums";
 import { EditAlbumDialog } from "@/components/albums/EditAlbumDialog";
 import { DeleteAlbumDialog } from "@/components/albums/DeleteAlbumDialog";
 import { Album } from "@/types";
@@ -25,7 +25,7 @@ const UserAlbumsPage: React.FC = () => {
     totalCount,
     updateAlbum,
     deleteAlbum,
-  } = useUserAlbums();
+  } = useAlbums();
 
   // Filter albums based on search term
   const filteredAlbums = albums.filter(
@@ -46,13 +46,13 @@ const UserAlbumsPage: React.FC = () => {
 
   // Handle save album
   const handleSaveAlbum = async (albumId: string, data: any) => {
-    await updateAlbum(albumId, data);
+    updateAlbum && (await updateAlbum(albumId, data));
   };
 
   // Handle confirm delete
   const handleConfirmDelete = async () => {
     if (deletingAlbum) {
-      await deleteAlbum(deletingAlbum.id);
+      deleteAlbum && (await deleteAlbum(deletingAlbum.id));
       setDeletingAlbum(null);
     }
   };

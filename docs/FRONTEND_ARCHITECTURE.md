@@ -151,6 +151,20 @@ The application includes profile pages that display user-specific content access
   - Responsive design with 1-4 column layout based on screen size
   - Navigation back to main profile page
 
+### Profile Albums Page
+
+- **File**: `/app/[locale]/profile/[username]/albums/page.tsx`
+- **Purpose**: Displays albums created by a specific user (public albums only unless viewing own profile)
+- **Features**:
+  - Grid and list view toggle
+  - Real-time album fetching using `useProfileAlbums` hook
+  - Pagination with "Load More" functionality
+  - Loading states and error handling
+  - Responsive design with 1-3 column layout based on screen size
+  - Navigation back to main profile page
+  - Album folder icon theming for albums context
+  - Uses `/albums?user=username&limit=12` API endpoint
+
 ### Profile Likes Page
 
 - **File**: `/app/[locale]/profile/[username]/likes/page.tsx`

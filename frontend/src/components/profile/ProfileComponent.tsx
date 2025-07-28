@@ -8,8 +8,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { UserPlanBadge } from "@/components/UserPlanBadge";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { ContentCard } from "@/components/ui/ContentCard";
-import { Media, Album } from "@/types";
+import { Media } from "@/types";
 import { useProfileData } from "@/hooks/useProfileData";
+import { useProfileAlbums } from "@/hooks/useProfileAlbums";
 import {
   User,
   Mail,
@@ -71,6 +72,16 @@ export default function ProfileComponent({
   } = useProfileData({
     username: user.username,
     isOwner,
+  });
+
+  // Get real recent albums
+  const {
+    albums: recentAlbums,
+    loading: albumsLoading,
+    error: albumsError,
+  } = useProfileAlbums({
+    username: user.username || "",
+    limit: 3, // Only fetch 3 recent albums for the profile preview
   });
 
   // Loading state
@@ -217,81 +228,6 @@ export default function ProfileComponent({
         viewCount: 123,
         title: "AI Generated Art",
       } as Media,
-    ],
-    recentAlbums: [
-      {
-        id: "album7",
-        title: "Urban Exploration",
-        isPublic: true,
-        mediaCount: 12,
-        coverImageUrl: "/albums/album7/cover/urban-exploration-cover.jpg",
-        thumbnailUrls: {
-          cover:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
-          small:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
-          medium:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
-          large:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
-          xlarge:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
-        },
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-        updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        likeCount: 92,
-        viewCount: 287,
-      } as Album,
-      {
-        id: "album8",
-        title: "Portrait Series",
-        isPublic: true,
-        mediaCount: 8,
-        coverImageUrl: "/albums/album8/cover/portrait-series-cover.jpg",
-        thumbnailUrls: {
-          cover:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
-          small:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
-          medium:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
-          large:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
-          xlarge:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
-        },
-        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week ago
-        updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-        likeCount: 156,
-        viewCount: 456,
-      } as Album,
-      {
-        id: "album9",
-        title: "Travel Memories",
-        isPublic: true,
-        mediaCount: 24,
-        coverImageUrl: "/albums/album9/cover/travel-memories-cover.jpg",
-        thumbnailUrls: {
-          cover:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
-          small:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
-          medium:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
-          large:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
-          xlarge:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
-        },
-        createdAt: new Date(
-          Date.now() - 14 * 24 * 60 * 60 * 1000
-        ).toISOString(), // 2 weeks ago
-        updatedAt: new Date(
-          Date.now() - 14 * 24 * 60 * 60 * 1000
-        ).toISOString(),
-        likeCount: 203,
-        viewCount: 789,
-      } as Album,
     ],
     recentComments: [
       {
@@ -689,21 +625,47 @@ export default function ProfileComponent({
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {mockData.recentAlbums.map((album) => (
-                    <ContentCard
-                      key={album.id}
-                      item={album}
-                      type="album"
-                      canLike={false}
-                      canBookmark={false}
-                      canFullscreen={false}
-                      canAddToAlbum={false}
-                      showCounts={false}
-                      showTags={false}
-                    />
-                  ))}
-                </div>
+                {albumsLoading ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="animate-pulse">
+                        <div className="aspect-square bg-muted rounded-lg"></div>
+                        <div className="mt-2 h-4 bg-muted rounded w-3/4"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : albumsError ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground text-sm">
+                      {albumsError}
+                    </p>
+                  </div>
+                ) : recentAlbums.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {recentAlbums.map((album) => (
+                      <ContentCard
+                        key={album.id}
+                        item={album}
+                        type="album"
+                        canLike={false}
+                        canBookmark={false}
+                        canFullscreen={false}
+                        canAddToAlbum={false}
+                        showCounts={false}
+                        showTags={false}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <FolderOpen className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                    <p className="text-muted-foreground text-sm">
+                      {isOwner
+                        ? "You haven't created any albums yet."
+                        : "This user hasn't created any albums yet."}
+                    </p>
+                  </div>
+                )}
                 <div className="text-center pt-4">
                   <LocaleLink href={`/profile/${displayName}/albums`}>
                     <Button variant="outline" size="sm" className="text-xs">
