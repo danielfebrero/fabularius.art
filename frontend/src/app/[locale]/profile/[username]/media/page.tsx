@@ -484,10 +484,6 @@ export default function UserMediaPage() {
                       }
                       mediaList={media}
                       currentIndex={index}
-                      onFullscreen={() => {
-                        setCurrentMediaIndex(index);
-                        setLightboxOpen(true);
-                      }}
                     />
                   ))}
                 </div>

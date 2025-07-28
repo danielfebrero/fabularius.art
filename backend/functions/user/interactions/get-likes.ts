@@ -11,16 +11,48 @@ export const handler = async (
   }
 
   try {
-    // Validate user session
-    const authResult = await UserAuthMiddleware.validateSession(event);
-    if (!authResult.isValid || !authResult.user) {
-      return ResponseUtil.unauthorized(event, "Unauthorized");
+    // Get user ID from request context (set by the user authorizer)
+    let requestingUserId = event.requestContext.authorizer?.["userId"];
+
+    console.log("👤 RequestingUserId from authorizer:", requestingUserId);
+
+    // Fallback for local development or when authorizer context is missing
+    if (!requestingUserId) {
+      console.log(
+        "⚠️ No userId from authorizer, falling back to session validation"
+      );
+      const validation = await UserAuthMiddleware.validateSession(event);
+
+      if (!validation.isValid || !validation.user) {
+        console.log("❌ Session validation failed");
+        return ResponseUtil.unauthorized(event, "No user session found");
+      }
+
+      requestingUserId = validation.user.userId;
+      console.log(
+        "✅ Got requestingUserId from session validation:",
+        requestingUserId
+      );
     }
 
-    const userId = authResult.user.userId;
+    // Check if we're querying for a specific user's likes
+    const queryParams = event.queryStringParameters || {};
+    const targetUsername = queryParams["user"];
+
+    let targetUserId = requestingUserId; // Default to requesting user's own likes
+
+    if (targetUsername) {
+      // Look up the target user by username
+      const targetUser = await DynamoDBService.getUserByUsername(
+        targetUsername
+      );
+      if (!targetUser) {
+        return ResponseUtil.notFound(event, "User not found");
+      }
+      targetUserId = targetUser.userId;
+    }
 
     // Get pagination parameters
-    const queryParams = event.queryStringParameters || {};
     const page = parseInt(queryParams["page"] || "1");
     const limit = Math.min(parseInt(queryParams["limit"] || "20"), 100);
 
@@ -31,7 +63,7 @@ export const handler = async (
 
     // Get user's likes from DynamoDB
     const result = await DynamoDBService.getUserInteractions(
-      userId,
+      targetUserId,
       "like",
       limit,
       lastEvaluatedKey

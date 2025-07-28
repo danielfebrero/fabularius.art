@@ -9,6 +9,7 @@ import { UserPlanBadge } from "@/components/UserPlanBadge";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { Media, Album } from "@/types";
+import { useProfileData } from "@/hooks/useProfileData";
 import {
   User,
   Mail,
@@ -61,6 +62,16 @@ export default function ProfileComponent({
   });
 
   const t = useTranslations("common");
+
+  // Get real profile data
+  const {
+    recentLikes,
+    loading: profileDataLoading,
+    error: profileDataError,
+  } = useProfileData({
+    username: user.username,
+    isOwner,
+  });
 
   // Loading state
   if (loading) {
@@ -124,85 +135,6 @@ export default function ProfileComponent({
       totalUploads: 156,
       totalAlbums: 23,
     },
-    recentLikes: [
-      {
-        id: "media1",
-        filename: "beautiful-sunset.jpg",
-        originalName: "Beautiful Sunset",
-        mimeType: "image/jpeg",
-        size: 2048000,
-        width: 1920,
-        height: 1080,
-        url: "/media/media1/beautiful-sunset.jpg",
-        thumbnailUrls: {
-          cover:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
-          small:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
-          medium:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
-          large:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
-          xlarge:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
-        },
-        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-        updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        likeCount: 42,
-        viewCount: 156,
-        title: "Beautiful Sunset",
-      } as Media,
-      {
-        id: "album2",
-        title: "Nature Collection",
-        isPublic: true,
-        mediaCount: 12,
-        coverImageUrl: "/albums/album2/cover/nature-collection-cover.jpg",
-        thumbnailUrls: {
-          cover:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
-          small:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
-          medium:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
-          large:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
-          xlarge:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
-        },
-        createdAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 hours ago
-        updatedAt: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-        likeCount: 89,
-        viewCount: 234,
-      } as Album,
-      {
-        id: "media3",
-        filename: "city-lights.jpg",
-        originalName: "City Lights",
-        mimeType: "image/jpeg",
-        size: 1856000,
-        width: 1600,
-        height: 900,
-        url: "/media/media3/city-lights.jpg",
-        thumbnailUrls: {
-          cover:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
-          small:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
-          medium:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
-          large:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
-          xlarge:
-            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
-        },
-        createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-        updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        likeCount: 78,
-        viewCount: 198,
-        title: "City Lights",
-      } as Media,
-    ],
     recentGeneratedMedias: [
       {
         id: "media4",
@@ -659,21 +591,47 @@ export default function ProfileComponent({
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {mockData.recentLikes.map((item) => (
-                    <ContentCard
-                      key={item.id}
-                      item={item}
-                      type={"filename" in item ? "media" : "album"}
-                      canLike={false}
-                      canBookmark={false}
-                      canFullscreen={false}
-                      canAddToAlbum={false}
-                      showCounts={false}
-                      showTags={false}
-                    />
-                  ))}
-                </div>
+                {profileDataLoading ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="animate-pulse">
+                        <div className="aspect-square bg-muted rounded-lg"></div>
+                        <div className="mt-2 h-4 bg-muted rounded w-3/4"></div>
+                      </div>
+                    ))}
+                  </div>
+                ) : profileDataError ? (
+                  <div className="text-center py-8">
+                    <p className="text-muted-foreground text-sm">
+                      {profileDataError}
+                    </p>
+                  </div>
+                ) : recentLikes.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    {recentLikes.map((item) => (
+                      <ContentCard
+                        key={item.id}
+                        item={item}
+                        type={"filename" in item ? "media" : "album"}
+                        canLike={false}
+                        canBookmark={false}
+                        canFullscreen={false}
+                        canAddToAlbum={false}
+                        showCounts={false}
+                        showTags={false}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Heart className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                    <p className="text-muted-foreground text-sm">
+                      {isOwner
+                        ? "You haven't liked any content yet."
+                        : "This user hasn't liked any content yet."}
+                    </p>
+                  </div>
+                )}
                 <div className="text-center pt-4">
                   <LocaleLink href={`/profile/${displayName}/likes`}>
                     <Button variant="outline" size="sm" className="text-xs">

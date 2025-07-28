@@ -103,6 +103,38 @@ export const interactionApi = {
     return response.json();
   },
 
+  // Get likes by username (for profile views)
+  getLikesByUsername: async (
+    username: string,
+    page: number = 1,
+    limit: number = 20,
+    lastKey?: string
+  ): Promise<UserInteractionsResponse> => {
+    const params = new URLSearchParams({
+      user: username,
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    if (lastKey) {
+      params.append("lastKey", lastKey);
+    }
+
+    const response = await fetch(
+      `${API_URL}/user/interactions/likes?${params}`,
+      {
+        method: "GET",
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to get likes for user: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
   // Get user's bookmarks
   getBookmarks: async (
     page: number = 1,
