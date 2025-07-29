@@ -25,6 +25,7 @@ import {
   Lock,
   MinusCircle,
   Sparkles,
+  RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocaleRouter } from "@/lib/navigation";
@@ -108,7 +109,10 @@ export function GenerateClient() {
   // Track optimization state to prevent re-optimizing the same prompt
   const [lastOptimizedPrompt, setLastOptimizedPrompt] = useState<string>("");
   const [optimizedPromptCache, setOptimizedPromptCache] = useState<string>("");
-  const [originalPromptBeforeOptimization, setOriginalPromptBeforeOptimization] = useState<string>("");
+  const [
+    originalPromptBeforeOptimization,
+    setOriginalPromptBeforeOptimization,
+  ] = useState<string>("");
 
   const {
     canGenerateImages,
@@ -131,7 +135,7 @@ export function GenerateClient() {
 
   const updateSettings = (key: keyof GenerationSettings, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
-    
+
     // If the prompt is being changed manually, clear the optimization cache
     // This ensures a new/modified prompt can be optimized again
     if (key === "prompt") {
@@ -223,6 +227,20 @@ export function GenerateClient() {
     setSettings((prev) => ({ ...prev, loraSelectionMode: mode }));
   };
 
+  // Revert to original prompt before optimization
+  const revertToOriginalPrompt = () => {
+    if (originalPromptBeforeOptimization) {
+      setSettings((prev) => ({
+        ...prev,
+        prompt: originalPromptBeforeOptimization,
+      }));
+      // Clear the optimization cache since we're reverting
+      setLastOptimizedPrompt("");
+      setOptimizedPromptCache("");
+      setOriginalPromptBeforeOptimization("");
+    }
+  };
+
   // Optimize prompt function with magical animation
   const optimizePrompt = async (originalPrompt: string): Promise<string> => {
     setIsOptimizing(true);
@@ -275,7 +293,9 @@ export function GenerateClient() {
         // Case 1: Current prompt is the original that was optimized before
         // Case 2: Current prompt is already the optimized version from a previous optimization
         if (
-          (originalPromptBeforeOptimization && settings.prompt === originalPromptBeforeOptimization && optimizedPromptCache) ||
+          (originalPromptBeforeOptimization &&
+            settings.prompt === originalPromptBeforeOptimization &&
+            optimizedPromptCache) ||
           (settings.prompt === optimizedPromptCache && optimizedPromptCache)
         ) {
           // Use cached optimized prompt instead of re-optimizing
@@ -558,6 +578,28 @@ export function GenerateClient() {
                   className="data-[state=checked]:bg-primary"
                 />
               </div>
+
+              {/* Revert to Original Prompt Button */}
+              {originalPromptBeforeOptimization && (
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <RotateCcw className="h-3 w-3" />
+                    <span>
+                      {settings.prompt === originalPromptBeforeOptimization
+                        ? "Viewing original prompt"
+                        : "Prompt optimized"}
+                    </span>
+                  </div>
+                  {settings.prompt !== originalPromptBeforeOptimization && (
+                    <button
+                      onClick={revertToOriginalPrompt}
+                      className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors"
+                    >
+                      Revert to original
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
