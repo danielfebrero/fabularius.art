@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/Select";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { ContentCard } from "@/components/ui/ContentCard";
+import { GradientTextarea } from "@/components/ui/GradientTextarea";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import {
   ImageIcon,
@@ -387,13 +388,13 @@ export function GenerateClient() {
             </div>
 
             <div className="space-y-2">
-              <Textarea
+              <GradientTextarea
                 placeholder="Amateur photo, woman, 21, laying on the balcony, parisian building, lace thong..."
                 value={settings.prompt}
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                   updateSettings("prompt", e.target.value)
                 }
-                className="w-full h-32 text-lg p-6 border-2 border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 focus:ring-offset-0 resize-none transition-all bg-background placeholder:bg-gradient-to-r placeholder:from-primary placeholder:to-purple-600 placeholder:bg-clip-text placeholder:text-transparent bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent"
+                className="w-full h-32 text-lg p-6 border-2 border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 focus:ring-offset-0 resize-none transition-all"
               />
               <div className="flex justify-between items-center">
                 <div className="text-xs text-muted-foreground">
