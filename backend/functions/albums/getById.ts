@@ -21,7 +21,11 @@ export const handler = async (
 
     // Fetch comments for this album
     try {
-      const commentsResult = await DynamoDBService.getCommentsForTarget("album", albumId, 20);
+      const commentsResult = await DynamoDBService.getCommentsForTarget(
+        "album",
+        albumId,
+        20
+      );
       const comments: Comment[] = commentsResult.comments.map((comment) => ({
         id: comment.id,
         content: comment.content,
@@ -34,7 +38,7 @@ export const handler = async (
         likeCount: comment.likeCount || 0,
         isEdited: comment.isEdited || false,
       }));
-      
+
       // Add comments to album response
       (album as any).comments = comments;
     } catch (error) {

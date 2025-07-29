@@ -1922,7 +1922,7 @@ export class DynamoDBService {
 
       const allComments = [
         ...(albumCommentsResult.Items || []),
-        ...(mediaCommentsResult.Items || [])
+        ...(mediaCommentsResult.Items || []),
       ];
 
       if (allComments.length === 0) {
@@ -1953,9 +1953,14 @@ export class DynamoDBService {
         );
       }
 
-      console.log(`✅ Deleted ${allComments.length} comments for target: ${targetId}`);
+      console.log(
+        `✅ Deleted ${allComments.length} comments for target: ${targetId}`
+      );
     } catch (error) {
-      console.error(`❌ Error deleting comments for target ${targetId}:`, error);
+      console.error(
+        `❌ Error deleting comments for target ${targetId}:`,
+        error
+      );
       throw error;
     }
   }

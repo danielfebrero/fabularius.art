@@ -118,7 +118,11 @@ export const handler = async (
 
     // Fetch comments for this media
     try {
-      const commentsResult = await DynamoDBService.getCommentsForTarget("media", mediaId, 20);
+      const commentsResult = await DynamoDBService.getCommentsForTarget(
+        "media",
+        mediaId,
+        20
+      );
       const comments: Comment[] = commentsResult.comments.map((comment) => ({
         id: comment.id,
         content: comment.content,
@@ -131,7 +135,7 @@ export const handler = async (
         likeCount: comment.likeCount || 0,
         isEdited: comment.isEdited || false,
       }));
-      
+
       // Add comments to media response
       (mediaResponse as any).comments = comments;
     } catch (error) {

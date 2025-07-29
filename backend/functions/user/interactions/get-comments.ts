@@ -18,9 +18,12 @@ export const handler = async (
     // Get parameters from path and query string
     const targetType = event.pathParameters?.["targetType"];
     const targetId = event.pathParameters?.["targetId"];
-    
+
     if (!targetType || !targetId) {
-      return ResponseUtil.badRequest(event, "targetType and targetId are required");
+      return ResponseUtil.badRequest(
+        event,
+        "targetType and targetId are required"
+      );
     }
 
     if (!["album", "media"].includes(targetType)) {
@@ -98,7 +101,9 @@ export const handler = async (
       ).toString("base64");
     }
 
-    console.log(`✅ Retrieved ${comments.length} comments for ${targetType} ${targetId}`);
+    console.log(
+      `✅ Retrieved ${comments.length} comments for ${targetType} ${targetId}`
+    );
 
     return ResponseUtil.success(event, response.data);
   } catch (error) {

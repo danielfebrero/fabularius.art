@@ -2,10 +2,10 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 import { ResponseUtil } from "@shared/utils/response";
-import { 
-  CreateCommentRequest, 
-  UpdateCommentRequest, 
-  CommentEntity 
+import {
+  CreateCommentRequest,
+  UpdateCommentRequest,
+  CommentEntity,
 } from "@shared/types";
 import { v4 as uuidv4 } from "uuid";
 
@@ -235,7 +235,10 @@ async function deleteComment(
 
   // Check if user owns the comment
   if (existingComment.userId !== user.userId) {
-    return ResponseUtil.forbidden(event, "You can only delete your own comments");
+    return ResponseUtil.forbidden(
+      event,
+      "You can only delete your own comments"
+    );
   }
 
   // Delete the comment
@@ -243,9 +246,15 @@ async function deleteComment(
 
   // Decrement comment count for the target
   if (existingComment.targetType === "album") {
-    await DynamoDBService.incrementAlbumCommentCount(existingComment.targetId, -1);
+    await DynamoDBService.incrementAlbumCommentCount(
+      existingComment.targetId,
+      -1
+    );
   } else {
-    await DynamoDBService.incrementMediaCommentCount(existingComment.targetId, -1);
+    await DynamoDBService.incrementMediaCommentCount(
+      existingComment.targetId,
+      -1
+    );
   }
 
   console.log(`✅ Comment ${commentId} deleted`);
