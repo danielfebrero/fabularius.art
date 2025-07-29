@@ -107,6 +107,7 @@ export function GenerateClient() {
     canUseBulkGeneration,
     canUseLoRAModels,
     canUseNegativePrompt,
+    canUseCustomSizes,
   } = useUserPermissions();
 
   const router = useLocaleRouter();
@@ -115,7 +116,6 @@ export function GenerateClient() {
   const plan = getCurrentPlan();
 
   const canUseBulk = canUseBulkGeneration();
-  const canUseCustomSizes = plan === "pro"; // Only Pro plan has access to image size selection
   const canUseLoras = canUseLoRAModels();
   const canUseNegativePrompts = canUseNegativePrompt();
 
@@ -513,14 +513,14 @@ export function GenerateClient() {
               <div
                 className={cn(
                   "bg-card border border-border rounded-2xl shadow-lg p-6 transition-all",
-                  !canUseCustomSizes && "opacity-50"
+                  !canUseCustomSizes() && "opacity-50"
                 )}
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div
                     className={cn(
                       "w-10 h-10 rounded-xl flex items-center justify-center",
-                      canUseCustomSizes
+                      canUseCustomSizes()
                         ? "bg-primary/10 text-primary"
                         : "bg-muted text-muted-foreground"
                     )}
@@ -535,7 +535,7 @@ export function GenerateClient() {
                       Choose dimensions
                     </p>
                   </div>
-                  {!canUseCustomSizes && (
+                  {!canUseCustomSizes() && (
                     <div className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 px-2 py-1 rounded-full">
                       <Crown className="h-3 w-3" />
                       <span className="text-xs font-medium">Pro</span>
@@ -545,9 +545,9 @@ export function GenerateClient() {
 
                 <Select
                   value={settings.imageSize}
-                  disabled={!canUseCustomSizes}
+                  disabled={!canUseCustomSizes()}
                   onValueChange={(value: string) => {
-                    if (!canUseCustomSizes) return;
+                    if (!canUseCustomSizes()) return;
                     updateSettings("imageSize", value);
                     const size = IMAGE_SIZES.find((s) => s.value === value);
                     if (size) {
@@ -568,7 +568,7 @@ export function GenerateClient() {
                   </SelectContent>
                 </Select>
 
-                {settings.imageSize === "custom" && canUseCustomSizes && (
+                {settings.imageSize === "custom" && canUseCustomSizes() && (
                   <div className="grid grid-cols-2 gap-3 mt-4">
                     <div>
                       <label className="text-xs font-medium text-muted-foreground mb-2 block">
@@ -667,16 +667,21 @@ export function GenerateClient() {
                   ))}
                 </div>
 
-                {settings.batchCount > 1 && (
+                {/* {settings.batchCount > 1 && (
                   <p className="text-xs text-muted-foreground mt-3 text-center">
                     Uses {settings.batchCount} of your generation quota
                   </p>
-                )}
+                )} */}
               </div>
             </div>
 
             {/* LoRA Models */}
-            <div className="bg-card border border-border rounded-2xl shadow-lg p-6 transition-all opacity-50">
+            <div
+              className={cn(
+                "bg-card border border-border rounded-2xl shadow-lg p-6 transition-all",
+                !canUseLoras && "opacity-50"
+              )}
+            >
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-primary/10 text-primary">
                   <Crown className="h-5 w-5" />
@@ -1072,6 +1077,7 @@ export function GenerateClient() {
             media={allGeneratedImages.map(createMediaFromUrl)}
             currentIndex={lightboxIndex}
             isOpen={lightboxOpen}
+            canDelete={true}
             onClose={() => setLightboxOpen(false)}
             onNext={() =>
               setLightboxIndex((prev) =>

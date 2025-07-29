@@ -24,6 +24,7 @@ interface PermissionsContextType {
   canUseLoRAModels: () => boolean;
   canUseNegativePrompt: () => boolean;
   canCreatePrivateContent: () => boolean;
+  canUseCustomSizes: () => boolean;
 
   // Role-based permission checks
   canAccessAdmin: () => boolean;
@@ -77,6 +78,7 @@ export function PermissionsProvider({
   const canGenerateImagesCount = (
     count: number = 1
   ): { allowed: boolean; remaining: number | "unlimited" } => {
+    console.log({ user, planPermissions });
     if (!user || !planPermissions || !user.planInfo.isActive) {
       return { allowed: false, remaining: 0 };
     }
@@ -133,6 +135,11 @@ export function PermissionsProvider({
   const canCreatePrivateContent = (): boolean => {
     if (!user || !planPermissions) return false;
     return planPermissions.canCreatePrivateContent && user.planInfo.isActive;
+  };
+
+  const canUseCustomSizes = (): boolean => {
+    if (!user || !planPermissions) return false;
+    return planPermissions.canSelectImageSizes && user.planInfo.isActive;
   };
 
   // Role-based permission checks
@@ -241,6 +248,7 @@ export function PermissionsProvider({
     canUseLoRAModels,
     canUseNegativePrompt,
     canCreatePrivateContent,
+    canUseCustomSizes,
     canAccessAdmin,
     canManageUsers,
     canModerateContent,

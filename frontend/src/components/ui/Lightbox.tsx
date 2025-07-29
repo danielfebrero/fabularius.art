@@ -9,6 +9,9 @@ interface LightboxProps {
   media: Media[];
   currentIndex: number;
   isOpen: boolean;
+
+  canDelete?: boolean;
+
   onClose: () => void;
   onNext: () => void;
   onPrevious: () => void;
@@ -18,6 +21,9 @@ export const Lightbox: React.FC<LightboxProps> = ({
   media,
   currentIndex,
   isOpen,
+
+  canDelete = false,
+
   onClose,
   onNext,
   onPrevious,
@@ -110,7 +116,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
               canFullscreen={false}
               canAddToAlbum={true}
               canDownload={true}
-              canDelete={false}
+              canDelete={canDelete}
               showCounts={false}
               disableHoverEffects={true}
               preferredThumbnailSize="originalSize"
