@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -16,6 +16,7 @@ import {
 import { Lightbox } from "@/components/ui/Lightbox";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { GradientTextarea } from "@/components/ui/GradientTextarea";
+import { MagicText, MagicTextHandle } from "@/components/ui/MagicText";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import {
   ImageIcon,
@@ -86,6 +87,8 @@ const LORA_MODELS = [
 ];
 
 export function GenerateClient() {
+  const magicTextRef = useRef<MagicTextHandle>(null);
+
   const [settings, setSettings] = useState<GenerationSettings>({
     prompt: "",
     negativePrompt: "",
@@ -105,6 +108,7 @@ export function GenerateClient() {
   const [allGeneratedImages, setAllGeneratedImages] = useState<string[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [showMagicText, setShowMagicText] = useState(false);
 
   // Track optimization state to prevent re-optimizing the same prompt
   const [lastOptimizedPrompt, setLastOptimizedPrompt] = useState<string>("");
@@ -246,7 +250,7 @@ export function GenerateClient() {
     setIsOptimizing(true);
 
     // Simulate AI processing delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // PLACEHOLDER: Replace with actual SDXL prompt optimization logic
     const optimizedPrompt = `${originalPrompt}, (masterpiece:1.2), (best quality:1.2), (ultra-detailed:1.2), (realistic:1.2), (photorealistic:1.2), sharp focus, cinematic lighting, detailed textures, high resolution, professional photography, depth of field, bokeh effect, vibrant colors, perfect composition`;
@@ -289,6 +293,8 @@ export function GenerateClient() {
     // Optimize prompt if enabled
     if (settings.optimizePrompt) {
       try {
+        handleResetMagicText();
+        setShowMagicText(true);
         // Check if we already have an optimized version of this exact prompt
         // Case 1: Current prompt is the original that was optimized before
         // Case 2: Current prompt is already the optimized version from a previous optimization
@@ -310,6 +316,8 @@ export function GenerateClient() {
           setOptimizedPromptCache(finalPrompt);
           // Update the settings with the optimized prompt (but avoid triggering cache clearing)
           setSettings((prev) => ({ ...prev, prompt: finalPrompt }));
+
+          handleCastSpell(finalPrompt);
         }
       } catch (error) {
         console.error("Prompt optimization failed:", error);
@@ -346,8 +354,23 @@ export function GenerateClient() {
     }
   };
 
+  const handleCastSpell = (newText: string) => {
+    if (magicTextRef.current) {
+      magicTextRef.current.castSpell(newText); // Pass the new text here
+    }
+  };
+
+  const handleResetMagicText = () => {
+    if (magicTextRef.current) {
+      magicTextRef.current.reset();
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div
+      className="min-h-screen bg-background"
+      onClick={() => showMagicText && !isOptimizing && setShowMagicText(false)}
+    >
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto space-y-8">
           {/* Hero Header */}
@@ -503,41 +526,13 @@ export function GenerateClient() {
                 />
 
                 {/* Magical overlay during optimization */}
-                {isOptimizing && (
-                  <>
-                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary/10 rounded-xl border-2 border-primary/30 animate-pulse z-10" />
-                    <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
-                      <div className="relative">
-                        {/* Magic sparkles */}
-                        <div className="absolute inset-0 animate-spin">
-                          <Sparkles className="h-8 w-8 text-primary absolute -top-4 -left-4 animate-pulse" />
-                          <Sparkles
-                            className="h-6 w-6 text-purple-500 absolute -top-2 right-6 animate-pulse"
-                            style={{ animationDelay: "0.5s" }}
-                          />
-                          <Sparkles
-                            className="h-5 w-5 text-primary absolute bottom-4 -left-2 animate-pulse"
-                            style={{ animationDelay: "1s" }}
-                          />
-                          <Sparkles
-                            className="h-7 w-7 text-purple-400 absolute bottom-2 right-4 animate-pulse"
-                            style={{ animationDelay: "1.5s" }}
-                          />
-                        </div>
-
-                        {/* Central magical effect */}
-                        <div className="flex items-center gap-3 bg-background/90 backdrop-blur-sm px-4 py-2 rounded-full border border-primary/20 shadow-lg">
-                          <div className="relative">
-                            <Zap className="h-6 w-6 text-primary animate-pulse" />
-                            <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
-                          </div>
-                          <span className="text-sm font-medium text-primary">
-                            Optimizing prompt...
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </>
+                {showMagicText && (
+                  <MagicText
+                    originalText={
+                      originalPromptBeforeOptimization || settings.prompt
+                    }
+                    ref={magicTextRef}
+                  />
                 )}
                 <div className="flex justify-between items-center">
                   <div className="text-xs text-muted-foreground">
