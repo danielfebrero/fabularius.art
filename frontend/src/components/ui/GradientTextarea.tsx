@@ -98,6 +98,17 @@ export const GradientTextarea: React.FC<GradientTextareaProps> = ({
   const displayText = value || placeholder;
   const isPlaceholder = !value && placeholder;
 
+  // Extract relevant classes for initial styling
+  const extractedClasses = className
+    .split(" ")
+    .filter(
+      (cls) =>
+        cls.startsWith("text-") ||
+        cls.startsWith("p-") ||
+        cls.startsWith("font-")
+    )
+    .join(" ");
+
   return (
     <div className="relative">
       {/* Invisible textarea for input */}
@@ -127,7 +138,8 @@ export const GradientTextarea: React.FC<GradientTextareaProps> = ({
         <div
           className={cn(
             "whitespace-pre-wrap break-words",
-            isPlaceholder ? "opacity-60" : "opacity-100"
+            isPlaceholder ? "opacity-60" : "opacity-100",
+            extractedClasses // Apply relevant classes from parent to prevent flash
           )}
           style={{
             background:
