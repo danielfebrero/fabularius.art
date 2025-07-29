@@ -10,6 +10,7 @@ export interface Album {
         medium?: string;
         large?: string;
         xlarge?: string;
+        originalSize?: string;
       }
     | undefined;
   createdAt: string;
@@ -19,6 +20,8 @@ export interface Album {
   likeCount?: number;
   bookmarkCount?: number;
   viewCount?: number;
+  commentCount?: number;
+  comments?: Comment[] | undefined; // Include comments directly in Album
 }
 
 export interface Media {
@@ -47,12 +50,14 @@ export interface Media {
   likeCount?: number;
   bookmarkCount?: number;
   viewCount?: number;
+  commentCount?: number;
   metadata?: Record<string, any> | undefined;
   // User tracking fields
   createdBy?: string | undefined;
   createdByType?: "user" | "admin" | undefined;
   // Album relationships (populated when needed)
   albums?: Album[] | undefined; // array of album objects this media belongs to
+  comments?: Comment[] | undefined; // Include comments directly in Media
 }
 
 export interface CreateAlbumRequest {
@@ -122,6 +127,7 @@ export interface AlbumEntity {
   likeCount?: number;
   bookmarkCount?: number;
   viewCount?: number;
+  commentCount?: number;
   createdBy?: string | undefined; // User ID who created the album
   createdByType?: "user" | "admin" | undefined; // Type of creator
 }
@@ -159,6 +165,7 @@ export interface MediaEntity {
   likeCount?: number;
   bookmarkCount?: number;
   viewCount?: number;
+  commentCount?: number;
   metadata?: Record<string, any> | undefined;
   // User tracking fields
   createdBy?: string | undefined; // userId or adminId who uploaded this media
@@ -178,6 +185,73 @@ export interface AlbumMediaEntity {
   mediaId: string;
   addedAt: string; // when media was added to this album
   addedBy?: string | undefined; // who added it to this album
+}
+
+// Comment Types
+export interface Comment {
+  id: string;
+  content: string;
+  targetType: "album" | "media";
+  targetId: string;
+  userId: string;
+  username?: string;
+  createdAt: string;
+  updatedAt: string;
+  likeCount?: number;
+  isEdited?: boolean;
+}
+
+export interface CreateCommentRequest {
+  content: string;
+  targetType: "album" | "media";
+  targetId: string;
+}
+
+export interface UpdateCommentRequest {
+  content: string;
+}
+
+export interface CommentResponse {
+  success: boolean;
+  data?: Comment;
+  error?: string;
+}
+
+// For standalone comment operations (create, update, delete)
+export interface CommentListResponse {
+  success: boolean;
+  data?: {
+    comments: Comment[];
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      hasNext: boolean;
+      hasPrev: boolean;
+    };
+  };
+  error?: string;
+}
+
+// Comment DynamoDB Entity
+export interface CommentEntity {
+  PK: string; // COMMENT#{commentId}
+  SK: string; // METADATA
+  GSI1PK: string; // COMMENTS_BY_TARGET
+  GSI1SK: string; // {targetType}#{targetId}#{createdAt}#{commentId}
+  GSI2PK: string; // COMMENTS_BY_USER
+  GSI2SK: string; // {userId}#{createdAt}#{commentId}
+  EntityType: "Comment";
+  id: string;
+  content: string;
+  targetType: "album" | "media";
+  targetId: string;
+  userId: string;
+  username?: string;
+  createdAt: string;
+  updatedAt: string;
+  likeCount?: number;
+  isEdited?: boolean;
 }
 
 // Admin Authentication Types

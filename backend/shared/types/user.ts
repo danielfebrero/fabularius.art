@@ -59,9 +59,16 @@ export interface UsernameAvailabilityResponse {
 export interface UserInteraction {
   userId: string;
   interactionType: "like" | "bookmark";
-  targetType: "album" | "media";
+  targetType: "album" | "media" | "comment";
   targetId: string;
   createdAt: string;
+}
+
+// Comment interaction types - separate from likes/bookmarks for clarity
+export interface CommentInteractionRequest {
+  targetType: "comment";
+  targetId: string; // commentId
+  action: "add" | "remove";
 }
 
 export interface InteractionRequest {
@@ -166,7 +173,7 @@ export interface UserInteractionEntity {
   EntityType: "UserInteraction";
   userId: string;
   interactionType: "like" | "bookmark";
-  targetType: "album" | "media";
+  targetType: "album" | "media" | "comment";
   targetId: string;
   createdAt: string;
 }

@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { ResponseUtil } from "@shared/utils/response";
-import { Media } from "@shared/types";
+import { Media, Comment } from "@shared/types";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -70,6 +70,11 @@ export const handler = async (
       mediaResponse.viewCount = mediaEntity.viewCount;
     }
 
+    // Add comment count
+    if (mediaEntity.commentCount !== undefined) {
+      mediaResponse.commentCount = mediaEntity.commentCount;
+    }
+
     // Add creator information if available
     if (mediaEntity.createdBy !== undefined) {
       mediaResponse.createdBy = mediaEntity.createdBy;
@@ -109,6 +114,30 @@ export const handler = async (
     } catch (error) {
       console.error("Failed to fetch albums for media:", error);
       // Don't fail the request if albums can't be fetched
+    }
+
+    // Fetch comments for this media
+    try {
+      const commentsResult = await DynamoDBService.getCommentsForTarget("media", mediaId, 20);
+      const comments: Comment[] = commentsResult.comments.map((comment) => ({
+        id: comment.id,
+        content: comment.content,
+        targetType: comment.targetType,
+        targetId: comment.targetId,
+        userId: comment.userId,
+        username: comment.username || "",
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
+        likeCount: comment.likeCount || 0,
+        isEdited: comment.isEdited || false,
+      }));
+      
+      // Add comments to media response
+      (mediaResponse as any).comments = comments;
+    } catch (error) {
+      console.error("Failed to fetch comments for media:", error);
+      // Don't fail the request if comments can't be fetched
+      (mediaResponse as any).comments = [];
     }
 
     return ResponseUtil.success(event, mediaResponse);

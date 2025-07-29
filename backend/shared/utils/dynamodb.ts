@@ -15,6 +15,7 @@ import {
   AlbumMediaEntity,
   AdminUserEntity,
   AdminSessionEntity,
+  CommentEntity,
 } from "../types";
 import {
   UserEntity,
@@ -1689,6 +1690,272 @@ export class DynamoDBService {
         `❌ Error deleting ${interactionType} interactions for target ${targetId}:`,
         error
       );
+      throw error;
+    }
+  }
+
+  // Comment operations
+  static async createComment(comment: CommentEntity): Promise<void> {
+    await docClient.send(
+      new PutCommand({
+        TableName: TABLE_NAME,
+        Item: comment,
+        ConditionExpression: "attribute_not_exists(PK)",
+      })
+    );
+  }
+
+  static async getComment(commentId: string): Promise<CommentEntity | null> {
+    const result = await docClient.send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `COMMENT#${commentId}`,
+          SK: "METADATA",
+        },
+      })
+    );
+
+    return (result.Item as CommentEntity) || null;
+  }
+
+  static async updateComment(
+    commentId: string,
+    updates: Partial<CommentEntity>
+  ): Promise<void> {
+    const updateExpression: string[] = [];
+    const expressionAttributeNames: Record<string, string> = {};
+    const expressionAttributeValues: Record<string, any> = {};
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (key !== "PK" && key !== "SK" && value !== undefined) {
+        updateExpression.push(`#${key} = :${key}`);
+        expressionAttributeNames[`#${key}`] = key;
+        expressionAttributeValues[`:${key}`] = value;
+      }
+    });
+
+    if (updateExpression.length === 0) return;
+
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `COMMENT#${commentId}`,
+          SK: "METADATA",
+        },
+        UpdateExpression: `SET ${updateExpression.join(", ")}`,
+        ExpressionAttributeNames: expressionAttributeNames,
+        ExpressionAttributeValues: expressionAttributeValues,
+      })
+    );
+  }
+
+  static async deleteComment(commentId: string): Promise<void> {
+    await docClient.send(
+      new DeleteCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `COMMENT#${commentId}`,
+          SK: "METADATA",
+        },
+      })
+    );
+  }
+
+  static async getCommentsForTarget(
+    targetType: "album" | "media",
+    targetId: string,
+    limit: number = 20,
+    lastEvaluatedKey?: Record<string, any>
+  ): Promise<{
+    comments: CommentEntity[];
+    lastEvaluatedKey?: Record<string, any>;
+  }> {
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI1",
+        KeyConditionExpression: "GSI1PK = :gsi1pk",
+        ExpressionAttributeValues: {
+          ":gsi1pk": `COMMENTS_BY_TARGET#${targetType}#${targetId}`,
+        },
+        ScanIndexForward: false, // Most recent first
+        Limit: limit,
+        ExclusiveStartKey: lastEvaluatedKey,
+      })
+    );
+
+    const response: {
+      comments: CommentEntity[];
+      lastEvaluatedKey?: Record<string, any>;
+    } = {
+      comments: (result.Items as CommentEntity[]) || [],
+    };
+
+    if (result.LastEvaluatedKey) {
+      response.lastEvaluatedKey = result.LastEvaluatedKey;
+    }
+
+    return response;
+  }
+
+  static async getCommentsByUser(
+    userId: string,
+    limit: number = 20,
+    lastEvaluatedKey?: Record<string, any>
+  ): Promise<{
+    comments: CommentEntity[];
+    lastEvaluatedKey?: Record<string, any>;
+  }> {
+    const result = await docClient.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: "GSI2",
+        KeyConditionExpression: "GSI2PK = :gsi2pk",
+        ExpressionAttributeValues: {
+          ":gsi2pk": `COMMENTS_BY_USER#${userId}`,
+        },
+        ScanIndexForward: false, // Most recent first
+        Limit: limit,
+        ExclusiveStartKey: lastEvaluatedKey,
+      })
+    );
+
+    const response: {
+      comments: CommentEntity[];
+      lastEvaluatedKey?: Record<string, any>;
+    } = {
+      comments: (result.Items as CommentEntity[]) || [],
+    };
+
+    if (result.LastEvaluatedKey) {
+      response.lastEvaluatedKey = result.LastEvaluatedKey;
+    }
+
+    return response;
+  }
+
+  static async incrementAlbumCommentCount(
+    albumId: string,
+    increment: number = 1
+  ): Promise<void> {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `ALBUM#${albumId}`,
+          SK: "METADATA",
+        },
+        UpdateExpression: "ADD commentCount :inc",
+        ExpressionAttributeValues: {
+          ":inc": increment,
+        },
+      })
+    );
+  }
+
+  static async incrementMediaCommentCount(
+    mediaId: string,
+    increment: number = 1
+  ): Promise<void> {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `MEDIA#${mediaId}`,
+          SK: "METADATA",
+        },
+        UpdateExpression: "ADD commentCount :inc",
+        ExpressionAttributeValues: {
+          ":inc": increment,
+        },
+      })
+    );
+  }
+
+  static async incrementCommentLikeCount(
+    commentId: string,
+    increment: number = 1
+  ): Promise<void> {
+    await docClient.send(
+      new UpdateCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `COMMENT#${commentId}`,
+          SK: "METADATA",
+        },
+        UpdateExpression: "ADD likeCount :inc",
+        ExpressionAttributeValues: {
+          ":inc": increment,
+        },
+      })
+    );
+  }
+
+  static async deleteAllCommentsForTarget(targetId: string): Promise<void> {
+    console.log(`🧹 Cleaning up all comments for target: ${targetId}`);
+
+    try {
+      // Get all comments for this target using both album and media target types
+      const albumCommentsResult = await docClient.send(
+        new QueryCommand({
+          TableName: TABLE_NAME,
+          IndexName: "GSI1",
+          KeyConditionExpression: "GSI1PK = :gsi1pk",
+          ExpressionAttributeValues: {
+            ":gsi1pk": `COMMENTS_BY_TARGET#album#${targetId}`,
+          },
+        })
+      );
+
+      const mediaCommentsResult = await docClient.send(
+        new QueryCommand({
+          TableName: TABLE_NAME,
+          IndexName: "GSI1",
+          KeyConditionExpression: "GSI1PK = :gsi1pk",
+          ExpressionAttributeValues: {
+            ":gsi1pk": `COMMENTS_BY_TARGET#media#${targetId}`,
+          },
+        })
+      );
+
+      const allComments = [
+        ...(albumCommentsResult.Items || []),
+        ...(mediaCommentsResult.Items || [])
+      ];
+
+      if (allComments.length === 0) {
+        console.log(`No comments found for target: ${targetId}`);
+        return;
+      }
+
+      // Delete comments in batches
+      const batchSize = 25;
+      for (let i = 0; i < allComments.length; i += batchSize) {
+        const batch = allComments.slice(i, i + batchSize);
+
+        const deleteRequests = batch.map((item: any) => ({
+          DeleteRequest: {
+            Key: {
+              PK: item["PK"],
+              SK: item["SK"],
+            },
+          },
+        }));
+
+        await docClient.send(
+          new BatchWriteCommand({
+            RequestItems: {
+              [TABLE_NAME]: deleteRequests,
+            },
+          })
+        );
+      }
+
+      console.log(`✅ Deleted ${allComments.length} comments for target: ${targetId}`);
+    } catch (error) {
+      console.error(`❌ Error deleting comments for target ${targetId}:`, error);
       throw error;
     }
   }

@@ -1513,6 +1513,96 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
 
+  # Comment Functions
+  UserCommentFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-comment"
+      CodeUri: backend/dist/functions/user/interactions/
+      Handler: comment.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        PostComment:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/comment
+            Method: POST
+            Auth:
+              Authorizer: UserAuthorizer
+        PutComment:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/comment/{commentId}
+            Method: PUT
+            Auth:
+              Authorizer: UserAuthorizer
+        DeleteComment:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/comment/{commentId}
+            Method: DELETE
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsComment:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/comment
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+        OptionsCommentById:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/comment/{commentId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+              Resource: !GetAtt MediaTable.Arn
+
+  UserGetCommentsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-get-comments"
+      CodeUri: backend/dist/functions/user/interactions/
+      Handler: get-comments.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        GetComments:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/comments/{targetType}/{targetId}
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        OptionsGetComments:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/comments/{targetType}/{targetId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
   # AI Generation Functions
   GenerationCreateFunction:
     Type: AWS::Serverless::Function
