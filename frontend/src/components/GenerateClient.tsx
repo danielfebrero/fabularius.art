@@ -394,7 +394,7 @@ export function GenerateClient() {
                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
                   updateSettings("prompt", e.target.value)
                 }
-                className="w-full h-32 text-lg p-6 border-2 border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 focus:ring-offset-0 resize-none transition-all"
+                className="w-full h-40 md:h-32 text-lg p-6 border-2 border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 focus:ring-offset-0 resize-none transition-all"
               />
               <div className="flex justify-between items-center">
                 <div className="text-xs text-muted-foreground">

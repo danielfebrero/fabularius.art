@@ -138,7 +138,7 @@ export const GradientTextarea: React.FC<GradientTextareaProps> = ({
         <div
           className={cn(
             "whitespace-pre-wrap break-words",
-            isPlaceholder ? "opacity-60" : "opacity-100",
+            isPlaceholder ? "opacity-80" : "opacity-100",
             extractedClasses // Apply relevant classes from parent to prevent flash
           )}
           style={{
