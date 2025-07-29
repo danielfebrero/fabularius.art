@@ -35,7 +35,7 @@ export const GradientTextarea: React.FC<GradientTextareaProps> = ({
         // Use precise scroll positioning with subpixel accuracy
         const scrollLeft = textarea.scrollLeft;
         const scrollTop = textarea.scrollTop;
-        
+
         // Apply transform with hardware acceleration for smooth scrolling
         textContent.style.transform = `translate3d(-${scrollLeft}px, -${scrollTop}px, 0)`;
         textContent.style.willChange = "transform";
@@ -57,7 +57,7 @@ export const GradientTextarea: React.FC<GradientTextareaProps> = ({
         // Update overlay position to match textarea's content area exactly
         const borderTopWidth = parseInt(computedStyle.borderTopWidth, 10);
         const borderLeftWidth = parseInt(computedStyle.borderLeftWidth, 10);
-        
+
         // Position overlay to match textarea's content area (excluding borders and scrollbars)
         overlay.style.top = `${borderTopWidth}px`;
         overlay.style.left = `${borderLeftWidth}px`;
@@ -75,7 +75,7 @@ export const GradientTextarea: React.FC<GradientTextareaProps> = ({
           textContent.style.paddingLeft = computedStyle.paddingLeft;
           textContent.style.margin = "0"; // Reset margin to prevent offset
           textContent.style.boxSizing = computedStyle.boxSizing;
-          
+
           // Font and text properties
           textContent.style.fontSize = computedStyle.fontSize;
           textContent.style.fontFamily = computedStyle.fontFamily;
@@ -87,14 +87,14 @@ export const GradientTextarea: React.FC<GradientTextareaProps> = ({
           textContent.style.textAlign = computedStyle.textAlign;
           textContent.style.textIndent = computedStyle.textIndent;
           textContent.style.textTransform = computedStyle.textTransform;
-          
+
           // White space and word wrapping
           textContent.style.whiteSpace = "pre-wrap";
           textContent.style.wordWrap = "break-word";
           textContent.style.overflowWrap = "break-word";
           textContent.style.wordBreak = computedStyle.wordBreak;
           textContent.style.hyphens = computedStyle.hyphens;
-          
+
           // Calculate the actual content width accounting for scrollbars
           // Use the same clientWidth as the overlay to ensure perfect alignment
           textContent.style.width = `${textarea.clientWidth}px`;
