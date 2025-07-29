@@ -156,6 +156,24 @@ export function GenerateClient() {
     });
   };
 
+  const handleLoraClickInAutoMode = (loraId: string) => {
+    // Only Pro users can switch to manual mode and select LoRAs
+    if (!canUseLoras) {
+      return;
+    }
+
+    // Switch to manual mode and select the clicked LoRA
+    setSettings((prev) => ({
+      ...prev,
+      loraSelectionMode: "manual",
+      selectedLoras: [loraId],
+      loraStrengths: {
+        ...prev.loraStrengths,
+        [loraId]: { mode: "auto", value: 1.0 },
+      },
+    }));
+  };
+
   const updateLoraStrength = (
     loraId: string,
     mode: "auto" | "manual",
@@ -929,6 +947,12 @@ export function GenerateClient() {
                         </div>
                       )}
                     </div>
+                    {canUseLoras && (
+                      <p className="text-xs text-muted-foreground mb-2">
+                        💡 Click on any LoRA model to switch to manual selection
+                        and configure it
+                      </p>
+                    )}
                     <div className="grid gap-2">
                       {LORA_MODELS.map((lora) => (
                         <div
@@ -937,8 +961,9 @@ export function GenerateClient() {
                             "p-3 border border-border rounded-lg transition-all",
                             !canUseLoras
                               ? "bg-muted/30 cursor-not-allowed"
-                              : "hover:border-primary/50 hover:bg-primary/5"
+                              : "hover:border-primary/50 hover:bg-primary/5 cursor-pointer"
                           )}
+                          onClick={() => handleLoraClickInAutoMode(lora.id)}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex-1">
