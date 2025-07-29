@@ -12,7 +12,7 @@ interface MagicTextProps {
 }
 
 export interface MagicTextHandle {
-  castSpell: (_targetText: string) => void;
+  castSpell: (targetText: string) => void;
   reset: () => void;
 }
 
@@ -24,14 +24,28 @@ export const MagicText = forwardRef<MagicTextHandle, MagicTextProps>(
     const splitText = useCallback(
       (text: string) => {
         if (containerRef.current) {
+          // Set the text content for the background gradient
+          const backgroundTextEl = containerRef.current
+            .previousElementSibling as HTMLElement;
+          if (backgroundTextEl) {
+            backgroundTextEl.textContent = text;
+          }
+
+          // Create individual letter spans for animation
           containerRef.current.innerHTML = "";
           text.split("").forEach((char, index) => {
             const span = document.createElement("span");
             span.classList.add("letter");
             span.textContent = char === " " ? "\u00A0" : char;
+
+            // Handle line breaks
+            if (char === "\n") {
+              span.style.whiteSpace = "pre";
+            }
+
             if (text === originalText && isInitial) {
               span.classList.add("initial-magic");
-              span.style.animationDelay = `${index * 0.1}s`;
+              span.style.animationDelay = `${index * 0.05}s`;
             }
             containerRef.current!.appendChild(span);
           });
@@ -74,7 +88,7 @@ export const MagicText = forwardRef<MagicTextHandle, MagicTextProps>(
       const rect = containerRef.current.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
-      for (let i = 0; i < 50; i++) {
+      for (let i = 0; i < 30; i++) {
         const particle = document.createElement("div");
         particle.classList.add("particle");
         document.body.appendChild(particle);
@@ -85,19 +99,26 @@ export const MagicText = forwardRef<MagicTextHandle, MagicTextProps>(
         setTimeout(() => {
           particle.style.opacity = "1";
           particle.style.transform = `translate(${
-            Math.random() * 200 - 100
-          }px, ${Math.random() * 200 - 100}px) scale(${
-            Math.random() * 0.5 + 0.5
+            Math.random() * 120 - 60
+          }px, ${Math.random() * 120 - 60}px) scale(${
+            Math.random() * 0.8 + 0.4
           })`;
           setTimeout(() => {
             particle.style.opacity = "0";
-            setTimeout(() => particle.remove(), 500);
-          }, 500);
-        }, Math.random() * 500);
+            setTimeout(() => particle.remove(), 300);
+          }, 400);
+        }, Math.random() * 300);
       }
 
       // After out animation, animate in new text
       setTimeout(() => {
+        // Update background text first
+        const backgroundTextEl = containerRef.current!
+          .previousElementSibling as HTMLElement;
+        if (backgroundTextEl) {
+          backgroundTextEl.textContent = targetText;
+        }
+
         splitText(targetText);
         const newLetters = containerRef.current!.querySelectorAll(
           ".letter"
@@ -127,60 +148,111 @@ export const MagicText = forwardRef<MagicTextHandle, MagicTextProps>(
     }));
 
     const css = `
-      .magic-text-container {
+      .magic-text-overlay {
+        position: absolute;
+        top: 2px;
+        left: 2px;
+        right: 2px;
+        bottom: 2px;
+        pointer-events: none;
+        z-index: 30;
+        overflow: hidden;
+        border-radius: inherit;
         display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
+        align-items: flex-start;
+        justify-content: flex-start;
+      }
+      .magic-text-content {
+        width: 100%;
+        height: 100%;
+        padding: 1.5rem;
         margin: 0;
-        background-color: #111;
-        color: #fff;
-        font-family: 'Times New Roman', serif;
+        box-sizing: border-box;
+        font-size: 1.125rem;
+        line-height: 1.75rem;
+        font-family: inherit;
+        font-weight: inherit;
+        letter-spacing: inherit;
+        text-align: left;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
       }
-      .inner-container {
-        text-align: center;
+      .magic-text-inner {
+        width: 100%;
+        min-height: 100%;
+        display: block;
+        position: relative;
       }
-      .text-container {
-        font-size: 48px;
-        letter-spacing: 2px;
-        margin-bottom: 20px;
+      .magic-text-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to right, hsl(var(--primary)), #9333ea);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        z-index: 1;
+      }
+      .magic-text-letters {
+        position: relative;
+        z-index: 2;
+        background: hsl(var(--background));
       }
       .letter {
         display: inline-block;
         transition: transform 0.5s ease, opacity 0.5s ease, text-shadow 0.3s ease;
+        vertical-align: baseline;
       }
       .letter.morphing {
-        text-shadow: 0 0 10px gold;
+        background: linear-gradient(to right, hsl(var(--primary)), #9333ea);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-shadow: 0 0 10px hsl(var(--primary));
       }
       .letter.initial-magic {
-        animation: magicalFloat 3s infinite ease-in-out;
+        animation: magicalFloat 2s infinite ease-in-out;
       }
       @keyframes magicalFloat {
         0%, 100% {
           transform: translateY(0px);
-          text-shadow: 0 0 5px gold;
+          filter: drop-shadow(0 0 3px hsl(var(--primary)));
         }
         50% {
-          transform: translateY(-5px);
-          text-shadow: 0 0 15px gold;
+          transform: translateY(-1px);
+          filter: drop-shadow(0 0 6px hsl(var(--primary)));
         }
       }
       .particle {
-        position: absolute;
-        width: 5px;
-        height: 5px;
-        background: gold;
+        position: fixed;
+        width: 3px;
+        height: 3px;
+        background: hsl(var(--primary));
         border-radius: 50%;
         pointer-events: none;
         transition: transform 0.5s ease-out, opacity 0.5s ease;
+        z-index: 9999;
       }
     `;
 
     return (
-      <div className="magic-text-container">
+      <div className="magic-text-overlay bg-background">
         <style>{css}</style>
-        <div className="inner-container">
-          <div ref={containerRef} className="text-container"></div>
+        <div className="magic-text-content">
+          <div className="magic-text-inner">
+            <div className="magic-text-background">{originalText}</div>
+            <div className="magic-text-letters" ref={containerRef}></div>
+          </div>
         </div>
       </div>
     );

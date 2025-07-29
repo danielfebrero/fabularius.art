@@ -534,22 +534,22 @@ export function GenerateClient() {
                     ref={magicTextRef}
                   />
                 )}
-                <div className="flex justify-between items-center">
-                  <div className="text-xs text-muted-foreground">
-                    Be descriptive for better results
-                  </div>
-                  <div
-                    className={cn(
-                      "text-xs font-medium",
-                      settings.prompt.length > 800
-                        ? "text-amber-600 dark:text-amber-400"
-                        : settings.prompt.length > 900
-                        ? "text-red-600 dark:text-red-400"
-                        : "text-muted-foreground"
-                    )}
-                  >
-                    {settings.prompt.length}/1000
-                  </div>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="text-xs text-muted-foreground">
+                  Be descriptive for better results
+                </div>
+                <div
+                  className={cn(
+                    "text-xs font-medium",
+                    settings.prompt.length > 800
+                      ? "text-amber-600 dark:text-amber-400"
+                      : settings.prompt.length > 900
+                      ? "text-red-600 dark:text-red-400"
+                      : "text-muted-foreground"
+                  )}
+                >
+                  {settings.prompt.length}/1000
                 </div>
               </div>
 
