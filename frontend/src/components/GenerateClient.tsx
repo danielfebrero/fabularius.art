@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 import { Slider } from "@/components/ui/Slider";
+import { Switch } from "@/components/ui/Switch";
 import {
   Select,
   SelectContent,
@@ -23,6 +24,7 @@ import {
   Grid3X3,
   Lock,
   MinusCircle,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocaleRouter } from "@/lib/navigation";
@@ -37,6 +39,7 @@ interface GenerationSettings {
   selectedLoras: string[];
   loraStrengths: Record<string, { mode: "auto" | "manual"; value: number }>;
   loraSelectionMode: "auto" | "manual";
+  optimizePrompt: boolean;
 }
 
 const IMAGE_SIZES = [
@@ -92,13 +95,20 @@ export function GenerateClient() {
     selectedLoras: [],
     loraStrengths: {},
     loraSelectionMode: "auto",
+    optimizePrompt: true,
   });
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isOptimizing, setIsOptimizing] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [allGeneratedImages, setAllGeneratedImages] = useState<string[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  // Track optimization state to prevent re-optimizing the same prompt
+  const [lastOptimizedPrompt, setLastOptimizedPrompt] = useState<string>("");
+  const [optimizedPromptCache, setOptimizedPromptCache] = useState<string>("");
+  const [originalPromptBeforeOptimization, setOriginalPromptBeforeOptimization] = useState<string>("");
 
   const {
     canGenerateImages,
@@ -121,6 +131,17 @@ export function GenerateClient() {
 
   const updateSettings = (key: keyof GenerationSettings, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
+    
+    // If the prompt is being changed manually, clear the optimization cache
+    // This ensures a new/modified prompt can be optimized again
+    if (key === "prompt") {
+      // Only clear cache if the new prompt is different from both the original and optimized versions
+      if (value !== lastOptimizedPrompt && value !== optimizedPromptCache) {
+        setLastOptimizedPrompt("");
+        setOptimizedPromptCache("");
+        setOriginalPromptBeforeOptimization("");
+      }
+    }
   };
 
   const toggleLora = (loraId: string) => {
@@ -202,6 +223,20 @@ export function GenerateClient() {
     setSettings((prev) => ({ ...prev, loraSelectionMode: mode }));
   };
 
+  // Optimize prompt function with magical animation
+  const optimizePrompt = async (originalPrompt: string): Promise<string> => {
+    setIsOptimizing(true);
+
+    // Simulate AI processing delay
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // PLACEHOLDER: Replace with actual SDXL prompt optimization logic
+    const optimizedPrompt = `${originalPrompt}, (masterpiece:1.2), (best quality:1.2), (ultra-detailed:1.2), (realistic:1.2), (photorealistic:1.2), sharp focus, cinematic lighting, detailed textures, high resolution, professional photography, depth of field, bokeh effect, vibrant colors, perfect composition`;
+
+    setIsOptimizing(false);
+    return optimizedPrompt;
+  };
+
   // Convert image URLs to Media objects for the Lightbox component
   const createMediaFromUrl = (url: string, index: number) => ({
     id: `generated-${Date.now()}-${index}`,
@@ -230,6 +265,37 @@ export function GenerateClient() {
 
   const handleGenerate = async () => {
     if (!canGenerateImages() || !allowed || !settings.prompt.trim()) return;
+
+    let finalPrompt = settings.prompt;
+
+    // Optimize prompt if enabled
+    if (settings.optimizePrompt) {
+      try {
+        // Check if we already have an optimized version of this exact prompt
+        // Case 1: Current prompt is the original that was optimized before
+        // Case 2: Current prompt is already the optimized version from a previous optimization
+        if (
+          (originalPromptBeforeOptimization && settings.prompt === originalPromptBeforeOptimization && optimizedPromptCache) ||
+          (settings.prompt === optimizedPromptCache && optimizedPromptCache)
+        ) {
+          // Use cached optimized prompt instead of re-optimizing
+          finalPrompt = optimizedPromptCache;
+        } else {
+          // This is a new/different prompt, optimize it
+          const originalPrompt = settings.prompt;
+          finalPrompt = await optimizePrompt(settings.prompt);
+          // Cache the optimization result
+          setOriginalPromptBeforeOptimization(originalPrompt);
+          setLastOptimizedPrompt(originalPrompt);
+          setOptimizedPromptCache(finalPrompt);
+          // Update the settings with the optimized prompt (but avoid triggering cache clearing)
+          setSettings((prev) => ({ ...prev, prompt: finalPrompt }));
+        }
+      } catch (error) {
+        console.error("Prompt optimization failed:", error);
+        // Continue with original prompt if optimization fails
+      }
+    }
 
     setIsGenerating(true);
 
@@ -406,30 +472,91 @@ export function GenerateClient() {
             </div>
 
             <div className="space-y-2">
-              <GradientTextarea
-                placeholder="Amateur photo, woman, 21, laying on the balcony, parisian building, lace thong..."
-                value={settings.prompt}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                  updateSettings("prompt", e.target.value)
-                }
-                className="w-full h-40 md:h-32 text-lg p-6 border-2 border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 focus:ring-offset-0 resize-none transition-all"
-              />
-              <div className="flex justify-between items-center">
-                <div className="text-xs text-muted-foreground">
-                  Be descriptive for better results
+              <div className="relative">
+                <GradientTextarea
+                  placeholder="Amateur photo, woman, 21, laying on the balcony, parisian building, lace thong..."
+                  value={settings.prompt}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                    updateSettings("prompt", e.target.value)
+                  }
+                  className="w-full h-40 md:h-32 text-lg p-6 border-2 border-border rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 focus:ring-offset-0 resize-none transition-all"
+                />
+
+                {/* Magical overlay during optimization */}
+                {isOptimizing && (
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-purple-500/10 to-primary/10 rounded-xl border-2 border-primary/30 animate-pulse z-10" />
+                    <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
+                      <div className="relative">
+                        {/* Magic sparkles */}
+                        <div className="absolute inset-0 animate-spin">
+                          <Sparkles className="h-8 w-8 text-primary absolute -top-4 -left-4 animate-pulse" />
+                          <Sparkles
+                            className="h-6 w-6 text-purple-500 absolute -top-2 right-6 animate-pulse"
+                            style={{ animationDelay: "0.5s" }}
+                          />
+                          <Sparkles
+                            className="h-5 w-5 text-primary absolute bottom-4 -left-2 animate-pulse"
+                            style={{ animationDelay: "1s" }}
+                          />
+                          <Sparkles
+                            className="h-7 w-7 text-purple-400 absolute bottom-2 right-4 animate-pulse"
+                            style={{ animationDelay: "1.5s" }}
+                          />
+                        </div>
+
+                        {/* Central magical effect */}
+                        <div className="flex items-center gap-3 bg-background/90 backdrop-blur-sm px-4 py-2 rounded-full border border-primary/20 shadow-lg">
+                          <div className="relative">
+                            <Zap className="h-6 w-6 text-primary animate-pulse" />
+                            <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
+                          </div>
+                          <span className="text-sm font-medium text-primary">
+                            Optimizing prompt...
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+                <div className="flex justify-between items-center">
+                  <div className="text-xs text-muted-foreground">
+                    Be descriptive for better results
+                  </div>
+                  <div
+                    className={cn(
+                      "text-xs font-medium",
+                      settings.prompt.length > 800
+                        ? "text-amber-600 dark:text-amber-400"
+                        : settings.prompt.length > 900
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    {settings.prompt.length}/1000
+                  </div>
                 </div>
-                <div
-                  className={cn(
-                    "text-xs font-medium",
-                    settings.prompt.length > 800
-                      ? "text-amber-600 dark:text-amber-400"
-                      : settings.prompt.length > 900
-                      ? "text-red-600 dark:text-red-400"
-                      : "text-muted-foreground"
-                  )}
-                >
-                  {settings.prompt.length}/1000
+              </div>
+
+              {/* Optimize Prompt Toggle */}
+              <div className="flex items-center justify-between p-4 bg-muted/30 border border-border/50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-primary to-purple-600 rounded-full flex items-center justify-center">
+                    <Sparkles className="h-4 w-4 text-white" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground">
+                      Optimize prompt
+                    </h4>
+                  </div>
                 </div>
+                <Switch
+                  checked={settings.optimizePrompt}
+                  onCheckedChange={(checked) =>
+                    updateSettings("optimizePrompt", checked)
+                  }
+                  className="data-[state=checked]:bg-primary"
+                />
               </div>
             </div>
           </div>
@@ -438,16 +565,29 @@ export function GenerateClient() {
           <div className="relative">
             <Button
               onClick={handleGenerate}
-              disabled={!allowed || !settings.prompt.trim() || isGenerating}
+              disabled={
+                !allowed ||
+                !settings.prompt.trim() ||
+                isGenerating ||
+                isOptimizing
+              }
               className={cn(
                 "w-full h-16 text-lg font-semibold rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]",
-                isGenerating
+                isGenerating || isOptimizing
                   ? "bg-gradient-to-r from-primary/80 to-purple-600/80"
                   : "bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
               )}
               size="lg"
             >
-              {isGenerating ? (
+              {isOptimizing ? (
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Sparkles className="w-6 h-6 text-white animate-pulse" />
+                    <div className="absolute inset-0 bg-white/20 rounded-full animate-ping" />
+                  </div>
+                  <span>Optimizing Prompt...</span>
+                </div>
+              ) : isGenerating ? (
                 <div className="flex items-center gap-3">
                   <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
                   <span>Creating Magic...</span>
@@ -1099,7 +1239,9 @@ export function GenerateClient() {
 
           {/* Lightbox */}
           <Lightbox
-            media={allGeneratedImages.map(createMediaFromUrl)}
+            media={allGeneratedImages.map((url, index) =>
+              createMediaFromUrl(url, index)
+            )}
             currentIndex={lightboxIndex}
             isOpen={lightboxOpen}
             canDelete={true}
