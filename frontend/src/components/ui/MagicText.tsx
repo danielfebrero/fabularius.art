@@ -19,6 +19,7 @@ export interface MagicTextHandle {
 export const MagicText = forwardRef<MagicTextHandle, MagicTextProps>(
   ({ originalText }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
+    const magicTextRef = useRef<HTMLDivElement>(null);
     const [isInitial, setIsInitial] = useState(true);
 
     const splitText = useCallback(
@@ -31,23 +32,53 @@ export const MagicText = forwardRef<MagicTextHandle, MagicTextProps>(
             backgroundTextEl.textContent = text;
           }
 
-          // Create individual letter spans for animation
+          // Create word-based spans with individual letter spans inside for animation
           containerRef.current.innerHTML = "";
-          text.split("").forEach((char, index) => {
-            const span = document.createElement("span");
-            span.classList.add("letter");
-            span.textContent = char === " " ? "\u00A0" : char;
+          let letterIndex = 0;
 
-            // Handle line breaks
-            if (char === "\n") {
-              span.style.whiteSpace = "pre";
-            }
+          // Split text into words and spaces, preserving whitespace
+          const segments = text.split(/(\s+|\n)/);
 
-            if (text === originalText && isInitial) {
-              span.classList.add("initial-magic");
-              span.style.animationDelay = `${index * 0.05}s`;
-            }
-            containerRef.current!.appendChild(span);
+          segments.forEach((segment) => {
+            if (segment.length === 0) return;
+
+            // Create a word container span
+            const wordSpan = document.createElement("span");
+            wordSpan.classList.add("word");
+            wordSpan.style.display = "inline-block";
+            wordSpan.style.whiteSpace = segment.match(/^\s+$/)
+              ? "pre"
+              : "nowrap";
+
+            // Split segment into individual letters
+            segment.split("").forEach((char) => {
+              const letterSpan = document.createElement("span");
+              letterSpan.classList.add("letter");
+              letterSpan.textContent = char === " " ? "\u00A0" : char;
+
+              // Handle line breaks
+              if (char === "\n") {
+                letterSpan.style.whiteSpace = "pre";
+              }
+
+              if (text === originalText && isInitial) {
+                letterSpan.classList.add("initial-magic");
+                // Calculate delay to make full text appear in 1.5 seconds
+                const totalInitialTime = 1500; // 1.5 seconds
+                const letterDelay = Math.min(
+                  50,
+                  totalInitialTime / Math.max(text.length, 1)
+                );
+                letterSpan.style.animationDelay = `${
+                  letterIndex * letterDelay
+                }ms`;
+              }
+
+              wordSpan.appendChild(letterSpan);
+              letterIndex++;
+            });
+
+            containerRef.current!.appendChild(wordSpan);
           });
         }
       },
@@ -123,6 +154,14 @@ export const MagicText = forwardRef<MagicTextHandle, MagicTextProps>(
         const newLetters = containerRef.current!.querySelectorAll(
           ".letter"
         ) as NodeListOf<HTMLSpanElement>;
+
+        // Calculate delay to make full text appear in 1.5 seconds
+        const totalAnimationTime = 1500; // 1.5 seconds
+        const letterDelay = Math.min(
+          50,
+          totalAnimationTime / Math.max(newLetters.length, 1)
+        );
+
         newLetters.forEach((letter, index) => {
           letter.classList.add("morphing");
           letter.style.transform = `translate(${Math.random() * 100 - 50}px, ${
@@ -132,8 +171,20 @@ export const MagicText = forwardRef<MagicTextHandle, MagicTextProps>(
           setTimeout(() => {
             letter.style.transform = "translate(0, 0) rotate(0deg)";
             letter.style.opacity = "1";
-            setTimeout(() => letter.classList.remove("morphing"), 500);
-          }, index * 50);
+            setTimeout(() => {
+              letter.classList.remove("morphing");
+
+              // Start gradual disappearance after animation completes
+              letter.style.transition = "opacity 300ms ease-out";
+              letter.style.opacity = "0";
+
+              const mtr = magicTextRef.current;
+              if (mtr) {
+                mtr.style.transition = "opacity 300ms ease-out";
+                mtr.style.opacity = "0";
+              }
+            }, 500);
+          }, index * letterDelay);
         });
       }, letters.length * 50 + 500);
     };
@@ -175,8 +226,8 @@ export const MagicText = forwardRef<MagicTextHandle, MagicTextProps>(
         letter-spacing: inherit;
         text-align: left;
         white-space: pre-wrap;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
+        word-break: normal;
+        overflow-wrap: normal;
         display: flex;
         align-items: flex-start;
         justify-content: flex-start;
@@ -199,14 +250,17 @@ export const MagicText = forwardRef<MagicTextHandle, MagicTextProps>(
         -webkit-text-fill-color: transparent;
         color: transparent;
         white-space: pre-wrap;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
+        word-break: normal;
+        overflow-wrap: normal;
         z-index: 1;
       }
       .magic-text-letters {
         position: relative;
         z-index: 2;
         background: hsl(var(--background));
+      }
+      .word {
+        display: inline-block;
       }
       .letter {
         display: inline-block;
@@ -246,7 +300,7 @@ export const MagicText = forwardRef<MagicTextHandle, MagicTextProps>(
     `;
 
     return (
-      <div className="magic-text-overlay bg-background">
+      <div className="magic-text-overlay bg-background" ref={magicTextRef}>
         <style>{css}</style>
         <div className="magic-text-content">
           <div className="magic-text-inner">
