@@ -1098,19 +1098,6 @@ export function GenerateClient() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="p-4 text-center bg-primary/5 border border-primary/20 rounded-xl">
-                    <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Crown className="h-6 w-6 text-primary" />
-                    </div>
-                    <h4 className="font-medium text-foreground mb-2">
-                      Automatic LoRA Selection
-                    </h4>
-                    <p className="text-sm text-muted-foreground">
-                      We will automatically choose the best LoRA models and
-                      settings based on your prompt to create the perfect image.
-                    </p>
-                  </div>
-
                   {/* Available LoRA Models Preview */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
