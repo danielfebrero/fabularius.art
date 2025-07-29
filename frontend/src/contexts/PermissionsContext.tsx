@@ -78,7 +78,6 @@ export function PermissionsProvider({
   const canGenerateImagesCount = (
     count: number = 1
   ): { allowed: boolean; remaining: number | "unlimited" } => {
-    console.log({ user, planPermissions });
     if (!user || !planPermissions || !user.planInfo.isActive) {
       return { allowed: false, remaining: 0 };
     }

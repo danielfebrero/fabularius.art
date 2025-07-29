@@ -32,8 +32,13 @@ export const GradientTextarea: React.FC<GradientTextareaProps> = ({
       const textContent = overlay.firstElementChild as HTMLElement;
 
       if (textContent) {
-        // Move the text content to match scroll position
-        textContent.style.transform = `translate(-${textarea.scrollLeft}px, -${textarea.scrollTop}px)`;
+        // Use precise scroll positioning with subpixel accuracy
+        const scrollLeft = textarea.scrollLeft;
+        const scrollTop = textarea.scrollTop;
+        
+        // Apply transform with hardware acceleration for smooth scrolling
+        textContent.style.transform = `translate3d(-${scrollLeft}px, -${scrollTop}px, 0)`;
+        textContent.style.willChange = "transform";
       }
     }
   }, []);
@@ -49,20 +54,57 @@ export const GradientTextarea: React.FC<GradientTextareaProps> = ({
         // Copy computed styles to ensure pixel-perfect alignment
         const computedStyle = window.getComputedStyle(textarea);
 
+        // Update overlay position to match textarea's content area exactly
+        const borderTopWidth = parseInt(computedStyle.borderTopWidth, 10);
+        const borderLeftWidth = parseInt(computedStyle.borderLeftWidth, 10);
+        
+        // Position overlay to match textarea's content area (excluding borders and scrollbars)
+        overlay.style.top = `${borderTopWidth}px`;
+        overlay.style.left = `${borderLeftWidth}px`;
+        overlay.style.width = `${textarea.clientWidth}px`;
+        overlay.style.height = `${textarea.clientHeight}px`;
+        overlay.style.borderRadius = computedStyle.borderRadius;
+
         // Apply styles to the text content div
         if (textContent) {
+          // Copy all text-related properties that affect layout
           textContent.style.padding = computedStyle.padding;
+          textContent.style.paddingTop = computedStyle.paddingTop;
+          textContent.style.paddingRight = computedStyle.paddingRight;
+          textContent.style.paddingBottom = computedStyle.paddingBottom;
+          textContent.style.paddingLeft = computedStyle.paddingLeft;
+          textContent.style.margin = "0"; // Reset margin to prevent offset
+          textContent.style.boxSizing = computedStyle.boxSizing;
+          
+          // Font and text properties
           textContent.style.fontSize = computedStyle.fontSize;
           textContent.style.fontFamily = computedStyle.fontFamily;
+          textContent.style.fontWeight = computedStyle.fontWeight;
+          textContent.style.fontStyle = computedStyle.fontStyle;
           textContent.style.lineHeight = computedStyle.lineHeight;
           textContent.style.letterSpacing = computedStyle.letterSpacing;
           textContent.style.wordSpacing = computedStyle.wordSpacing;
           textContent.style.textAlign = computedStyle.textAlign;
+          textContent.style.textIndent = computedStyle.textIndent;
+          textContent.style.textTransform = computedStyle.textTransform;
+          
+          // White space and word wrapping
           textContent.style.whiteSpace = "pre-wrap";
           textContent.style.wordWrap = "break-word";
+          textContent.style.overflowWrap = "break-word";
+          textContent.style.wordBreak = computedStyle.wordBreak;
+          textContent.style.hyphens = computedStyle.hyphens;
+          
+          // Calculate the actual content width accounting for scrollbars
+          // Use the same clientWidth as the overlay to ensure perfect alignment
+          textContent.style.width = `${textarea.clientWidth}px`;
+          textContent.style.minHeight = computedStyle.minHeight;
 
           // Position the text content to match scroll offset
-          textContent.style.transform = `translate(-${textarea.scrollLeft}px, -${textarea.scrollTop}px)`;
+          const scrollLeft = textarea.scrollLeft;
+          const scrollTop = textarea.scrollTop;
+          textContent.style.transform = `translate3d(-${scrollLeft}px, -${scrollTop}px, 0)`;
+          textContent.style.willChange = "transform";
         }
       }
     };
@@ -73,26 +115,29 @@ export const GradientTextarea: React.FC<GradientTextareaProps> = ({
     const resizeObserver = new ResizeObserver(syncStyles);
     const currentTextarea = textareaRef.current;
 
-    if (currentTextarea) {
-      resizeObserver.observe(currentTextarea);
-    }
-
-    // Also sync when content changes
+    // Also sync when content changes and on scroll
     const handleInput = () => {
       requestAnimationFrame(syncStyles);
     };
 
+    const handleScrollEvent = () => {
+      requestAnimationFrame(handleScroll);
+    };
+
     if (currentTextarea) {
+      resizeObserver.observe(currentTextarea);
       currentTextarea.addEventListener("input", handleInput);
+      currentTextarea.addEventListener("scroll", handleScrollEvent);
     }
 
     return () => {
       resizeObserver.disconnect();
       if (currentTextarea) {
         currentTextarea.removeEventListener("input", handleInput);
+        currentTextarea.removeEventListener("scroll", handleScrollEvent);
       }
     };
-  }, [value]); // Re-run when value changes
+  }, [value, handleScroll]); // Re-run when value or handleScroll changes
 
   // Process text for display - handle placeholder and content
   const displayText = value || placeholder;
@@ -133,7 +178,14 @@ export const GradientTextarea: React.FC<GradientTextareaProps> = ({
       {/* Gradient text overlay */}
       <div
         ref={overlayRef}
-        className="absolute inset-0 z-10 pointer-events-none overflow-hidden"
+        className="absolute z-10 pointer-events-none overflow-hidden"
+        style={{
+          // Initial positioning - will be updated by syncStyles
+          top: 0,
+          left: 0,
+          width: 0,
+          height: 0,
+        }}
       >
         <div
           className={cn(
@@ -148,6 +200,10 @@ export const GradientTextarea: React.FC<GradientTextareaProps> = ({
             backgroundClip: "text",
             WebkitTextFillColor: "transparent",
             color: "transparent",
+            // Ensure consistent text rendering
+            textRendering: "optimizeLegibility",
+            WebkitFontSmoothing: "antialiased",
+            MozOsxFontSmoothing: "grayscale",
           }}
         >
           {displayText}
