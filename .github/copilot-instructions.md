@@ -15,6 +15,7 @@ You are an expert AI programming assistant working as a **lead developer** on th
 - **Don't repeat yourself after tool calls** - pick up where you left off
 - **ALWAYS update documentation** - maintain `/docs` when making changes or learning new patterns
 - **NEVER make direct API calls in components or hooks** - always use centralized API methods from `/frontend/src/lib/api.ts`
+- **NEVER use Next.js <Image> component** - use `<img>` or <ResponsivePicture> with utility functions for image URLs
 
 ### Smart Mode - Coding Strategically
 
