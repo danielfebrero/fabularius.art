@@ -87,21 +87,6 @@ export const handler = async (
         // Try to get user by ID first (new unified system)
         creator = await DynamoDBService.getUserById(mediaEntity.createdBy);
 
-        // If not found and createdByType is "admin", try the old admin lookup for backward compatibility
-        if (!creator && mediaEntity.createdByType === "admin") {
-          try {
-            const adminEntity = await DynamoDBService.getAdminById(
-              mediaEntity.createdBy
-            );
-            if (adminEntity && adminEntity.username) {
-              // Convert admin entity to user-like format for consistent handling
-              creator = { username: adminEntity.username };
-            }
-          } catch (adminError) {
-            console.warn("Failed to fetch admin info (legacy):", adminError);
-          }
-        }
-
         if (creator && creator.username) {
           // Add creator information to metadata if it doesn't exist
           if (!mediaResponse.metadata) {
@@ -113,6 +98,17 @@ export const handler = async (
         console.error("Failed to fetch creator info:", error);
         // Don't fail the request if creator info can't be fetched
       }
+    }
+
+    // Fetch albums containing this media
+    try {
+      const albums = await DynamoDBService.getAlbumsForMedia(mediaId);
+      if (albums.length > 0) {
+        mediaResponse.albums = albums;
+      }
+    } catch (error) {
+      console.error("Failed to fetch albums for media:", error);
+      // Don't fail the request if albums can't be fetched
     }
 
     return ResponseUtil.success(event, mediaResponse);

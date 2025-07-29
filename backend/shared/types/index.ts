@@ -52,7 +52,7 @@ export interface Media {
   createdBy?: string | undefined;
   createdByType?: "user" | "admin" | undefined;
   // Album relationships (populated when needed)
-  albums?: string[] | undefined; // array of album IDs this media belongs to
+  albums?: Album[] | undefined; // array of album objects this media belongs to
 }
 
 export interface CreateAlbumRequest {

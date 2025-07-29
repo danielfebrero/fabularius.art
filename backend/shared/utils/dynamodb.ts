@@ -751,6 +751,26 @@ export class DynamoDBService {
     return relationships.map((rel) => rel.albumId);
   }
 
+  static async getAlbumsForMedia(mediaId: string): Promise<Album[]> {
+    // First get the album IDs
+    const albumIds = await this.getMediaAlbums(mediaId);
+
+    if (albumIds.length === 0) {
+      return [];
+    }
+
+    // Fetch all album entities
+    const albumPromises = albumIds.map((albumId) => this.getAlbum(albumId));
+    const albumEntities = await Promise.all(albumPromises);
+
+    // Filter out null results and convert to Album format
+    const albums = albumEntities
+      .filter((entity): entity is AlbumEntity => entity !== null)
+      .map((entity) => this.convertAlbumEntityToAlbum(entity));
+
+    return albums;
+  }
+
   static async getAllPublicMedia(): Promise<MediaEntity[]> {
     // Get all public albums first
     const allMediaIds = new Set<string>();

@@ -29,6 +29,7 @@ import { ContentCard } from "@/components/ui/ContentCard";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { getBestThumbnailUrl } from "@/lib/urlUtils";
 
 // --- PROPS INTERFACES ---
 
@@ -183,7 +184,11 @@ const AlbumCard: FC<{ album: Album; router: any }> = ({ album, router }) => (
   >
     <div className="relative aspect-square">
       <img
-        src={album.coverImageUrl || "/placeholder-album.jpg"}
+        src={getBestThumbnailUrl(
+          album.thumbnailUrls,
+          album.coverImageUrl,
+          "cover"
+        )}
         alt={album.title}
         className="object-cover w-full h-full transition-opacity group-hover:opacity-90"
       />
