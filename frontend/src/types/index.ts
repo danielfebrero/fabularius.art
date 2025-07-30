@@ -16,9 +16,11 @@ export interface Album {
   likeCount?: number;
   bookmarkCount?: number;
   viewCount?: number;
+  commentCount?: number;
   createdAt: string;
   updatedAt: string;
   media?: Media[];
+  comments?: Comment[];
 }
 
 export interface Media {
@@ -46,10 +48,12 @@ export interface Media {
   likeCount?: number;
   bookmarkCount?: number;
   viewCount?: number;
+  commentCount?: number;
   // User tracking fields
   createdBy?: string; // userId or adminId who uploaded this media
   createdByType?: "user" | "admin"; // type of creator
   albums?: Album[]; // For storing full album information when populated
+  comments?: Comment[]; // Include comments directly in Media
 }
 
 export interface ApiResponse<T = any> {
@@ -129,6 +133,49 @@ export interface ThumbnailUrls {
   large?: string;
   xlarge?: string;
   originalSize?: string;
+}
+
+// Comment types
+export interface Comment {
+  id: string;
+  content: string;
+  targetType: "album" | "media";
+  targetId: string;
+  userId: string;
+  username?: string;
+  createdAt: string;
+  updatedAt: string;
+  likeCount?: number;
+  isEdited?: boolean;
+}
+
+export interface CreateCommentRequest {
+  content: string;
+  targetType: "album" | "media";
+  targetId: string;
+}
+
+export interface UpdateCommentRequest {
+  content: string;
+}
+
+export interface CommentResponse {
+  success: boolean;
+  data?: Comment;
+  error?: string;
+}
+
+export interface CommentListResponse {
+  success: boolean;
+  data?: {
+    comments: Comment[];
+    pagination: {
+      limit: number;
+      hasNext: boolean;
+      cursor?: string;
+    };
+  };
+  error?: string;
 }
 
 // User authentication types

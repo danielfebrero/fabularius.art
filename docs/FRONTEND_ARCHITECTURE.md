@@ -203,6 +203,67 @@ All profile pages follow established patterns for:
 - Loading skeletons and error states
 - Back navigation to parent profile page
 
+## Comment System
+
+### Comments Component Architecture
+
+The comment system is implemented with two main components that work together to provide an optimized user experience:
+
+#### CommentItem Component
+
+- **File**: `/components/ui/Comment.tsx`
+- **Purpose**: Individual comment display and interaction
+- **Features**:
+  - User avatar with fallback to initials
+  - Username linking to user profiles
+  - Inline editing with textarea and character count
+  - Owner-only edit/delete actions with hover states
+  - Time formatting (e.g., "2h ago", "3d ago")
+  - Like functionality (placeholder for future implementation)
+  - Edited indicator for modified comments
+
+#### Comments Component (Optimized)
+
+- **File**: `/components/ui/CommentsOptimized.tsx`
+- **Purpose**: Comment section with optimized loading strategy
+- **Key Features**:
+  - **Initial Comments**: Uses pre-loaded comments from Media/Album objects
+  - **Lazy Loading**: Only fetches additional comments when needed
+  - **Duplicate Prevention**: Filters out already loaded comments
+  - **Real-time Updates**: New comments appear immediately
+  - **Keyboard Shortcuts**: Cmd+Enter to submit on desktop
+  - **Permission Checks**: Only authenticated users can comment
+  - **Error Handling**: Graceful error states with retry options
+
+#### Implementation Strategy
+
+**Optimized Loading Pattern**:
+```typescript
+interface CommentsProps {
+  targetType: "album" | "media";
+  targetId: string;
+  initialComments?: Comment[]; // Pre-loaded from parent object
+  currentUserId?: string;
+}
+```
+
+**Benefits**:
+- **Performance**: Reduces initial API calls by leveraging existing data
+- **UX**: Comments appear immediately without loading states
+- **Scalability**: Only fetches additional comments when user requests them
+- **Consistency**: Works seamlessly with both Media and Album objects
+
+**Integration Example**:
+```typescript
+// MediaDetailClient.tsx
+<Comments
+  targetType="media"
+  targetId={media.id}
+  initialComments={media.comments}
+  currentUserId={user?.userId}
+/>
+```
+
 ## AI Image Generation
 
 ### GenerateClient Component

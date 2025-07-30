@@ -1,13 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Share2, ArrowLeft } from "lucide-react";
+import { Share2, ArrowLeft, MessageCircle } from "lucide-react";
 import { Album, Media } from "@/types";
 import { Tag } from "@/components/ui/Tag";
 import { ShareDropdown } from "@/components/ui/ShareDropdown";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { ViewTracker } from "@/components/ui/ViewTracker";
 import { MediaGallery } from "@/components/MediaGallery";
+import { Comments } from "@/components/ui/Comments";
+import { useUser } from "@/hooks/useUser";
 import LocaleLink from "@/components/ui/LocaleLink";
 
 interface AlbumDetailClientProps {
@@ -25,6 +27,7 @@ export function AlbumDetailClient({
   initialPagination,
 }: AlbumDetailClientProps) {
   const router = useRouter();
+  const { user } = useUser();
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -118,6 +121,24 @@ export function AlbumDetailClient({
             initialMedia={initialMedia}
             initialPagination={initialPagination}
           />
+
+          {/* Comments Section */}
+          <div className="max-w-4xl mx-auto mt-8">
+            <div className="bg-card rounded-lg border border-border/20 p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <MessageCircle className="w-5 h-5 text-primary" />
+                <h2 className="text-lg font-semibold text-foreground">
+                  Comments
+                </h2>
+              </div>
+              <Comments
+                targetType="album"
+                targetId={album.id}
+                initialComments={album.comments}
+                currentUserId={user?.userId}
+              />
+            </div>
+          </div>
         </div>
       </main>
     </div>

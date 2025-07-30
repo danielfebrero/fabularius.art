@@ -4,6 +4,12 @@ import {
   UserInteractionsResponse,
   UserInteractionStatsResponse,
 } from "@/types/user";
+import {
+  CreateCommentRequest,
+  UpdateCommentRequest,
+  CommentResponse,
+  CommentListResponse,
+} from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -206,6 +212,94 @@ export const interactionApi = {
 
     if (!response.ok) {
       throw new Error(`Failed to get insights: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  // Comment operations
+  getComments: async (
+    targetType: "album" | "media",
+    targetId: string,
+    limit: number = 20,
+    cursor?: string
+  ): Promise<CommentListResponse> => {
+    const params = new URLSearchParams({
+      limit: limit.toString(),
+    });
+
+    if (cursor) {
+      params.append("cursor", cursor);
+    }
+
+    const response = await fetch(
+      `${API_URL}/user/interactions/comments/${targetType}/${targetId}?${params}`,
+      {
+        method: "GET",
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to get comments: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  createComment: async (
+    request: CreateCommentRequest
+  ): Promise<CommentResponse> => {
+    const response = await fetch(`${API_URL}/user/interactions/comment`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create comment: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  updateComment: async (
+    commentId: string,
+    request: UpdateCommentRequest
+  ): Promise<CommentResponse> => {
+    const response = await fetch(
+      `${API_URL}/user/interactions/comment/${commentId}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(request),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to update comment: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  deleteComment: async (commentId: string): Promise<{ success: boolean }> => {
+    const response = await fetch(
+      `${API_URL}/user/interactions/comment/${commentId}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete comment: ${response.statusText}`);
     }
 
     return response.json();

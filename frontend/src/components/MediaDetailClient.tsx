@@ -21,16 +21,17 @@ import {
 } from "lucide-react";
 import { Media, Album } from "@/types";
 import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
+import { useUser } from "@/hooks/useUser";
 import { ShareDropdown } from "@/components/ui/ShareDropdown";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { ViewTracker } from "@/components/ui/ViewTracker";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { HorizontalScroll } from "@/components/ui/HorizontalScroll";
+import { Comments } from "@/components/ui/Comments";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { getBestThumbnailUrl } from "@/lib/urlUtils";
 
 // --- PROPS INTERFACES ---
 
@@ -184,6 +185,7 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const metadata = useMediaMetadata(media);
   const isMobile = useIsMobile();
+  const { user } = useUser();
 
   useUserInteractionStatus();
 
@@ -447,10 +449,12 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
               title="Comments"
               defaultOpen
             >
-              <div className="text-center py-6 text-muted-foreground">
-                <MessageCircle className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                <p>Comments are coming soon!</p>
-              </div>
+              <Comments
+                targetType="media"
+                targetId={media.id}
+                initialComments={media.comments}
+                currentUserId={user?.userId}
+              />
             </MetaSection>
           </aside>
         </div>
