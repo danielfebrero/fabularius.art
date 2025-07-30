@@ -145,11 +145,13 @@ export default function UserCommentsPage() {
                       <p className="text-muted-foreground">
                         {totalCount > 0 ? (
                           <>
-                            {totalCount} comment{totalCount !== 1 ? "s" : ""} made
+                            {totalCount} comment{totalCount !== 1 ? "s" : ""}{" "}
+                            made
                           </>
                         ) : comments.length > 0 ? (
                           <>
-                            {comments.length} comment{comments.length !== 1 ? "s" : ""} loaded
+                            {comments.length} comment
+                            {comments.length !== 1 ? "s" : ""} loaded
                           </>
                         ) : (
                           "No comments yet"
@@ -225,7 +227,8 @@ export default function UserCommentsPage() {
                             {/* Like count if available */}
                             {(comment.likeCount || 0) > 0 && (
                               <div className="text-xs text-muted-foreground">
-                                {comment.likeCount} like{comment.likeCount !== 1 ? "s" : ""}
+                                {comment.likeCount} like
+                                {comment.likeCount !== 1 ? "s" : ""}
                               </div>
                             )}
                           </div>
