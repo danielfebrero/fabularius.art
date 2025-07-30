@@ -238,6 +238,7 @@ The comment system is implemented with two main components that work together to
 #### Implementation Strategy
 
 **Optimized Loading Pattern**:
+
 ```typescript
 interface CommentsProps {
   targetType: "album" | "media";
@@ -248,12 +249,14 @@ interface CommentsProps {
 ```
 
 **Benefits**:
+
 - **Performance**: Reduces initial API calls by leveraging existing data
 - **UX**: Comments appear immediately without loading states
 - **Scalability**: Only fetches additional comments when user requests them
 - **Consistency**: Works seamlessly with both Media and Album objects
 
 **Integration Example**:
+
 ```typescript
 // MediaDetailClient.tsx
 <Comments

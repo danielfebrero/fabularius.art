@@ -5,8 +5,10 @@ import { MessageCircle, Send, Loader2 } from "lucide-react";
 import { Comment, CreateCommentRequest } from "@/types";
 import { CommentItem } from "@/components/ui/Comment";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { interactionApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface CommentsProps {
   targetType: "album" | "media";
@@ -24,7 +26,7 @@ export function Comments({
   className,
 }: CommentsProps) {
   const [comments, setComments] = useState<Comment[]>(initialComments);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false); // Not used in this implementation as loading is handled by parent
   const [loadingMore, setLoadingMore] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +34,13 @@ export function Comments({
   const [cursor, setCursor] = useState<string | undefined>();
   const [newComment, setNewComment] = useState("");
   const [hasFetchedAdditional, setHasFetchedAdditional] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    isOpen: boolean;
+    commentId?: string;
+  }>({
+    isOpen: false,
+  });
+  const isMobile = useIsMobile();
 
   // Load additional comments (beyond initial ones)
   const loadMoreComments = useCallback(async () => {
@@ -48,11 +57,13 @@ export function Comments({
 
       if (response.success && response.data) {
         const newComments = response.data.comments;
-        
+
         // Filter out comments we already have to avoid duplicates
-        const existingIds = new Set(comments.map(c => c.id));
-        const uniqueNewComments = newComments.filter(c => !existingIds.has(c.id));
-        
+        const existingIds = new Set(comments.map((c) => c.id));
+        const uniqueNewComments = newComments.filter(
+          (c) => !existingIds.has(c.id)
+        );
+
         setComments((prev) => [...prev, ...uniqueNewComments]);
         setHasMore(!!response.data.pagination.hasNext);
         setCursor(response.data.pagination.cursor);
@@ -132,14 +143,25 @@ export function Comments({
 
   // Delete comment
   const handleDeleteComment = async (commentId: string) => {
-    if (!confirm("Are you sure you want to delete this comment?")) return;
+    setDeleteConfirm({
+      isOpen: true,
+      commentId,
+    });
+  };
+
+  // Confirm delete comment
+  const handleConfirmDelete = async () => {
+    const commentId = deleteConfirm.commentId;
+    if (!commentId) return;
 
     try {
       await interactionApi.deleteComment(commentId);
       setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+      setDeleteConfirm({ isOpen: false });
     } catch (err) {
       console.error("Error deleting comment:", err);
       setError(err instanceof Error ? err.message : "Failed to delete comment");
+      setDeleteConfirm({ isOpen: false });
     }
   };
 
@@ -164,21 +186,21 @@ export function Comments({
       {/* Comment form */}
       {canComment && (
         <div className="space-y-3">
-          <div className="relative">
+          <div className="flex items-center gap-2">
             <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Write a comment..."
-              className="w-full p-3 pr-12 text-sm border border-border rounded-lg bg-background text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[80px]"
+              className="flex-1 p-3 text-sm border border-border rounded-lg bg-background text-foreground resize-none focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-h-[44px] max-h-[120px]"
               maxLength={1000}
-              rows={3}
+              rows={1}
             />
             <Button
               onClick={handleSubmitComment}
               disabled={!newComment.trim() || submitting}
               size="sm"
-              className="absolute bottom-2 right-2"
+              className="h-[44px] px-3"
             >
               {submitting ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -188,8 +210,10 @@ export function Comments({
             </Button>
           </div>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Press Cmd+Enter to submit</span>
-            <span>{newComment.length}/1000</span>
+            {!isMobile && <span>Press Cmd+Enter to submit</span>}
+            <span className={cn(!isMobile && "ml-auto")}>
+              {newComment.length}/1000
+            </span>
           </div>
         </div>
       )}
@@ -262,6 +286,17 @@ export function Comments({
           </p>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm({ isOpen: false })}
+        onConfirm={handleConfirmDelete}
+        title="Delete Comment"
+        message="Are you sure you want to delete this comment? This action cannot be undone."
+        confirmText="Delete"
+        confirmVariant="danger"
+      />
     </div>
   );
 }

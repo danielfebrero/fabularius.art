@@ -125,8 +125,15 @@ export function CommentItem({
               </Button>
 
               {/* Owner actions */}
-              {isOwner && (showActions || isEditing) && (
-                <div className="flex items-center gap-1">
+              {isOwner && (
+                <div
+                  className={cn(
+                    "flex items-center gap-1",
+                    !showActions &&
+                      !isEditing &&
+                      "opacity-0 pointer-events-none"
+                  )}
+                >
                   <Tooltip content="Edit comment" side="top">
                     <Button
                       variant="ghost"
