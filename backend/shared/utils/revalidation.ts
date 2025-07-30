@@ -69,7 +69,7 @@ export class RevalidationService {
    * @param albumId The album ID to revalidate
    */
   static async revalidateAlbum(albumId: string): Promise<void> {
-    await this.revalidate(["albums", `album-${albumId}`, "albums"]);
+    await this.revalidate(["albums", `album-${albumId}`]);
   }
 
   /**
