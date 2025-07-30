@@ -6,6 +6,7 @@ import { ResponseUtil } from "@shared/utils/response";
 import { UploadMediaRequest } from "@shared/types";
 import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 import { PlanUtil } from "@shared/utils/plan";
+import { RevalidationService } from "@shared/utils/revalidation";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -97,6 +98,9 @@ export const handler = async (
         throw error;
       }
 
+      await RevalidationService.revalidateMedia(mediaId);
+      await RevalidationService.revalidateAlbum(albumId);
+
       return ResponseUtil.success(event, {
         success: true,
         message: "Media added to album successfully",
@@ -169,6 +173,8 @@ export const handler = async (
       key,
       expiresIn: 3600, // 1 hour
     };
+
+    await RevalidationService.revalidateAlbum(albumId);
 
     return ResponseUtil.success(event, response);
   } catch (error) {
