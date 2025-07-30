@@ -83,6 +83,7 @@ export default function ProfileComponent({
     error: albumsError,
   } = useAlbums({
     user: user.username || "",
+    isPublic: true,
     limit: 3, // Only fetch 3 recent albums for the profile preview
   });
 

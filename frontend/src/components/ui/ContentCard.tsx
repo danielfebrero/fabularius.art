@@ -10,6 +10,8 @@ import { Tag } from "@/components/ui/Tag";
 import { cn } from "@/lib/utils";
 import { composeMediaUrl } from "@/lib/urlUtils";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useUser } from "@/hooks/useUser";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import {
   Maximize2,
   Plus,
@@ -109,6 +111,8 @@ export function ContentCard({
   currentIndex = 0,
 }: ContentCardProps) {
   const router = useLocaleRouter();
+  const { user } = useUser();
+  const { redirectToLogin } = useAuthRedirect();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [showMobileActions, setShowMobileActions] = useState(false);
@@ -217,6 +221,13 @@ export function ContentCard({
     if (onAddToAlbum) {
       onAddToAlbum();
     } else if (isMedia && media) {
+      // Check if user is authenticated before showing dialog
+      if (!user) {
+        // Redirect to login page with current page as return URL
+        redirectToLogin();
+        return;
+      }
+
       // Default behavior: show add to album dialog for media items
       setAddToAlbumDialogOpen(true);
     } else {

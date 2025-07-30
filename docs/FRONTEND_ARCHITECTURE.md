@@ -115,6 +115,14 @@ The application uses custom React hooks to fetch data from the API. This approac
 - **File**: `frontend/src/hooks/useUser.ts`
 - **Purpose**: A simple hook that provides access to the user state from the `UserContext`.
 
+### `useAuthRedirect` Hook
+
+- **File**: [`frontend/src/hooks/useAuthRedirect.ts`](../frontend/src/hooks/useAuthRedirect.ts)
+- **Purpose**: Provides functionality to redirect unauthenticated users to the login page while preserving their current location.
+- **Functions**:
+  - `redirectToLogin(currentPath?)`: Redirects to `/auth/login` with a `returnTo` parameter containing the current URL or the provided path.
+- **Usage**: Used in components like `ContentCard`, `LikeButton`, and `BookmarkButton` to automatically redirect users who attempt to interact with authenticated features while not logged in.
+
 ## Styling
 
 The application uses **Tailwind CSS** for styling. Utility classes are used to style components directly in the JSX, which allows for rapid development and a consistent design system.

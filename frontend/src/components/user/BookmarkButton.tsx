@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -8,6 +8,7 @@ import { useInteractions } from "@/hooks/useInteractions";
 import { useUser } from "@/hooks/useUser";
 import { useTargetInteractionStatus } from "@/hooks/useUserInteractionStatus";
 import { InteractionButtonSkeleton } from "@/components/ui/Skeleton";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { cn } from "@/lib/utils";
 
 interface BookmarkButtonProps {
@@ -38,6 +39,7 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
   const { userBookmarked, isLoading, updateStatusOptimistically } =
     useTargetInteractionStatus(targetType, targetId, { useCache });
   const [bookmarkCount, setBookmarkCount] = useState<number | null>(null);
+  const { redirectToLogin } = useAuthRedirect();
 
   const t = useTranslations("common");
   const tUser = useTranslations("user.bookmarks");
@@ -68,7 +70,8 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
 
   const handleBookmark = async () => {
     if (!user) {
-      // You could show a login modal here
+      // Redirect to login page with current page as return URL
+      redirectToLogin();
       return;
     }
 
@@ -95,14 +98,6 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
       console.error("Failed to toggle bookmark:", err);
     }
   };
-
-  // Load initial counts and status
-  useEffect(() => {
-    if (showCount && user) {
-      // This would need to be implemented if we want to show counts
-      // For now, we'll just use the initial state
-    }
-  }, [targetType, targetId, showCount, user]);
 
   return (
     <div className="flex items-center gap-1">

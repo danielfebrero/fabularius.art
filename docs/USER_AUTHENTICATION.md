@@ -112,6 +112,17 @@ The Google OAuth integration requires the following environment variables:
   4.  If the session is valid and not expired, the authorizer generates an IAM policy that allows the request to proceed.
   5.  The authorizer also passes user context (e.g., `userId`, `email`) to the downstream Lambda function.
 
+### Authentication Redirects
+
+The application supports automatic redirect functionality for unauthenticated users:
+
+- **Login Redirects**: When an unauthenticated user attempts to access protected features (like, bookmark, add to album), they are automatically redirected to the login page with a `returnTo` parameter preserving their current location.
+- **Post-Login Redirect**: After successful authentication, users are automatically redirected back to their original location using the `returnTo` parameter.
+- **Implementation**:
+  - Frontend components use the `useAuthRedirect` hook to handle redirects
+  - Login form processes the `returnTo` query parameter for post-login navigation
+  - Protected features in `ContentCard`, `LikeButton`, and `BookmarkButton` components automatically redirect unauthenticated users
+
 ### Session Expiration and Cleanup
 
 - Sessions expire after 30 days of inactivity.

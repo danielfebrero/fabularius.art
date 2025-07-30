@@ -180,7 +180,14 @@ export const handler = async (
     // Add selected media to the album if provided
     if (request.mediaIds && request.mediaIds.length > 0) {
       for (const mediaId of request.mediaIds) {
-        await DynamoDBService.addMediaToAlbum(albumId, mediaId, userId);
+        try {
+          await DynamoDBService.addMediaToAlbum(albumId, mediaId, userId);
+        } catch (error: any) {
+          // Skip duplicates silently during album creation (shouldn't happen but defensive)
+          if (!error.message?.includes("already in album")) {
+            throw error;
+          }
+        }
       }
     }
 

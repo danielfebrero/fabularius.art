@@ -88,7 +88,14 @@ export const handler = async (
       }
 
       // Add media to album
-      await DynamoDBService.addMediaToAlbum(albumId, mediaId, userId);
+      try {
+        await DynamoDBService.addMediaToAlbum(albumId, mediaId, userId);
+      } catch (error: any) {
+        if (error.message?.includes("already in album")) {
+          return ResponseUtil.badRequest(event, error.message);
+        }
+        throw error;
+      }
 
       return ResponseUtil.success(event, {
         success: true,

@@ -8,6 +8,7 @@ import { useInteractions } from "@/hooks/useInteractions";
 import { useUser } from "@/hooks/useUser";
 import { useTargetInteractionStatus } from "@/hooks/useUserInteractionStatus";
 import { InteractionButtonSkeleton } from "@/components/ui/Skeleton";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { cn } from "@/lib/utils";
 
 interface LikeButtonProps {
@@ -38,6 +39,7 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
   const { userLiked, isLoading, updateStatusOptimistically } =
     useTargetInteractionStatus(targetType, targetId, { useCache });
   const [likeCount, setLikeCount] = useState<number | null>(null);
+  const { redirectToLogin } = useAuthRedirect();
 
   const t = useTranslations("common");
   const tUser = useTranslations("user.likes");
@@ -68,7 +70,8 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
 
   const handleLike = async () => {
     if (!user) {
-      // You could show a login modal here
+      // Redirect to login page with current page as return URL
+      redirectToLogin();
       return;
     }
 

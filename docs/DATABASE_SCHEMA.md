@@ -131,6 +131,8 @@ Represents the relationship between an album and a media item, allowing one medi
 | `addedAt` | `string` | The ISO 8601 timestamp when media was added. |
 | `addedBy` | `string` | Optional: who added the media to this album. |
 
+**Important**: The PK+SK combination ensures duplicate prevention. The condition expression `attribute_not_exists(PK) AND attribute_not_exists(SK)` prevents the same media from being added to the same album twice.
+
 ## Access Patterns
 
 ### Album Access Patterns

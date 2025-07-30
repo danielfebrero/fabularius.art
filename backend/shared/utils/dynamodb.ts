@@ -622,16 +622,24 @@ export class DynamoDBService {
       addedBy,
     };
 
-    await docClient.send(
-      new PutCommand({
-        TableName: TABLE_NAME,
-        Item: albumMediaEntity,
-        ConditionExpression: "attribute_not_exists(PK)",
-      })
-    );
+    try {
+      await docClient.send(
+        new PutCommand({
+          TableName: TABLE_NAME,
+          Item: albumMediaEntity,
+          ConditionExpression:
+            "attribute_not_exists(PK) AND attribute_not_exists(SK)",
+        })
+      );
 
-    // Update album media count
-    await this.incrementAlbumMediaCount(albumId);
+      // Update album media count
+      await this.incrementAlbumMediaCount(albumId);
+    } catch (error: any) {
+      if (error.name === "ConditionalCheckFailedException") {
+        throw new Error(`Media ${mediaId} is already in album ${albumId}`);
+      }
+      throw error;
+    }
   }
 
   static async removeMediaFromAlbum(

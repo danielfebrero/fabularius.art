@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { X, Plus, Folder, FolderPlus, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -11,6 +11,7 @@ import { Media, Album } from "@/types";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { cn } from "@/lib/utils";
 import { albumsApi } from "@/lib/api";
+import { useUser } from "@/hooks/useUser";
 
 interface AddToAlbumDialogProps {
   isOpen: boolean;
@@ -26,11 +27,15 @@ export function AddToAlbumDialog({
   const t = useTranslations("album");
   const tCommon = useTranslations("common");
   const { canCreatePrivateContent } = usePermissions();
+  const { user } = useUser();
 
   // Local albums state - only fetched when dialog opens
   const [albums, setAlbums] = useState<Album[]>([]);
   const [albumsLoading, setAlbumsLoading] = useState(false);
   const [albumsError, setAlbumsError] = useState<string | null>(null);
+
+  // Track if we've already fetched albums for this dialog session
+  const hasFetchedRef = useRef(false);
 
   // UI state
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -45,26 +50,32 @@ export function AddToAlbumDialog({
   const [newAlbumIsPublic, setNewAlbumIsPublic] = useState(true);
   const [useAsCover, setUseAsCover] = useState(true);
 
-  // Fetch albums only when dialog opens
-  useEffect(() => {
-    if (isOpen && albums.length === 0 && !albumsLoading) {
-      fetchAlbums();
-    }
-  }, [isOpen, albums.length, albumsLoading]);
-
-  const fetchAlbums = async () => {
+  const fetchAlbums = useCallback(async () => {
     setAlbumsLoading(true);
     setAlbumsError(null);
     try {
-      const response = await albumsApi.getAlbums({ limit: 50 }); // Get more albums for selection
+      const response = await albumsApi.getAlbums({
+        limit: 50, // Get more albums for selection
+        user: user?.username, // Only fetch albums for the current user
+      });
       setAlbums(response.albums);
     } catch (error) {
       console.error("Failed to fetch albums:", error);
-      setAlbumsError(error instanceof Error ? error.message : "Failed to fetch albums");
+      setAlbumsError(
+        error instanceof Error ? error.message : "Failed to fetch albums"
+      );
     } finally {
       setAlbumsLoading(false);
     }
-  };
+  }, [user?.username]);
+
+  // Fetch albums only when dialog opens
+  useEffect(() => {
+    if (isOpen && !hasFetchedRef.current && !albumsLoading) {
+      hasFetchedRef.current = true;
+      fetchAlbums();
+    }
+  }, [isOpen, albumsLoading, fetchAlbums]);
 
   const createAlbum = async (albumData: {
     title: string;
@@ -75,7 +86,7 @@ export function AddToAlbumDialog({
   }) => {
     const newAlbum = await albumsApi.createAlbum(albumData);
     // Add the new album to local state
-    setAlbums(prev => [newAlbum, ...prev]);
+    setAlbums((prev) => [newAlbum, ...prev]);
     return newAlbum;
   };
 
@@ -97,6 +108,8 @@ export function AddToAlbumDialog({
       // Clear albums when dialog closes to prevent stale data
       setAlbums([]);
       setAlbumsError(null);
+      // Reset the fetch flag so albums will be fetched next time dialog opens
+      hasFetchedRef.current = false;
     }
   }, [isOpen]);
 
@@ -257,11 +270,7 @@ export function AddToAlbumDialog({
               ) : albumsError ? (
                 <div className="text-center py-8">
                   <p className="text-sm text-red-500 mb-2">{albumsError}</p>
-                  <Button
-                    onClick={fetchAlbums}
-                    variant="outline"
-                    size="sm"
-                  >
+                  <Button onClick={fetchAlbums} variant="outline" size="sm">
                     Try Again
                   </Button>
                 </div>

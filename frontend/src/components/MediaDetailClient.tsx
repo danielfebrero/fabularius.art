@@ -26,6 +26,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { ViewTracker } from "@/components/ui/ViewTracker";
 import { ContentCard } from "@/components/ui/ContentCard";
+import { HorizontalScroll } from "@/components/ui/HorizontalScroll";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -172,35 +173,6 @@ const GenerationPrompt: FC<GenerationPromptProps> = ({ title, prompt }) => (
     <h4 className="mb-2 text-sm font-medium text-muted-foreground">{title}</h4>
     <div className="p-3 text-sm rounded-lg bg-muted/50 max-h-40 overflow-y-auto">
       {prompt}
-    </div>
-  </div>
-);
-
-const AlbumCard: FC<{ album: Album; router: any }> = ({ album, router }) => (
-  <div
-    key={album.id}
-    onClick={() => router.push(`/albums/${album.id}`)}
-    className="overflow-hidden transition-all duration-200 rounded-lg cursor-pointer group bg-muted/30 hover:shadow-md hover:scale-[1.02]"
-  >
-    <div className="relative aspect-square">
-      <img
-        src={getBestThumbnailUrl(
-          album.thumbnailUrls,
-          album.coverImageUrl,
-          "cover"
-        )}
-        alt={album.title}
-        className="object-cover w-full h-full transition-opacity group-hover:opacity-90"
-      />
-      <div className="absolute inset-0 transition-colors bg-black/0 group-hover:bg-black/10" />
-    </div>
-    <div className="p-3">
-      <h3 className="font-medium text-sm text-foreground group-hover:text-primary transition-colors line-clamp-2">
-        {album.title}
-      </h3>
-      <p className="mt-1 text-xs text-muted-foreground">
-        {album.mediaCount} {album.mediaCount === 1 ? "item" : "items"}
-      </p>
     </div>
   </div>
 );
@@ -408,13 +380,18 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
                 icon={<Layers className="w-5 h-5" />}
                 title="Related Images"
               >
-                <div className="grid grid-cols-2 gap-3">
+                <HorizontalScroll
+                  itemWidth="150px"
+                  gap="small"
+                  showArrows={true}
+                  className="w-full"
+                >
                   {metadata.bulkSiblings.map(
                     (siblingId: string, index: number) => (
                       <button
                         key={siblingId}
                         onClick={() => router.push(`/media/${siblingId}`)}
-                        className="aspect-square bg-muted/50 rounded-lg overflow-hidden hover:ring-2 hover:ring-primary transition-all hover:scale-[1.02]"
+                        className="aspect-square bg-muted/50 rounded-lg overflow-hidden hover:ring-2 hover:ring-primary transition-all hover:scale-[1.02] w-full"
                       >
                         <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">
                           Image {index + 1}
@@ -422,20 +399,41 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
                       </button>
                     )
                   )}
-                </div>
+                </HorizontalScroll>
               </MetaSection>
             )}
 
             <MetaSection
               icon={<FolderOpen className="w-5 h-5" />}
               title="In Albums"
+              defaultOpen
             >
               {media.albums && media.albums.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
+                <HorizontalScroll
+                  itemWidth="200px"
+                  gap="medium"
+                  showArrows={true}
+                  className="w-full"
+                >
                   {media.albums.map((album) => (
-                    <AlbumCard key={album.id} album={album} router={router} />
+                    <ContentCard
+                      key={album.id}
+                      item={album}
+                      type="album"
+                      aspectRatio="square"
+                      canLike={false}
+                      canBookmark={false}
+                      canFullscreen={false}
+                      canAddToAlbum={false}
+                      canDownload={false}
+                      canDelete={false}
+                      showTags={false}
+                      context="albums"
+                      columns={1}
+                      className="w-full"
+                    />
                   ))}
-                </div>
+                </HorizontalScroll>
               ) : (
                 <div className="text-center py-6 text-muted-foreground">
                   <FolderOpen className="w-10 h-10 mx-auto mb-2 opacity-50" />
@@ -447,6 +445,7 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
             <MetaSection
               icon={<MessageCircle className="w-5 h-5" />}
               title="Comments"
+              defaultOpen
             >
               <div className="text-center py-6 text-muted-foreground">
                 <MessageCircle className="w-10 h-10 mx-auto mb-2 opacity-50" />

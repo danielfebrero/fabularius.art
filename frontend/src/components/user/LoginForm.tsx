@@ -36,6 +36,12 @@ export function LoginForm() {
   const t = useTranslations("common");
   const tAuth = useTranslations("auth");
 
+  // Get returnTo parameter from URL
+  const returnTo =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("returnTo")
+      : null;
+
   const loginSchema = createLoginSchema(tAuth);
 
   const {
@@ -64,8 +70,9 @@ export function LoginForm() {
       });
 
       if (success) {
-        // Redirect to discover or dashboard after successful login
-        router.push("/");
+        // Redirect to returnTo URL if provided, otherwise to home page
+        const redirectUrl = returnTo || "/";
+        router.push(redirectUrl);
       } else if (!emailVerificationRequired) {
         setFormError("root", {
           type: "manual",

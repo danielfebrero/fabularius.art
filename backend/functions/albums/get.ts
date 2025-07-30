@@ -127,12 +127,16 @@ export const handler = async (
         result.albums?.length || 0
       );
 
-      // Filter to only show public albums
-      result.albums = result.albums.filter((album) => album.isPublic === true);
-      console.log(
-        "[Albums API] Public albums after filtering:",
-        result.albums?.length || 0
-      );
+      // Filter to only show public albums if finalCreatedBy !== currentUserId
+      if (finalCreatedBy !== currentUserId) {
+        result.albums = result.albums.filter(
+          (album) => album.isPublic === true
+        );
+        console.log(
+          "[Albums API] Public albums after filtering:",
+          result.albums?.length || 0
+        );
+      }
     } else {
       // No user provided - show all public albums from everyone
       result = await DynamoDBService.listAlbumsByPublicStatus(
