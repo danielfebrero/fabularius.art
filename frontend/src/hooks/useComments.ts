@@ -4,16 +4,9 @@ import { useState, useEffect, useCallback } from "react";
 import { interactionApi } from "@/lib/api";
 import { Comment } from "@/types";
 
-interface CommentWithTarget extends Comment {
-  target?: {
-    title?: string;
-    type?: "media" | "album";
-  };
-}
-
 export interface UseCommentsReturn {
   // Data
-  comments: CommentWithTarget[];
+  comments: Comment[];
   totalCount: number;
   hasMore: boolean;
 
@@ -35,7 +28,7 @@ export const useComments = (
   username: string,
   initialLoad: boolean = true
 ): UseCommentsReturn => {
-  const [comments, setComments] = useState<CommentWithTarget[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

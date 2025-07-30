@@ -35,22 +35,37 @@ export const useCommentInteractions = () => {
         setLoading(true);
 
         // Get user's like status for these comments
-        // Note: This would require a batch API endpoint to check multiple comment likes at once
-        // For now, we'll initialize with basic state and let individual toggles update as needed
-        const initialStates: Record<string, CommentLikeState> = {};
+        const commentIds = commentsWithLikes.map((c) => c.id);
+        const response = await interactionApi.getCommentLikeStatus(commentIds);
 
-        commentsWithLikes.forEach((comment) => {
-          initialStates[comment.id] = {
-            isLiked: false, // Will be determined on first interaction
-            likeCount: comment.likeCount || 0,
-            hasBeenChecked: false,
-          };
-        });
+        if (response.success && response.data) {
+          const initialStates: Record<string, CommentLikeState> = {};
 
-        setCommentLikes((prev) => ({
-          ...prev,
-          ...initialStates,
-        }));
+          // Initialize states based on API response
+          response.data.statuses.forEach(
+            (status: { commentId: string; isLiked: boolean }) => {
+              const comment = commentsWithLikes.find(
+                (c) => c.id === status.commentId
+              );
+              if (comment) {
+                initialStates[status.commentId] = {
+                  isLiked: status.isLiked,
+                  likeCount: comment.likeCount || 0,
+                  hasBeenChecked: true,
+                };
+              }
+            }
+          );
+
+          setCommentLikes((prev) => ({
+            ...prev,
+            ...initialStates,
+          }));
+        } else {
+          throw new Error(
+            response.error || "Failed to get comment like status"
+          );
+        }
       } catch (err) {
         console.error("Error initializing comment likes:", err);
         setError(
@@ -58,6 +73,21 @@ export const useCommentInteractions = () => {
             ? err.message
             : "Failed to load comment like states"
         );
+
+        // Fallback: initialize with basic state (not liked)
+        const fallbackStates: Record<string, CommentLikeState> = {};
+        commentsWithLikes.forEach((comment) => {
+          fallbackStates[comment.id] = {
+            isLiked: false,
+            likeCount: comment.likeCount || 0,
+            hasBeenChecked: false,
+          };
+        });
+
+        setCommentLikes((prev) => ({
+          ...prev,
+          ...fallbackStates,
+        }));
       } finally {
         setLoading(false);
       }

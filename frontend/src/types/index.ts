@@ -175,8 +175,20 @@ export interface CommentListResponse {
       limit: number;
       hasNext: boolean;
       nextKey?: string;
+      cursor?: string;
       total: number;
     };
+  };
+  error?: string;
+}
+
+export interface CommentLikeStatusResponse {
+  success: boolean;
+  data?: {
+    statuses: Array<{
+      commentId: string;
+      isLiked: boolean;
+    }>;
   };
   error?: string;
 }

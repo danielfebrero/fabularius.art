@@ -10,6 +10,7 @@ import {
   UpdateCommentRequest,
   CommentResponse,
   CommentListResponse,
+  CommentLikeStatusResponse,
 } from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -355,6 +356,31 @@ export const interactionApi = {
 
     if (!response.ok) {
       throw new Error(`Comment like action failed: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  // Get comment like status
+  getCommentLikeStatus: async (
+    commentIds: string[]
+  ): Promise<CommentLikeStatusResponse> => {
+    const response = await fetch(
+      `${API_URL}/user/interactions/comment-like-status`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ commentIds }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to get comment like status: ${response.statusText}`
+      );
     }
 
     return response.json();
