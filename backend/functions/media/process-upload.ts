@@ -280,7 +280,7 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
 
   // Trigger revalidation for the album containing this media
   try {
-    await RevalidationService.revalidateAlbumMedia(albumId);
+    await RevalidationService.revalidateAlbum(albumId);
   } catch (error) {
     console.error(
       "Error triggering revalidation after media processing:",

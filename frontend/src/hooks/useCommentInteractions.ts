@@ -22,44 +22,96 @@ export const useCommentInteractions = () => {
   const [isToggling, setIsToggling] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initialize like states for comments (only for comments with likes > 0)
+  // Initialize like states for comments (fetch user's like status for comments with likes > 0)
   const initializeCommentLikes = useCallback(
     async (comments: Comment[]) => {
       if (!user) return;
 
-      // Only process comments that have likes
+      console.log(
+        `[initializeCommentLikes] Called with ${comments.length} comments`
+      );
+
+      // Only fetch like status for comments that have likes > 0 (optimization)
       const commentsWithLikes = comments.filter((c) => (c.likeCount || 0) > 0);
-      if (commentsWithLikes.length === 0) return;
+
+      // Initialize all comments with default state first
+      // Only initialize comments that don't already have state to avoid overwriting existing states
+      const newCommentStates: Record<string, CommentLikeState> = {};
+      comments.forEach((comment) => {
+        // Don't overwrite existing state
+        if (!commentLikes[comment.id]) {
+          newCommentStates[comment.id] = {
+            isLiked: false,
+            likeCount: comment.likeCount || 0,
+            hasBeenChecked: (comment.likeCount || 0) === 0, // Comments with 0 likes are "checked" immediately
+          };
+          console.log(
+            `[initializeCommentLikes] Adding new state for ${comment.id}:`,
+            newCommentStates[comment.id]
+          );
+        } else {
+          console.log(
+            `[initializeCommentLikes] Skipping ${comment.id} - already has state:`,
+            commentLikes[comment.id]
+          );
+        }
+      });
+
+      // Only update if we have new states to add
+      if (Object.keys(newCommentStates).length > 0) {
+        console.log(
+          `[initializeCommentLikes] Setting ${
+            Object.keys(newCommentStates).length
+          } new comment states`
+        );
+        setCommentLikes((prev) => ({
+          ...prev,
+          ...newCommentStates,
+        }));
+      }
+
+      // If no comments have likes, we're done
+      if (commentsWithLikes.length === 0) {
+        console.log(`[initializeCommentLikes] No comments with likes, done`);
+        return;
+      }
 
       try {
         setLoading(true);
 
-        // Get user's like status for these comments
+        // Get user's like status for comments with likes
         const commentIds = commentsWithLikes.map((c) => c.id);
+        console.log(
+          `[initializeCommentLikes] Fetching like status for comments:`,
+          commentIds
+        );
         const response = await interactionApi.getCommentLikeStatus(commentIds);
 
         if (response.success && response.data) {
-          const initialStates: Record<string, CommentLikeState> = {};
+          const updatedStates: Record<string, CommentLikeState> = {};
 
-          // Initialize states based on API response
+          // Update states based on API response
           response.data.statuses.forEach(
             (status: { commentId: string; isLiked: boolean }) => {
               const comment = commentsWithLikes.find(
                 (c) => c.id === status.commentId
               );
               if (comment) {
-                initialStates[status.commentId] = {
+                updatedStates[status.commentId] = {
                   isLiked: status.isLiked,
                   likeCount: comment.likeCount || 0,
                   hasBeenChecked: true,
                 };
+                console.log(
+                  `[initializeCommentLikes] API response for ${status.commentId}: isLiked=${status.isLiked}`
+                );
               }
             }
           );
 
           setCommentLikes((prev) => ({
             ...prev,
-            ...initialStates,
+            ...updatedStates,
           }));
         } else {
           throw new Error(
@@ -73,28 +125,12 @@ export const useCommentInteractions = () => {
             ? err.message
             : "Failed to load comment like states"
         );
-
-        // Fallback: initialize with basic state (not liked)
-        const fallbackStates: Record<string, CommentLikeState> = {};
-        commentsWithLikes.forEach((comment) => {
-          fallbackStates[comment.id] = {
-            isLiked: false,
-            likeCount: comment.likeCount || 0,
-            hasBeenChecked: false,
-          };
-        });
-
-        setCommentLikes((prev) => ({
-          ...prev,
-          ...fallbackStates,
-        }));
       } finally {
         setLoading(false);
       }
     },
-    [user]
+    [user, commentLikes]
   );
-
   const toggleCommentLike = useCallback(
     async (commentId: string) => {
       if (!user) {
@@ -110,15 +146,27 @@ export const useCommentInteractions = () => {
         const currentlyLiked = currentState?.isLiked || false;
         const currentLikeCount = currentState?.likeCount || 0;
 
-        // Optimistic update
+        console.log(
+          `[toggleCommentLike] Comment ${commentId}: currentlyLiked=${currentlyLiked}, currentLikeCount=${currentLikeCount}`
+        );
+
+        // Optimistic update - ensure we have state for this comment
+        const newState = {
+          isLiked: !currentlyLiked,
+          likeCount: currentlyLiked
+            ? Math.max(0, currentLikeCount - 1)
+            : currentLikeCount + 1,
+          hasBeenChecked: true,
+        };
+
+        console.log(
+          `[toggleCommentLike] New state for ${commentId}:`,
+          newState
+        );
+
         setCommentLikes((prev) => ({
           ...prev,
-          [commentId]: {
-            isLiked: !currentlyLiked,
-            likeCount: currentlyLiked
-              ? Math.max(0, currentLikeCount - 1)
-              : currentLikeCount + 1,
-          },
+          [commentId]: newState,
         }));
 
         const request = {
@@ -147,6 +195,7 @@ export const useCommentInteractions = () => {
               likeCount: currentState.isLiked
                 ? currentState.likeCount + 1
                 : Math.max(0, currentState.likeCount - 1),
+              hasBeenChecked: true,
             },
           }));
         }
@@ -161,7 +210,13 @@ export const useCommentInteractions = () => {
 
   const getCommentLikeState = useCallback(
     (commentId: string) => {
-      return commentLikes[commentId] || { isLiked: false, likeCount: 0 };
+      return (
+        commentLikes[commentId] || {
+          isLiked: false,
+          likeCount: 0,
+          hasBeenChecked: false,
+        }
+      );
     },
     [commentLikes]
   );
@@ -173,6 +228,7 @@ export const useCommentInteractions = () => {
         [commentId]: {
           ...prev[commentId],
           likeCount: Math.max(0, newLikeCount),
+          hasBeenChecked: true,
         },
       }));
     },

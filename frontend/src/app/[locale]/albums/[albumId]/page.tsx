@@ -19,7 +19,7 @@ type AlbumDetailPageProps = {
 };
 
 // Enable ISR for album pages
-export const revalidate = 7200; // Revalidate every 2 hours (less frequent than homepage)
+export const revalidate = false;
 export const dynamic = "force-static";
 export const dynamicParams = true;
 

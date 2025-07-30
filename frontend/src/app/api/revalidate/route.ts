@@ -76,7 +76,6 @@ export async function POST(request: NextRequest) {
 
       console.log(`Revalidating album ${albumId} for all locales`);
       revalidateTag(`album-${albumId}`);
-      revalidateTag(`album-${albumId}-media`);
 
       for (const locale of locales) {
         revalidatePath(`/${locale}/albums/${albumId}`);
@@ -104,7 +103,6 @@ export async function POST(request: NextRequest) {
 
       console.log(`Revalidating media ${mediaId} for all locales`);
       revalidateTag(`media-${mediaId}`);
-      revalidateTag("media");
 
       for (const locale of locales) {
         revalidatePath(`/${locale}/media/${mediaId}`);

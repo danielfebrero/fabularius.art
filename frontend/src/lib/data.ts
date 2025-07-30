@@ -43,7 +43,6 @@ export async function getAlbums(
   const response = await fetch(`${API_URL}/albums?${params}`, {
     // ISR: Revalidate every hour, but serve stale content while regenerating
     next: {
-      revalidate: 3600, // 1 hour
       tags: ["albums", "homepage"],
     },
     // Remove cache: force-cache since we're using revalidate
@@ -89,8 +88,7 @@ export async function fetchAllPublicAlbums(): Promise<Album[]> {
 export async function getAlbumById(albumId: string) {
   const response = await fetch(`${API_URL}/albums/${albumId}`, {
     next: {
-      revalidate: 7200, // 2 hours - albums change less frequently
-      tags: ["album", `album-${albumId}`],
+      tags: [`album-${albumId}`],
     },
     // Remove cache: force-cache since we're using revalidate
   });
@@ -112,8 +110,7 @@ export async function getMediaForAlbum(
 
   const response = await fetch(`${API_URL}/albums/${albumId}/media?${params}`, {
     next: {
-      revalidate: 7200, // 2 hours - media changes less frequently
-      tags: ["media", `album-${albumId}-media`],
+      tags: [`album-${albumId}`],
     },
     // Remove cache: force-cache since we're using revalidate
   });
@@ -129,8 +126,7 @@ export async function getMediaForAlbum(
 export async function getMediaById(mediaId: string) {
   const response = await fetch(`${API_URL}/media/${mediaId}`, {
     next: {
-      revalidate: false, // Disable auto-revalidation - use on-demand only
-      tags: ["media", `media-${mediaId}`],
+      tags: [`media-${mediaId}`],
     },
   });
   return handleResponse<Media>(response);
@@ -139,7 +135,7 @@ export async function getMediaById(mediaId: string) {
 // Fetch all public media items
 export async function fetchAllPublicMedia(): Promise<Media[]> {
   const response = await fetch(`${API_URL}/media`, {
-    next: { revalidate: 3600, tags: ["media"] },
+    next: { tags: ["medias"] },
   });
   const result = await handleResponse<Media[]>(response);
   return result.data || [];

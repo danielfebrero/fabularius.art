@@ -53,18 +53,33 @@ export function Comments({
     clearError: clearLikeError,
   } = useCommentInteractions();
 
+  const [initializedComments, setInitializedComments] = useState<Set<string>>(
+    new Set()
+  );
+
   // Initialize comment like states when comments change
   useEffect(() => {
     if (comments.length > 0 && currentUserId) {
-      // Only initialize like states for comments that have likes (optimization)
-      const commentsWithLikes = comments.filter(
-        (comment) => (comment.likeCount || 0) > 0
+      // Only initialize comments we haven't initialized yet
+      const newComments = comments.filter(
+        (comment) => !initializedComments.has(comment.id)
       );
-      if (commentsWithLikes.length > 0) {
-        initializeCommentLikes(commentsWithLikes);
+
+      if (newComments.length > 0) {
+        console.log(
+          `[Comments] Initializing ${newComments.length} new comments`
+        );
+        initializeCommentLikes(newComments);
+
+        // Track that we've initialized these comments
+        setInitializedComments((prev) => {
+          const newSet = new Set(prev);
+          newComments.forEach((comment) => newSet.add(comment.id));
+          return newSet;
+        });
       }
     }
-  }, [comments, currentUserId, initializeCommentLikes]);
+  }, [comments, currentUserId, initializeCommentLikes, initializedComments]);
 
   // Load additional comments (beyond initial ones)
   const loadMoreComments = useCallback(async () => {
@@ -203,33 +218,40 @@ export function Comments({
         if (!comment) return;
 
         const currentLikeCount = comment.likeCount || 0;
-        const currentIsLiked =
-          currentLikeCount > 0
-            ? getCommentLikeState(commentId)?.isLiked || false
-            : false;
+        const currentIsLiked = getCommentLikeState(commentId)?.isLiked || false;
         const newIsLiked = !currentIsLiked;
         const newLikeCount = newIsLiked
           ? currentLikeCount + 1
           : Math.max(0, currentLikeCount - 1);
 
-        // Optimistically update the comment's like count
+        // Optimistically update the comment's like count in comments state
         setComments((prev) =>
           prev.map((c) =>
             c.id === commentId ? { ...c, likeCount: newLikeCount } : c
           )
         );
 
-        // Make API call
+        // The hook will handle its own optimistic update for the isLiked state
         await toggleCommentLike(commentId);
       } catch (err) {
         console.error("Error liking comment:", err);
 
-        // Revert optimistic update on error
+        // Revert optimistic update on error - restore original like count
         const comment = comments.find((c) => c.id === commentId);
         if (comment) {
+          const currentLikeCount = comment.likeCount || 0;
+          const currentIsLiked =
+            getCommentLikeState(commentId)?.isLiked || false;
+          // Calculate what the original count should have been
+          const originalLikeCount = currentIsLiked
+            ? currentLikeCount - 1
+            : currentLikeCount + 1;
+
           setComments((prev) =>
             prev.map((c) =>
-              c.id === commentId ? { ...c, likeCount: comment.likeCount } : c
+              c.id === commentId
+                ? { ...c, likeCount: Math.max(0, originalLikeCount) }
+                : c
             )
           );
         }
@@ -315,9 +337,9 @@ export function Comments({
         <div className="space-y-4">
           {comments.map((comment, index) => {
             const commentLikeCount = comment.likeCount || 0;
-            // Only check like state if the comment has likes and user is logged in
-            const shouldCheckLikeState = commentLikeCount > 0 && currentUserId;
-            const likeState = shouldCheckLikeState
+            // Check like state if user is logged in (regardless of like count)
+            // This handles the case where a comment goes from 0 to 1+ likes
+            const likeState = currentUserId
               ? getCommentLikeState(comment.id)
               : null;
 

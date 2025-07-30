@@ -48,7 +48,7 @@ export const handler = async (
     // Note: Album media counts are automatically updated in deleteMedia method
 
     // Trigger revalidation
-    await RevalidationService.revalidateAlbumMedia(albumId);
+    await RevalidationService.revalidateAlbum(albumId);
 
     return ResponseUtil.success(event, {
       message: "Media deleted successfully",
