@@ -1901,6 +1901,41 @@ export class DynamoDBService {
     );
   }
 
+  // Comment interaction operations
+  static async getUserInteractionForComment(
+    userId: string,
+    interactionType: "like",
+    commentId: string
+  ): Promise<UserInteractionEntity | null> {
+    const result = await docClient.send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `USER#${userId}`,
+          SK: `COMMENT_INTERACTION#${interactionType}#${commentId}`,
+        },
+      })
+    );
+
+    return (result.Item as UserInteractionEntity) || null;
+  }
+
+  static async deleteUserInteractionForComment(
+    userId: string,
+    interactionType: "like",
+    commentId: string
+  ): Promise<void> {
+    await docClient.send(
+      new DeleteCommand({
+        TableName: TABLE_NAME,
+        Key: {
+          PK: `USER#${userId}`,
+          SK: `COMMENT_INTERACTION#${interactionType}#${commentId}`,
+        },
+      })
+    );
+  }
+
   static async deleteAllCommentsForTarget(targetId: string): Promise<void> {
     console.log(`🧹 Cleaning up all comments for target: ${targetId}`);
 

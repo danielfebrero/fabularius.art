@@ -147,6 +147,7 @@ export interface Comment {
   updatedAt: string;
   likeCount?: number;
   isEdited?: boolean;
+  target?: Media | Album; // Added for enriched comments from getUserComments API
 }
 
 export interface CreateCommentRequest {
@@ -170,9 +171,11 @@ export interface CommentListResponse {
   data?: {
     comments: Comment[];
     pagination: {
+      page: number;
       limit: number;
       hasNext: boolean;
-      cursor?: string;
+      nextKey?: string;
+      total: number;
     };
   };
   error?: string;

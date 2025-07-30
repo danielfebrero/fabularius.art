@@ -14,6 +14,8 @@ interface CommentItemProps {
   onEdit?: (commentId: string, content: string) => void;
   onDelete?: (commentId: string) => void;
   onLike?: (commentId: string) => void;
+  isLiked?: boolean;
+  likeCount?: number;
   className?: string;
 }
 
@@ -23,6 +25,8 @@ export function CommentItem({
   onEdit,
   onDelete,
   onLike,
+  isLiked = false,
+  likeCount,
   className,
 }: CommentItemProps) {
   const [showActions, setShowActions] = useState(false);
@@ -118,10 +122,17 @@ export function CommentItem({
                 variant="ghost"
                 size="sm"
                 onClick={() => onLike?.(comment.id)}
-                className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+                className={cn(
+                  "h-6 px-2 text-xs hover:text-foreground transition-colors",
+                  isLiked
+                    ? "text-red-500 hover:text-red-600"
+                    : "text-muted-foreground"
+                )}
               >
-                <Heart className="w-3 h-3 mr-1" />
-                {comment.likeCount || 0}
+                <Heart
+                  className={cn("w-3 h-3 mr-1", isLiked && "fill-current")}
+                />
+                {likeCount !== undefined ? likeCount : comment.likeCount || 0}
               </Button>
 
               {/* Owner actions */}

@@ -9,6 +9,7 @@ import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { interactionApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useCommentInteractions } from "@/hooks/useCommentInteractions";
 
 interface CommentsProps {
   targetType: "album" | "media";
@@ -41,6 +42,29 @@ export function Comments({
     isOpen: false,
   });
   const isMobile = useIsMobile();
+
+  // Comment interaction hooks
+  const {
+    toggleCommentLike,
+    getCommentLikeState,
+    initializeCommentLikes,
+    isToggling,
+    error: likeError,
+    clearError: clearLikeError,
+  } = useCommentInteractions();
+
+  // Initialize comment like states when comments change
+  useEffect(() => {
+    if (comments.length > 0 && currentUserId) {
+      // Only initialize like states for comments that have likes (optimization)
+      const commentsWithLikes = comments.filter(
+        (comment) => (comment.likeCount || 0) > 0
+      );
+      if (commentsWithLikes.length > 0) {
+        initializeCommentLikes(commentsWithLikes);
+      }
+    }
+  }, [comments, currentUserId, initializeCommentLikes]);
 
   // Load additional comments (beyond initial ones)
   const loadMoreComments = useCallback(async () => {
@@ -165,11 +189,59 @@ export function Comments({
     }
   };
 
-  // Like comment (placeholder - not implemented in backend yet)
-  const handleLikeComment = async (commentId: string) => {
-    // TODO: Implement comment liking when backend supports it
-    console.log("Like comment:", commentId);
-  };
+  // Like comment
+  const handleLikeComment = useCallback(
+    async (commentId: string) => {
+      if (!currentUserId) {
+        setError("You must be logged in to like comments");
+        return;
+      }
+
+      try {
+        // Find the comment to get current state
+        const comment = comments.find((c) => c.id === commentId);
+        if (!comment) return;
+
+        const currentLikeCount = comment.likeCount || 0;
+        const currentIsLiked =
+          currentLikeCount > 0
+            ? getCommentLikeState(commentId)?.isLiked || false
+            : false;
+        const newIsLiked = !currentIsLiked;
+        const newLikeCount = newIsLiked
+          ? currentLikeCount + 1
+          : Math.max(0, currentLikeCount - 1);
+
+        // Optimistically update the comment's like count
+        setComments((prev) =>
+          prev.map((c) =>
+            c.id === commentId ? { ...c, likeCount: newLikeCount } : c
+          )
+        );
+
+        // Make API call
+        await toggleCommentLike(commentId);
+      } catch (err) {
+        console.error("Error liking comment:", err);
+
+        // Revert optimistic update on error
+        const comment = comments.find((c) => c.id === commentId);
+        if (comment) {
+          setComments((prev) =>
+            prev.map((c) =>
+              c.id === commentId ? { ...c, likeCount: comment.likeCount } : c
+            )
+          );
+        }
+
+        // Error handling is done in the hook, just display it
+        if (likeError) {
+          setError(likeError);
+        }
+      }
+    },
+    [currentUserId, comments, toggleCommentLike, getCommentLikeState, likeError]
+  );
 
   // Handle keyboard shortcuts
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -241,19 +313,31 @@ export function Comments({
         </div>
       ) : comments.length > 0 ? (
         <div className="space-y-4">
-          {comments.map((comment, index) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              currentUserId={currentUserId}
-              onEdit={handleEditComment}
-              onDelete={handleDeleteComment}
-              onLike={handleLikeComment}
-              className={cn(
-                index < comments.length - 1 && "border-b border-border/20 pb-4"
-              )}
-            />
-          ))}
+          {comments.map((comment, index) => {
+            const commentLikeCount = comment.likeCount || 0;
+            // Only check like state if the comment has likes and user is logged in
+            const shouldCheckLikeState = commentLikeCount > 0 && currentUserId;
+            const likeState = shouldCheckLikeState
+              ? getCommentLikeState(comment.id)
+              : null;
+
+            return (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                currentUserId={currentUserId}
+                onEdit={handleEditComment}
+                onDelete={handleDeleteComment}
+                onLike={handleLikeComment}
+                isLiked={likeState?.isLiked || false}
+                likeCount={commentLikeCount}
+                className={cn(
+                  index < comments.length - 1 &&
+                    "border-b border-border/20 pb-4"
+                )}
+              />
+            );
+          })}
 
           {/* Load more button */}
           {hasMore && (

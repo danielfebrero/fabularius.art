@@ -199,6 +199,13 @@ export interface InteractionRequest {
   albumId?: string; // Required for media interactions
 }
 
+// Comment interaction types - separate from likes/bookmarks for clarity
+export interface CommentInteractionRequest {
+  targetType: "comment";
+  targetId: string; // commentId
+  action: "add" | "remove";
+}
+
 export interface InteractionResponse {
   success: boolean;
   data?: {

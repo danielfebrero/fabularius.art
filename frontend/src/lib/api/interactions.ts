@@ -3,6 +3,7 @@ import {
   InteractionResponse,
   UserInteractionsResponse,
   UserInteractionStatsResponse,
+  CommentInteractionRequest,
 } from "@/types/user";
 import {
   CreateCommentRequest,
@@ -247,6 +248,40 @@ export const interactionApi = {
     return response.json();
   },
 
+  // Get comments by username (for profile views)
+  getCommentsByUsername: async (
+    username: string,
+    page: number = 1,
+    limit: number = 20,
+    lastKey?: string
+  ): Promise<CommentListResponse> => {
+    const params = new URLSearchParams({
+      user: username,
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    if (lastKey) {
+      params.append("lastKey", lastKey);
+    }
+
+    const response = await fetch(
+      `${API_URL}/user/interactions/comments?${params}`,
+      {
+        method: "GET",
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to get comments for user: ${response.statusText}`
+      );
+    }
+
+    return response.json();
+  },
+
   createComment: async (
     request: CreateCommentRequest
   ): Promise<CommentResponse> => {
@@ -300,6 +335,26 @@ export const interactionApi = {
 
     if (!response.ok) {
       throw new Error(`Failed to delete comment: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  // Like/Unlike comment
+  likeComment: async (
+    request: CommentInteractionRequest
+  ): Promise<InteractionResponse> => {
+    const response = await fetch(`${API_URL}/user/interactions/comment-like`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(request),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Comment like action failed: ${response.statusText}`);
     }
 
     return response.json();

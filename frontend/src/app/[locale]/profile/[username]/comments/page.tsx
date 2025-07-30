@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Mail, Grid, List, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -9,235 +9,36 @@ import { ContentCard } from "@/components/ui/ContentCard";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useComments } from "@/hooks/useComments";
 import { Media, Album } from "@/types";
-
-interface Comment {
-  id: string;
-  content: string;
-  contentTitle: string;
-  targetType: "media" | "album";
-  targetId: string;
-  timestamp: string;
-  createdAt: string;
-}
-
-interface PublicUser {
-  userId: string;
-  email: string;
-  username?: string;
-  createdAt: string;
-  isActive: boolean;
-  isEmailVerified: boolean;
-  lastLoginAt?: string;
-}
-
-// Helper functions to create mock content objects for ContentCard
-const createMockMediaFromComment = (comment: Comment): Media => {
-  return {
-    id: comment.targetId,
-    filename: `${comment.contentTitle.toLowerCase().replace(/\s+/g, "_")}.jpg`,
-    originalFilename: `${comment.contentTitle}.jpg`,
-    mimeType: "image/jpeg",
-    size: 1024000, // 1MB
-    width: 1920,
-    height: 1080,
-    url: `/placeholder-media-${comment.targetId}.jpg`,
-    thumbnailUrl: `/placeholder-media-${comment.targetId}-thumb.jpg`,
-    thumbnailUrls: {
-      cover:
-        "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
-      small:
-        "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
-      medium:
-        "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
-      large:
-        "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
-      xlarge:
-        "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
-    },
-    createdAt: comment.createdAt,
-    updatedAt: comment.createdAt,
-    likeCount: Math.floor(Math.random() * 100) + 10,
-    bookmarkCount: Math.floor(Math.random() * 50) + 5,
-    viewCount: Math.floor(Math.random() * 500) + 50,
-  };
-};
-
-const createMockAlbumFromComment = (comment: Comment): Album => {
-  return {
-    id: comment.targetId,
-    title: comment.contentTitle,
-    tags: ["photography", "art", "gallery"],
-    coverImageUrl: `/placeholder-album-${comment.targetId}-cover.jpg`,
-    thumbnailUrls: {
-      cover:
-        "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
-      small:
-        "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
-      medium:
-        "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
-      large:
-        "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
-      xlarge:
-        "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
-    },
-    isPublic: true,
-    mediaCount: Math.floor(Math.random() * 20) + 5,
-    likeCount: Math.floor(Math.random() * 80) + 15,
-    bookmarkCount: Math.floor(Math.random() * 40) + 8,
-    viewCount: Math.floor(Math.random() * 300) + 100,
-    createdAt: comment.createdAt,
-    updatedAt: comment.createdAt,
-  };
-};
+import { formatDistanceToNow } from "@/lib/dateUtils";
 
 export default function UserCommentsPage() {
   const params = useParams();
   const username = params.username as string;
 
-  const [user, setUser] = useState<PublicUser | null>(null);
-  const [comments, setComments] = useState<Comment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"grid" | "list">("list");
 
   const isMobile = useIsMobile();
 
-  const displayName = user?.username || user?.email?.split("@")[0] || username;
+  // Use the existing useComments hook to fetch user comments
+  const {
+    comments,
+    totalCount,
+    hasMore,
+    isLoading,
+    isLoadingMore,
+    loadMore,
+    refresh,
+    error,
+    clearError,
+  } = useComments(username, true); // Auto-load comments
+
+  const displayName = username;
   const initials = displayName.slice(0, 2).toUpperCase();
 
-  // Fetch user profile and comments
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Mock user data (in real app, this would be fetched from API)
-        const mockUser: PublicUser = {
-          userId: `user_${username}`,
-          email: `${username}@example.com`,
-          username: username,
-          createdAt: "2024-01-15T10:30:00Z",
-          isActive: true,
-          isEmailVerified: true,
-          lastLoginAt: "2024-12-20T14:22:00Z",
-        };
-
-        // Mock comments data (in real app, this would be fetched from API)
-        const mockComments: Comment[] = [
-          {
-            id: "comment1",
-            content:
-              "Amazing composition and lighting! The way you captured the golden hour is absolutely stunning. This reminds me of my favorite photography spots.",
-            contentTitle: "Sunset Beach Photography",
-            targetType: "media",
-            targetId: "media1",
-            timestamp: "2 hours ago",
-            createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            id: "comment2",
-            content:
-              "Love the colors in this series. Each photo tells a different story while maintaining a cohesive aesthetic.",
-            contentTitle: "Abstract Art Collection",
-            targetType: "album",
-            targetId: "album2",
-            timestamp: "5 hours ago",
-            createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            id: "comment3",
-            content:
-              "Great perspective on urban life. The contrast between old and new architecture is beautifully captured.",
-            contentTitle: "City Streets",
-            targetType: "media",
-            targetId: "media3",
-            timestamp: "1 day ago",
-            createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            id: "comment4",
-            content:
-              "This collection speaks to me on so many levels. Thank you for sharing your vision with us!",
-            contentTitle: "Nature's Symphony",
-            targetType: "album",
-            targetId: "album4",
-            timestamp: "2 days ago",
-            createdAt: new Date(
-              Date.now() - 2 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-          },
-          {
-            id: "comment5",
-            content:
-              "The detail in this macro shot is incredible. You can see every droplet of water on the petals.",
-            contentTitle: "Morning Dew",
-            targetType: "media",
-            targetId: "media5",
-            timestamp: "3 days ago",
-            createdAt: new Date(
-              Date.now() - 3 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-          },
-          {
-            id: "comment6",
-            content:
-              "Your editing style has really evolved. The mood and atmosphere in these recent photos is exceptional.",
-            contentTitle: "Moody Landscapes",
-            targetType: "album",
-            targetId: "album6",
-            timestamp: "4 days ago",
-            createdAt: new Date(
-              Date.now() - 4 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-          },
-          {
-            id: "comment7",
-            content:
-              "Perfect timing on this street photography shot. The interaction between the subjects is pure poetry.",
-            contentTitle: "Human Connections",
-            targetType: "media",
-            targetId: "media7",
-            timestamp: "1 week ago",
-            createdAt: new Date(
-              Date.now() - 7 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-          },
-          {
-            id: "comment8",
-            content:
-              "This series made me see my own city in a completely different light. Fantastic work!",
-            contentTitle: "Urban Exploration",
-            targetType: "album",
-            targetId: "album8",
-            timestamp: "1 week ago",
-            createdAt: new Date(
-              Date.now() - 7 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-          },
-        ];
-
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        setUser(mockUser);
-        setComments(mockComments);
-      } catch (err) {
-        console.error("Error fetching user comments:", err);
-        setError("Failed to load user comments");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (username) {
-      fetchData();
-    }
-  }, [username]);
-
   // Loading state
-  if (loading) {
+  if (isLoading && !comments.length) {
     return (
       <div className="min-h-screen bg-background">
         <div className="max-w-4xl mx-auto md:px-4 sm:px-6 lg:px-8 md:py-8">
@@ -342,8 +143,17 @@ export default function UserCommentsPage() {
                         {displayName}&apos;s Comments
                       </h1>
                       <p className="text-muted-foreground">
-                        {comments.length} comment
-                        {comments.length !== 1 ? "s" : ""} made
+                        {totalCount > 0 ? (
+                          <>
+                            {totalCount} comment{totalCount !== 1 ? "s" : ""} made
+                          </>
+                        ) : comments.length > 0 ? (
+                          <>
+                            {comments.length} comment{comments.length !== 1 ? "s" : ""} loaded
+                          </>
+                        ) : (
+                          "No comments yet"
+                        )}
                       </p>
                     </div>
                   </div>
@@ -408,37 +218,43 @@ export default function UserCommentsPage() {
                           {/* Comment metadata */}
                           <div className="space-y-2">
                             <div className="text-xs text-muted-foreground">
-                              {comment.timestamp}
+                              {/* Format the timestamp using the formatDistanceToNow function */}
+                              {formatDistanceToNow(comment.createdAt)}
+                              {comment.isEdited && " (edited)"}
                             </div>
+                            {/* Like count if available */}
+                            {(comment.likeCount || 0) > 0 && (
+                              <div className="text-xs text-muted-foreground">
+                                {comment.likeCount} like{comment.likeCount !== 1 ? "s" : ""}
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
 
                       {/* Content Preview */}
-                      <div className="ml-14">
-                        <div className="w-full max-w-sm">
-                          <ContentCard
-                            item={
-                              comment.targetType === "media"
-                                ? createMockMediaFromComment(comment)
-                                : createMockAlbumFromComment(comment)
-                            }
-                            type={comment.targetType}
-                            aspectRatio="square"
-                            className="w-full"
-                            canAddToAlbum={comment.targetType !== "album"}
-                            canDownload={false}
-                            showCounts={true}
-                            showTags={comment.targetType === "album"}
-                          />
+                      {comment.target && (
+                        <div className="ml-14">
+                          <div className="w-full max-w-sm">
+                            <ContentCard
+                              item={comment.target as Media | Album}
+                              type={comment.targetType}
+                              aspectRatio="square"
+                              className="w-full"
+                              canAddToAlbum={comment.targetType !== "album"}
+                              canDownload={false}
+                              showCounts={true}
+                              showTags={comment.targetType === "album"}
+                            />
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
               ))}
             </div>
-          ) : (
+          ) : !isLoading ? (
             /* Empty state */
             <Card
               className="border-border/50"
@@ -457,6 +273,54 @@ export default function UserCommentsPage() {
                 <LocaleLink href={`/profile/${username}`}>
                   <Button variant="outline">Back to Profile</Button>
                 </LocaleLink>
+              </CardContent>
+            </Card>
+          ) : null}
+
+          {/* Load More Button */}
+          {hasMore && comments.length > 0 && (
+            <div className="flex justify-center pt-4">
+              <Button
+                onClick={loadMore}
+                disabled={isLoadingMore}
+                variant="outline"
+                className="text-sm"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-foreground border-t-transparent" />
+                    Loading more...
+                  </>
+                ) : (
+                  "Load more comments"
+                )}
+              </Button>
+            </div>
+          )}
+
+          {/* Error handling */}
+          {error && (
+            <Card
+              className="border-destructive/50 bg-destructive/5"
+              hideBorder={isMobile}
+              hideMargin={isMobile}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 text-destructive text-sm">
+                  <Mail className="w-4 h-4 flex-shrink-0" />
+                  <span>{error}</span>
+                  <Button
+                    onClick={() => {
+                      clearError();
+                      refresh();
+                    }}
+                    variant="ghost"
+                    size="sm"
+                    className="ml-auto text-xs"
+                  >
+                    Retry
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}

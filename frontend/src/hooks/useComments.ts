@@ -1,20 +1,19 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { interactionApi } from "@/lib/api";
+import { Comment } from "@/types";
 
-export interface Comment {
-  id: string;
-  content: string;
-  contentTitle: string;
-  targetType: "media" | "album";
-  targetId: string;
-  timestamp: string;
-  createdAt: string;
+interface CommentWithTarget extends Comment {
+  target?: {
+    title?: string;
+    type?: "media" | "album";
+  };
 }
 
 export interface UseCommentsReturn {
   // Data
-  comments: Comment[];
+  comments: CommentWithTarget[];
   totalCount: number;
   hasMore: boolean;
 
@@ -36,13 +35,14 @@ export const useComments = (
   username: string,
   initialLoad: boolean = true
 ): UseCommentsReturn => {
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [comments, setComments] = useState<CommentWithTarget[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [lastKey, setLastKey] = useState<string | undefined>();
 
   const clearError = useCallback(() => {
     setError(null);
@@ -61,123 +61,40 @@ export const useComments = (
       setError(null);
 
       try {
-        // Mock API call - in real implementation, this would be:
-        // const response = await commentsApi.getUserComments(username, page, 20);
+        const keyToUse = isFirstPage ? undefined : lastKey;
+        const response = await interactionApi.getCommentsByUsername(
+          username,
+          page,
+          20,
+          keyToUse
+        );
 
-        // Simulate API delay
-        await new Promise((resolve) => setTimeout(resolve, 800));
+        if (response.success && response.data) {
+          const { comments: newComments, pagination } = response.data;
 
-        // Mock comments data - this would come from the API
-        const mockComments: Comment[] = [
-          {
-            id: "comment1",
-            content:
-              "Amazing composition and lighting! The way you captured the golden hour is absolutely stunning. This reminds me of my favorite photography spots.",
-            contentTitle: "Sunset Beach Photography",
-            targetType: "media",
-            targetId: "media1",
-            timestamp: "2 hours ago",
-            createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            id: "comment2",
-            content:
-              "Love the colors in this series. Each photo tells a different story while maintaining a cohesive aesthetic.",
-            contentTitle: "Abstract Art Collection",
-            targetType: "album",
-            targetId: "album2",
-            timestamp: "5 hours ago",
-            createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            id: "comment3",
-            content:
-              "Great perspective on urban life. The contrast between old and new architecture is beautifully captured.",
-            contentTitle: "City Streets",
-            targetType: "media",
-            targetId: "media3",
-            timestamp: "1 day ago",
-            createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-          },
-          {
-            id: "comment4",
-            content:
-              "This collection speaks to me on so many levels. Thank you for sharing your vision with us!",
-            contentTitle: "Nature's Symphony",
-            targetType: "album",
-            targetId: "album4",
-            timestamp: "2 days ago",
-            createdAt: new Date(
-              Date.now() - 2 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-          },
-          {
-            id: "comment5",
-            content:
-              "The detail in this macro shot is incredible. You can see every droplet of water on the petals.",
-            contentTitle: "Morning Dew",
-            targetType: "media",
-            targetId: "media5",
-            timestamp: "3 days ago",
-            createdAt: new Date(
-              Date.now() - 3 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-          },
-          {
-            id: "comment6",
-            content:
-              "Your editing style has really evolved. The mood and atmosphere in these recent photos is exceptional.",
-            contentTitle: "Moody Landscapes",
-            targetType: "album",
-            targetId: "album6",
-            timestamp: "4 days ago",
-            createdAt: new Date(
-              Date.now() - 4 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-          },
-          {
-            id: "comment7",
-            content:
-              "Perfect timing on this street photography shot. The interaction between the subjects is pure poetry.",
-            contentTitle: "Human Connections",
-            targetType: "media",
-            targetId: "media7",
-            timestamp: "1 week ago",
-            createdAt: new Date(
-              Date.now() - 7 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-          },
-          {
-            id: "comment8",
-            content:
-              "This series made me see my own city in a completely different light. Fantastic work!",
-            contentTitle: "Urban Exploration",
-            targetType: "album",
-            targetId: "album8",
-            timestamp: "1 week ago",
-            createdAt: new Date(
-              Date.now() - 7 * 24 * 60 * 60 * 1000
-            ).toISOString(),
-          },
-        ];
+          if (reset || isFirstPage) {
+            setComments(newComments);
+          } else {
+            setComments((prev) => [...prev, ...newComments]);
+          }
 
-        // Simulate pagination
-        const itemsPerPage = 20;
-        const startIndex = (page - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage;
-        const pageComments = mockComments.slice(startIndex, endIndex);
-        const hasNextPage = endIndex < mockComments.length;
+          setTotalCount(pagination.total);
+          setHasMore(pagination.hasNext);
 
-        if (reset || isFirstPage) {
-          setComments(pageComments);
+          if (pagination.nextKey) {
+            setLastKey(pagination.nextKey);
+          }
+
+          setCurrentPage(page);
+
+          console.log(
+            `✅ Loaded ${newComments.length} comments for user ${username}`
+          );
         } else {
-          setComments((prev) => [...prev, ...pageComments]);
+          throw new Error(response.error || "Failed to fetch comments");
         }
-
-        setTotalCount(mockComments.length);
-        setHasMore(hasNextPage);
-        setCurrentPage(page);
       } catch (err) {
+        console.error("Error fetching comments:", err);
         const errorMessage =
           err instanceof Error ? err.message : "Failed to fetch comments";
         setError(errorMessage);
@@ -185,7 +102,7 @@ export const useComments = (
         loading(false);
       }
     },
-    [username]
+    [username, lastKey]
   );
 
   const loadMore = useCallback(async () => {
@@ -198,6 +115,7 @@ export const useComments = (
 
   const refresh = useCallback(async () => {
     setCurrentPage(1);
+    setLastKey(undefined);
     await fetchComments(1, true);
   }, [fetchComments]);
 
@@ -215,6 +133,7 @@ export const useComments = (
       setTotalCount(0);
       setHasMore(false);
       setCurrentPage(1);
+      setLastKey(undefined);
     }
   }, [username]);
 

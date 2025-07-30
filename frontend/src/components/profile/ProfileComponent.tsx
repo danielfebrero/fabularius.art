@@ -11,7 +11,9 @@ import { ContentCard } from "@/components/ui/ContentCard";
 import { Media } from "@/types";
 import { useProfileData } from "@/hooks/useProfileData";
 import { useAlbums } from "@/hooks/useAlbums";
+import { useComments } from "@/hooks/useComments";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { formatDistanceToNow } from "@/lib/dateUtils";
 import {
   User,
   Mail,
@@ -75,6 +77,13 @@ export default function ProfileComponent({
     username: user.username,
     isOwner,
   });
+
+  // Get real comments data
+  const {
+    comments: recentComments,
+    isLoading: commentsLoading,
+    error: commentsError,
+  } = useComments(user.username || "", true);
 
   // Get real recent albums
   const {
@@ -727,33 +736,61 @@ export default function ProfileComponent({
               </CardHeader>
               <CardContent hidePadding={isMobile}>
                 <div className="space-y-3">
-                  {mockData.recentComments.map((comment) => (
-                    <LocaleLink
-                      key={comment.id}
-                      href={
-                        comment.targetType === "media"
-                          ? `/media/${comment.targetId}`
-                          : `/albums/${comment.targetId}`
-                      }
-                    >
-                      <div className="p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
-                            {initials}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-foreground">
-                              &ldquo;{comment.content}&rdquo;
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              On &ldquo;{comment.contentTitle}&rdquo; •{" "}
-                              {comment.timestamp}
-                            </p>
+                  {commentsLoading ? (
+                    // Loading state
+                    <div className="space-y-3">
+                      {[...Array(3)].map((_, i) => (
+                        <div key={i} className="p-3 rounded-lg">
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 bg-muted rounded-full animate-pulse"></div>
+                            <div className="flex-1 space-y-2">
+                              <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
+                              <div className="h-3 bg-muted rounded w-1/2 animate-pulse"></div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </LocaleLink>
-                  ))}
+                      ))}
+                    </div>
+                  ) : commentsError ? (
+                    <div className="text-center py-4 text-muted-foreground">
+                      Failed to load comments
+                    </div>
+                  ) : recentComments.length === 0 ? (
+                    <div className="text-center py-4 text-muted-foreground">
+                      No comments yet
+                    </div>
+                  ) : (
+                    recentComments.slice(0, 3).map((comment) => (
+                      <LocaleLink
+                        key={comment.id}
+                        href={
+                          comment.targetType === "media"
+                            ? `/media/${comment.targetId}`
+                            : `/albums/${comment.targetId}`
+                        }
+                      >
+                        <div className="p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                          <div className="flex items-start gap-3">
+                            <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-bold">
+                              {initials}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-foreground">
+                                &ldquo;{comment.content}&rdquo;
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                On &ldquo;{comment.target?.title || "Untitled"}
+                                &rdquo; •{" "}
+                                {formatDistanceToNow(
+                                  new Date(comment.createdAt)
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </LocaleLink>
+                    ))
+                  )}
                   <div className="text-center pt-2">
                     <LocaleLink href={`/profile/${displayName}/comments`}>
                       <Button variant="outline" size="sm" className="text-xs">

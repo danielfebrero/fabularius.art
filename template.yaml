@@ -1603,6 +1603,37 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
 
+  UserCommentLikeFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-comment-like"
+      CodeUri: backend/dist/functions/user/interactions/
+      Handler: comment-like.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        CommentLike:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/comment-like
+            Method: POST
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsCommentLike:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/comment-like
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
   # AI Generation Functions
   GenerationCreateFunction:
     Type: AWS::Serverless::Function
