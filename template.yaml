@@ -1574,10 +1574,10 @@ Resources:
                 - dynamodb:DeleteItem
               Resource: !GetAtt MediaTable.Arn
 
-  UserGetCommentsFunction:
+  TargetGetCommentsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "${Environment}-pornspot-user-get-comments"
+      FunctionName: !Sub "${Environment}-pornspot-target-get-comments"
       CodeUri: backend/dist/functions/user/interactions/
       Handler: get-comments.handler
       Layers:
@@ -1596,6 +1596,35 @@ Resources:
           Properties:
             RestApiId: !Ref ApiGateway
             Path: /user/interactions/comments/{targetType}/{targetId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
+  UserGetCommentsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-get-comments"
+      CodeUri: backend/dist/functions/user/interactions/
+      Handler: get-comments.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        GetComments:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/comments
+            Method: GET
+            Auth:
+              Authorizer: NONE
+        OptionsGetComments:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/interactions/comments
             Method: OPTIONS
             Auth:
               Authorizer: NONE
