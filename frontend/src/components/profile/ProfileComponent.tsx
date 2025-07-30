@@ -779,8 +779,6 @@ export default function ProfileComponent({
                                 &ldquo;{comment.content}&rdquo;
                               </p>
                               <p className="text-xs text-muted-foreground mt-1">
-                                On &ldquo;{comment.target?.title || "Untitled"}
-                                &rdquo; •{" "}
                                 {formatDistanceToNow(
                                   new Date(comment.createdAt)
                                 )}
