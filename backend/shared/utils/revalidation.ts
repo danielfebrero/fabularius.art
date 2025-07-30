@@ -79,4 +79,12 @@ export class RevalidationService {
   static async revalidateAlbumMedia(albumId: string): Promise<void> {
     await this.revalidate([`album-${albumId}`, "albums"]);
   }
+
+  /**
+   * Trigger revalidation for a specific media page
+   * @param mediaId The media ID to revalidate
+   */
+  static async revalidateMedia(mediaId: string): Promise<void> {
+    await this.revalidate([`media-${mediaId}`, "media"]);
+  }
 }

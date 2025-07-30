@@ -92,6 +92,34 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    if (type === "media") {
+      // Revalidate specific media across all locales
+      const mediaId = request.nextUrl.searchParams.get("mediaId");
+      if (!mediaId) {
+        return NextResponse.json(
+          { message: "mediaId is required for media revalidation" },
+          { status: 400 }
+        );
+      }
+
+      console.log(`Revalidating media ${mediaId} for all locales`);
+      revalidateTag(`media-${mediaId}`);
+      revalidateTag("media");
+
+      for (const locale of locales) {
+        revalidatePath(`/${locale}/media/${mediaId}`);
+        console.log(`Revalidated path: /${locale}/media/${mediaId}`);
+      }
+
+      return NextResponse.json({
+        revalidated: true,
+        now: Date.now(),
+        type: "media",
+        mediaId,
+        locales: locales,
+      });
+    }
+
     if (tag) {
       console.log(`Revalidating tag: ${tag}`);
       revalidateTag(tag);

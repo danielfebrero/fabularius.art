@@ -35,7 +35,7 @@ export async function generateMetadata({
   return generateMediaMetadata(locale, mediaId, media, displayImageUrl);
 }
 
-export const revalidate = 3600 * 24; // Revalidate every hour
+export const revalidate = false; // Disable automatic revalidation - use on-demand only
 export const dynamic = "force-static"; // Force static generation at build time
 
 export async function generateStaticParams() {

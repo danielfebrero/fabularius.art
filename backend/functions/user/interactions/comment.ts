@@ -2,6 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 import { ResponseUtil } from "@shared/utils/response";
+import { RevalidationService } from "@shared/utils/revalidation";
 import {
   CreateCommentRequest,
   UpdateCommentRequest,
@@ -131,6 +132,13 @@ async function createComment(
     await DynamoDBService.incrementMediaCommentCount(targetId, 1);
   }
 
+  // Trigger page revalidation for the target
+  if (targetType === "media") {
+    await RevalidationService.revalidateMedia(targetId);
+  } else {
+    await RevalidationService.revalidateAlbum(targetId);
+  }
+
   console.log(`✅ Comment created for ${targetType} ${targetId}`);
 
   return ResponseUtil.success(event, {
@@ -201,6 +209,13 @@ async function updateComment(
     isEdited: true,
   });
 
+  // Trigger page revalidation for the target
+  if (existingComment.targetType === "media") {
+    await RevalidationService.revalidateMedia(existingComment.targetId);
+  } else {
+    await RevalidationService.revalidateAlbum(existingComment.targetId);
+  }
+
   console.log(`✅ Comment ${commentId} updated`);
 
   return ResponseUtil.success(event, {
@@ -255,6 +270,13 @@ async function deleteComment(
       existingComment.targetId,
       -1
     );
+  }
+
+  // Trigger page revalidation for the target
+  if (existingComment.targetType === "media") {
+    await RevalidationService.revalidateMedia(existingComment.targetId);
+  } else {
+    await RevalidationService.revalidateAlbum(existingComment.targetId);
   }
 
   console.log(`✅ Comment ${commentId} deleted`);

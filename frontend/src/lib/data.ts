@@ -128,7 +128,10 @@ export async function getMediaForAlbum(
 // Fetch a single media item by ID
 export async function getMediaById(mediaId: string) {
   const response = await fetch(`${API_URL}/media/${mediaId}`, {
-    next: { revalidate: 3600, tags: ["media"] },
+    next: {
+      revalidate: false, // Disable auto-revalidation - use on-demand only
+      tags: ["media", `media-${mediaId}`],
+    },
   });
   return handleResponse<Media>(response);
 }

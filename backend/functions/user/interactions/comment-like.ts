@@ -2,6 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 import { ResponseUtil } from "@shared/utils/response";
+import { RevalidationService } from "@shared/utils/revalidation";
 import {
   CommentInteractionRequest,
   UserInteractionEntity,
@@ -90,6 +91,13 @@ export const handler = async (
       // Increment like count for the comment
       await DynamoDBService.incrementCommentLikeCount(targetId, 1);
 
+      // Trigger page revalidation for the comment's target
+      if (comment.targetType === "media") {
+        await RevalidationService.revalidateMedia(comment.targetId);
+      } else {
+        await RevalidationService.revalidateAlbum(comment.targetId);
+      }
+
       console.log(`✅ Like added for comment ${targetId}`);
     } else {
       // Remove like
@@ -101,6 +109,13 @@ export const handler = async (
 
       // Decrement like count for the comment
       await DynamoDBService.incrementCommentLikeCount(targetId, -1);
+
+      // Trigger page revalidation for the comment's target
+      if (comment.targetType === "media") {
+        await RevalidationService.revalidateMedia(comment.targetId);
+      } else {
+        await RevalidationService.revalidateAlbum(comment.targetId);
+      }
 
       console.log(`✅ Like removed for comment ${targetId}`);
     }

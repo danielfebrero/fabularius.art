@@ -20,6 +20,7 @@
     "playwright:install": "playwright install",
     "revalidate:homepage": "node ../scripts/revalidate-homepage.js",
     "revalidate:album": "node ../scripts/revalidate-album.js",
+    "revalidate:media": "node ../scripts/revalidate-media.js",
     "revalidate:static-pages": "node ../scripts/revalidate-static-pages.js"
   },
   "dependencies": {
