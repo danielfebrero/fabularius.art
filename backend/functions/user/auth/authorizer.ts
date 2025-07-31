@@ -114,7 +114,7 @@ export const handler = async (
       try {
         const currentTime = new Date().toISOString();
         await DynamoDBService.updateUser(userValidation.user.userId, {
-          lastActive: currentTime
+          lastActive: currentTime,
         });
         console.log("📅 Updated user lastActive timestamp");
       } catch (updateError) {

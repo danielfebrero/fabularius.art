@@ -85,15 +85,24 @@ export function useLightboxPreloader(media: Media[], currentIndex: number) {
 
       // Preload current image with highest priority
       if (currentMedia?.url) {
-        preloadImage(composeMediaUrl(currentMedia.url), "high");
+        preloadImage(
+          composeMediaUrl(currentMedia.thumbnailUrls?.originalSize),
+          "high"
+        );
       }
 
       // Preload next and previous with medium priority
       if (nextMedia?.url) {
-        preloadImage(composeMediaUrl(nextMedia.url), "medium");
+        preloadImage(
+          composeMediaUrl(nextMedia.thumbnailUrls?.originalSize),
+          "medium"
+        );
       }
       if (prevMedia?.url) {
-        preloadImage(composeMediaUrl(prevMedia.url), "medium");
+        preloadImage(
+          composeMediaUrl(prevMedia.thumbnailUrls?.originalSize),
+          "medium"
+        );
       }
 
       // Preload high-quality thumbnails as fallbacks with low priority
@@ -110,10 +119,16 @@ export function useLightboxPreloader(media: Media[], currentIndex: number) {
         const pastMedia = media[index - i - 1];
 
         if (futureMedia?.url) {
-          preloadImage(composeMediaUrl(futureMedia.url), "low");
+          preloadImage(
+            composeMediaUrl(futureMedia.thumbnailUrls?.originalSize),
+            "low"
+          );
         }
         if (pastMedia?.url) {
-          preloadImage(composeMediaUrl(pastMedia.url), "low");
+          preloadImage(
+            composeMediaUrl(pastMedia.thumbnailUrls?.originalSize),
+            "low"
+          );
         }
       }
     },

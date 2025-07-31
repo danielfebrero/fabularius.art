@@ -19,7 +19,7 @@ export function cn(...inputs: ClassValue[]) {
  * Prefers WebP optimized version for images, falls back to original URL
  */
 export function getMediaDisplayUrl(media: Media): string {
-  const isImage = media.mimeType.startsWith("image/");
+  const isImage = media?.mimeType?.startsWith("image/");
 
   // For images, prefer WebP display version (stored as originalSize thumbnail) for better performance
   if (isImage && media.thumbnailUrls?.originalSize) {
@@ -27,7 +27,7 @@ export function getMediaDisplayUrl(media: Media): string {
   }
 
   // Fall back to original URL
-  return media.url;
+  return media.url || "";
 }
 
 const MONTH_NAMES = [

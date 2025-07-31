@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Media } from "../../types/index";
-import { cn } from "../../lib/utils";
-import { ContentCard } from "./ContentCard";
-import { ViewTracker } from "./ViewTracker";
-import { useLightboxPreloader } from "../../hooks/useLightboxPreloader";
-import { useSwipeGesture } from "../../hooks/useSwipeGesture";
+import { Media } from "@/types/index";
+import { cn } from "@/lib/utils";
+import { ContentCard } from "@/components/ui/ContentCard";
+import { ViewTracker } from "@/components/ui//ViewTracker";
+import { useLightboxPreloader } from "@/hooks/useLightboxPreloader";
+import { useSwipeGesture } from "@/hooks/useSwipeGesture";
 
 interface LightboxProps {
   media: Media[];
