@@ -110,7 +110,7 @@ export class UserAuthMiddleware {
       // Update lastActive timestamp to track user activity
       const currentTime = new Date().toISOString();
       await DynamoDBService.updateUser(userEntity.userId, {
-        lastActive: currentTime
+        lastActive: currentTime,
       });
 
       // Note: We don't update lastAccessedAt here to keep the authorizer fast
