@@ -19,7 +19,12 @@ export function cn(...inputs: ClassValue[]) {
  * Prefers WebP optimized version for images, falls back to original URL
  */
 export function getMediaDisplayUrl(media: Media): string {
-  const isImage = media?.mimeType?.startsWith("image/");
+  // Ensure we have valid media object and mimeType before checking
+  if (!media || typeof media !== "object") {
+    return "";
+  }
+
+  const isImage = media.mimeType?.startsWith("image/");
 
   // For images, prefer WebP display version (stored as originalSize thumbnail) for better performance
   if (isImage && media.thumbnailUrls?.originalSize) {

@@ -236,12 +236,12 @@ export class ThumbnailService {
     if (!mimeType) {
       return false;
     }
-    
+
     return (
       mimeType.startsWith("image/") &&
       [
         "image/jpeg",
-        "image/jpg", 
+        "image/jpg",
         "image/png",
         "image/webp",
         "image/gif",

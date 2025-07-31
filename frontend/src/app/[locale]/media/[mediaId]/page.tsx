@@ -30,7 +30,15 @@ export async function generateMetadata({
     };
   }
 
-  const displayImageUrl = composeMediaUrl(getMediaDisplayUrl(media));
+  // Ensure we have a valid media object with required fields
+  const safeMedia = {
+    ...media,
+    mimeType: media.mimeType || "",
+    url: media.url || "",
+    thumbnailUrls: media.thumbnailUrls || {},
+  };
+
+  const displayImageUrl = composeMediaUrl(getMediaDisplayUrl(safeMedia));
 
   return generateMediaMetadata(locale, mediaId, media, displayImageUrl);
 }
