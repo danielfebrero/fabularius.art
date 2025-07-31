@@ -315,7 +315,7 @@ export function MediaManager({
                     </div>
 
                     <div className="aspect-square">
-                      {mediaItem.mimeType.startsWith("image/") ? (
+                      {mediaItem?.mimeType?.startsWith("image/") ? (
                         <ResponsivePicture
                           thumbnailUrls={composeThumbnailUrls(
                             mediaItem.thumbnailUrls

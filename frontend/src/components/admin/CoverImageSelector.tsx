@@ -48,7 +48,9 @@ export function CoverImageSelector({
     onCoverSelect(newCoverUrl);
   };
 
-  const imageMedia = media.filter((item) => item.mimeType.startsWith("image/"));
+  const imageMedia = media.filter((item) =>
+    item?.mimeType?.startsWith("image/")
+  );
 
   if (!isOpen) {
     return (
