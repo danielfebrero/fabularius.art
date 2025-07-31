@@ -232,12 +232,16 @@ export class ThumbnailService {
   /**
    * Check if a file is an image that supports thumbnail generation
    */
-  static isImageFile(mimeType: string): boolean {
+  static isImageFile(mimeType: string | undefined): boolean {
+    if (!mimeType) {
+      return false;
+    }
+    
     return (
-      mimeType?.startsWith("image/") &&
+      mimeType.startsWith("image/") &&
       [
         "image/jpeg",
-        "image/jpg",
+        "image/jpg", 
         "image/png",
         "image/webp",
         "image/gif",
