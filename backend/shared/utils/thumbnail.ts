@@ -234,7 +234,7 @@ export class ThumbnailService {
    */
   static isImageFile(mimeType: string): boolean {
     return (
-      mimeType.startsWith("image/") &&
+      mimeType?.startsWith("image/") &&
       [
         "image/jpeg",
         "image/jpg",
