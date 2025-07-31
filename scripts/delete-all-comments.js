@@ -2,20 +2,20 @@
 
 /**
  * Delete All Comments Script for pornspot.ai
- * 
+ *
  * This script deletes ALL comments from the production database.
  * WARNING: This is a destructive operation that cannot be undone.
- * 
+ *
  * Usage:
  *   node scripts/delete-all-comments.js --env=prod --dry-run
  *   node scripts/delete-all-comments.js --env=prod --confirm
- * 
+ *
  * Environment Options:
  *   --env=local     Delete from local database
  *   --env=dev       Delete from dev environment
- *   --env=staging   Delete from staging environment  
+ *   --env=staging   Delete from staging environment
  *   --env=prod      Delete from production database
- * 
+ *
  * Options:
  *   --dry-run       Preview what would be deleted without actually deleting
  *   --confirm       Actually perform the deletion (required for real deletion)
@@ -55,7 +55,9 @@ for (const arg of args) {
 
 // Validate environment
 if (!["local", "dev", "staging", "prod"].includes(ENVIRONMENT)) {
-  console.error("❌ Error: Invalid environment. Must be: local, dev, staging, or prod");
+  console.error(
+    "❌ Error: Invalid environment. Must be: local, dev, staging, or prod"
+  );
   process.exit(1);
 }
 
@@ -114,8 +116,12 @@ function showHelp() {
   console.log("  --env=prod      Delete from production database");
   console.log("");
   console.log("Safety Options:");
-  console.log("  --dry-run       Preview what would be deleted without actually deleting");
-  console.log("  --confirm       Actually perform the deletion (required for real deletion)");
+  console.log(
+    "  --dry-run       Preview what would be deleted without actually deleting"
+  );
+  console.log(
+    "  --confirm       Actually perform the deletion (required for real deletion)"
+  );
   console.log("  --help, -h      Show this help message");
   console.log("");
   console.log("Examples:");
@@ -158,7 +164,7 @@ function askConfirmation(message) {
  */
 async function scanAllComments() {
   console.log("🔍 Scanning DynamoDB for comment entities...");
-  
+
   const allComments = [];
   let lastEvaluatedKey = undefined;
   let totalScanned = 0;
@@ -174,11 +180,13 @@ async function scanAllComments() {
     };
 
     const result = await docClient.send(new ScanCommand(params));
-    
+
     if (result.Items && result.Items.length > 0) {
       allComments.push(...result.Items);
       totalScanned += result.Items.length;
-      console.log(`   Found ${result.Items.length} comments in this batch (${totalScanned} total scanned)`);
+      console.log(
+        `   Found ${result.Items.length} comments in this batch (${totalScanned} total scanned)`
+      );
     }
 
     lastEvaluatedKey = result.LastEvaluatedKey;
@@ -193,7 +201,7 @@ async function scanAllComments() {
  */
 async function scanAllCommentInteractions() {
   console.log("🔍 Scanning DynamoDB for comment interaction entities...");
-  
+
   const allInteractions = [];
   let lastEvaluatedKey = undefined;
   let totalScanned = 0;
@@ -209,17 +217,21 @@ async function scanAllCommentInteractions() {
     };
 
     const result = await docClient.send(new ScanCommand(params));
-    
+
     if (result.Items && result.Items.length > 0) {
       allInteractions.push(...result.Items);
       totalScanned += result.Items.length;
-      console.log(`   Found ${result.Items.length} comment interactions in this batch (${totalScanned} total scanned)`);
+      console.log(
+        `   Found ${result.Items.length} comment interactions in this batch (${totalScanned} total scanned)`
+      );
     }
 
     lastEvaluatedKey = result.LastEvaluatedKey;
   } while (lastEvaluatedKey);
 
-  console.log(`📊 Total comment interaction entities found: ${allInteractions.length}`);
+  console.log(
+    `📊 Total comment interaction entities found: ${allInteractions.length}`
+  );
   return allInteractions;
 }
 
@@ -242,7 +254,7 @@ function analyzeComments(comments) {
     } else if (comment.targetType === "media") {
       analysis.byTargetType.media++;
     }
-    
+
     if (comment.targetId) {
       analysis.targetIds.add(comment.targetId);
     }
@@ -291,10 +303,14 @@ async function deleteEntitiesInBatches(entities, entityType) {
     const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
     const totalBatches = Math.ceil(entities.length / BATCH_SIZE);
 
-    console.log(`   Deleting batch ${batchNumber}/${totalBatches} (${batch.length} entities)`);
+    console.log(
+      `   Deleting batch ${batchNumber}/${totalBatches} (${batch.length} entities)`
+    );
 
     if (DRY_RUN) {
-      console.log(`   [DRY RUN] Would delete ${batch.length} ${entityType} entities`);
+      console.log(
+        `   [DRY RUN] Would delete ${batch.length} ${entityType} entities`
+      );
       results.processed += batch.length;
       results.success += batch.length;
       continue;
@@ -320,7 +336,9 @@ async function deleteEntitiesInBatches(entities, entityType) {
 
       results.processed += batch.length;
       results.success += batch.length;
-      console.log(`   ✅ Completed batch ${batchNumber}: ${batch.length} entities deleted`);
+      console.log(
+        `   ✅ Completed batch ${batchNumber}: ${batch.length} entities deleted`
+      );
     } catch (error) {
       console.error(`   ❌ Error in batch ${batchNumber}:`, error.message);
       results.processed += batch.length;
@@ -344,13 +362,17 @@ async function deleteEntitiesInBatches(entities, entityType) {
 async function updateTargetCommentCounts(targetIds) {
   if (targetIds.size === 0 || DRY_RUN) {
     if (DRY_RUN) {
-      console.log(`🔄 [DRY RUN] Would reset comment counts for ${targetIds.size} targets`);
+      console.log(
+        `🔄 [DRY RUN] Would reset comment counts for ${targetIds.size} targets`
+      );
     }
     return;
   }
 
-  console.log(`🔄 Resetting comment counts for ${targetIds.size} target entities...`);
-  
+  console.log(
+    `🔄 Resetting comment counts for ${targetIds.size} target entities...`
+  );
+
   let updated = 0;
   let errors = 0;
 
@@ -375,7 +397,7 @@ async function updateTargetCommentCounts(targetIds) {
           },
         })
       );
-      
+
       // Try to update as media second
       await docClient.send(
         new BatchWriteCommand({
@@ -385,7 +407,7 @@ async function updateTargetCommentCounts(targetIds) {
                 PutRequest: {
                   Item: {
                     PK: `MEDIA#${targetId}`,
-                    SK: "METADATA", 
+                    SK: "METADATA",
                     commentCount: 0,
                     updatedAt: new Date().toISOString(),
                   },
@@ -398,12 +420,16 @@ async function updateTargetCommentCounts(targetIds) {
 
       updated++;
     } catch (error) {
-      console.warn(`⚠️  Could not update comment count for ${targetId}: ${error.message}`);
+      console.warn(
+        `⚠️  Could not update comment count for ${targetId}: ${error.message}`
+      );
       errors++;
     }
   }
 
-  console.log(`✅ Updated comment counts: ${updated} succeeded, ${errors} failed`);
+  console.log(
+    `✅ Updated comment counts: ${updated} succeeded, ${errors} failed`
+  );
 }
 
 /**
@@ -437,18 +463,24 @@ async function deleteAllComments() {
 
     // Ask for confirmation unless dry run
     if (!DRY_RUN) {
-      console.log("\n⚠️  WARNING: This will permanently delete ALL comments and interactions!");
+      console.log(
+        "\n⚠️  WARNING: This will permanently delete ALL comments and interactions!"
+      );
       console.log("   This action cannot be undone.");
       console.log(`   Environment: ${ENVIRONMENT.toUpperCase()}`);
       console.log(`   Comments to delete: ${comments.length}`);
       console.log(`   Interactions to delete: ${interactions.length}`);
-      
+
       if (ENVIRONMENT === "prod") {
         console.log("\n🚨 PRODUCTION ENVIRONMENT DELETION 🚨");
-        console.log("   This will delete ALL comments from the production database!");
+        console.log(
+          "   This will delete ALL comments from the production database!"
+        );
       }
 
-      const confirmed = await askConfirmation("\nAre you absolutely sure you want to proceed?");
+      const confirmed = await askConfirmation(
+        "\nAre you absolutely sure you want to proceed?"
+      );
       if (!confirmed) {
         console.log("❌ Operation cancelled by user");
         return;
@@ -480,7 +512,7 @@ async function deleteAllComments() {
 
     // Display results
     console.log("\n📊 Deletion Results:");
-    
+
     console.log("\n💬 Comments:");
     console.log(`   Processed: ${commentResults.processed}`);
     console.log(`   Successfully deleted: ${commentResults.success}`);
@@ -501,24 +533,30 @@ async function deleteAllComments() {
     // Show error details if any
     if (totalErrors > 0) {
       console.log("\n❌ Deletion Errors:");
-      
+
       if (commentResults.errors > 0) {
         console.log("   Comment deletion errors:");
         commentResults.errorDetails.forEach((error, index) => {
-          console.log(`     ${index + 1}. Batch ${error.batchNumber}: ${error.error}`);
+          console.log(
+            `     ${index + 1}. Batch ${error.batchNumber}: ${error.error}`
+          );
         });
       }
 
       if (interactionResults.errors > 0) {
         console.log("   Interaction deletion errors:");
         interactionResults.errorDetails.forEach((error, index) => {
-          console.log(`     ${index + 1}. Batch ${error.batchNumber}: ${error.error}`);
+          console.log(
+            `     ${index + 1}. Batch ${error.batchNumber}: ${error.error}`
+          );
         });
       }
     }
 
     if (DRY_RUN) {
-      console.log("\n🧪 This was a dry run. No entities were actually deleted.");
+      console.log(
+        "\n🧪 This was a dry run. No entities were actually deleted."
+      );
       console.log("   Run with --confirm flag to perform actual deletion.");
     } else if (totalErrors === 0) {
       console.log("\n✅ All comments deleted successfully!");

@@ -19,7 +19,7 @@ npm run delete:comments -- --env=prod --confirm
 ### Environment Options
 
 - `--env=local` - Delete from local database (LocalStack)
-- `--env=dev` - Delete from dev environment  
+- `--env=dev` - Delete from dev environment
 - `--env=staging` - Delete from staging environment
 - `--env=prod` - Delete from production database
 
