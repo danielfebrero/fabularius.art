@@ -18,3 +18,9 @@ On tablet, we could have a sticky footer with text and icons.
 ### Last active date
 
 This date should be updated on login, but also when the user interacts with the app, like liking a post or commenting. We should catch it at authorizer level.
+
+## Videos and Gifs
+
+### Components should be able to play videos and gifs
+
+On click on the video icon, when being on media page or lightbox, it should show the video component or play the gif. Also, we should avoid Gifs maybe because they are really heavy.
