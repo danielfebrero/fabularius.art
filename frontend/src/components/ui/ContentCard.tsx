@@ -125,7 +125,7 @@ export function ContentCard({
   const media = isMedia ? (item as Media) : null;
   const album = !isMedia ? (item as Album) : null;
 
-  const isVideo = isMedia && media?.mimeType.startsWith("video/");
+  const isVideo = isMedia && media?.mimeType?.startsWith("video/");
 
   // Hide mobile actions when clicking outside or after timeout
   useEffect(() => {
