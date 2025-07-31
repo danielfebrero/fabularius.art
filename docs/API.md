@@ -375,6 +375,44 @@ Content-Type: application/json
 }
 ```
 
+### Delete Album
+
+Delete an album and remove all media from it (media is preserved for other albums). Also deletes all comments on the album and their likes.
+
+```http
+DELETE /albums/{albumId}
+Cookie: sessionId=session-token-here
+```
+
+**Path Parameters:**
+
+| Parameter | Type   | Required | Description             |
+| --------- | ------ | -------- | ----------------------- |
+| `albumId` | string | Yes      | Unique album identifier |
+
+**Authentication:** Required - User must own the album or have admin privileges
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Album deleted successfully, media removed from album but preserved",
+    "deletedAlbumId": "album-789",
+    "removedMediaCount": 5
+  }
+}
+```
+
+**Error Responses:**
+
+- `400`: Album ID is required
+- `401`: User not authenticated
+- `403`: User doesn't own the album (non-admin)
+- `404`: Album not found
+- `500`: Server error
+
 ## Media API
 
 ### List Media

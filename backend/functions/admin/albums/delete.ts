@@ -22,24 +22,21 @@ export const handler = async (
       return ResponseUtil.notFound(event, "Album not found");
     }
 
-    // Get all media in the album to delete them first
+    // Get all media in the album to remove them from the album (not delete them)
     const { media } = await DynamoDBService.listAlbumMedia(albumId, 1000);
 
-    // Delete all media in the album
+    // Remove all media from the album (don't delete the media itself)
     if (media.length > 0) {
-      const deleteMediaPromises = media.map((mediaItem) =>
-        DynamoDBService.deleteMedia(mediaItem.id)
+      const removeMediaPromises = media.map((mediaItem) =>
+        DynamoDBService.removeMediaFromAlbum(albumId, mediaItem.id)
       );
-      await Promise.all(deleteMediaPromises);
-
-      // Clean up interactions for each media item
-      const cleanupMediaPromises = media.map((mediaItem) =>
-        DynamoDBService.deleteAllInteractionsForTarget(mediaItem.id)
-      );
-      await Promise.all(cleanupMediaPromises);
+      await Promise.all(removeMediaPromises);
     }
 
-    // Clean up interactions for the album itself
+    // Delete all comments for the album (this also deletes likes on those comments)
+    await DynamoDBService.deleteAllCommentsForTarget(albumId);
+
+    // Clean up interactions (likes/bookmarks) for the album itself
     await DynamoDBService.deleteAllInteractionsForTarget(albumId);
 
     // Delete the album
@@ -49,9 +46,10 @@ export const handler = async (
     await RevalidationService.revalidateAlbums();
 
     return ResponseUtil.success(event, {
-      message: "Album and all associated media deleted successfully",
+      message:
+        "Album deleted successfully, media removed from album but preserved",
       deletedAlbumId: albumId,
-      deletedMediaCount: media.length,
+      removedMediaCount: media.length,
     });
   } catch (error) {
     console.error("Error deleting album:", error);

@@ -1973,6 +1973,14 @@ export class DynamoDBService {
         return;
       }
 
+      // Extract comment IDs for cleaning up likes
+      const commentIds = allComments.map((comment: any) => comment.id);
+
+      // Delete all comment likes for these comments
+      if (commentIds.length > 0) {
+        await this.deleteAllCommentLikesForComments(commentIds);
+      }
+
       // Delete comments in batches
       const batchSize = 25;
       for (let i = 0; i < allComments.length; i += batchSize) {
@@ -1997,13 +2005,81 @@ export class DynamoDBService {
       }
 
       console.log(
-        `✅ Deleted ${allComments.length} comments for target: ${targetId}`
+        `✅ Deleted ${allComments.length} comments and their likes for target: ${targetId}`
       );
     } catch (error) {
       console.error(
         `❌ Error deleting comments for target ${targetId}:`,
         error
       );
+      throw error;
+    }
+  }
+
+  // Helper method to delete all likes for a list of comments
+  static async deleteAllCommentLikesForComments(
+    commentIds: string[]
+  ): Promise<void> {
+    console.log(`🧹 Cleaning up likes for ${commentIds.length} comments`);
+
+    try {
+      // For each comment, find all users who liked it using GSI1
+      const allLikesToDelete: { PK: string; SK: string }[] = [];
+
+      for (const commentId of commentIds) {
+        const likesResult = await docClient.send(
+          new QueryCommand({
+            TableName: TABLE_NAME,
+            IndexName: "GSI1",
+            KeyConditionExpression: "GSI1PK = :gsi1pk",
+            ExpressionAttributeValues: {
+              ":gsi1pk": `COMMENT_INTERACTION#like#${commentId}`,
+            },
+          })
+        );
+
+        const commentLikes = likesResult.Items || [];
+        commentLikes.forEach((like: any) => {
+          allLikesToDelete.push({
+            PK: like.PK,
+            SK: like.SK,
+          });
+        });
+      }
+
+      if (allLikesToDelete.length === 0) {
+        console.log(`No comment likes found to delete`);
+        return;
+      }
+
+      // Delete all comment likes in batches
+      const batchSize = 25;
+      for (let i = 0; i < allLikesToDelete.length; i += batchSize) {
+        const batch = allLikesToDelete.slice(i, i + batchSize);
+
+        const deleteRequests = batch.map((like) => ({
+          DeleteRequest: {
+            Key: {
+              PK: like.PK,
+              SK: like.SK,
+            },
+          },
+        }));
+
+        await docClient.send(
+          new BatchWriteCommand({
+            RequestItems: {
+              [TABLE_NAME]: deleteRequests,
+            },
+          })
+        );
+      }
+
+      console.log(
+        `✅ Deleted ${allLikesToDelete.length} comment likes for ${commentIds.length} comments`
+      );
+    } catch (error) {
+      console.error(`❌ Error deleting comment likes:`, error);
       throw error;
     }
   }

@@ -25,8 +25,9 @@ Users can now edit and delete their own albums from the `/user/albums` page. Thi
 2. **DELETE /albums/{albumId}** - Delete an album
    - Requires user authentication
    - Validates album ownership
-   - Deletes all associated media
-   - Cleans up interactions and references
+   - Removes media from album but preserves media for other albums
+   - Deletes all comments on the album and their likes
+   - Cleans up all interactions (likes/bookmarks) for the album
 
 ### Files Added/Modified
 
