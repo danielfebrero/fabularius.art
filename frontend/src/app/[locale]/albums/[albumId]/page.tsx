@@ -19,7 +19,7 @@ type AlbumDetailPageProps = {
 };
 
 // Enable ISR for album pages
-export const revalidate = false;
+export const revalidate = 0;
 export const dynamic = "force-static";
 export const dynamicParams = true;
 

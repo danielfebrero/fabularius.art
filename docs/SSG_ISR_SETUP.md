@@ -112,6 +112,20 @@ curl https://yoursite.com/api/revalidate?secret=YOUR_SECRET&type=homepage
 2. Check for build-time errors in deployment logs
 3. Verify `getAlbums()` function works with `force-cache`
 
+### Local Development Revalidation Issues
+
+In local development, the backend Lambda functions run in Docker containers while the frontend runs on the host machine. If you see `connect ECONNREFUSED 127.0.0.1:3000` errors:
+
+1. **Automatic Fix**: The revalidation service automatically converts `localhost` to `host.docker.internal` for Docker networking
+2. **Manual Check**: Ensure frontend is running on `http://localhost:3000`
+3. **Verify Configuration**: Check `FRONTEND_URL` in `backend/.env.local.json` is set to `http://localhost:3000`
+
+The logs will show:
+
+```
+Local development detected: Adjusted frontend URL from http://localhost:3000 to http://host.docker.internal:3000
+```
+
 ## Next Steps
 
 Consider these optimizations:

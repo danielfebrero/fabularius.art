@@ -19,9 +19,26 @@ export class RevalidationService {
         ParameterStoreService.getRevalidateSecret(),
       ]);
 
+      // In local development with Docker, we need to use host.docker.internal
+      // to access the host machine from inside the container
+      const isLocal =
+        process.env["AWS_SAM_LOCAL"] === "true" ||
+        process.env["ENVIRONMENT"] === "local";
+      let adjustedFrontendUrl = frontendUrl;
+
+      if (isLocal && frontendUrl.includes("localhost")) {
+        adjustedFrontendUrl = frontendUrl.replace(
+          "localhost",
+          "host.docker.internal"
+        );
+        console.log(
+          `Local development detected: Adjusted frontend URL from ${frontendUrl} to ${adjustedFrontendUrl}`
+        );
+      }
+
       // Trigger revalidation for each tag
       const revalidationPromises = tags.map(async (tag) => {
-        const revalidateUrl = `${frontendUrl}/api/revalidate?secret=${revalidateSecret}&tag=${tag}`;
+        const revalidateUrl = `${adjustedFrontendUrl}/api/revalidate?secret=${revalidateSecret}&tag=${tag}`;
         console.log(
           "Triggering revalidation for tag:",
           tag,

@@ -35,7 +35,7 @@ export async function generateMetadata({
   return generateMediaMetadata(locale, mediaId, media, displayImageUrl);
 }
 
-export const revalidate = false; // Disable automatic revalidation - use on-demand only
+export const revalidate = 0;
 export const dynamic = "force-static"; // Force static generation at build time
 
 export async function generateStaticParams() {

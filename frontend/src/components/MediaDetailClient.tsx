@@ -19,7 +19,7 @@ import {
   Bot,
   Hash,
 } from "lucide-react";
-import { Media, Album } from "@/types";
+import { Media } from "@/types";
 import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
 import { useUser } from "@/hooks/useUser";
 import { ShareDropdown } from "@/components/ui/ShareDropdown";

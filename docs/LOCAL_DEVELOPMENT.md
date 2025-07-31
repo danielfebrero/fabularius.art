@@ -123,6 +123,22 @@ If you get an error message that the Docker daemon is not running, make sure you
 
 If you have other services running on ports `4566` or `3000`, the application might fail to start. Make sure these ports are free before running the setup script.
 
+### Revalidation Connection Issues
+
+If you see revalidation errors like `connect ECONNREFUSED 127.0.0.1:3000` in the backend logs, this indicates that the backend Lambda functions (running in Docker containers) cannot reach the frontend server (running on the host machine).
+
+This is automatically handled by the revalidation service, which converts `localhost` URLs to `host.docker.internal` in local development mode. The logs will show:
+
+```
+Local development detected: Adjusted frontend URL from http://localhost:3000 to http://host.docker.internal:3000
+```
+
+If you continue to see connection issues:
+
+1. Ensure your frontend is running on `http://localhost:3000`
+2. Check that Docker Desktop has the "host.docker.internal" hostname enabled
+3. Verify the `FRONTEND_URL` in `backend/.env.local.json` is set to `http://localhost:3000`
+
 ### Useful Commands
 
 The `start-local-backend.sh` script provides some useful commands for managing the local environment:
