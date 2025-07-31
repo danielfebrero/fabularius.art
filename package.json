@@ -31,6 +31,7 @@
     "cleanup:thumbnails:s3": "node scripts/cleanup-thumbnails-s3.js",
     "cleanup:thumbnails:db": "node scripts/cleanup-thumbnails-db.js",
     "cleanup:thumbnails:all": "node scripts/cleanup-thumbnails-all.js",
+    "delete:comments": "node scripts/delete-all-comments.js",
     "deploy": "./scripts/deploy.sh",
     "deploy:guided": "./scripts/deploy.sh --guided",
     "sam:build": "sam build",
