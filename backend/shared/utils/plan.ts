@@ -26,6 +26,9 @@ export interface EnhancedUser {
   username?: string;
   firstName?: string;
   lastName?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
   createdAt: string;
   isActive: boolean;
   isEmailVerified: boolean;
@@ -156,6 +159,9 @@ export class PlanUtil {
       username: userEntity.username,
       firstName: userEntity.firstName,
       lastName: userEntity.lastName,
+      bio: userEntity.bio,
+      location: userEntity.location,
+      website: userEntity.website,
       createdAt: userEntity.createdAt,
       isActive: userEntity.isActive,
       isEmailVerified: userEntity.isEmailVerified,

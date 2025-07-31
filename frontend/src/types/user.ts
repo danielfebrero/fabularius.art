@@ -282,3 +282,29 @@ export interface UserWithPlanInfo extends User {
     lastGenerationAt?: string;
   };
 }
+
+// Profile Update Types
+export interface UserProfileUpdateRequest {
+  username?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+}
+
+export interface UserProfileUpdateResponse {
+  success: boolean;
+  data?: {
+    message: string;
+    user?: {
+      userId: string;
+      email: string;
+      username: string;
+      bio?: string;
+      location?: string;
+      website?: string;
+      createdAt: string;
+      lastLoginAt?: string;
+    };
+  };
+  error?: string;
+}

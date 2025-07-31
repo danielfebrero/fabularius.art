@@ -136,6 +136,11 @@ export interface UserEntity {
   lastLoginAt?: string;
   googleId?: string; // For Google OAuth integration
 
+  // Profile information
+  bio?: string; // User biography/description
+  location?: string; // User location (city, country)
+  website?: string; // User website URL
+
   // Plan and subscription information
   role?: "user" | "admin" | "moderator"; // User role
   plan?: "free" | "starter" | "unlimited" | "pro"; // Current plan

@@ -1178,6 +1178,37 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
 
+  UserProfileEditFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-profile-edit"
+      CodeUri: backend/dist/functions/user/profile/
+      Handler: edit.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        PutProfileEdit:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/profile/edit
+            Method: PUT
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsProfileEdit:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/profile/edit
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
   UserVerifyEmailFunction:
     Type: AWS::Serverless::Function
     Properties:

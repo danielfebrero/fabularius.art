@@ -9,6 +9,8 @@ import {
   GoogleOAuthResponse,
   UsernameAvailabilityRequest,
   UsernameAvailabilityResponse,
+  UserProfileUpdateRequest,
+  UserProfileUpdateResponse,
 } from "@/types/user";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -169,6 +171,39 @@ export const userApi = {
 
     if (!response.ok) {
       throw new Error(`Google OAuth failed: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
+  // Update user profile
+  updateProfile: async (
+    profileData: UserProfileUpdateRequest
+  ): Promise<UserProfileUpdateResponse> => {
+    const response = await fetch(`${API_URL}/user/profile/edit`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(profileData),
+    });
+
+    if (!response.ok) {
+      let errorData = null;
+      try {
+        errorData = await response.json();
+      } catch {
+        // response body is not JSON
+      }
+      const errorMessage =
+        (errorData && (errorData.error || errorData.message)) ||
+        `Profile update failed: ${response.statusText}`;
+      const error = new Error(errorMessage);
+      if (errorData) {
+        (error as any).response = errorData;
+      }
+      throw error;
     }
 
     return response.json();

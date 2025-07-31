@@ -674,6 +674,58 @@ GET /user/auth/me
 Cookie: sessionId=session-token-here
 ```
 
+### Update User Profile
+
+Update the current user's profile information.
+
+```http
+PUT /user/profile/edit
+Cookie: sessionId=session-token-here
+Content-Type: application/json
+
+{
+  "username": "newusername",
+  "bio": "Updated bio information",
+  "location": "New York, USA",
+  "website": "https://example.com"
+}
+```
+
+**Request Body:**
+
+All fields are optional. Only provided fields will be updated.
+
+- `username` (string, optional): New username (3-30 characters, alphanumeric + underscore/hyphen)
+- `bio` (string, optional): User biography (max 500 characters)
+- `location` (string, optional): User location (max 100 characters)
+- `website` (string, optional): User website URL (max 200 characters, auto-prefixes https:// if needed)
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Profile updated successfully",
+  "user": {
+    "userId": "user123",
+    "email": "user@example.com",
+    "username": "newusername",
+    "bio": "Updated bio information",
+    "location": "New York, USA",
+    "website": "https://example.com",
+    "createdAt": "2023-01-01T00:00:00.000Z",
+    "lastLoginAt": "2023-01-02T00:00:00.000Z"
+  }
+}
+```
+
+**Error Responses:**
+
+- `400 Bad Request`: Validation errors (username taken, invalid format, etc.)
+- `401 Unauthorized`: User session required
+- `405 Method Not Allowed`: Only PUT method allowed
+- `500 Internal Server Error`: Server error
+
 ## User Interactions API
 
 ### Like Media

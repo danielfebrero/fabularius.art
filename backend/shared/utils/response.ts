@@ -111,6 +111,13 @@ export class ResponseUtil {
     return this.error(event, message, 403);
   }
 
+  static methodNotAllowed(
+    event: APIGatewayProxyEvent,
+    message: string = "Method not allowed"
+  ): APIGatewayProxyResult {
+    return this.error(event, message, 405);
+  }
+
   static internalError(
     event: APIGatewayProxyEvent,
     message: string = "Internal server error"

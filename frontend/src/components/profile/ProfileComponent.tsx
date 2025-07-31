@@ -14,6 +14,7 @@ import { useAlbums } from "@/hooks/useAlbums";
 import { useComments } from "@/hooks/useComments";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { formatDistanceToNow } from "@/lib/dateUtils";
+import { userApi } from "@/lib/api/user";
 import {
   User,
   Mail,
@@ -58,6 +59,8 @@ export default function ProfileComponent({
   loading = false,
 }: ProfileComponentProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [currentUser, setCurrentUser] = useState<ProfileUser>(user);
   const [formData, setFormData] = useState({
     username: "",
     bio: "",
@@ -74,7 +77,7 @@ export default function ProfileComponent({
     loading: profileDataLoading,
     error: profileDataError,
   } = useProfileData({
-    username: user.username,
+    username: currentUser.username,
     isOwner,
   });
 
@@ -83,7 +86,7 @@ export default function ProfileComponent({
     comments: recentComments,
     isLoading: commentsLoading,
     error: commentsError,
-  } = useComments(user.username || "", true);
+  } = useComments(currentUser.username || "", true);
 
   // Get real recent albums
   const {
@@ -91,7 +94,7 @@ export default function ProfileComponent({
     loading: albumsLoading,
     error: albumsError,
   } = useAlbums({
-    user: user.username || "",
+    user: currentUser.username || "",
     isPublic: true,
     limit: 3, // Only fetch 3 recent albums for the profile preview
   });
@@ -121,18 +124,50 @@ export default function ProfileComponent({
   // Initialize form data when user is available and editing starts
   const handleEditStart = () => {
     setFormData({
-      username: user.username || "",
-      bio: user.bio || "",
-      location: user.location || "",
-      website: user.website || "",
+      username: currentUser.username || "",
+      bio: currentUser.bio || "",
+      location: currentUser.location || "",
+      website: currentUser.website || "",
     });
     setIsEditing(true);
   };
 
   const handleSave = async () => {
-    // Placeholder - would call API to update profile
-    console.log("Saving profile:", formData);
-    setIsEditing(false);
+    setIsSaving(true);
+    try {
+      console.log("Saving profile:", formData);
+
+      // Call the API to update the profile
+      const result = await userApi.updateProfile(formData);
+
+      if (result.success && result.data?.user) {
+        console.log("Profile updated successfully:", result.data.user);
+
+        // Update the current user state with the response data
+        setCurrentUser({
+          ...currentUser,
+          username: result.data.user.username,
+          bio: result.data.user.bio,
+          location: result.data.user.location,
+          website: result.data.user.website,
+        });
+
+        // Optionally show a success message or trigger a refresh
+        // For now, we'll just log the success
+      } else {
+        console.error(
+          "Profile update failed:",
+          result.data?.message || "Unknown error"
+        );
+        // In a real app, you'd show an error message to the user
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      // In a real app, you'd show an error message to the user
+    } finally {
+      setIsSaving(false);
+      setIsEditing(false); // Always exit edit mode after save attempt
+    }
   };
 
   const handleCancel = () => {
@@ -145,7 +180,14 @@ export default function ProfileComponent({
     });
   };
 
-  const displayName = user.username || user.email.split("@")[0];
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !isSaving) {
+      e.preventDefault();
+      handleSave();
+    }
+  };
+
+  const displayName = currentUser.username || currentUser.email.split("@")[0];
   const initials = displayName.slice(0, 2).toUpperCase();
 
   // Mock data for content - in real app, this would be passed as props or fetched
@@ -293,7 +335,24 @@ export default function ProfileComponent({
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      {isOwner && isEditing ? (
+                      {isSaving ? (
+                        // Loading state while saving
+                        <div className="space-y-3 animate-pulse">
+                          <div className="flex items-center gap-3">
+                            <div className="h-8 bg-muted rounded w-1/3"></div>
+                            <div className="w-16 h-6 bg-muted rounded"></div>
+                          </div>
+                          <div className="space-y-2">
+                            <div className="h-4 bg-muted rounded w-1/4"></div>
+                            <div className="h-4 bg-muted rounded w-1/4"></div>
+                            <div className="mt-4 space-y-2">
+                              <div className="h-4 bg-muted rounded w-1/3"></div>
+                              <div className="h-4 bg-muted rounded w-1/2"></div>
+                              <div className="h-16 bg-muted rounded w-full"></div>
+                            </div>
+                          </div>
+                        </div>
+                      ) : isOwner && isEditing ? (
                         <div className="space-y-4">
                           <Input
                             label="Username"
@@ -304,6 +363,7 @@ export default function ProfileComponent({
                                 username: e.target.value,
                               }))
                             }
+                            onKeyDown={handleKeyDown}
                             placeholder="Enter username"
                             className="text-lg font-semibold"
                           />
@@ -316,6 +376,7 @@ export default function ProfileComponent({
                                 bio: e.target.value,
                               }))
                             }
+                            onKeyDown={handleKeyDown}
                             placeholder="Tell us about yourself"
                             className="text-sm"
                           />
@@ -329,6 +390,7 @@ export default function ProfileComponent({
                                   location: e.target.value,
                                 }))
                               }
+                              onKeyDown={handleKeyDown}
                               placeholder="City, Country"
                               className="text-sm"
                             />
@@ -341,6 +403,7 @@ export default function ProfileComponent({
                                   website: e.target.value,
                                 }))
                               }
+                              onKeyDown={handleKeyDown}
                               placeholder="https://yoursite.com"
                               className="text-sm"
                             />
@@ -360,17 +423,19 @@ export default function ProfileComponent({
                               <Calendar className="w-4 h-4" />
                               <span>
                                 Joined{" "}
-                                {new Date(user.createdAt).toLocaleDateString()}
+                                {new Date(
+                                  currentUser.createdAt
+                                ).toLocaleDateString()}
                               </span>
                             </div>
 
-                            {user.lastLoginAt && (
+                            {currentUser.lastLoginAt && (
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Shield className="w-4 h-4" />
                                 <span>
                                   Last active{" "}
                                   {new Date(
-                                    user.lastLoginAt
+                                    currentUser.lastLoginAt
                                   ).toLocaleDateString()}
                                 </span>
                               </div>
@@ -379,39 +444,39 @@ export default function ProfileComponent({
                             {/* User Information */}
                             <div className="mt-4 space-y-2">
                               {/* Location - only show if user has location */}
-                              {user.location && (
+                              {currentUser.location && (
                                 <div className="flex items-center gap-2 text-sm">
                                   <MapPin className="w-4 h-4 text-muted-foreground" />
                                   <span className="text-foreground">
-                                    {user.location}
+                                    {currentUser.location}
                                   </span>
                                 </div>
                               )}
 
                               {/* Website - only show if user has website */}
-                              {user.website && (
+                              {currentUser.website && (
                                 <div className="flex items-center gap-2 text-sm">
                                   <Globe className="w-4 h-4 text-muted-foreground" />
                                   <a
                                     href={
-                                      user.website.startsWith("http")
-                                        ? user.website
-                                        : `https://${user.website}`
+                                      currentUser.website?.startsWith("http")
+                                        ? currentUser.website
+                                        : `https://${currentUser.website}`
                                     }
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-primary hover:underline"
                                   >
-                                    {user.website}
+                                    {currentUser.website}
                                   </a>
                                 </div>
                               )}
 
                               {/* Bio - moved after location and website */}
                               <div>
-                                {user.bio ? (
+                                {currentUser.bio ? (
                                   <p className="text-sm text-foreground">
-                                    {user.bio}
+                                    {currentUser.bio}
                                   </p>
                                 ) : (
                                   <p className="text-sm text-muted-foreground italic">
@@ -436,15 +501,17 @@ export default function ProfileComponent({
                               onClick={handleSave}
                               size="sm"
                               className="flex items-center gap-2"
+                              disabled={isSaving}
                             >
                               <Save className="w-4 h-4" />
-                              {t("save")}
+                              {isSaving ? "Saving..." : t("save")}
                             </Button>
                             <Button
                               onClick={handleCancel}
                               variant="outline"
                               size="sm"
                               className="flex items-center gap-2"
+                              disabled={isSaving}
                             >
                               <X className="w-4 h-4" />
                               {t("cancel")}
