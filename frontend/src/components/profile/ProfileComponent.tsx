@@ -43,6 +43,7 @@ interface ProfileUser {
   website?: string;
   createdAt: string;
   lastLoginAt?: string;
+  lastActive?: string; // Last time user was seen active
   plan?: string;
   role?: string;
 }
@@ -429,13 +430,13 @@ export default function ProfileComponent({
                               </span>
                             </div>
 
-                            {currentUser.lastLoginAt && (
+                            {currentUser.lastActive && (
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Shield className="w-4 h-4" />
                                 <span>
                                   Last active{" "}
                                   {new Date(
-                                    currentUser.lastLoginAt
+                                    currentUser.lastActive
                                   ).toLocaleDateString()}
                                 </span>
                               </div>

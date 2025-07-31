@@ -33,6 +33,7 @@ export interface EnhancedUser {
   isActive: boolean;
   isEmailVerified: boolean;
   lastLoginAt?: string;
+  lastActive?: string; // Last time user was seen active
   googleId?: string;
   role: UserRole;
   planInfo: UserPlanInfo;
@@ -166,6 +167,7 @@ export class PlanUtil {
       isActive: userEntity.isActive,
       isEmailVerified: userEntity.isEmailVerified,
       lastLoginAt: userEntity.lastLoginAt,
+      lastActive: userEntity.lastActive,
       googleId: userEntity.googleId,
       role,
       planInfo,

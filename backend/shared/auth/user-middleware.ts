@@ -107,6 +107,12 @@ export class UserAuthMiddleware {
 
       console.log("✅ User is valid and active");
 
+      // Update lastActive timestamp to track user activity
+      const currentTime = new Date().toISOString();
+      await DynamoDBService.updateUser(userEntity.userId, {
+        lastActive: currentTime
+      });
+
       // Note: We don't update lastAccessedAt here to keep the authorizer fast
       // Individual endpoints can update it if needed
 
@@ -120,6 +126,7 @@ export class UserAuthMiddleware {
         ...(userEntity.firstName && { firstName: userEntity.firstName }),
         ...(userEntity.lastName && { lastName: userEntity.lastName }),
         ...(userEntity.lastLoginAt && { lastLoginAt: userEntity.lastLoginAt }),
+        ...(userEntity.lastActive && { lastActive: userEntity.lastActive }),
         ...(userEntity.googleId && { googleId: userEntity.googleId }),
       };
 

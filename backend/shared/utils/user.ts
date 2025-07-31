@@ -296,6 +296,7 @@ export class UserUtil {
     isActive: boolean;
     isEmailVerified: boolean;
     lastLoginAt?: string;
+    lastActive?: string;
   } {
     const response: any = {
       userId: userEntity.userId,
@@ -308,6 +309,10 @@ export class UserUtil {
 
     if (userEntity.lastLoginAt) {
       response.lastLoginAt = userEntity.lastLoginAt;
+    }
+
+    if (userEntity.lastActive) {
+      response.lastActive = userEntity.lastActive;
     }
 
     return response;

@@ -7,6 +7,7 @@ export interface User {
   isActive: boolean;
   isEmailVerified: boolean;
   lastLoginAt?: string;
+  lastActive?: string; // Last time user was seen active (updated on each request)
   googleId?: string;
 }
 

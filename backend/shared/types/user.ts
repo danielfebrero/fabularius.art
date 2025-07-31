@@ -9,6 +9,7 @@ export interface User {
   isActive: boolean;
   isEmailVerified: boolean;
   lastLoginAt?: string;
+  lastActive?: string; // Last time user was seen active (updated on each request)
   googleId?: string; // For future Google OAuth integration
 }
 
@@ -134,6 +135,7 @@ export interface UserEntity {
   isActive: boolean;
   isEmailVerified: boolean;
   lastLoginAt?: string;
+  lastActive?: string; // Last time user was seen active (updated on each request)
   googleId?: string; // For Google OAuth integration
 
   // Profile information
