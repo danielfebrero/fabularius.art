@@ -249,6 +249,8 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
 
   AdminAuthorizerFunction:
     Type: AWS::Serverless::Function

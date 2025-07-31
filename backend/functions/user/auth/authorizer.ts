@@ -3,6 +3,7 @@ import {
   APIGatewayAuthorizerResult,
 } from "aws-lambda";
 import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { DynamoDBService } from "@shared/utils/dynamodb";
 
 // Helper function to generate an IAM policy
 const generatePolicy = (
@@ -107,6 +108,19 @@ export const handler = async (
         userId: userValidation.user.userId,
         email: userValidation.user.email,
       });
+
+      // Update lastActive timestamp to track user activity
+      // This happens in the authorizer to avoid giving write permissions to all functions
+      try {
+        const currentTime = new Date().toISOString();
+        await DynamoDBService.updateUser(userValidation.user.userId, {
+          lastActive: currentTime
+        });
+        console.log("📅 Updated user lastActive timestamp");
+      } catch (updateError) {
+        console.error("⚠️ Failed to update lastActive timestamp:", updateError);
+        // Don't fail authorization if lastActive update fails
+      }
 
       const userContext = {
         userId: userValidation.user.userId,
