@@ -85,6 +85,39 @@ export class DynamoDBService {
       album.viewCount = entity.viewCount;
     }
 
+    // Add creator information if available
+    if (entity.createdBy !== undefined) {
+      album.createdBy = entity.createdBy;
+    }
+
+    if (entity.createdByType !== undefined) {
+      album.createdByType = entity.createdByType;
+    }
+
+    return album;
+  }
+
+  private static async convertAlbumEntityToAlbumWithCreator(entity: AlbumEntity): Promise<Album> {
+    const album = this.convertAlbumEntityToAlbum(entity);
+
+    // Fetch creator username dynamically if createdBy exists
+    if (entity.createdBy) {
+      try {
+        const creator = await this.getUserById(entity.createdBy);
+        
+        if (creator && creator.username) {
+          // Add creator information to metadata
+          if (!album.metadata) {
+            album.metadata = {};
+          }
+          album.metadata["creatorUsername"] = creator.username;
+        }
+      } catch (error) {
+        console.error("Failed to fetch creator info for album:", error);
+        // Don't fail the conversion if creator info can't be fetched
+      }
+    }
+
     return album;
   }
 
@@ -115,7 +148,7 @@ export class DynamoDBService {
 
   static async getAlbumForAPI(albumId: string): Promise<Album | null> {
     const entity = await this.getAlbum(albumId);
-    return entity ? this.convertAlbumEntityToAlbum(entity) : null;
+    return entity ? this.convertAlbumEntityToAlbumWithCreator(entity) : null;
   }
 
   static async updateAlbum(

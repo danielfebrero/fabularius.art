@@ -19,6 +19,10 @@ export interface Album {
   commentCount?: number;
   createdAt: string;
   updatedAt: string;
+  metadata?: Record<string, any>;
+  // User tracking fields
+  createdBy?: string; // userId or adminId who created this album
+  createdByType?: "user" | "admin"; // type of creator
   media?: Media[];
   comments?: Comment[];
 }

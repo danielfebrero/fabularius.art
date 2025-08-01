@@ -202,6 +202,8 @@ export const handler = async (
       likeCount: albumEntity.likeCount || 0,
       bookmarkCount: albumEntity.bookmarkCount || 0,
       viewCount: albumEntity.viewCount || 0,
+      createdBy: albumEntity.createdBy,
+      createdByType: albumEntity.createdByType,
     };
 
     if (albumEntity.tags !== undefined) {

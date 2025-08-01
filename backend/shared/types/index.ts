@@ -21,6 +21,10 @@ export interface Album {
   bookmarkCount?: number;
   viewCount?: number;
   commentCount?: number;
+  metadata?: Record<string, any> | undefined;
+  // User tracking fields
+  createdBy?: string | undefined; // userId or adminId who created this album
+  createdByType?: "user" | "admin" | undefined; // type of creator
   comments?: Comment[] | undefined; // Include comments directly in Album
 }
 
@@ -132,6 +136,7 @@ export interface AlbumEntity {
   bookmarkCount?: number;
   viewCount?: number;
   commentCount?: number;
+  metadata?: Record<string, any> | undefined;
   createdBy?: string | undefined; // User ID who created the album
   createdByType?: "user" | "admin" | undefined; // Type of creator
 }
