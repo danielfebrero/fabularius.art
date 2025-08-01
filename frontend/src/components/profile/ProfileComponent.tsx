@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { UserPlanBadge } from "@/components/UserPlanBadge";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { ContentCard } from "@/components/ui/ContentCard";
+import { HorizontalScroll } from "@/components/ui/HorizontalScroll";
 import { Media } from "@/types";
 import { useProfileData } from "@/hooks/useProfileData";
 import { useAlbums } from "@/hooks/useAlbums";
@@ -80,6 +81,7 @@ export default function ProfileComponent({
   } = useProfileData({
     username: currentUser.username,
     isOwner,
+    limit: 6, // Fetch 6 recent likes for the scrollable preview
   });
 
   // Get real comments data
@@ -87,7 +89,7 @@ export default function ProfileComponent({
     comments: recentComments,
     isLoading: commentsLoading,
     error: commentsError,
-  } = useComments(currentUser.username || "", true);
+  } = useComments(currentUser.username || "", true, 3); // Fetch 6 recent comments for the profile preview
 
   // Get real recent albums
   const {
@@ -97,7 +99,7 @@ export default function ProfileComponent({
   } = useAlbums({
     user: currentUser.username || "",
     isPublic: true,
-    limit: 3, // Only fetch 3 recent albums for the profile preview
+    limit: 6, // Fetch 6 recent albums for the scrollable preview
   });
 
   // Loading state
@@ -282,6 +284,87 @@ export default function ProfileComponent({
         likeCount: 45,
         viewCount: 123,
         title: "AI Generated Art",
+      } as Media,
+      {
+        id: "media8",
+        filename: "nature-landscape.jpg",
+        originalName: "Nature Landscape",
+        mimeType: "image/jpeg",
+        size: 2856000,
+        width: 2400,
+        height: 1350,
+        url: "/media/media8/nature-landscape.jpg",
+        thumbnailUrls: {
+          cover:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
+          small:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
+          medium:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
+          large:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
+          xlarge:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
+        },
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
+        updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        likeCount: 89,
+        viewCount: 234,
+        title: "Nature Landscape",
+      } as Media,
+      {
+        id: "media9",
+        filename: "portrait-studio.jpg",
+        originalName: "Portrait Studio",
+        mimeType: "image/jpeg",
+        size: 2456000,
+        width: 1920,
+        height: 1280,
+        url: "/media/media9/portrait-studio.jpg",
+        thumbnailUrls: {
+          cover:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
+          small:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
+          medium:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
+          large:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
+          xlarge:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
+        },
+        createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(), // 6 days ago
+        updatedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+        likeCount: 134,
+        viewCount: 378,
+        title: "Portrait Studio",
+      } as Media,
+      {
+        id: "media10",
+        filename: "macro-flowers.jpg",
+        originalName: "Macro Flowers",
+        mimeType: "image/jpeg",
+        size: 1956000,
+        width: 1600,
+        height: 1200,
+        url: "/media/media10/macro-flowers.jpg",
+        thumbnailUrls: {
+          cover:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
+          small:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
+          medium:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
+          large:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
+          xlarge:
+            "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
+        },
+        createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+        updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        likeCount: 76,
+        viewCount: 198,
+        title: "Macro Flowers",
       } as Media,
     ],
     recentComments: [
@@ -614,19 +697,19 @@ export default function ProfileComponent({
               </CardHeader>
               <CardContent hidePadding={isMobile}>
                 {profileDataLoading ? (
-                  <div
-                    className={cn(
-                      "grid gap-4",
-                      isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"
-                    )}
+                  <HorizontalScroll
+                    itemWidth="200px"
+                    gap="medium"
+                    showArrows={true}
+                    className="w-full"
                   >
-                    {[1, 2, 3].map((i) => (
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
                       <div key={i} className="animate-pulse">
                         <div className="aspect-square bg-muted rounded-lg"></div>
                         <div className="mt-2 h-4 bg-muted rounded w-3/4"></div>
                       </div>
                     ))}
-                  </div>
+                  </HorizontalScroll>
                 ) : profileDataError ? (
                   <div className="text-center py-8">
                     <p className="text-muted-foreground text-sm">
@@ -634,11 +717,11 @@ export default function ProfileComponent({
                     </p>
                   </div>
                 ) : recentLikes.length > 0 ? (
-                  <div
-                    className={cn(
-                      "grid gap-4",
-                      isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"
-                    )}
+                  <HorizontalScroll
+                    itemWidth="200px"
+                    gap="medium"
+                    showArrows={true}
+                    className="w-full"
                   >
                     {recentLikes.map((item) => (
                       <ContentCard
@@ -646,9 +729,12 @@ export default function ProfileComponent({
                         item={item}
                         type={"filename" in item ? "media" : "album"}
                         showTags={false}
+                        context="albums"
+                        columns={1}
+                        className="w-full"
                       />
                     ))}
-                  </div>
+                  </HorizontalScroll>
                 ) : (
                   <div className="text-center py-8">
                     <Heart className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
@@ -686,11 +772,11 @@ export default function ProfileComponent({
                 </div>
               </CardHeader>
               <CardContent hidePadding={isMobile}>
-                <div
-                  className={cn(
-                    "grid gap-4",
-                    isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"
-                  )}
+                <HorizontalScroll
+                  itemWidth="200px"
+                  gap="medium"
+                  showArrows={true}
+                  className="w-full"
                 >
                   {mockData.recentGeneratedMedias.map((item) => (
                     <ContentCard
@@ -698,9 +784,12 @@ export default function ProfileComponent({
                       item={item}
                       type={"filename" in item ? "media" : "album"}
                       showTags={false}
+                      context="albums"
+                      columns={1}
+                      className="w-full"
                     />
                   ))}
-                </div>
+                </HorizontalScroll>
                 <div className="text-center pt-4">
                   <LocaleLink href={`/profile/${displayName}/media`}>
                     <Button variant="outline" size="sm" className="text-xs">
@@ -729,19 +818,19 @@ export default function ProfileComponent({
               </CardHeader>
               <CardContent hidePadding={isMobile}>
                 {albumsLoading ? (
-                  <div
-                    className={cn(
-                      "grid gap-4",
-                      isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"
-                    )}
+                  <HorizontalScroll
+                    itemWidth="200px"
+                    gap="medium"
+                    showArrows={true}
+                    className="w-full"
                   >
-                    {[1, 2, 3].map((i) => (
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
                       <div key={i} className="animate-pulse">
                         <div className="aspect-square bg-muted rounded-lg"></div>
                         <div className="mt-2 h-4 bg-muted rounded w-3/4"></div>
                       </div>
                     ))}
-                  </div>
+                  </HorizontalScroll>
                 ) : albumsError ? (
                   <div className="text-center py-8">
                     <p className="text-muted-foreground text-sm">
@@ -749,11 +838,11 @@ export default function ProfileComponent({
                     </p>
                   </div>
                 ) : recentAlbums.length > 0 ? (
-                  <div
-                    className={cn(
-                      "grid gap-4",
-                      isMobile ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-3"
-                    )}
+                  <HorizontalScroll
+                    itemWidth="200px"
+                    gap="medium"
+                    showArrows={true}
+                    className="w-full"
                   >
                     {recentAlbums.map((album) => (
                       <ContentCard
@@ -763,9 +852,12 @@ export default function ProfileComponent({
                         canFullscreen={false}
                         canAddToAlbum={false}
                         showTags={false}
+                        context="albums"
+                        columns={1}
+                        className="w-full"
                       />
                     ))}
-                  </div>
+                  </HorizontalScroll>
                 ) : (
                   <div className="text-center py-8">
                     <FolderOpen className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />

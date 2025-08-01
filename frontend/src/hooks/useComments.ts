@@ -26,7 +26,8 @@ export interface UseCommentsReturn {
 
 export const useComments = (
   username: string,
-  initialLoad: boolean = true
+  initialLoad: boolean = true,
+  limit: number = 20
 ): UseCommentsReturn => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -58,7 +59,7 @@ export const useComments = (
         const response = await interactionApi.getCommentsByUsername(
           username,
           page,
-          20,
+          limit,
           keyToUse
         );
 
@@ -95,7 +96,7 @@ export const useComments = (
         loading(false);
       }
     },
-    [username, lastKey]
+    [username, lastKey, limit]
   );
 
   const loadMore = useCallback(async () => {

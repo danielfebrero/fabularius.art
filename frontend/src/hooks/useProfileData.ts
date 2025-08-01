@@ -5,6 +5,7 @@ import { UserInteractionsResponse } from "@/types/user";
 interface UseProfileDataOptions {
   username?: string;
   isOwner?: boolean;
+  limit?: number;
 }
 
 interface ProfileData {
@@ -16,6 +17,7 @@ interface ProfileData {
 export function useProfileData({
   username,
   isOwner = false,
+  limit = 3,
 }: UseProfileDataOptions): ProfileData {
   const [recentLikes, setRecentLikes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,10 +38,14 @@ export function useProfileData({
 
         if (username) {
           // Fetch likes for specific user by username
-          response = await interactionApi.getLikesByUsername(username, 1, 3);
+          response = await interactionApi.getLikesByUsername(
+            username,
+            1,
+            limit
+          );
         } else {
           // Fetch current user's likes (for owner view)
-          response = await interactionApi.getLikes(1, 3);
+          response = await interactionApi.getLikes(1, limit);
         }
 
         if (response.success && response.data) {
@@ -109,7 +115,7 @@ export function useProfileData({
     };
 
     fetchRecentLikes();
-  }, [username, isOwner]);
+  }, [username, isOwner, limit]);
 
   return {
     recentLikes,
