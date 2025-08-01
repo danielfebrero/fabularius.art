@@ -9,6 +9,7 @@ interface UpdateProfileRequest {
   bio?: string;
   location?: string;
   website?: string;
+  preferredLanguage?: string;
 }
 
 interface UpdateProfileResponse {
@@ -20,6 +21,7 @@ interface UpdateProfileResponse {
     bio?: string;
     location?: string;
     website?: string;
+    preferredLanguage?: string;
     createdAt: string;
     lastLoginAt?: string;
   };
@@ -139,6 +141,22 @@ export const handler = async (
       }
     }
 
+    // Preferred language validation
+    if (
+      updateData.preferredLanguage !== undefined &&
+      typeof updateData.preferredLanguage !== "string"
+    ) {
+      validationErrors.push("Preferred language must be a string");
+    } else if (updateData.preferredLanguage) {
+      // Validate against supported locales
+      const supportedLanguages = ["de", "en", "es", "fr", "ru", "zh"];
+      if (!supportedLanguages.includes(updateData.preferredLanguage)) {
+        validationErrors.push(
+          `Preferred language must be one of: ${supportedLanguages.join(", ")}`
+        );
+      }
+    }
+
     if (validationErrors.length > 0) {
       console.log("❌ Validation errors:", validationErrors);
       return ResponseUtil.badRequest(
@@ -203,6 +221,14 @@ export const handler = async (
       }
     }
 
+    if (updateData.preferredLanguage !== undefined) {
+      if (updateData.preferredLanguage.trim()) {
+        updates.preferredLanguage = updateData.preferredLanguage.trim();
+      } else {
+        delete updates.preferredLanguage; // Remove the field entirely if empty
+      }
+    }
+
     // Only proceed if there are actually changes to make
     if (Object.keys(updates).length === 0) {
       console.log("ℹ️ No changes to apply");
@@ -218,6 +244,9 @@ export const handler = async (
           }),
           ...(currentUserEntity.website && {
             website: currentUserEntity.website,
+          }),
+          ...(currentUserEntity.preferredLanguage && {
+            preferredLanguage: currentUserEntity.preferredLanguage,
           }),
           createdAt: currentUserEntity.createdAt,
           ...(currentUserEntity.lastLoginAt && {
@@ -258,6 +287,9 @@ export const handler = async (
         ...(updatedUser.bio && { bio: updatedUser.bio }),
         ...(updatedUser.location && { location: updatedUser.location }),
         ...(updatedUser.website && { website: updatedUser.website }),
+        ...(updatedUser.preferredLanguage && {
+          preferredLanguage: updatedUser.preferredLanguage,
+        }),
         createdAt: updatedUser.createdAt,
         ...(updatedUser.lastLoginAt && {
           lastLoginAt: updatedUser.lastLoginAt,

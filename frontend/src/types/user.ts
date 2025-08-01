@@ -9,6 +9,7 @@ export interface User {
   lastLoginAt?: string;
   lastActive?: string; // Last time user was seen active (updated on each request)
   googleId?: string;
+  preferredLanguage?: string; // User's preferred language (ISO 639-1 code: en, fr, de, etc.)
 }
 
 export interface UserSession {
@@ -290,6 +291,7 @@ export interface UserProfileUpdateRequest {
   bio?: string;
   location?: string;
   website?: string;
+  preferredLanguage?: string;
 }
 
 export interface UserProfileUpdateResponse {
@@ -303,6 +305,7 @@ export interface UserProfileUpdateResponse {
       bio?: string;
       location?: string;
       website?: string;
+      preferredLanguage?: string;
       createdAt: string;
       lastLoginAt?: string;
     };

@@ -9,6 +9,7 @@ import { Header } from "@/components/Header";
 import { PermissionsWrapper } from "@/components/PermissionsWrapper";
 import { MainContentWrapper } from "@/components/MainContentWrapper";
 import { NavigationLoadingOverlay } from "@/components/ui/NavigationLoadingOverlay";
+import { LanguageRedirect } from "@/components/LanguageRedirect";
 import {
   PageErrorBoundary,
   SectionErrorBoundary,
@@ -106,6 +107,7 @@ export default async function LocaleLayout({
             <PermissionsWrapper>
               <AdminProvider>
                 <NavigationLoadingProvider>
+                  <LanguageRedirect />
                   <div className="min-h-screen bg-background flex flex-col">
                     <SectionErrorBoundary context="Header">
                       <Header />

@@ -53,7 +53,9 @@ export default function SettingsPage() {
   const currentLocale = params.locale as string;
 
   // State for various sections
-  const [selectedLanguage] = useState(currentLocale || "en");
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    currentLocale || "en"
+  );
   const [isLanguageAutomatic, setIsLanguageAutomatic] = useState(false);
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
@@ -68,26 +70,56 @@ export default function SettingsPage() {
   // Loading states
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [isChangingLanguage, setIsChangingLanguage] = useState(false);
 
   useEffect(() => {
-    // Detect if browser language matches current locale
-    const browserLang = navigator.language.split("-")[0];
-    setIsLanguageAutomatic(browserLang === currentLocale);
-  }, [currentLocale]);
+    // Check if user has a language preference
+    if (user?.preferredLanguage) {
+      // User has a preference set
+      setSelectedLanguage(user.preferredLanguage);
+      setIsLanguageAutomatic(false);
+      // If current locale doesn't match preference, redirect
+      if (currentLocale !== user.preferredLanguage) {
+        router.replace(`/${user.preferredLanguage}/settings`);
+      }
+    } else {
+      // No preference set, detect if browser language matches current locale
+      const browserLang = navigator.language.split("-")[0];
+      setSelectedLanguage(currentLocale);
+      setIsLanguageAutomatic(browserLang === currentLocale);
+    }
+  }, [currentLocale, user?.preferredLanguage, router]);
 
   // Handle language change
   const handleLanguageChange = async (languageCode: string) => {
-    if (languageCode === "auto") {
-      // Get browser language
-      const browserLang = navigator.language.split("-")[0];
-      const supportedLang = locales.includes(browserLang as any)
-        ? browserLang
-        : "en";
-      router.push(`/${supportedLang}/settings`);
-      setIsLanguageAutomatic(true);
-    } else {
-      router.push(`/${languageCode}/settings`);
-      setIsLanguageAutomatic(false);
+    setIsChangingLanguage(true);
+
+    try {
+      if (languageCode === "auto") {
+        // Get browser language
+        const browserLang = navigator.language.split("-")[0];
+        const supportedLang = locales.includes(browserLang as any)
+          ? browserLang
+          : "en";
+
+        // Clear user's language preference
+        await userApi.updateLanguage("");
+        // Navigate to browser language
+        router.push(`/${supportedLang}/settings`);
+        setIsLanguageAutomatic(true);
+        setSelectedLanguage(supportedLang);
+      } else {
+        // Save language preference to user profile
+        await userApi.updateLanguage(languageCode);
+        // Navigate to selected language
+        router.push(`/${languageCode}/settings`);
+        setIsLanguageAutomatic(false);
+        setSelectedLanguage(languageCode);
+      }
+    } catch (error: any) {
+      alert(error.message || "Failed to update language preference");
+    } finally {
+      setIsChangingLanguage(false);
     }
   };
 
@@ -240,7 +272,8 @@ export default function SettingsPage() {
                     id="language-select"
                     value={isLanguageAutomatic ? "auto" : selectedLanguage}
                     onChange={(e) => handleLanguageChange(e.target.value)}
-                    className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+                    disabled={isChangingLanguage}
+                    className="mt-1 block w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
                   >
                     <option value="auto">
                       {tSettings("language.automatic")}
@@ -254,8 +287,15 @@ export default function SettingsPage() {
                 </div>
                 <div className="text-sm text-muted-foreground">
                   <strong>{tSettings("language.current")}:</strong>{" "}
-                  {languageOptions.find((l) => l.code === currentLocale)
-                    ?.nativeName || "English"}
+                  {isChangingLanguage ? (
+                    <span className="inline-flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-3 w-3 border-b border-primary"></div>
+                      {tCommon("loading")}
+                    </span>
+                  ) : (
+                    languageOptions.find((l) => l.code === currentLocale)
+                      ?.nativeName || "English"
+                  )}
                 </div>
               </div>
             </CardContent>

@@ -299,4 +299,41 @@ export const userApi = {
 
     return response.json();
   },
+
+  // Update language preference
+  updateLanguage: async (
+    languageCode: string
+  ): Promise<{
+    success: boolean;
+    message: string;
+    user?: any;
+  }> => {
+    const response = await fetch(`${API_URL}/user/profile/edit`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ preferredLanguage: languageCode }),
+    });
+
+    if (!response.ok) {
+      let errorData = null;
+      try {
+        errorData = await response.json();
+      } catch {
+        // response body is not JSON
+      }
+      const errorMessage =
+        (errorData && (errorData.error || errorData.message)) ||
+        `Language update failed: ${response.statusText}`;
+      const error = new Error(errorMessage);
+      if (errorData) {
+        (error as any).response = errorData;
+      }
+      throw error;
+    }
+
+    return response.json();
+  },
 };

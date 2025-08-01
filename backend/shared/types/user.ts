@@ -11,6 +11,7 @@ export interface User {
   lastLoginAt?: string;
   lastActive?: string; // Last time user was seen active (updated on each request)
   googleId?: string; // For future Google OAuth integration
+  preferredLanguage?: string; // User's preferred language (ISO 639-1 code: en, fr, de, etc.)
 }
 
 export interface UserSession {
@@ -142,6 +143,7 @@ export interface UserEntity {
   bio?: string; // User biography/description
   location?: string; // User location (city, country)
   website?: string; // User website URL
+  preferredLanguage?: string; // User's preferred language (ISO 639-1 code: en, fr, de, etc.)
 
   // Plan and subscription information
   role?: "user" | "admin" | "moderator"; // User role
