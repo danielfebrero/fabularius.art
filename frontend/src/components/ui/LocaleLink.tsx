@@ -4,6 +4,7 @@ import React from "react";
 import NextLink, { LinkProps } from "next/link";
 import { useParams } from "next/navigation";
 import { createLocalePath } from "@/lib/navigation";
+import { locales } from "@/i18n";
 
 interface LocaleLinkProps extends Omit<LinkProps, "href"> {
   href: string;
@@ -30,7 +31,7 @@ export function LocaleLink({
     href.startsWith("http") ||
     href.startsWith("mailto:") ||
     href.startsWith("tel:");
-  const hasLocale = href.startsWith(`/${locale}/`);
+  const hasLocale = locales.some(loc => href.startsWith(`/${loc}/`));
 
   // If external or already has locale, use href as-is
   // If it's an API route, use as-is (API routes should remain unlocalized)

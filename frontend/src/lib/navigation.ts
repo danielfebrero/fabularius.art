@@ -95,7 +95,7 @@ export function useLocaleRouter() {
       href.startsWith("http") ||
       href.startsWith("mailto:") ||
       href.startsWith("tel:");
-    const hasLocale = href.startsWith(`/${locale}/`);
+    const hasLocale = locales.some(loc => href.startsWith(`/${loc}/`));
 
     // If external or already has locale, use href as-is
     // If it's an API route, use as-is (API routes should remain unlocalized)
@@ -119,7 +119,7 @@ export function useLocaleRouter() {
       href.startsWith("http") ||
       href.startsWith("mailto:") ||
       href.startsWith("tel:");
-    const hasLocale = href.startsWith(`/${locale}/`);
+    const hasLocale = locales.some(loc => href.startsWith(`/${loc}/`));
 
     // If external or already has locale, use href as-is
     // If it's an API route, use as-is (API routes should remain unlocalized)
