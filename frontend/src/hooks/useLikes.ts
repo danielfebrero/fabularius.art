@@ -159,10 +159,7 @@ export const useLikes = (
     );
     // Only fetch if we don't have initial data
     if (initialLikes.length === 0 && initialLoad) {
-      console.log("[useLikes] Fetching likes because no initial data");
       fetchLikes();
-    } else {
-      console.log("[useLikes] Skipping fetch because we have initial data");
     }
   }, [initialLikes.length, initialLoad, fetchLikes]);
 

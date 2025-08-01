@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { UserSessionValidationResult, User } from "@shared/types";
+import { UsernameGenerator } from "@shared/utils/username-generator";
 
 export class UserAuthMiddleware {
   static async validateSession(
@@ -108,13 +109,33 @@ export class UserAuthMiddleware {
       // Note: We don't update lastAccessedAt here to keep the authorizer fast
       // Individual endpoints can update it if needed
 
+      // Check if user needs username repair (automatically generate username if missing)
+      let currentUsername = userEntity.username;
+      if (!currentUsername) {
+        console.log(
+          "🔧 User missing username, generating one automatically..."
+        );
+        try {
+          currentUsername = await UsernameGenerator.repairMissingUsername(
+            userEntity.userId
+          );
+          console.log(
+            `✅ Generated username for user ${userEntity.userId}: ${currentUsername}`
+          );
+        } catch (error) {
+          console.error("❌ Failed to generate username:", error);
+          // Don't fail authentication if username generation fails
+          // The user can still proceed without a username
+        }
+      }
+
       const user: User = {
         userId: userEntity.userId,
         email: userEntity.email,
         createdAt: userEntity.createdAt,
         isActive: userEntity.isActive,
         isEmailVerified: userEntity.isEmailVerified,
-        ...(userEntity.username && { username: userEntity.username }),
+        ...(currentUsername && { username: currentUsername }),
         ...(userEntity.firstName && { firstName: userEntity.firstName }),
         ...(userEntity.lastName && { lastName: userEntity.lastName }),
         ...(userEntity.lastLoginAt && { lastLoginAt: userEntity.lastLoginAt }),

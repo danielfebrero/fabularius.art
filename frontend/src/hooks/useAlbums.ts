@@ -83,15 +83,6 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
   const fetchAlbums = useCallback(
     async (cursor?: string, append = false) => {
       try {
-        console.log("[useAlbums] fetchAlbums called", {
-          cursor,
-          append,
-          limit,
-          user,
-          isPublic,
-          tag,
-        });
-
         if (append) {
           setLoadingMore(true);
         } else {
@@ -124,15 +115,10 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
         if (append) {
           setAlbums((prev) => {
             const updated = [...prev, ...response.albums];
-            console.log("[useAlbums] setAlbums (append)", updated.length);
             return updated;
           });
         } else {
           setAlbums(() => {
-            console.log(
-              "[useAlbums] setAlbums (replace)",
-              response.albums.length
-            );
             return response.albums;
           });
           setTotalCount(response.albums.length);
@@ -143,7 +129,6 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
             hasNext: response.hasNext,
             cursor: response.nextCursor || null,
           };
-          console.log("[useAlbums] setPagination", newPagination);
           return newPagination;
         });
       } catch (err) {
@@ -175,10 +160,8 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
     );
     // Only fetch if we don't have initial data
     if (initialAlbums.length === 0) {
-      console.log("[useAlbums] Fetching albums because no initial data");
       fetchAlbums();
     } else {
-      console.log("[useAlbums] Skipping fetch because we have initial data");
     }
   }, [initialAlbums.length, fetchAlbums]);
 

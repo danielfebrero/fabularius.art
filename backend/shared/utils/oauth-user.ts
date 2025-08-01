@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { DynamoDBService } from "./dynamodb";
 import { UserEntity } from "../types/user";
+import { UsernameGenerator } from "./username-generator";
 
 export class OAuthUserUtil {
   /**
@@ -10,6 +11,39 @@ export class OAuthUserUtil {
     await DynamoDBService.updateUser(userId, {
       lastLoginAt: new Date().toISOString(),
     });
+  }
+
+  /**
+   * Repair username for OAuth user if needed
+   * This checks if the user has a properly formatted username and generates one if not
+   */
+  static async repairUsernameIfNeeded(user: UserEntity): Promise<string> {
+    // Check if user has a username and if it follows the new format
+    if (
+      !user.username ||
+      !UsernameGenerator.isValidGeneratedFormat(user.username)
+    ) {
+      console.log(`🔧 Repairing username for OAuth user ${user.userId}`);
+
+      // Generate a new username
+      const newUsername = await UsernameGenerator.generateUsernameFromEmail(
+        user.email
+      );
+
+      // Update the user with the new username
+      await DynamoDBService.updateUser(user.userId, {
+        username: newUsername,
+        GSI3PK: "USER_USERNAME",
+        GSI3SK: newUsername.toLowerCase(),
+      });
+
+      console.log(
+        `✅ Repaired username for OAuth user ${user.userId}: ${newUsername}`
+      );
+      return newUsername;
+    }
+
+    return user.username;
   }
 
   /**
@@ -28,21 +62,8 @@ export class OAuthUserUtil {
       throw new Error("Google account already linked to another user");
     }
 
-    // Generate a unique username from email
-    const baseUsername = email
-      ? email
-          .split("@")[0]
-          ?.toLowerCase()
-          .replace(/[^a-z0-9]/g, "") || "google_user"
-      : "user";
-    let username = baseUsername;
-    let counter = 1;
-
-    // Ensure username is unique
-    while (await DynamoDBService.getUserByUsername(username)) {
-      username = `${baseUsername}${counter}`;
-      counter++;
-    }
+    // Generate a unique username using the new username generation system
+    const username = await UsernameGenerator.generateUniqueUsername();
 
     const userId = uuidv4();
     const now = new Date().toISOString();
@@ -115,6 +136,9 @@ export class OAuthUserUtil {
     if (existingEmailUser) {
       // Link Google account to existing user
       await this.linkGoogleToUser(existingEmailUser.userId, googleId);
+
+      // Repair username if needed for existing user
+      await this.repairUsernameIfNeeded(existingEmailUser);
 
       return {
         userId: existingEmailUser.userId,

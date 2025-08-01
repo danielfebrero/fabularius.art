@@ -71,20 +71,57 @@ graph TD
   3.  The provided password is compared with the hashed password in the database.
   4.  If the credentials are valid, a new session is created and a session cookie is returned.
 
-## Google OAuth 2.0 Authentication
+## Google OAuth Authentication
 
 ### 1. **OAuth Flow**
 
-- **Endpoint**: `GET /auth/oauth/callback`
+- **Endpoint**: `GET /user/auth/oauth/google/callback`
 - **Handler**: [`backend/functions/user/auth/oauth-google.ts`](../backend/functions/user/auth/oauth-google.ts)
 - **Process**:
-  1.  The user clicks the "Sign in with Google" button on the frontend.
-  2.  The user is redirected to Google's authentication page.
-  3.  After successful authentication, Google redirects the user back to the application's OAuth callback endpoint with an authorization code.
-  4.  The backend exchanges the authorization code for an ID token and an access token.
-  5.  The ID token is verified, and the user's Google profile information is extracted.
-  6.  A new user is created or linked to an existing account based on the Google ID.
-  7.  A new session is created, and the user is redirected to the frontend.
+  1. The user is redirected to Google's OAuth consent screen.
+  2. After user grants permission, Google redirects back with an authorization code.
+  3. The system exchanges the code for an access token and retrieves user information.
+  4. If the user's email exists in the system, the Google account is linked to the existing user.
+  5. If the user is new, a new account is created with Google OAuth provider.
+  6. **Automatic Username Generation**: OAuth users receive a unique username in the format `{adjective}-{noun}-{number}` (e.g., `brilliant-eagle-042`).
+  7. A session is created and the user is authenticated.
+
+### 2. **Username Generation for OAuth Users**
+
+OAuth users don't choose their username during registration. Instead, the system automatically generates a unique username using:
+
+- **Format**: `{adjective}-{noun}-{number}`
+- **Components**:
+  - 500 predefined adjectives (e.g., "brilliant", "creative", "amazing")
+  - 500 predefined nouns (e.g., "eagle", "mountain", "galaxy")
+  - Numbers 001-999 (zero-padded to 3 digits)
+- **Examples**: `brilliant-eagle-042`, `creative-mountain-158`, `amazing-galaxy-999`
+
+#### Username Repair
+
+For existing OAuth users who have basic usernames (e.g., email-based), the system automatically repairs their username to the new format when they log in:
+
+- **Trigger**: Automatic on OAuth login if username doesn't match new format
+- **Process**:
+  1. System detects old/invalid username format
+  2. Generates new username using the adjective-noun-number format
+  3. Updates user record with new username
+  4. Logs the repair action for monitoring
+
+#### Implementation
+
+The username generation is handled by the `UsernameGenerator` utility:
+
+```typescript
+// Generate a new random username
+const username = await UsernameGenerator.generateUniqueUsername();
+
+// Generate username preferring email base, fallback to random
+const username = await UsernameGenerator.generateUsernameFromEmail(email);
+
+// Repair existing user's username if needed
+const username = await OAuthUserUtil.repairUsernameIfNeeded(user);
+```
 
 ### 2. **Environment Variables**
 

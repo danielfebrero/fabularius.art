@@ -45,18 +45,8 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({
     }
   }, [albums, preloadStatuses]);
 
-  // Log props on render for debugging
-  useEffect(() => {
-    console.log("[AlbumGrid] albums.length", albums.length, {
-      loading,
-      hasMore,
-      error,
-    });
-  }, [albums, loading, hasMore, error]);
-
   useEffect(() => {
     if (inView && hasMore && !loading && loadMore) {
-      console.log("[AlbumGrid] loadMore triggered");
       loadMore();
     }
   }, [inView, hasMore, loading, loadMore]);

@@ -22,12 +22,7 @@ export function AuthSuccessClient() {
     if (!hasInitialized) {
       setHasInitialized(true);
       if (!user) {
-        console.log("[AuthSuccessClient] Component mounted, calling checkAuth");
         checkAuth();
-      } else {
-        console.log(
-          "[AuthSuccessClient] User already authenticated, skipping checkAuth"
-        );
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -44,7 +39,6 @@ export function AuthSuccessClient() {
     const countdownTimer = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          console.log("[AuthSuccessClient] Redirecting to home");
           router.push("/");
           return 0;
         }
