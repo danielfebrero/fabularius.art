@@ -18,13 +18,27 @@ export const handler = async (
 
     const request: BulkDeleteAlbumsRequest = JSON.parse(event.body);
 
-    if (!request.albumIds || !Array.isArray(request.albumIds) || request.albumIds.length === 0) {
-      return ResponseUtil.badRequest(event, "Album IDs array is required and must not be empty");
+    if (
+      !request.albumIds ||
+      !Array.isArray(request.albumIds) ||
+      request.albumIds.length === 0
+    ) {
+      return ResponseUtil.badRequest(
+        event,
+        "Album IDs array is required and must not be empty"
+      );
     }
 
     // Validate that all album IDs are strings
-    if (!request.albumIds.every(id => typeof id === 'string' && id.trim().length > 0)) {
-      return ResponseUtil.badRequest(event, "All album IDs must be non-empty strings");
+    if (
+      !request.albumIds.every(
+        (id) => typeof id === "string" && id.trim().length > 0
+      )
+    ) {
+      return ResponseUtil.badRequest(
+        event,
+        "All album IDs must be non-empty strings"
+      );
     }
 
     // Limit the number of albums that can be deleted in one request to avoid timeouts
@@ -55,7 +69,7 @@ export const handler = async (
           console.log(`⚠️ Album ${albumId} not found, skipping`);
           results.failed.push({
             albumId,
-            error: "Album not found"
+            error: "Album not found",
           });
           continue;
         }
@@ -84,17 +98,18 @@ export const handler = async (
 
         console.log(`✅ Successfully deleted album ${albumId}`);
         results.successful.push(albumId);
-
       } catch (error) {
         console.error(`❌ Error deleting album ${albumId}:`, error);
         results.failed.push({
           albumId,
-          error: error instanceof Error ? error.message : "Unknown error"
+          error: error instanceof Error ? error.message : "Unknown error",
         });
       }
     }
 
-    console.log(`📊 Bulk delete complete. Success: ${results.successful.length}, Failed: ${results.failed.length}`);
+    console.log(
+      `📊 Bulk delete complete. Success: ${results.successful.length}, Failed: ${results.failed.length}`
+    );
 
     // Trigger revalidation if any albums were successfully deleted
     if (results.successful.length > 0) {
@@ -108,9 +123,10 @@ export const handler = async (
 
     // If some deletions failed but some succeeded, return success with details
     return ResponseUtil.success(event, {
-      message: results.failed.length === 0 
-        ? "All albums deleted successfully"
-        : `${results.successful.length} albums deleted successfully, ${results.failed.length} failed`,
+      message:
+        results.failed.length === 0
+          ? "All albums deleted successfully"
+          : `${results.successful.length} albums deleted successfully, ${results.failed.length} failed`,
       results: {
         successfullyDeleted: results.successful,
         failedDeletions: results.failed,
@@ -118,11 +134,13 @@ export const handler = async (
         totalProcessed: request.albumIds.length,
         successCount: results.successful.length,
         failureCount: results.failed.length,
-      }
+      },
     });
-
   } catch (error) {
     console.error("Error in bulk delete albums:", error);
-    return ResponseUtil.internalError(event, "Failed to process bulk delete request");
+    return ResponseUtil.internalError(
+      event,
+      "Failed to process bulk delete request"
+    );
   }
 };

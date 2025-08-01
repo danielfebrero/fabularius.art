@@ -12,9 +12,13 @@ import { ResponseUtil } from "../../../../../shared/utils/response";
 import { RevalidationService } from "../../../../../shared/utils/revalidation";
 
 // Create typed mocks
-const mockDynamoDBService = DynamoDBService as jest.Mocked<typeof DynamoDBService>;
+const mockDynamoDBService = DynamoDBService as jest.Mocked<
+  typeof DynamoDBService
+>;
 const mockResponseUtil = ResponseUtil as jest.Mocked<typeof ResponseUtil>;
-const mockRevalidationService = RevalidationService as jest.Mocked<typeof RevalidationService>;
+const mockRevalidationService = RevalidationService as jest.Mocked<
+  typeof RevalidationService
+>;
 
 describe("Admin Bulk Delete Albums Function", () => {
   beforeEach(() => {
@@ -73,7 +77,9 @@ describe("Admin Bulk Delete Albums Function", () => {
 
     mockResponseUtil.badRequest.mockReturnValue({
       statusCode: 400,
-      body: JSON.stringify({ error: "Album IDs array is required and must not be empty" }),
+      body: JSON.stringify({
+        error: "Album IDs array is required and must not be empty",
+      }),
       headers: {},
     });
 
@@ -90,7 +96,9 @@ describe("Admin Bulk Delete Albums Function", () => {
 
     mockResponseUtil.badRequest.mockReturnValue({
       statusCode: 400,
-      body: JSON.stringify({ error: "Album IDs array is required and must not be empty" }),
+      body: JSON.stringify({
+        error: "Album IDs array is required and must not be empty",
+      }),
       headers: {},
     });
 
@@ -103,11 +111,15 @@ describe("Admin Bulk Delete Albums Function", () => {
   });
 
   it("should validate albumIds are strings", async () => {
-    const event = createMockEvent({ albumIds: ["valid-id", "", null] }) as APIGatewayProxyEvent;
+    const event = createMockEvent({
+      albumIds: ["valid-id", "", null],
+    }) as APIGatewayProxyEvent;
 
     mockResponseUtil.badRequest.mockReturnValue({
       statusCode: 400,
-      body: JSON.stringify({ error: "All album IDs must be non-empty strings" }),
+      body: JSON.stringify({
+        error: "All album IDs must be non-empty strings",
+      }),
       headers: {},
     });
 
@@ -121,11 +133,15 @@ describe("Admin Bulk Delete Albums Function", () => {
 
   it("should enforce maximum bulk delete size", async () => {
     const largeAlbumIds = Array.from({ length: 51 }, (_, i) => `album-${i}`);
-    const event = createMockEvent({ albumIds: largeAlbumIds }) as APIGatewayProxyEvent;
+    const event = createMockEvent({
+      albumIds: largeAlbumIds,
+    }) as APIGatewayProxyEvent;
 
     mockResponseUtil.badRequest.mockReturnValue({
       statusCode: 400,
-      body: JSON.stringify({ error: "Cannot delete more than 50 albums at once" }),
+      body: JSON.stringify({
+        error: "Cannot delete more than 50 albums at once",
+      }),
       headers: {},
     });
 
@@ -148,7 +164,9 @@ describe("Admin Bulk Delete Albums Function", () => {
 
     // Mock media list
     mockDynamoDBService.listAlbumMedia
-      .mockResolvedValueOnce({ media: [{ id: "media-1" }, { id: "media-2" }] } as any)
+      .mockResolvedValueOnce({
+        media: [{ id: "media-1" }, { id: "media-2" }],
+      } as any)
       .mockResolvedValueOnce({ media: [{ id: "media-3" }] } as any);
 
     // Mock removal operations
@@ -171,8 +189,12 @@ describe("Admin Bulk Delete Albums Function", () => {
     expect(mockDynamoDBService.getAlbum).toHaveBeenCalledTimes(2);
     expect(mockDynamoDBService.listAlbumMedia).toHaveBeenCalledTimes(2);
     expect(mockDynamoDBService.removeMediaFromAlbum).toHaveBeenCalledTimes(3); // 2 + 1 media items
-    expect(mockDynamoDBService.deleteAllCommentsForTarget).toHaveBeenCalledTimes(2);
-    expect(mockDynamoDBService.deleteAllInteractionsForTarget).toHaveBeenCalledTimes(2);
+    expect(
+      mockDynamoDBService.deleteAllCommentsForTarget
+    ).toHaveBeenCalledTimes(2);
+    expect(
+      mockDynamoDBService.deleteAllInteractionsForTarget
+    ).toHaveBeenCalledTimes(2);
     expect(mockDynamoDBService.deleteAlbum).toHaveBeenCalledTimes(2);
     expect(mockRevalidationService.revalidateAlbums).toHaveBeenCalledTimes(1);
     expect(mockResponseUtil.success).toHaveBeenCalled();
@@ -189,7 +211,9 @@ describe("Admin Bulk Delete Albums Function", () => {
       .mockRejectedValueOnce(new Error("Database error")); // Third album causes error
 
     // Mock for successful album
-    mockDynamoDBService.listAlbumMedia.mockResolvedValueOnce({ media: [] } as any);
+    mockDynamoDBService.listAlbumMedia.mockResolvedValueOnce({
+      media: [],
+    } as any);
     mockDynamoDBService.deleteAllCommentsForTarget.mockResolvedValue();
     mockDynamoDBService.deleteAllInteractionsForTarget.mockResolvedValue();
     mockDynamoDBService.deleteAlbum.mockResolvedValue();
@@ -236,7 +260,9 @@ describe("Admin Bulk Delete Albums Function", () => {
   });
 
   it("should handle unexpected errors", async () => {
-    const event = createMockEvent({ albumIds: ["album-1"] }) as APIGatewayProxyEvent;
+    const event = createMockEvent({
+      albumIds: ["album-1"],
+    }) as APIGatewayProxyEvent;
 
     // Simulate unexpected error during JSON parsing
     const eventWithBadJSON = {

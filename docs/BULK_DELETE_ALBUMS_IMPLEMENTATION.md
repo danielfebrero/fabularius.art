@@ -7,9 +7,11 @@ The bulk delete albums feature has been successfully implemented for admin users
 ### Backend Components
 
 1. **Type Definition** (`backend/shared/types/index.ts`)
+
    - Added `BulkDeleteAlbumsRequest` interface
 
 2. **Lambda Function** (`backend/functions/admin/albums/bulk-delete.ts`)
+
    - Handles bulk deletion of up to 50 albums at once
    - Validates all album IDs are strings
    - Processes each album deletion individually with error handling
@@ -19,6 +21,7 @@ The bulk delete albums feature has been successfully implemented for admin users
    - Uses proper GSI queries, no table scans
 
 3. **API Endpoint** (`template.yaml`)
+
    - `DELETE /admin/albums/bulk-delete`
    - Requires admin authorization
    - 5-minute timeout for bulk operations
@@ -56,7 +59,7 @@ The frontend can now call:
 
 ```typescript
 // Bulk delete multiple albums
-await adminAlbumsApi.bulkDeleteAlbums(['album-1', 'album-2', 'album-3']);
+await adminAlbumsApi.bulkDeleteAlbums(["album-1", "album-2", "album-3"]);
 ```
 
 The API returns detailed results:

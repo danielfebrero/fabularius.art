@@ -978,8 +978,8 @@ Resources:
       Handler: bulk-delete.handler
       Layers:
         - !Ref SharedLayer
-      Timeout: 300  # 5 minutes for bulk operations
-      MemorySize: 512  # More memory for bulk processing
+      Timeout: 300 # 5 minutes for bulk operations
+      MemorySize: 512 # More memory for bulk processing
       Events:
         BulkDeleteAlbums:
           Type: Api

@@ -22,7 +22,3 @@ On tablet, we could have a sticky footer with text and icons.
 On click on the video icon, when being on media page or lightbox, it should show the video component or play the gif. Also, we should avoid Gifs maybe because they are really heavy.
 
 ## Admin
-
-### Bulk delete albums not working
-
-When trying to bulk delete albums, it doesn't work. It should delete all the albums selected. It logs "album not found".
