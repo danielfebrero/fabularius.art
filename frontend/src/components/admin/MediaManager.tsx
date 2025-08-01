@@ -7,7 +7,7 @@ import { FileUpload } from "@/components/admin/FileUpload";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { CoverImageSelector } from "@/components/admin/CoverImageSelector";
 import { useAdminMedia } from "@/hooks/useAdminMedia";
-import { formatDateShort, formatFileSize } from "@/lib/utils";
+import { formatDateShort, formatFileSize, isImage } from "@/lib/utils";
 import {
   composeMediaUrl,
   composeThumbnailUrls,
@@ -315,7 +315,7 @@ export function MediaManager({
                     </div>
 
                     <div className="aspect-square">
-                      {mediaItem?.mimeType?.startsWith("image/") ? (
+                      {isImage(mediaItem) ? (
                         <ResponsivePicture
                           thumbnailUrls={composeThumbnailUrls(
                             mediaItem.thumbnailUrls

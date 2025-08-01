@@ -10,6 +10,7 @@ import {
   composeThumbnailUrls,
   getBestThumbnailUrl,
 } from "@/lib/urlUtils";
+import { isImage } from "@/lib/utils";
 
 interface CoverImageSelectorProps {
   albumId: string;
@@ -48,9 +49,7 @@ export function CoverImageSelector({
     onCoverSelect(newCoverUrl);
   };
 
-  const imageMedia = media.filter((item) =>
-    item?.mimeType?.startsWith("image/")
-  );
+  const imageMedia = media.filter((item) => isImage(item));
 
   if (!isOpen) {
     return (

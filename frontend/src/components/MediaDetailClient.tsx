@@ -29,9 +29,11 @@ import { ViewTracker } from "@/components/ui/ViewTracker";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { HorizontalScroll } from "@/components/ui/HorizontalScroll";
 import { Comments } from "@/components/ui/Comments";
+import { MediaPlayer } from "@/components/ui/MediaPlayer";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { formatFileSize, isVideo } from "@/lib/utils";
+import { formatDateTime } from "@/lib/dateUtils";
 
 // --- PROPS INTERFACES ---
 
@@ -59,24 +61,6 @@ interface GenerationPromptProps {
 }
 
 // --- HELPER FUNCTIONS ---
-
-const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
-};
-
-const formatDate = (dateString: string): string => {
-  return new Date(dateString).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
 
 // --- DATA EXTRACTORS ---
 
@@ -183,11 +167,24 @@ const GenerationPrompt: FC<GenerationPromptProps> = ({ title, prompt }) => (
 export function MediaDetailClient({ media }: MediaDetailClientProps) {
   const router = useLocaleRouter();
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
   const metadata = useMediaMetadata(media);
-  const isMobile = useIsMobile();
   const { user } = useUser();
 
+  // Determine if media is video
+  const isVideoMedia = isVideo(media);
+  const shouldShowPlayer = isVideoMedia;
+
   useUserInteractionStatus();
+
+  // Handle media click - for videos, toggle playback mode instead of lightbox
+  const handleMediaClick = () => {
+    if (shouldShowPlayer) {
+      setIsPlayingVideo(!isPlayingVideo);
+    } else {
+      setLightboxOpen(true);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -266,21 +263,13 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Media Display */}
           <div className="lg:col-span-2">
-            <ContentCard
-              item={media}
-              type="media"
-              aspectRatio="auto"
+            <MediaPlayer
+              media={media}
+              isPlaying={isPlayingVideo}
+              onTogglePlay={handleMediaClick}
+              onFullscreen={() => setLightboxOpen(true)}
               className="bg-card shadow-lg w-full"
               imageClassName="w-full h-auto max-h-[80vh]"
-              preferredThumbnailSize="originalSize"
-              canLike={true}
-              canBookmark={true}
-              canFullscreen={true}
-              canAddToAlbum={true}
-              canDownload={true}
-              canDelete={false}
-              onClick={isMobile ? undefined : () => setLightboxOpen(true)}
-              onFullscreen={() => setLightboxOpen(true)}
             />
           </div>
 
@@ -315,7 +304,7 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
                 <InfoPill
                   icon={<Calendar className="w-4 h-4" />}
                   label="Created"
-                  value={formatDate(media.createdAt)}
+                  value={formatDateTime(media.createdAt)}
                 />
                 {metadata.imageSize && (
                   <InfoPill

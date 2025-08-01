@@ -24,15 +24,29 @@ export function getMediaDisplayUrl(media: Media): string {
     return "";
   }
 
-  const isImage = media.mimeType?.startsWith("image/");
+  const isImageMedia = isImage(media);
 
   // For images, prefer WebP display version (stored as originalSize thumbnail) for better performance
-  if (isImage && media.thumbnailUrls?.originalSize) {
+  if (isImageMedia && media.thumbnailUrls?.originalSize) {
     return media.thumbnailUrls.originalSize;
   }
 
   // Fall back to original URL
   return media.url || "";
+}
+
+/**
+ * Check if a media item is a video based on its MIME type
+ */
+export function isVideo(media: Media): boolean {
+  return media.mimeType?.startsWith("video/") || false;
+}
+
+/**
+ * Check if a media item is an image based on its MIME type
+ */
+export function isImage(media: Media): boolean {
+  return media.mimeType?.startsWith("image/") || false;
 }
 
 const MONTH_NAMES = [

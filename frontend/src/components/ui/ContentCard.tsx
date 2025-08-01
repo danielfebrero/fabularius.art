@@ -7,7 +7,7 @@ import { AddToAlbumDialog } from "@/components/user/AddToAlbumDialog";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Tag } from "@/components/ui/Tag";
-import { cn } from "@/lib/utils";
+import { cn, isVideo } from "@/lib/utils";
 import { composeMediaUrl } from "@/lib/urlUtils";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useUser } from "@/hooks/useUser";
@@ -125,7 +125,7 @@ export function ContentCard({
   const media = isMedia ? (item as Media) : null;
   const album = !isMedia ? (item as Album) : null;
 
-  const isVideo = isMedia && media?.mimeType?.startsWith("video/");
+  const isVideoMedia = isMedia && media ? isVideo(media) : false;
 
   // Hide mobile actions when clicking outside or after timeout
   useEffect(() => {
@@ -339,7 +339,7 @@ export function ContentCard({
         {/* Content based on type */}
         {isMedia && media ? (
           <div className="relative w-full h-full">
-            {isVideo ? (
+            {isVideoMedia ? (
               <video
                 src={composeMediaUrl(media.url)}
                 poster={composeMediaUrl(media.thumbnailUrl)}
@@ -403,7 +403,7 @@ export function ContentCard({
             />
 
             {/* Play button for videos */}
-            {isVideo && (
+            {isVideoMedia && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <PlayCircle className="w-16 h-16 text-white/80 opacity-50 group-hover:opacity-100 transition-opacity duration-300 transform group-hover:scale-110" />
               </div>
