@@ -306,6 +306,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
                     media={currentMedia}
                     isPlaying={isPlayingVideo}
                     onTogglePlay={() => setIsPlayingVideo(!isPlayingVideo)}
+                    onMobileClick={() => setIsPlayingVideo(!isPlayingVideo)}
                     className="bg-transparent shadow-none border-none w-fit h-fit"
                     imageClassName="max-w-[calc(100vw)] max-h-[calc(100vh)] w-auto h-auto object-contain"
                   />

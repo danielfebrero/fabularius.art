@@ -26,11 +26,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const [initializing, setInitializing] = useState(true);
 
   const checkAuth = useCallback(async (): Promise<void> => {
-    console.log("[UserContext] checkAuth called", {
-      user: !!user,
-      loading,
-      initializing,
-    });
     try {
       setLoading(true);
       setError(null);
@@ -38,16 +33,13 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const response = await userApi.me();
 
       if (response.success && response.data?.user) {
-        console.log("[UserContext] checkAuth success, setting user");
         // Store the raw user data for now
         // The PermissionsWrapper will handle adding permissions
         setUser(response.data.user);
       } else {
-        console.log("[UserContext] checkAuth failed, clearing user");
         setUser(null);
       }
     } catch (err) {
-      console.log("[UserContext] checkAuth error, clearing user", err);
       // Silent fail for auth check - user is simply not authenticated
       setUser(null);
     } finally {
@@ -57,7 +49,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   // Check authentication on mount
   useEffect(() => {
-    console.log("[UserContext] Initial auth effect triggered");
     const initAuth = async () => {
       await checkAuth();
       setInitializing(false);

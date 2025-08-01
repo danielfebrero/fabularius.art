@@ -60,8 +60,6 @@ interface GenerationPromptProps {
   prompt: string;
 }
 
-// --- HELPER FUNCTIONS ---
-
 // --- DATA EXTRACTORS ---
 
 const useMediaMetadata = (media: Media) => {
@@ -177,8 +175,17 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
 
   useUserInteractionStatus();
 
-  // Handle media click - for videos, toggle playback mode instead of lightbox
-  const handleMediaClick = () => {
+  // Desktop-only handler for MediaPlayer - mobile behavior is handled by ContentCard
+  const handleDesktopMediaClick = () => {
+    if (shouldShowPlayer) {
+      setIsPlayingVideo(!isPlayingVideo);
+    } else {
+      setLightboxOpen(true);
+    }
+  };
+
+  // Mobile handler for MediaPlayer - triggers appropriate action on second tap
+  const handleMobileMediaClick = () => {
     if (shouldShowPlayer) {
       setIsPlayingVideo(!isPlayingVideo);
     } else {
@@ -266,7 +273,8 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
             <MediaPlayer
               media={media}
               isPlaying={isPlayingVideo}
-              onTogglePlay={handleMediaClick}
+              onTogglePlay={handleDesktopMediaClick}
+              onMobileClick={handleMobileMediaClick}
               onFullscreen={() => setLightboxOpen(true)}
               className="bg-card shadow-lg w-full"
               imageClassName="w-full h-auto max-h-[80vh]"

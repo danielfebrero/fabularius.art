@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useState, useEffect, useRef } from "react";
 import { Media } from "@/types";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { cn, isVideo } from "@/lib/utils";
@@ -11,6 +11,7 @@ interface MediaPlayerProps {
   media: Media;
   isPlaying: boolean;
   onTogglePlay: () => void;
+  onMobileClick?: () => void; // Optional mobile-specific click handler
   onFullscreen?: () => void;
   className?: string;
   imageClassName?: string;
@@ -20,13 +21,73 @@ export const MediaPlayer: FC<MediaPlayerProps> = ({
   media,
   isPlaying,
   onTogglePlay,
+  onMobileClick,
   onFullscreen,
   className,
   imageClassName,
 }) => {
   const isMobile = useIsMobile();
   const isVideoMedia = isVideo(media);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  // Track native controls visibility on mobile
   const [showMobileOverlay, setShowMobileOverlay] = useState(false);
+
+  // Detect native video controls visibility on mobile
+  useEffect(() => {
+    if (!isMobile || !isVideoMedia || !isPlaying || !videoRef.current) {
+      return;
+    }
+
+    const video = videoRef.current;
+    let controlsVisibilityTimer: NodeJS.Timeout;
+
+    const handleControlsShow = () => {
+      setShowMobileOverlay(true);
+
+      // Clear any existing timer
+      if (controlsVisibilityTimer) {
+        clearTimeout(controlsVisibilityTimer);
+      }
+
+      // Set timer to hide overlay when controls auto-hide (usually after 3 seconds)
+      controlsVisibilityTimer = setTimeout(() => {
+        setShowMobileOverlay(false);
+      }, 3000);
+    };
+
+    const handleVideoInteraction = () => {
+      // When user interacts with video, controls become visible
+      handleControlsShow();
+    };
+
+    // Listen for user interactions that show controls
+    video.addEventListener("click", handleVideoInteraction);
+    video.addEventListener("touchstart", handleVideoInteraction);
+    video.addEventListener("play", handleControlsShow);
+    video.addEventListener("pause", handleControlsShow);
+
+    // Initial state - show controls when video starts
+    if (isPlaying) {
+      handleControlsShow();
+    }
+
+    return () => {
+      video.removeEventListener("click", handleVideoInteraction);
+      video.removeEventListener("touchstart", handleVideoInteraction);
+      video.removeEventListener("play", handleControlsShow);
+      video.removeEventListener("pause", handleControlsShow);
+      if (controlsVisibilityTimer) {
+        clearTimeout(controlsVisibilityTimer);
+      }
+    };
+  }, [isMobile, isVideoMedia, isPlaying]);
+
+  // Reset overlay when not playing
+  useEffect(() => {
+    if (!isPlaying) {
+      setShowMobileOverlay(false);
+    }
+  }, [isPlaying]);
 
   if (!isVideoMedia) {
     // For regular images, use ContentCard
@@ -44,26 +105,13 @@ export const MediaPlayer: FC<MediaPlayerProps> = ({
         canAddToAlbum={true}
         canDownload={true}
         canDelete={false}
-        onClick={isMobile ? undefined : onTogglePlay}
+        onClick={isMobile ? onMobileClick : onTogglePlay}
         onFullscreen={onFullscreen}
       />
     );
   }
 
   if (isPlaying) {
-    // Handle mobile video tap behavior
-    const handleVideoClick = () => {
-      if (isMobile) {
-        if (!showMobileOverlay) {
-          // First tap: show overlay
-          setShowMobileOverlay(true);
-        } else {
-          // Second tap: hide overlay and let native controls show
-          setShowMobileOverlay(false);
-        }
-      }
-    };
-
     const handleCloseClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       setShowMobileOverlay(false);
@@ -74,6 +122,7 @@ export const MediaPlayer: FC<MediaPlayerProps> = ({
     return (
       <div className={cn("relative group", className)}>
         <video
+          ref={videoRef}
           src={composeMediaUrl(media.url)}
           className={cn(
             "w-full h-auto max-h-[80vh] object-contain",
@@ -83,7 +132,6 @@ export const MediaPlayer: FC<MediaPlayerProps> = ({
           autoPlay
           muted
           playsInline
-          onClick={handleVideoClick}
         />
 
         {/* Close button - desktop: on hover, mobile: on tap */}
@@ -111,14 +159,6 @@ export const MediaPlayer: FC<MediaPlayerProps> = ({
             </svg>
           </button>
         )}
-
-        {/* Mobile overlay backdrop - hides when tapped */}
-        {isMobile && showMobileOverlay && (
-          <div
-            className="absolute inset-0 bg-transparent"
-            onClick={() => setShowMobileOverlay(false)}
-          />
-        )}
       </div>
     );
   }
@@ -138,7 +178,7 @@ export const MediaPlayer: FC<MediaPlayerProps> = ({
       canAddToAlbum={true}
       canDownload={true}
       canDelete={false}
-      onClick={isMobile ? undefined : onTogglePlay}
+      onClick={isMobile ? onMobileClick : onTogglePlay}
       onFullscreen={onFullscreen}
     />
   );

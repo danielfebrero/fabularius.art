@@ -26,29 +26,16 @@ export function PermissionsWrapper({ children }: PermissionsWrapperProps) {
   // Convert the current user to a permissions-compatible format
   // If no user is logged in, create a mock free user for permissions
   useEffect(() => {
-    console.log("[PermissionsWrapper] Effect triggered", {
-      user: !!user,
-      loading,
-    });
     // Don't load permissions until user context is fully initialized
     if (loading) {
-      console.log("[PermissionsWrapper] Still loading, skipping");
       return;
     }
 
     // Only process if user has actually changed (prevent unnecessary re-processing)
     const currentUserId = user?.userId || null;
     if (currentUserId === lastProcessedUserId && userWithPermissions !== null) {
-      console.log(
-        "[PermissionsWrapper] User unchanged, skipping permissions reload"
-      );
       return;
     }
-
-    console.log(
-      "[PermissionsWrapper] Loading permissions for user:",
-      currentUserId
-    );
     setLastProcessedUserId(currentUserId);
 
     const loadUserPermissions = async () => {

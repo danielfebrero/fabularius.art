@@ -172,8 +172,27 @@ export function ContentCard({
   // Handle click events based on content type
   const handleClick = (e: React.MouseEvent) => {
     if (onClick) {
-      onClick();
+      // Custom onClick handler provided
+      if (isMobile) {
+        // On mobile: first tap shows actions, second tap calls onClick
+        if (showMobileActions) {
+          // Actions are already showing, call the custom onClick
+          onClick();
+          setShowMobileActions(false); // Hide actions after click
+        } else {
+          // Actions are not showing, show them first
+          e.preventDefault();
+          e.stopPropagation();
+          setShowMobileActions(true);
+        }
+        return;
+      } else {
+        // Desktop: direct onClick call
+        onClick();
+        return;
+      }
     } else {
+      // No custom onClick handler, use default behavior
       // On mobile: first tap shows actions, second tap navigates
       if (isMobile) {
         if (showMobileActions) {
