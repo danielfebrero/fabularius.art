@@ -55,7 +55,6 @@ export function EditAlbumDialog({
 
   // Media selection state
   const [userMedia, setUserMedia] = useState<MediaWithSelection[]>([]);
-  const [albumMedia, setAlbumMedia] = useState<Media[]>([]);
   const [mediaLoading, setMediaLoading] = useState(false);
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [initiallySelectedMediaIds, setInitiallySelectedMediaIds] = useState<
@@ -80,7 +79,6 @@ export function EditAlbumDialog({
       const albumMediaIds = new Set(
         albumMediaResponse.media.map((m: Media) => m.id)
       );
-      setAlbumMedia(albumMediaResponse.media);
       setInitiallySelectedMediaIds(albumMediaIds);
 
       // Mark user media as selected if they're in the album
@@ -91,7 +89,17 @@ export function EditAlbumDialog({
         })
       );
 
-      setUserMedia(mediaWithSelection);
+      // Sort media so that images already in the album appear first
+      const sortedMedia = mediaWithSelection.sort((a, b) => {
+        // If a is selected and b is not, a comes first
+        if (a.selected && !b.selected) return -1;
+        // If b is selected and a is not, b comes first
+        if (b.selected && !a.selected) return 1;
+        // If both have the same selection status, maintain original order
+        return 0;
+      });
+
+      setUserMedia(sortedMedia);
     } catch (err) {
       setMediaError(
         err instanceof Error ? err.message : "Failed to fetch media"
@@ -120,7 +128,6 @@ export function EditAlbumDialog({
       setIsPublic(true); // Default to public
       setCoverImageUrl("");
       setUserMedia([]);
-      setAlbumMedia([]);
       setInitiallySelectedMediaIds(new Set());
     }
   }, [album, canMakePrivate, open, fetchMediaData]);
@@ -324,9 +331,6 @@ export function EditAlbumDialog({
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
                       {userMedia.map((media) => {
                         const isSelected = media.selected;
-                        const isFromAlbum = albumMedia.some(
-                          (am) => am.id === media.id
-                        );
 
                         return (
                           <div
@@ -381,13 +385,6 @@ export function EditAlbumDialog({
                                 </svg>
                               )}
                             </div>
-
-                            {/* Album Badge */}
-                            {isFromAlbum && (
-                              <div className="absolute top-2 left-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
-                                In Album
-                              </div>
-                            )}
                           </div>
                         );
                       })}
