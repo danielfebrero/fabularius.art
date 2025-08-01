@@ -183,10 +183,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
                       ? 0.95 + (Math.abs(dragOffset) / 600) * 0.05
                       : 0.9,
                   y: dragOffset > 0 ? 8 - (Math.abs(dragOffset) / 600) * 8 : 8,
-                  opacity:
-                    dragOffset > 0
-                      ? 0.6 + (Math.abs(dragOffset) / 600) * 0.4
-                      : 0.5,
+                  opacity: dragOffset > 0 ? 1 : 0,
                 }}
                 transition={{ type: "tween", duration: 0.1 }}
               >
@@ -227,10 +224,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
                       ? 0.95 + (Math.abs(dragOffset) / 600) * 0.05
                       : 0.9,
                   y: dragOffset < 0 ? 8 - (Math.abs(dragOffset) / 600) * 8 : 8,
-                  opacity:
-                    dragOffset < 0
-                      ? 0.6 + (Math.abs(dragOffset) / 600) * 0.4
-                      : 0.5,
+                  opacity: dragOffset < 0 ? 1 : 0,
                 }}
                 transition={{ type: "tween", duration: 0.1 }}
               >
