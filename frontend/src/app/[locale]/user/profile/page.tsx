@@ -27,7 +27,6 @@ export default function ProfilePage() {
       user={
         user || {
           userId: "",
-          email: "",
           createdAt: new Date().toISOString(),
         }
       }
