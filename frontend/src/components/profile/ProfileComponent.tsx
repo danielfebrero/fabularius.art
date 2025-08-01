@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -16,6 +16,7 @@ import { useComments } from "@/hooks/useComments";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
 import { useUser } from "@/hooks/useUser";
+import { useUsernameAvailability } from "@/hooks/useUsernameAvailability";
 import { formatDistanceToNow } from "@/lib/dateUtils";
 import { userApi } from "@/lib/api/user";
 import {
@@ -57,9 +58,6 @@ interface ProfileComponentProps {
   loading?: boolean;
 }
 
-// Username availability states
-type UsernameStatus = "idle" | "checking" | "available" | "taken" | "error";
-
 export default function ProfileComponent({
   user,
   isOwner = false,
@@ -74,13 +72,18 @@ export default function ProfileComponent({
     location: "",
     website: "",
   });
-  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>("idle");
-  const [usernameMessage, setUsernameMessage] = useState("");
 
   const t = useTranslations("common");
-  const tAuth = useTranslations("auth");
   const isMobile = useIsMobile();
   const { user: loggedInUser } = useUser();
+
+  // Use the abstracted username availability hook
+  const {
+    usernameStatus,
+    usernameMessage,
+    checkUsernameAvailability,
+    resetStatus: resetUsernameStatus,
+  } = useUsernameAvailability();
 
   // Get real profile data
   const {
@@ -111,77 +114,23 @@ export default function ProfileComponent({
     }
   }, [recentLikes, loggedInUser, preloadStatuses]);
 
-  // Debounced username availability checking
-  const checkUsernameAvailability = useCallback(
-    async (username: string) => {
-      // Skip checking if it's the current user's existing username
-      if (username === currentUser.username) {
-        setUsernameStatus("idle");
-        setUsernameMessage("");
-        return;
-      }
-
-      if (!username || username.length < 3) {
-        setUsernameStatus("idle");
-        setUsernameMessage("");
-        return;
-      }
-
-      // Check format first
-      if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-        setUsernameStatus("error");
-        setUsernameMessage(tAuth("messages.usernameInvalidChars"));
-        return;
-      }
-
-      if (username.length > 30) {
-        setUsernameStatus("error");
-        setUsernameMessage(tAuth("messages.usernameTooLong"));
-        return;
-      }
-
-      setUsernameStatus("checking");
-      setUsernameMessage(tAuth("messages.checkingAvailability"));
-
-      try {
-        const response = await userApi.checkUsernameAvailability({ username });
-
-        if (response.success && response.data) {
-          if (response.data.available) {
-            setUsernameStatus("available");
-            setUsernameMessage(tAuth("messages.usernameAvailable"));
-          } else {
-            setUsernameStatus("taken");
-            setUsernameMessage(
-              response.data.message || tAuth("messages.usernameAlreadyTaken")
-            );
-          }
-        } else {
-          setUsernameStatus("error");
-          setUsernameMessage(
-            response.error || "Failed to check username availability"
-          );
-        }
-      } catch (error) {
-        setUsernameStatus("error");
-        setUsernameMessage("Failed to check username availability");
-      }
-    },
-    [tAuth, currentUser.username]
-  );
-
   // Debounce username checking when form data changes
   useEffect(() => {
     if (!isEditing) return;
-    
+
     const timeoutId = setTimeout(() => {
       if (formData.username) {
-        checkUsernameAvailability(formData.username);
+        checkUsernameAvailability(formData.username, currentUser.username);
       }
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [formData.username, checkUsernameAvailability, isEditing]);
+  }, [
+    formData.username,
+    checkUsernameAvailability,
+    isEditing,
+    currentUser.username,
+  ]);
 
   // Get real comments data
   const {
@@ -232,8 +181,7 @@ export default function ProfileComponent({
       website: currentUser.website || "",
     });
     // Reset username status when starting to edit
-    setUsernameStatus("idle");
-    setUsernameMessage("");
+    resetUsernameStatus();
     setIsEditing(true);
   };
 
@@ -274,8 +222,7 @@ export default function ProfileComponent({
         });
 
         // Reset username status since we've successfully saved
-        setUsernameStatus("idle");
-        setUsernameMessage("");
+        resetUsernameStatus();
 
         // Optionally show a success message or trigger a refresh
         // For now, we'll just log the success
@@ -304,8 +251,7 @@ export default function ProfileComponent({
       website: "",
     });
     // Reset username status
-    setUsernameStatus("idle");
-    setUsernameMessage("");
+    resetUsernameStatus();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -579,78 +525,78 @@ export default function ProfileComponent({
                             />
 
                             {/* Username availability indicator */}
-                            {formData.username && 
-                             formData.username.length >= 3 && 
-                             formData.username !== currentUser.username && (
-                              <div className="absolute right-3 top-9 flex items-center">
-                                {usernameStatus === "checking" && (
-                                  <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
-                                )}
-                                {usernameStatus === "available" && (
-                                  <svg
-                                    className="w-4 h-4 text-green-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M5 13l4 4L19 7"
-                                    />
-                                  </svg>
-                                )}
-                                {usernameStatus === "taken" && (
-                                  <svg
-                                    className="w-4 h-4 text-red-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M6 18L18 6M6 6l12 12"
-                                    />
-                                  </svg>
-                                )}
-                                {usernameStatus === "error" && (
-                                  <svg
-                                    className="w-4 h-4 text-yellow-600"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                      strokeWidth={2}
-                                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-                                    />
-                                  </svg>
-                                )}
-                              </div>
-                            )}
+                            {formData.username &&
+                              formData.username.length >= 3 &&
+                              formData.username !== currentUser.username && (
+                                <div className="absolute right-3 top-8 flex items-center h-10">
+                                  {usernameStatus === "checking" && (
+                                    <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
+                                  )}
+                                  {usernameStatus === "available" && (
+                                    <svg
+                                      className="w-4 h-4 text-green-600"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M5 13l4 4L19 7"
+                                      />
+                                    </svg>
+                                  )}
+                                  {usernameStatus === "taken" && (
+                                    <svg
+                                      className="w-4 h-4 text-red-600"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M6 18L18 6M6 6l12 12"
+                                      />
+                                    </svg>
+                                  )}
+                                  {usernameStatus === "error" && (
+                                    <svg
+                                      className="w-4 h-4 text-yellow-600"
+                                      fill="none"
+                                      stroke="currentColor"
+                                      viewBox="0 0 24 24"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                                      />
+                                    </svg>
+                                  )}
+                                </div>
+                              )}
 
                             {/* Username status message */}
-                            {usernameMessage && 
-                             formData.username !== currentUser.username && (
-                              <div
-                                className={`text-xs mt-1 ${
-                                  usernameStatus === "available"
-                                    ? "text-green-600"
-                                    : usernameStatus === "taken"
-                                    ? "text-red-600"
-                                    : usernameStatus === "error"
-                                    ? "text-yellow-600"
-                                    : "text-gray-500"
-                                }`}
-                              >
-                                {usernameMessage}
-                              </div>
-                            )}
+                            {usernameMessage &&
+                              formData.username !== currentUser.username && (
+                                <div
+                                  className={`text-xs mt-1 ${
+                                    usernameStatus === "available"
+                                      ? "text-green-600"
+                                      : usernameStatus === "taken"
+                                      ? "text-red-600"
+                                      : usernameStatus === "error"
+                                      ? "text-yellow-600"
+                                      : "text-gray-500"
+                                  }`}
+                                >
+                                  {usernameMessage}
+                                </div>
+                              )}
                           </div>
                           <Input
                             label="Bio"
@@ -787,20 +733,19 @@ export default function ProfileComponent({
                               size="sm"
                               className="flex items-center gap-2"
                               disabled={
-                                isSaving || 
-                                usernameStatus === "checking" || 
+                                isSaving ||
+                                usernameStatus === "checking" ||
                                 usernameStatus === "taken"
                               }
                             >
                               <Save className="w-4 h-4" />
-                              {isSaving 
-                                ? "Saving..." 
+                              {isSaving
+                                ? "Saving..."
                                 : usernameStatus === "checking"
                                 ? "Checking username..."
                                 : usernameStatus === "taken"
                                 ? "Username taken"
-                                : t("save")
-                              }
+                                : t("save")}
                             </Button>
                             <Button
                               onClick={handleCancel}

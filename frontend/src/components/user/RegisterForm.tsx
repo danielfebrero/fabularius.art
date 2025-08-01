@@ -272,7 +272,7 @@ export function RegisterForm() {
 
           {/* Username availability indicator */}
           {watchedUsername && watchedUsername.length >= 3 && (
-            <div className="absolute right-3 top-9 flex items-center">
+            <div className="absolute right-3 top-8 flex items-center h-10">
               {usernameStatus === "checking" && (
                 <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin"></div>
               )}
