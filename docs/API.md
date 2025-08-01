@@ -703,6 +703,57 @@ POST /user/auth/logout
 Cookie: sessionId=session-token-here
 ```
 
+### Email Verification
+
+Verify a user's email address using a verification token.
+
+```http
+GET /user/verify-email?token={verification-token}
+```
+
+**Query Parameters:**
+
+- `token` (string, required): The verification token received via email
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "Email verified successfully! Welcome to PornSpot.ai",
+  "user": {
+    "userId": "user123",
+    "email": "user@example.com",
+    "username": "johndoe",
+    "isEmailVerified": true
+  }
+}
+```
+
+### Resend Verification Email
+
+Request a new email verification to be sent. Returns the same response regardless of email existence for security.
+
+```http
+POST /user/resend-verification
+Content-Type: application/json
+
+{
+  "email": "user@example.com"
+}
+```
+
+**Security Note:** This endpoint always returns the same response to prevent email enumeration attacks, regardless of whether the email exists, account status, or verification state.
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "message": "If the email exists in our system, a verification email has been sent."
+}
+```
+
 ### Get Current User
 
 Get the currently authenticated user's information.

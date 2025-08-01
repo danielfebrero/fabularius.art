@@ -31,7 +31,7 @@ export function LocaleLink({
     href.startsWith("http") ||
     href.startsWith("mailto:") ||
     href.startsWith("tel:");
-  const hasLocale = locales.some(loc => href.startsWith(`/${loc}/`));
+  const hasLocale = locales.some((loc) => href.startsWith(`/${loc}/`));
 
   // If external or already has locale, use href as-is
   // If it's an API route, use as-is (API routes should remain unlocalized)

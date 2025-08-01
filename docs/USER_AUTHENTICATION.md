@@ -171,3 +171,5 @@ The application supports automatic redirect functionality for unauthenticated us
 - **CSRF Protection**: The Google OAuth flow uses a `state` parameter to protect against Cross-Site Request Forgery (CSRF) attacks.
 - **Secure Cookies**: Session cookies are configured as HTTP-only, secure, and `SameSite=Strict`.
 - **Timing Attacks**: The login endpoint includes a delay to prevent timing attacks when a user does not exist.
+- **Email Enumeration Protection**: The resend verification endpoint always returns the same response regardless of whether the email exists, account status, or verification state to prevent email enumeration attacks.
+- **Enhanced Email Verification**: Verification emails include both clickable links and copy-pasteable tokens for improved user experience and reliability.

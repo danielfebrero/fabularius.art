@@ -106,7 +106,8 @@ export class EmailService {
 
     const template = this.getVerificationEmailTemplate(
       displayName,
-      verificationUrl
+      verificationUrl,
+      verificationToken
     );
 
     return this.sendEmail({
@@ -139,7 +140,8 @@ export class EmailService {
    */
   private static getVerificationEmailTemplate(
     displayName: string,
-    verificationUrl: string
+    verificationUrl: string,
+    verificationToken: string
   ): EmailTemplate {
     const subject = "Please verify your email address";
 
@@ -154,68 +156,76 @@ export class EmailService {
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       line-height: 1.6;
-      color: #333;
+      color: #f8fafc;
       max-width: 600px;
       margin: 0 auto;
       padding: 20px;
-      background-color: #f4f4f4;
+      background-color: #020817;
     }
     .container {
-      background-color: #ffffff;
-      border-radius: 10px;
+      background-color: #0f172a;
+      border-radius: 12px;
       padding: 40px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border: 1px solid #1e293b;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
     }
     .header {
       text-align: center;
       margin-bottom: 30px;
     }
     .logo {
-      font-size: 28px;
+      font-size: 32px;
       font-weight: bold;
-      color: #e11d48;
+      color: #8b5cf6;
       margin-bottom: 10px;
+      text-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
     }
     .title {
       font-size: 24px;
-      color: #1f2937;
+      color: #f8fafc;
       margin-bottom: 20px;
+      font-weight: 600;
     }
     .content {
       font-size: 16px;
       margin-bottom: 30px;
+      color: #cbd5e1;
     }
     .verify-button {
       display: inline-block;
-      background-color: #e11d48;
-      color: white;
-      padding: 15px 30px;
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      color: #ffffff;
+      padding: 16px 32px;
       text-decoration: none;
-      border-radius: 5px;
-      font-weight: bold;
+      border-radius: 8px;
+      font-weight: 600;
       font-size: 16px;
       text-align: center;
       margin: 20px 0;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.25);
     }
     .verify-button:hover {
-      background-color: #be185d;
+      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px 0 rgba(139, 92, 246, 0.4);
     }
     .footer {
       margin-top: 30px;
       padding-top: 20px;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid #334155;
       font-size: 14px;
-      color: #6b7280;
+      color: #64748b;
       text-align: center;
     }
     .token-info {
-      background-color: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 5px;
-      padding: 15px;
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 20px;
       margin: 20px 0;
       font-size: 14px;
-      color: #6b7280;
+      color: #cbd5e1;
     }
   </style>
 </head>
@@ -236,10 +246,18 @@ export class EmailService {
       </div>
       
       <p>If the button above doesn't work, you can copy and paste this link into your browser:</p>
-      <p style="word-break: break-all; background-color: #f9fafb; padding: 10px; border-radius: 5px;">${verificationUrl}</p>
+      <p style="word-break: break-all; background-color: #1e293b; padding: 12px; border-radius: 8px; border: 1px solid #334155; color: #94a3b8; font-family: 'Courier New', monospace; font-size: 14px;">${verificationUrl}</p>
       
       <div class="token-info">
-        <strong>Important:</strong> This verification link will expire in 24 hours for security reasons. If you don't verify your email within this time, you'll need to request a new verification email.
+        <strong style="color: #f8fafc;">Alternative:</strong> You can also verify your email by copying this verification code:
+        <div style="background-color: #0f172a; border: 2px solid #8b5cf6; border-radius: 8px; padding: 16px; margin: 12px 0; text-align: center; font-family: 'Courier New', monospace; font-size: 18px; font-weight: bold; color: #8b5cf6; letter-spacing: 3px; box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.1);">
+          ${verificationToken}
+        </div>
+        <small style="color: #94a3b8;">Enter this code on the verification page if the link doesn't work.</small>
+      </div>
+      
+      <div class="token-info">
+        <strong style="color: #f8fafc;">Important:</strong> This verification link will expire in 24 hours for security reasons. If you don't verify your email within this time, you'll need to request a new verification email.
       </div>
       
       <p>If you didn't create an account with PornSpot.ai, please ignore this email.</p>
@@ -260,6 +278,9 @@ Hello ${displayName},
 Thank you for signing up for PornSpot.ai! To complete your registration, please verify your email address.
 
 Verification Link: ${verificationUrl}
+
+Alternative - Verification Code: ${verificationToken}
+(Enter this code on the verification page if the link doesn't work)
 
 This verification link will expire in 24 hours for security reasons. If you don't verify your email within this time, you'll need to request a new verification email.
 
@@ -296,72 +317,87 @@ This is an automated email. Please do not reply to this message.
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       line-height: 1.6;
-      color: #333;
+      color: #f8fafc;
       max-width: 600px;
       margin: 0 auto;
       padding: 20px;
-      background-color: #f4f4f4;
+      background-color: #020817;
     }
     .container {
-      background-color: #ffffff;
-      border-radius: 10px;
+      background-color: #0f172a;
+      border-radius: 12px;
       padding: 40px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      border: 1px solid #1e293b;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
     }
     .header {
       text-align: center;
       margin-bottom: 30px;
     }
     .logo {
-      font-size: 28px;
+      font-size: 32px;
       font-weight: bold;
-      color: #e11d48;
+      color: #8b5cf6;
       margin-bottom: 10px;
+      text-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
     }
     .title {
       font-size: 24px;
-      color: #1f2937;
+      color: #f8fafc;
       margin-bottom: 20px;
+      font-weight: 600;
     }
     .content {
       font-size: 16px;
       margin-bottom: 30px;
+      color: #cbd5e1;
     }
     .login-button {
       display: inline-block;
-      background-color: #e11d48;
-      color: white;
-      padding: 15px 30px;
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      color: #ffffff;
+      padding: 16px 32px;
       text-decoration: none;
-      border-radius: 5px;
-      font-weight: bold;
+      border-radius: 8px;
+      font-weight: 600;
       font-size: 16px;
       text-align: center;
       margin: 20px 0;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.25);
     }
     .login-button:hover {
-      background-color: #be185d;
+      background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px 0 rgba(139, 92, 246, 0.4);
     }
     .features {
-      background-color: #f9fafb;
-      border-radius: 5px;
-      padding: 20px;
-      margin: 20px 0;
+      background-color: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 24px;
+      margin: 24px 0;
     }
     .features h3 {
-      color: #1f2937;
+      color: #f8fafc;
       margin-top: 0;
+      margin-bottom: 16px;
+      font-weight: 600;
     }
     .features ul {
       margin: 0;
       padding-left: 20px;
+      color: #cbd5e1;
+    }
+    .features li {
+      margin-bottom: 8px;
     }
     .footer {
       margin-top: 30px;
       padding-top: 20px;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid #334155;
       font-size: 14px;
-      color: #6b7280;
+      color: #64748b;
       text-align: center;
     }
   </style>

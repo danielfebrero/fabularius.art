@@ -31,23 +31,40 @@ export const handler = async (
       return ResponseUtil.badRequest(event, "Invalid email format");
     }
 
+    // Always return the same response for security, regardless of whether email exists
+    const standardResponse = {
+      message:
+        "If the email exists in our system, a verification email has been sent.",
+    };
+
     // Get user by email
     const userEntity = await DynamoDBService.getUserByEmail(request.email);
 
+    // If user doesn't exist, just return the standard response
     if (!userEntity) {
-      // For security, don't reveal if the email exists or not
-      return ResponseUtil.success(event, {
-        message:
-          "If the email exists in our system, a verification email has been sent.",
-      });
+      console.log(
+        "Resend verification attempt for non-existent email:",
+        request.email
+      );
+      return ResponseUtil.success(event, standardResponse);
     }
 
+    // If user is disabled, still return standard response to avoid revealing account status
     if (!userEntity.isActive) {
-      return ResponseUtil.forbidden(event, "Account is disabled");
+      console.log(
+        "Resend verification attempt for disabled account:",
+        userEntity.userId
+      );
+      return ResponseUtil.success(event, standardResponse);
     }
 
+    // If email is already verified, still return standard response
     if (userEntity.isEmailVerified) {
-      return ResponseUtil.badRequest(event, "Email is already verified");
+      console.log(
+        "Resend verification attempt for already verified email:",
+        userEntity.userId
+      );
+      return ResponseUtil.success(event, standardResponse);
     }
 
     // Note: Rate limiting implementation is simplified for now
@@ -70,10 +87,8 @@ export const handler = async (
 
       if (!emailResult.success) {
         console.error("Failed to send verification email:", emailResult.error);
-        return ResponseUtil.internalError(
-          event,
-          "Failed to send verification email"
-        );
+        // Still return standard response to avoid revealing system errors
+        return ResponseUtil.success(event, standardResponse);
       }
 
       console.log("Verification email resent successfully:", {
@@ -83,18 +98,12 @@ export const handler = async (
       });
     } catch (error) {
       console.error("Email sending error:", error);
-      return ResponseUtil.internalError(
-        event,
-        "Failed to send verification email"
-      );
+      // Still return standard response to avoid revealing system errors
+      return ResponseUtil.success(event, standardResponse);
     }
 
-    const responseData = {
-      message: "Verification email sent successfully. Please check your inbox.",
-      email: userEntity.email,
-    };
-
-    return ResponseUtil.success(event, responseData);
+    // Always return the same response regardless of the actual outcome
+    return ResponseUtil.success(event, standardResponse);
   } catch (error) {
     console.error("Resend verification error:", error);
     return ResponseUtil.internalError(

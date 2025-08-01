@@ -50,7 +50,8 @@ export function VerifyEmailClient() {
     };
 
     performVerification();
-  }, [searchParams, verifyEmail, checkAuth]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]); // Only depend on searchParams to prevent infinite loop with verifyEmail/checkAuth
 
   const handleGoHome = () => {
     router.push("/");

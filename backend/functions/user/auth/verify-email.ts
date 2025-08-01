@@ -12,8 +12,9 @@ export const handler = async (
   }
 
   try {
-    // Get token from query parameters
-    const token = event.queryStringParameters?.["token"];
+    // Parse request body
+    const body = event.body ? JSON.parse(event.body) : {};
+    const token = body.token;
 
     if (!token) {
       return ResponseUtil.badRequest(event, "Verification token is required");
