@@ -118,6 +118,7 @@ export function ContentCard({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [showMobileActions, setShowMobileActions] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [addToAlbumDialogOpen, setAddToAlbumDialogOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -129,26 +130,40 @@ export function ContentCard({
 
   const isVideoMedia = isMedia && media ? isVideo(media) : false;
 
-  // Hide mobile actions when clicking outside or after timeout
+  // Simple mobile actions timeout management
   useEffect(() => {
     if (!isMobile || !showMobileActions) return;
 
     const handleClickOutside = (event: Event) => {
-      if (cardRef.current && !cardRef.current.contains(event.target as Node)) {
-        setShowMobileActions(false);
+      const target = event.target as Node;
+
+      // Don't hide if clicking within this card
+      if (cardRef.current && cardRef.current.contains(target)) {
+        return;
       }
+
+      // Hide mobile actions only for this card
+      setShowMobileActions(false);
     };
 
     const timeoutId = setTimeout(() => {
       setShowMobileActions(false);
     }, 5000); // Auto-hide after 5 seconds
 
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside, {
+      capture: true,
+    });
+    document.addEventListener("touchstart", handleClickOutside, {
+      capture: true,
+    });
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside, {
+        capture: true,
+      });
+      document.removeEventListener("touchstart", handleClickOutside, {
+        capture: true,
+      });
       clearTimeout(timeoutId);
     };
   }, [isMobile, showMobileActions]);
@@ -347,8 +362,9 @@ export function ContentCard({
     <>
       <div
         ref={cardRef}
+        data-content-card
         className={cn(
-          "group relative cursor-pointer overflow-hidden shadow-lg transition-all duration-200",
+          "group relative cursor-pointer overflow-hidden shadow-lg transition-all duration-200 isolate",
           !useAllAvailableSpace && "rounded-lg sm:rounded-xl",
           !disableHoverEffects &&
             !useAllAvailableSpace &&
@@ -360,6 +376,8 @@ export function ContentCard({
           className
         )}
         onClick={handleClick}
+        onMouseEnter={() => !isMobile && setIsHovered(true)}
+        onMouseLeave={() => !isMobile && setIsHovered(false)}
       >
         {/* Content based on type */}
         {isMedia && media ? (
@@ -396,7 +414,8 @@ export function ContentCard({
                   useAllAvailableSpace ? "object-contain" : "object-cover",
                   !disableHoverEffects &&
                     !useAllAvailableSpace &&
-                    "group-hover:scale-105",
+                    isHovered &&
+                    "scale-105",
                   imageClassName
                 )}
                 context={context}
@@ -411,7 +430,9 @@ export function ContentCard({
                 "absolute inset-0 transition-colors duration-300",
                 isMobile && showMobileActions
                   ? "bg-black/30"
-                  : "bg-black/0 group-hover:bg-black/20"
+                  : isHovered
+                  ? "bg-black/20"
+                  : "bg-black/0"
               )}
             />
 
@@ -423,14 +444,21 @@ export function ContentCard({
                   ? showMobileActions
                     ? "opacity-100"
                     : "opacity-0"
-                  : "opacity-0 group-hover:opacity-100"
+                  : isHovered
+                  ? "opacity-100"
+                  : "opacity-0"
               )}
             />
 
             {/* Play button for videos */}
             {isVideoMedia && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <PlayCircle className="w-16 h-16 text-white/80 opacity-50 group-hover:opacity-100 transition-opacity duration-300 transform group-hover:scale-110" />
+                <PlayCircle
+                  className={cn(
+                    "w-16 h-16 text-white/80 transition-all duration-300",
+                    isHovered ? "opacity-100 scale-110" : "opacity-50 scale-100"
+                  )}
+                />
               </div>
             )}
 
@@ -443,7 +471,9 @@ export function ContentCard({
                     ? showMobileActions
                       ? "opacity-100"
                       : "opacity-0 pointer-events-none"
-                    : "opacity-0 group-hover:opacity-100"
+                    : isHovered
+                    ? "opacity-100"
+                    : "opacity-0"
                 )}
               >
                 {canFullscreen && (
@@ -518,7 +548,8 @@ export function ContentCard({
                       <div
                         onClick={(e) => e.stopPropagation()}
                         className={cn(
-                          "transition-opacity duration-200 opacity-0 group-hover:opacity-100"
+                          "transition-opacity duration-200",
+                          isHovered ? "opacity-100" : "opacity-0"
                         )}
                       >
                         <LikeButton
@@ -535,7 +566,8 @@ export function ContentCard({
                       <div
                         onClick={(e) => e.stopPropagation()}
                         className={cn(
-                          "transition-opacity duration-200 opacity-0 group-hover:opacity-100"
+                          "transition-opacity duration-200",
+                          isHovered ? "opacity-100" : "opacity-0"
                         )}
                       >
                         <BookmarkButton
@@ -596,7 +628,8 @@ export function ContentCard({
                   useAllAvailableSpace ? "object-contain" : "object-cover",
                   !disableHoverEffects &&
                     !useAllAvailableSpace &&
-                    "group-hover:scale-105",
+                    isHovered &&
+                    "scale-105",
                   imageClassName
                 )}
                 context={context}
@@ -654,7 +687,14 @@ export function ContentCard({
                       <div
                         onClick={(e) => e.stopPropagation()}
                         className={cn(
-                          "transition-opacity duration-200 opacity-100"
+                          "transition-opacity duration-200",
+                          isMobile
+                            ? showMobileActions
+                              ? "opacity-100"
+                              : "opacity-0"
+                            : isHovered
+                            ? "opacity-100"
+                            : "opacity-0"
                         )}
                       >
                         <LikeButton
@@ -671,7 +711,14 @@ export function ContentCard({
                       <div
                         onClick={(e) => e.stopPropagation()}
                         className={cn(
-                          "transition-opacity duration-200 opacity-100"
+                          "transition-opacity duration-200",
+                          isMobile
+                            ? showMobileActions
+                              ? "opacity-100"
+                              : "opacity-0"
+                            : isHovered
+                            ? "opacity-100"
+                            : "opacity-0"
                         )}
                       >
                         <BookmarkButton
@@ -727,7 +774,9 @@ export function ContentCard({
                         ? showMobileActions
                           ? "opacity-100"
                           : "opacity-0 pointer-events-none"
-                        : "sm:opacity-0 sm:group-hover:opacity-100"
+                        : isHovered
+                        ? "opacity-100"
+                        : "opacity-0"
                     )}
                     aria-label="Album actions"
                   >
@@ -771,7 +820,9 @@ export function ContentCard({
                     ? showMobileActions
                       ? "opacity-100"
                       : "opacity-0 pointer-events-none"
-                    : "opacity-0 group-hover:opacity-100"
+                    : isHovered
+                    ? "opacity-100"
+                    : "opacity-0"
                 )}
               >
                 {canFullscreen && (
