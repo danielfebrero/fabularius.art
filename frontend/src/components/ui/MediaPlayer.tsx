@@ -113,6 +113,7 @@ export const MediaPlayer: FC<MediaPlayerProps> = ({
         canAddToAlbum={true}
         canDownload={true}
         canDelete={false}
+        useAllAvailableSpace={true}
         onClick={isMobile ? onMobileClick : onTogglePlay}
         onFullscreen={onFullscreen}
       />
@@ -200,6 +201,7 @@ export const MediaPlayer: FC<MediaPlayerProps> = ({
             canAddToAlbum={true}
             canDownload={true}
             canDelete={false}
+            useAllAvailableSpace={true}
             onClick={isMobile ? onMobileClick : onTogglePlay}
             onFullscreen={onFullscreen}
           />
