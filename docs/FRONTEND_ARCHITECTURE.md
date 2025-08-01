@@ -131,6 +131,34 @@ The application uses **Tailwind CSS** for styling. Utility classes are used to s
 
 The application has a collection of reusable UI components in the `frontend/src/components/ui` directory. These components are used throughout the application to ensure a consistent look and feel.
 
+### MediaPlayer Component
+
+- **File**: [`frontend/src/components/ui/MediaPlayer.tsx`](../frontend/src/components/ui/MediaPlayer.tsx)
+- **Purpose**: Provides a unified interface for media playback with layout stability
+- **Features**:
+  - **Layout Stability**: Uses consistent container dimensions to prevent layout shifts during video/preview transitions
+  - **Aspect Ratio Preservation**: Automatically calculates and maintains proper aspect ratios based on media dimensions
+  - **Video Support**: Seamless transition between thumbnail preview and video playback
+  - **Mobile Optimization**: Touch-friendly controls with overlay management
+  - **Consistent API**: Unified interface for both images and videos through ContentCard integration
+  - **Responsive Design**: Adapts to different screen sizes and aspect ratios
+  - **Space Reservation**: Pre-calculates container dimensions to eliminate flash effects
+- **Key Innovation**: Eliminates flash effects by maintaining consistent container structure and aspect ratio constraints when switching between preview and video modes
+- **Usage**: Used in Lightbox, media detail pages, and any component requiring stable media playback
+- **Container Strategy**: Both preview and video modes use identical container structure with CSS aspect-ratio for perfect dimensional consistency
+
+### ContentCard Component
+
+- **File**: [`frontend/src/components/ui/ContentCard.tsx`](../frontend/src/components/ui/ContentCard.tsx)
+- **Purpose**: Versatile media and album display component with interactive features
+- **Features**:
+  - **Multi-format Support**: Handles images, videos, and album covers
+  - **Interactive Controls**: Like, bookmark, fullscreen, add-to-album, download actions
+  - **Responsive Images**: Uses ResponsivePicture for optimal image loading
+  - **Layout Flexibility**: Supports square, auto aspect ratios and full-space usage
+  - **Context Awareness**: Adapts behavior based on usage context (grid, lightbox, etc.)
+- **Integration**: Works seamlessly with MediaPlayer for video preview functionality
+
 ## Profile Pages
 
 The application includes profile pages that display user-specific content accessible via `/profile/[username]/` routes:

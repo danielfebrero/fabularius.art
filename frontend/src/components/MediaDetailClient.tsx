@@ -173,6 +173,25 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
   const isVideoMedia = isVideo(media);
   const shouldShowPlayer = isVideoMedia;
 
+  // Calculate aspect ratio for consistent container sizing
+  const mediaAspectRatio = useMemo(() => {
+    if (media.width && media.height) {
+      return `${media.width} / ${media.height}`;
+    }
+    return undefined;
+  }, [media.width, media.height]);
+
+  // Calculate minimum height to prevent layout shifts on mobile
+  const minHeight = useMemo(() => {
+    if (media.width && media.height) {
+      // Calculate height based on a reasonable max width for mobile/desktop
+      const maxWidth = 800; // Reasonable max container width
+      const aspectRatio = media.height / media.width;
+      return Math.min(maxWidth * aspectRatio, 600); // Cap at 600px height
+    }
+    return 400; // Fallback minimum height
+  }, [media.width, media.height]);
+
   useUserInteractionStatus();
 
   // Desktop-only handler for MediaPlayer - mobile behavior is handled by ContentCard
@@ -270,15 +289,23 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Media Display */}
           <div className="lg:col-span-2">
-            <MediaPlayer
-              media={media}
-              isPlaying={isPlayingVideo}
-              onTogglePlay={handleDesktopMediaClick}
-              onMobileClick={handleMobileMediaClick}
-              onFullscreen={() => setLightboxOpen(true)}
-              className="bg-card shadow-lg w-full"
-              imageClassName="w-full h-auto max-h-[80vh]"
-            />
+            <div
+              className="relative bg-card shadow-lg rounded-lg overflow-hidden"
+              style={{
+                aspectRatio: mediaAspectRatio,
+                minHeight: `${minHeight}px`,
+              }}
+            >
+              <MediaPlayer
+                media={media}
+                isPlaying={isPlayingVideo}
+                onTogglePlay={handleDesktopMediaClick}
+                onMobileClick={handleMobileMediaClick}
+                onFullscreen={() => setLightboxOpen(true)}
+                className="w-full h-full absolute inset-0"
+                imageClassName="w-full h-full object-contain"
+              />
+            </div>
           </div>
 
           {/* Right Column: Information & Details */}
