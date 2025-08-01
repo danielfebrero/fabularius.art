@@ -24,3 +24,9 @@ When viewing a media in lightbox, we should be able to swap the media with the n
 ### Components should be able to play videos and gifs
 
 On click on the video icon, when being on media page or lightbox, it should show the video component or play the gif. Also, we should avoid Gifs maybe because they are really heavy.
+
+## Admin
+
+### Bulk delete albums not working
+
+When trying to bulk delete albums, it doesn't work. It should delete all the albums selected. It logs "album not found".

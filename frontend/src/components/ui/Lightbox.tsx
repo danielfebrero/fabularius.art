@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Media } from "@/types/index";
 import { cn } from "@/lib/utils";
 import { ContentCard } from "@/components/ui/ContentCard";
@@ -30,9 +30,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
   onPrevious,
 }) => {
   const [isMounted, setIsMounted] = useState(false);
-  const [animationDirection, setAnimationDirection] = useState<
-    "left" | "right" | null
-  >(null);
 
   const currentMedia = media[currentIndex];
   const nextMedia = media[currentIndex + 1];
@@ -42,28 +39,22 @@ export const Lightbox: React.FC<LightboxProps> = ({
   const { preloadAroundIndex } = useLightboxPreloader(media, currentIndex);
 
   // Handle swipe gestures with preview
-  const {
-    handleDragStart,
-    handleDrag,
-    handleDragEnd,
-    isDragging,
-    dragOffset,
-    direction,
-  } = useSwipeGesture({
-    onSwipeLeft: () => {
-      if (currentIndex < media.length - 1) {
-        setAnimationDirection("left");
-        onNext();
-      }
-    },
-    onSwipeRight: () => {
-      if (currentIndex > 0) {
-        setAnimationDirection("right");
-        onPrevious();
-      }
-    },
-    enablePreview: true,
-  });
+  const { handleDragStart, handleDrag, handleDragEnd, dragOffset } =
+    useSwipeGesture({
+      // Swiping left should navigate to the NEXT item (content moves left)
+      onSwipeLeft: () => {
+        if (currentIndex < media.length - 1) {
+          onNext();
+        }
+      },
+      // Swiping right should navigate to the PREVIOUS item (content moves right)
+      onSwipeRight: () => {
+        if (currentIndex > 0) {
+          onPrevious();
+        }
+      },
+      enablePreview: true,
+    });
 
   // Trigger preloading when lightbox opens or index changes
   useEffect(() => {
@@ -79,14 +70,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
     }
   };
 
-  // Clear animation direction after navigation
-  useEffect(() => {
-    if (animationDirection) {
-      const timer = setTimeout(() => setAnimationDirection(null), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [animationDirection]);
-
+  // Initialize mounted state
   useEffect(() => {
     setIsMounted(true);
   }, []);
@@ -148,70 +132,77 @@ export const Lightbox: React.FC<LightboxProps> = ({
 
       {/* Content wrapper */}
       <div className="relative w-full h-full">
-        {/* Swipeable Media Content with Card Deck Effect */}
+        {/* Swipeable Media Content with deck-of-cards layered images */}
         <div className="w-full h-full flex items-center justify-center overflow-hidden">
-          <div className="relative w-full h-full max-w-[100vw] max-h-[100vh]">
-            <AnimatePresence
-              mode="wait"
-              custom={animationDirection || direction}
-            >
-              <motion.div
-                key={currentIndex}
+          <div className="relative w-full h-full max-w-[100vw] max-h-[100vh] flex">
+            {/* Background Card Stack - Multiple layers for depth */}
+            {/* Layer 3 (deepest) - 2 items ahead/behind */}
+            {(media[currentIndex + 2] || media[currentIndex - 2]) && (
+              <div
                 className="absolute inset-0 flex items-center justify-center"
-                custom={animationDirection || direction}
-                initial={{
-                  opacity: 0,
-                  x:
-                    (animationDirection || direction) === "left"
-                      ? 300
-                      : (animationDirection || direction) === "right"
-                      ? -300
-                      : 0,
-                  scale: 0.8,
-                }}
-                animate={{
-                  opacity: 1,
-                  x: 0,
-                  scale: 1,
-                }}
-                exit={{
-                  opacity: 0,
-                  x:
-                    (animationDirection || direction) === "left"
-                      ? -300
-                      : (animationDirection || direction) === "right"
-                      ? 300
-                      : 0,
-                  scale: 0.8,
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 30,
-                }}
-                drag="x"
-                dragConstraints={{ left: 0, right: 0 }}
-                dragElastic={0.2}
-                onDragStart={handleDragStart}
-                onDrag={handleDrag}
-                onDragEnd={handleDragEnd}
                 style={{
-                  x: dragOffset,
+                  zIndex: 1,
+                  transform: "scale(0.85) translateY(12px)",
+                  opacity: 0.3,
                 }}
               >
                 <div className="w-fit h-fit max-w-full max-h-full">
                   <ContentCard
-                    item={currentMedia}
+                    item={media[currentIndex + 2] || media[currentIndex - 2]}
                     type="media"
                     aspectRatio="auto"
                     className="bg-transparent shadow-none border-none w-fit h-fit"
                     imageClassName="max-w-[calc(100vw)] max-h-[calc(100vh)] w-auto h-auto object-contain"
-                    canLike={true}
-                    canBookmark={true}
+                    canLike={false}
+                    canBookmark={false}
                     canFullscreen={false}
-                    canAddToAlbum={true}
-                    canDownload={true}
-                    canDelete={canDelete}
+                    canAddToAlbum={false}
+                    canDownload={false}
+                    canDelete={false}
+                    showCounts={false}
+                    disableHoverEffects={true}
+                    preferredThumbnailSize="originalSize"
+                    useAllAvailableSpace={true}
+                    onClick={() => {}}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Layer 2 (middle) - Previous image when swiping right */}
+            {prevMedia && (
+              <motion.div
+                key={`prev-${prevMedia.id}`}
+                className="absolute inset-0 flex items-center justify-center"
+                style={{
+                  zIndex: dragOffset > 0 ? 5 : 2,
+                }}
+                animate={{
+                  scale:
+                    dragOffset > 0
+                      ? 0.95 + (Math.abs(dragOffset) / 600) * 0.05
+                      : 0.9,
+                  y: dragOffset > 0 ? 8 - (Math.abs(dragOffset) / 600) * 8 : 8,
+                  opacity:
+                    dragOffset > 0
+                      ? 0.6 + (Math.abs(dragOffset) / 600) * 0.4
+                      : 0.5,
+                }}
+                transition={{ type: "tween", duration: 0.1 }}
+              >
+                <div className="w-fit h-fit max-w-full max-h-full">
+                  <ContentCard
+                    item={prevMedia}
+                    type="media"
+                    aspectRatio="auto"
+                    className="bg-transparent shadow-none border-none w-fit h-fit"
+                    imageClassName="max-w-[calc(100vw)] max-h-[calc(100vh)] w-auto h-auto object-contain"
+                    canLike={false}
+                    canBookmark={false}
+                    canFullscreen={false}
+                    canAddToAlbum={false}
+                    canDownload={false}
+                    canDelete={false}
                     showCounts={false}
                     disableHoverEffects={true}
                     preferredThumbnailSize="originalSize"
@@ -220,67 +211,101 @@ export const Lightbox: React.FC<LightboxProps> = ({
                   />
                 </div>
               </motion.div>
-            </AnimatePresence>
+            )}
 
-            {/* Card Deck Preview - Show next/previous images during drag */}
-            {isDragging && direction && (
+            {/* Layer 2 (middle) - Next image when swiping left */}
+            {nextMedia && (
               <motion.div
-                className="absolute inset-0 flex items-center justify-center pointer-events-none"
-                initial={{ opacity: 0, scale: 0.7 }}
-                animate={{ opacity: 0.6, scale: 0.8 }}
+                key={`next-${nextMedia.id}`}
+                className="absolute inset-0 flex items-center justify-center"
                 style={{
-                  zIndex: -1,
-                  transform: `translateX(${
-                    direction === "left" ? "50%" : "-50%"
-                  })`,
+                  zIndex: dragOffset < 0 ? 5 : 2,
                 }}
+                animate={{
+                  scale:
+                    dragOffset < 0
+                      ? 0.95 + (Math.abs(dragOffset) / 600) * 0.05
+                      : 0.9,
+                  y: dragOffset < 0 ? 8 - (Math.abs(dragOffset) / 600) * 8 : 8,
+                  opacity:
+                    dragOffset < 0
+                      ? 0.6 + (Math.abs(dragOffset) / 600) * 0.4
+                      : 0.5,
+                }}
+                transition={{ type: "tween", duration: 0.1 }}
               >
-                {direction === "left" && nextMedia && (
-                  <div className="w-fit h-fit max-w-full max-h-full opacity-60">
-                    <ContentCard
-                      item={nextMedia}
-                      type="media"
-                      aspectRatio="auto"
-                      className="bg-transparent shadow-none border-none w-fit h-fit"
-                      imageClassName="max-w-[calc(90vw)] max-h-[calc(90vh)] w-auto h-auto object-contain"
-                      canLike={false}
-                      canBookmark={false}
-                      canFullscreen={false}
-                      canAddToAlbum={false}
-                      canDownload={false}
-                      canDelete={false}
-                      showCounts={false}
-                      disableHoverEffects={true}
-                      preferredThumbnailSize="originalSize"
-                      useAllAvailableSpace={true}
-                      onClick={() => {}}
-                    />
-                  </div>
-                )}
-                {direction === "right" && prevMedia && (
-                  <div className="w-fit h-fit max-w-full max-h-full opacity-60">
-                    <ContentCard
-                      item={prevMedia}
-                      type="media"
-                      aspectRatio="auto"
-                      className="bg-transparent shadow-none border-none w-fit h-fit"
-                      imageClassName="max-w-[calc(90vw)] max-h-[calc(90vh)] w-auto h-auto object-contain"
-                      canLike={false}
-                      canBookmark={false}
-                      canFullscreen={false}
-                      canAddToAlbum={false}
-                      canDownload={false}
-                      canDelete={false}
-                      showCounts={false}
-                      disableHoverEffects={true}
-                      preferredThumbnailSize="originalSize"
-                      useAllAvailableSpace={true}
-                      onClick={() => {}}
-                    />
-                  </div>
-                )}
+                <div className="w-fit h-fit max-w-full max-h-full">
+                  <ContentCard
+                    item={nextMedia}
+                    type="media"
+                    aspectRatio="auto"
+                    className="bg-transparent shadow-none border-none w-fit h-fit"
+                    imageClassName="max-w-[calc(100vw)] max-h-[calc(100vh)] w-auto h-auto object-contain"
+                    canLike={false}
+                    canBookmark={false}
+                    canFullscreen={false}
+                    canAddToAlbum={false}
+                    canDownload={false}
+                    canDelete={false}
+                    showCounts={false}
+                    disableHoverEffects={true}
+                    preferredThumbnailSize="originalSize"
+                    useAllAvailableSpace={true}
+                    onClick={() => {}}
+                  />
+                </div>
               </motion.div>
             )}
+
+            {/* Current Image - on top, draggable */}
+            <motion.div
+              key={`current-${currentIndex}`}
+              className="absolute inset-0 flex items-center justify-center"
+              initial={{
+                opacity: 1,
+                x: 0,
+                scale: 1,
+              }}
+              animate={{
+                opacity: 1,
+                x: 0,
+                scale: 1,
+              }}
+              transition={{
+                duration: 0,
+              }}
+              drag="x"
+              dragConstraints={{ left: -600, right: 600 }}
+              dragElastic={0.5}
+              onDragStart={handleDragStart}
+              onDrag={handleDrag}
+              onDragEnd={handleDragEnd}
+              style={{
+                x: dragOffset,
+                zIndex: 10,
+              }}
+            >
+              <div className="w-fit h-fit max-w-full max-h-full">
+                <ContentCard
+                  item={currentMedia}
+                  type="media"
+                  aspectRatio="auto"
+                  className="bg-transparent shadow-none border-none w-fit h-fit"
+                  imageClassName="max-w-[calc(100vw)] max-h-[calc(100vh)] w-auto h-auto object-contain"
+                  canLike={true}
+                  canBookmark={true}
+                  canFullscreen={false}
+                  canAddToAlbum={true}
+                  canDownload={true}
+                  canDelete={canDelete}
+                  showCounts={false}
+                  disableHoverEffects={true}
+                  preferredThumbnailSize="originalSize"
+                  useAllAvailableSpace={true}
+                  onClick={() => {}}
+                />
+              </div>
+            </motion.div>
           </div>
         </div>
 
@@ -332,7 +357,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 if (currentIndex > 0) {
-                  setAnimationDirection("right");
                   onPrevious();
                 }
               }}
@@ -369,7 +393,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 if (currentIndex < media.length - 1) {
-                  setAnimationDirection("left");
                   onNext();
                 }
               }}
