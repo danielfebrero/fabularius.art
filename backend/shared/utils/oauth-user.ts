@@ -19,16 +19,11 @@ export class OAuthUserUtil {
    */
   static async repairUsernameIfNeeded(user: UserEntity): Promise<string> {
     // Check if user has a username and if it follows the new format
-    if (
-      !user.username ||
-      !UsernameGenerator.isValidGeneratedFormat(user.username)
-    ) {
+    if (!user.username) {
       console.log(`🔧 Repairing username for OAuth user ${user.userId}`);
 
       // Generate a new username
-      const newUsername = await UsernameGenerator.generateUsernameFromEmail(
-        user.email
-      );
+      const newUsername = await UsernameGenerator.generateUniqueUsername();
 
       // Update the user with the new username
       await DynamoDBService.updateUser(user.userId, {

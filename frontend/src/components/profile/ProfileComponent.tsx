@@ -131,6 +131,10 @@ export default function ProfileComponent({
     currentUser.username,
   ]);
 
+  useEffect(() => {
+    setCurrentUser(user);
+  }, [user]);
+
   // Get real comments data
   const {
     comments: recentComments,
