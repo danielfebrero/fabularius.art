@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
 import { Media } from "@/types/index";
-import { cn } from "@/lib/utils";
+import { cn, isVideo } from "@/lib/utils";
 import { ContentCard } from "@/components/ui/ContentCard";
+import { MediaPlayer } from "@/components/ui/MediaPlayer";
 import { ViewTracker } from "@/components/ui//ViewTracker";
 import { useLightboxPreloader } from "@/hooks/useLightboxPreloader";
 import { useSwipeGesture } from "@/hooks/useSwipeGesture";
@@ -30,10 +31,14 @@ export const Lightbox: React.FC<LightboxProps> = ({
   onPrevious,
 }) => {
   const [isMounted, setIsMounted] = useState(false);
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
 
   const currentMedia = media[currentIndex];
   const nextMedia = media[currentIndex + 1];
   const prevMedia = media[currentIndex - 1];
+
+  // Determine if current media is video
+  const isVideoMedia = isVideo(currentMedia);
 
   // Use optimized preloader for seamless navigation
   const { preloadAroundIndex } = useLightboxPreloader(media, currentIndex);
@@ -44,12 +49,14 @@ export const Lightbox: React.FC<LightboxProps> = ({
       // Swiping left should navigate to the NEXT item (content moves left)
       onSwipeLeft: () => {
         if (currentIndex < media.length - 1) {
+          setIsPlayingVideo(false); // Stop video when navigating
           onNext();
         }
       },
       // Swiping right should navigate to the PREVIOUS item (content moves right)
       onSwipeRight: () => {
         if (currentIndex > 0) {
+          setIsPlayingVideo(false); // Stop video when navigating
           onPrevious();
         }
       },
@@ -62,6 +69,18 @@ export const Lightbox: React.FC<LightboxProps> = ({
       preloadAroundIndex(currentIndex);
     }
   }, [isOpen, currentIndex, media.length, preloadAroundIndex]);
+
+  // Reset video playing state when current media changes
+  useEffect(() => {
+    setIsPlayingVideo(false);
+  }, [currentIndex]);
+
+  // Reset video playing state when lightbox is closed
+  useEffect(() => {
+    if (!isOpen) {
+      setIsPlayingVideo(false);
+    }
+  }, [isOpen]);
 
   const handleClose = (e: React.MouseEvent<HTMLDivElement>) => {
     // Only close if the backdrop itself is clicked
@@ -86,11 +105,13 @@ export const Lightbox: React.FC<LightboxProps> = ({
           break;
         case "ArrowLeft":
           if (currentIndex > 0) {
+            setIsPlayingVideo(false); // Stop video when navigating
             onPrevious();
           }
           break;
         case "ArrowRight":
           if (currentIndex < media.length - 1) {
+            setIsPlayingVideo(false); // Stop video when navigating
             onNext();
           }
           break;
@@ -169,7 +190,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
               </div>
             )}
 
-            {/* Layer 2 (middle) - Previous image when swiping right */}
+            {/* Layer 2 (middle) - Previous media when swiping right */}
             {prevMedia && (
               <motion.div
                 key={`prev-${prevMedia.id}`}
@@ -210,7 +231,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
               </motion.div>
             )}
 
-            {/* Layer 2 (middle) - Next image when swiping left */}
+            {/* Layer 2 (middle) - Next media when swiping left */}
             {nextMedia && (
               <motion.div
                 key={`next-${nextMedia.id}`}
@@ -251,7 +272,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
               </motion.div>
             )}
 
-            {/* Current Image - on top, draggable */}
+            {/* Current Media - on top, draggable */}
             <motion.div
               key={`current-${currentIndex}`}
               className="absolute inset-0 flex items-center justify-center"
@@ -280,24 +301,34 @@ export const Lightbox: React.FC<LightboxProps> = ({
               }}
             >
               <div className="w-fit h-fit max-w-full max-h-full">
-                <ContentCard
-                  item={currentMedia}
-                  type="media"
-                  aspectRatio="auto"
-                  className="bg-transparent shadow-none border-none w-fit h-fit"
-                  imageClassName="max-w-[calc(100vw)] max-h-[calc(100vh)] w-auto h-auto object-contain"
-                  canLike={true}
-                  canBookmark={true}
-                  canFullscreen={false}
-                  canAddToAlbum={true}
-                  canDownload={true}
-                  canDelete={canDelete}
-                  showCounts={false}
-                  disableHoverEffects={true}
-                  preferredThumbnailSize="originalSize"
-                  useAllAvailableSpace={true}
-                  onClick={() => {}}
-                />
+                {isVideoMedia ? (
+                  <MediaPlayer
+                    media={currentMedia}
+                    isPlaying={isPlayingVideo}
+                    onTogglePlay={() => setIsPlayingVideo(!isPlayingVideo)}
+                    className="bg-transparent shadow-none border-none w-fit h-fit"
+                    imageClassName="max-w-[calc(100vw)] max-h-[calc(100vh)] w-auto h-auto object-contain"
+                  />
+                ) : (
+                  <ContentCard
+                    item={currentMedia}
+                    type="media"
+                    aspectRatio="auto"
+                    className="bg-transparent shadow-none border-none w-fit h-fit"
+                    imageClassName="max-w-[calc(100vw)] max-h-[calc(100vh)] w-auto h-auto object-contain"
+                    canLike={true}
+                    canBookmark={true}
+                    canFullscreen={false}
+                    canAddToAlbum={true}
+                    canDownload={true}
+                    canDelete={canDelete}
+                    showCounts={false}
+                    disableHoverEffects={true}
+                    preferredThumbnailSize="originalSize"
+                    useAllAvailableSpace={true}
+                    onClick={() => {}}
+                  />
+                )}
               </div>
             </motion.div>
           </div>
@@ -351,6 +382,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 if (currentIndex > 0) {
+                  setIsPlayingVideo(false); // Stop video when navigating
                   onPrevious();
                 }
               }}
@@ -360,7 +392,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
                   ? "opacity-30 cursor-not-allowed"
                   : "cursor-pointer hover:scale-110"
               )}
-              aria-label="Previous image"
+              aria-label="Previous media"
               disabled={currentIndex === 0}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: currentIndex === 0 ? 0.3 : 1, x: 0 }}
@@ -387,6 +419,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
               onClick={(e) => {
                 e.stopPropagation();
                 if (currentIndex < media.length - 1) {
+                  setIsPlayingVideo(false); // Stop video when navigating
                   onNext();
                 }
               }}
@@ -396,7 +429,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
                   ? "opacity-30 cursor-not-allowed"
                   : "cursor-pointer hover:scale-110"
               )}
-              aria-label="Next image"
+              aria-label="Next media"
               disabled={currentIndex === media.length - 1}
               initial={{ opacity: 0, x: 20 }}
               animate={{
