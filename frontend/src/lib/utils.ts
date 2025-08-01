@@ -39,14 +39,14 @@ export function getMediaDisplayUrl(media: Media): string {
  * Check if a media item is a video based on its MIME type
  */
 export function isVideo(media: Media): boolean {
-  return media.mimeType?.startsWith("video/") || false;
+  return media?.mimeType?.startsWith("video/") || false;
 }
 
 /**
  * Check if a media item is an image based on its MIME type
  */
 export function isImage(media: Media): boolean {
-  return media.mimeType?.startsWith("image/") || false;
+  return media?.mimeType?.startsWith("image/") || false;
 }
 
 const MONTH_NAMES = [
