@@ -401,6 +401,139 @@
       "emailNotVerified": "Email not verified",
       "signingOut": "Signing out...",
       "signOut": "Sign out"
+    },
+    "settings": {
+      "title": "Settings",
+      "description": "Manage your account preferences and settings",
+      "sections": {
+        "language": "Language",
+        "subscription": "Subscription",
+        "account": "Account",
+        "security": "Security",
+        "usage": "Usage & Quotas"
+      },
+      "language": {
+        "title": "Language Settings",
+        "description": "Choose your preferred language for the interface",
+        "current": "Current Language",
+        "automatic": "Automatic (Browser Language)",
+        "selectLanguage": "Select Language",
+        "languages": {
+          "en": "English",
+          "fr": "Français",
+          "de": "Deutsch",
+          "es": "Español",
+          "ru": "Русский",
+          "zh": "中文"
+        },
+        "updated": "Language updated successfully"
+      },
+      "subscription": {
+        "title": "Subscription & Plan",
+        "description": "Manage your subscription plan and billing",
+        "currentPlan": "Current Plan",
+        "billing": "Billing",
+        "upgrade": "Upgrade Plan",
+        "downgrade": "Downgrade Plan",
+        "cancel": "Cancel Subscription",
+        "plans": {
+          "free": "Free Plan",
+          "starter": "Starter Plan",
+          "unlimited": "Unlimited Plan",
+          "pro": "Pro Plan"
+        },
+        "status": {
+          "active": "Active",
+          "canceled": "Canceled",
+          "expired": "Expired",
+          "trial": "Trial"
+        },
+        "actions": {
+          "upgradeTo": "Upgrade to {plan}",
+          "downgradeTo": "Downgrade to {plan}",
+          "cancelSubscription": "Cancel Subscription",
+          "reactivate": "Reactivate Subscription",
+          "manageBilling": "Manage Billing"
+        },
+        "confirmCancel": {
+          "title": "Cancel Subscription",
+          "message": "Are you sure you want to cancel your subscription? You'll lose access to premium features at the end of your billing period.",
+          "confirm": "Yes, Cancel",
+          "keep": "Keep Subscription"
+        },
+        "nextBilling": "Next billing date: {date}",
+        "renewsOn": "Renews on {date}",
+        "expiresOn": "Expires on {date}"
+      },
+      "account": {
+        "title": "Account Settings",
+        "description": "Manage your account information and preferences",
+        "deleteAccount": {
+          "title": "Delete Account",
+          "description": "Permanently delete your account",
+          "button": "Delete My Account",
+          "warning": "This action cannot be undone. Your account will be permanently deleted.",
+          "confirmation": {
+            "title": "Confirm Account Deletion",
+            "message": "Are you sure you want to delete your account? This will permanently remove your account access. This action cannot be undone.",
+            "type": "Type 'DELETE' to confirm",
+            "placeholder": "Type DELETE",
+            "confirm": "Delete Account",
+            "cancel": "Cancel"
+          }
+        }
+      },
+      "security": {
+        "title": "Security Settings",
+        "description": "Manage your password and security preferences",
+        "changePassword": {
+          "title": "Change Password",
+          "description": "Update your password for better security",
+          "currentPassword": "Current Password",
+          "newPassword": "New Password",
+          "confirmPassword": "Confirm New Password",
+          "button": "Change Password",
+          "success": "Password changed successfully",
+          "requirements": "Password must be at least 8 characters with uppercase, lowercase, and number"
+        },
+        "unavailable": {
+          "title": "Password Settings Unavailable",
+          "message": "You signed in with Google. Password settings are managed through your Google account.",
+          "action": "Manage Google Account"
+        }
+      },
+      "usage": {
+        "title": "Usage & Quotas",
+        "description": "Monitor your usage and plan limits",
+        "period": "Current Billing Period",
+        "images": {
+          "title": "Image Generation",
+          "daily": "Daily Usage",
+          "monthly": "Monthly Usage",
+          "total": "Total Generated",
+          "remaining": "Remaining"
+        },
+        "quotas": {
+          "imagesGenerated": "Images Generated",
+          "imagesPerDay": "per day",
+          "imagesPerMonth": "per month",
+          "unlimited": "Unlimited",
+          "of": "of"
+        },
+        "resetInfo": {
+          "daily": "Daily quota resets at midnight",
+          "monthly": "Monthly quota resets on {date}",
+          "billingCycle": "Based on your billing cycle"
+        }
+      },
+      "messages": {
+        "saveSuccess": "Settings saved successfully",
+        "saveError": "Failed to save settings",
+        "updateSuccess": "Updated successfully",
+        "updateError": "Failed to update",
+        "confirmAction": "Are you sure?",
+        "actionCannotBeUndone": "This action cannot be undone"
+      }
     }
   },
   "media": {

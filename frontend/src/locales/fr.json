@@ -401,6 +401,139 @@
       "emailNotVerified": "Email non vérifié",
       "signingOut": "Déconnexion...",
       "signOut": "Se déconnecter"
+    },
+    "settings": {
+      "title": "Paramètres",
+      "description": "Gérez vos préférences de compte et paramètres",
+      "sections": {
+        "language": "Langue",
+        "subscription": "Abonnement",
+        "account": "Compte",
+        "security": "Sécurité",
+        "usage": "Utilisation et Quotas"
+      },
+      "language": {
+        "title": "Paramètres de langue",
+        "description": "Choisissez votre langue préférée pour l'interface",
+        "current": "Langue actuelle",
+        "automatic": "Automatique (Langue du navigateur)",
+        "selectLanguage": "Sélectionner la langue",
+        "languages": {
+          "en": "English",
+          "fr": "Français",
+          "de": "Deutsch",
+          "es": "Español",
+          "ru": "Русский",
+          "zh": "中文"
+        },
+        "updated": "Langue mise à jour avec succès"
+      },
+      "subscription": {
+        "title": "Abonnement et Plan",
+        "description": "Gérez votre plan d'abonnement et facturation",
+        "currentPlan": "Plan actuel",
+        "billing": "Facturation",
+        "upgrade": "Améliorer le plan",
+        "downgrade": "Rétrograder le plan",
+        "cancel": "Annuler l'abonnement",
+        "plans": {
+          "free": "Plan gratuit",
+          "starter": "Plan débutant",
+          "unlimited": "Plan illimité",
+          "pro": "Plan pro"
+        },
+        "status": {
+          "active": "Actif",
+          "canceled": "Annulé",
+          "expired": "Expiré",
+          "trial": "Essai"
+        },
+        "actions": {
+          "upgradeTo": "Passer au {plan}",
+          "downgradeTo": "Rétrograder vers {plan}",
+          "cancelSubscription": "Annuler l'abonnement",
+          "reactivate": "Réactiver l'abonnement",
+          "manageBilling": "Gérer la facturation"
+        },
+        "confirmCancel": {
+          "title": "Annuler l'abonnement",
+          "message": "Êtes-vous sûr de vouloir annuler votre abonnement ? Vous perdrez l'accès aux fonctionnalités premium à la fin de votre période de facturation.",
+          "confirm": "Oui, annuler",
+          "keep": "Conserver l'abonnement"
+        },
+        "nextBilling": "Prochaine facturation : {date}",
+        "renewsOn": "Renouvellement le {date}",
+        "expiresOn": "Expire le {date}"
+      },
+      "account": {
+        "title": "Paramètres du compte",
+        "description": "Gérez les informations et préférences de votre compte",
+        "deleteAccount": {
+          "title": "Supprimer le compte",
+          "description": "Supprimer définitivement votre compte",
+          "button": "Supprimer mon compte",
+          "warning": "Cette action ne peut pas être annulée. Votre compte sera définitivement supprimé.",
+          "confirmation": {
+            "title": "Confirmer la suppression du compte",
+            "message": "Êtes-vous sûr de vouloir supprimer votre compte ? Cela supprimera définitivement l'accès à votre compte. Cette action ne peut pas être annulée.",
+            "type": "Tapez 'DELETE' pour confirmer",
+            "placeholder": "Tapez DELETE",
+            "confirm": "Supprimer le compte",
+            "cancel": "Annuler"
+          }
+        }
+      },
+      "security": {
+        "title": "Paramètres de sécurité",
+        "description": "Gérez votre mot de passe et préférences de sécurité",
+        "changePassword": {
+          "title": "Changer le mot de passe",
+          "description": "Mettez à jour votre mot de passe pour une meilleure sécurité",
+          "currentPassword": "Mot de passe actuel",
+          "newPassword": "Nouveau mot de passe",
+          "confirmPassword": "Confirmer le nouveau mot de passe",
+          "button": "Changer le mot de passe",
+          "success": "Mot de passe changé avec succès",
+          "requirements": "Le mot de passe doit contenir au moins 8 caractères avec majuscule, minuscule et chiffre"
+        },
+        "unavailable": {
+          "title": "Paramètres de mot de passe non disponibles",
+          "message": "Vous vous êtes connecté avec Google. Les paramètres de mot de passe sont gérés via votre compte Google.",
+          "action": "Gérer le compte Google"
+        }
+      },
+      "usage": {
+        "title": "Utilisation et Quotas",
+        "description": "Surveillez votre utilisation et les limites de votre plan",
+        "period": "Période de facturation actuelle",
+        "images": {
+          "title": "Génération d'images",
+          "daily": "Utilisation quotidienne",
+          "monthly": "Utilisation mensuelle",
+          "total": "Total généré",
+          "remaining": "Restant"
+        },
+        "quotas": {
+          "imagesGenerated": "Images générées",
+          "imagesPerDay": "par jour",
+          "imagesPerMonth": "par mois",
+          "unlimited": "Illimité",
+          "of": "sur"
+        },
+        "resetInfo": {
+          "daily": "Le quota quotidien se remet à zéro à minuit",
+          "monthly": "Le quota mensuel se remet à zéro le {date}",
+          "billingCycle": "Basé sur votre cycle de facturation"
+        }
+      },
+      "messages": {
+        "saveSuccess": "Paramètres enregistrés avec succès",
+        "saveError": "Échec de l'enregistrement des paramètres",
+        "updateSuccess": "Mis à jour avec succès",
+        "updateError": "Échec de la mise à jour",
+        "confirmAction": "Êtes-vous sûr ?",
+        "actionCannotBeUndone": "Cette action ne peut pas être annulée"
+      }
     }
   },
   "media": {

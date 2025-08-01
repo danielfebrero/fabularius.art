@@ -1259,6 +1259,101 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
 
+  UserChangePasswordFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-change-password"
+      CodeUri: backend/dist/functions/user/auth/
+      Handler: change-password.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        PostChangePassword:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/auth/change-password
+            Method: POST
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsChangePassword:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/auth/change-password
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
+  UserDeleteAccountFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-delete-account"
+      CodeUri: backend/dist/functions/user/account/
+      Handler: delete.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        DeleteAccount:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/account/delete
+            Method: DELETE
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsDeleteAccount:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/account/delete
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+        - S3FullAccessPolicy:
+            BucketName: !Ref S3Bucket
+
+  UserCancelSubscriptionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-cancel-subscription"
+      CodeUri: backend/dist/functions/user/subscription/
+      Handler: cancel.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        PostCancelSubscription:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/subscription/cancel
+            Method: POST
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsCancelSubscription:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/subscription/cancel
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+
   UserVerifyEmailFunction:
     Type: AWS::Serverless::Function
     Properties:

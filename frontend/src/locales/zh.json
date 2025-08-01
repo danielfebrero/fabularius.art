@@ -204,6 +204,32 @@
         "title": "验证邮箱 - PornSpot.ai",
         "description": "验证您的邮箱地址"
       }
+    },
+    "whyRegister": {
+      "title": "为什么要注册？",
+      "subtitle": "发现加入我们社区的所有好处",
+      "benefits": {
+        "freeGenerations": {
+          "title": "5次免费生成",
+          "description": "无需承诺即可创建您的第一批AI图片"
+        },
+        "saveImages": {
+          "title": "保存您的图片",
+          "description": "保留您创作的个性化列表"
+        },
+        "createAlbums": {
+          "title": "创建相册",
+          "description": "按主题和收藏整理您的图片"
+        },
+        "community": {
+          "title": "参与社区互动",
+          "description": "评论、点赞并管理您的收藏夹"
+        }
+      },
+      "gallery": {
+        "title": "创作示例",
+        "description": "这里是一些您可以创作的示例"
+      }
     }
   },
   "site": {
@@ -375,6 +401,139 @@
       "emailNotVerified": "邮箱未验证",
       "signingOut": "退出中...",
       "signOut": "退出登录"
+    },
+    "settings": {
+      "title": "设置",
+      "description": "管理您的账户偏好和设置",
+      "sections": {
+        "language": "语言",
+        "subscription": "订阅",
+        "account": "账户",
+        "security": "安全",
+        "usage": "使用情况和配额"
+      },
+      "language": {
+        "title": "语言设置",
+        "description": "为界面选择您的首选语言",
+        "current": "当前语言",
+        "automatic": "自动（浏览器语言）",
+        "selectLanguage": "选择语言",
+        "languages": {
+          "en": "English",
+          "fr": "Français",
+          "de": "Deutsch",
+          "es": "Español",
+          "ru": "Русский",
+          "zh": "中文"
+        },
+        "updated": "语言更新成功"
+      },
+      "subscription": {
+        "title": "订阅和套餐",
+        "description": "管理您的订阅套餐和计费",
+        "currentPlan": "当前套餐",
+        "billing": "计费",
+        "upgrade": "升级套餐",
+        "downgrade": "降级套餐",
+        "cancel": "取消订阅",
+        "plans": {
+          "free": "免费套餐",
+          "starter": "入门套餐",
+          "unlimited": "无限套餐",
+          "pro": "专业套餐"
+        },
+        "status": {
+          "active": "有效",
+          "canceled": "已取消",
+          "expired": "已过期",
+          "trial": "试用"
+        },
+        "actions": {
+          "upgradeTo": "升级到{plan}",
+          "downgradeTo": "降级到{plan}",
+          "cancelSubscription": "取消订阅",
+          "reactivate": "重新激活订阅",
+          "manageBilling": "管理计费"
+        },
+        "confirmCancel": {
+          "title": "取消订阅",
+          "message": "您确定要取消订阅吗？您将在计费周期结束时失去对高级功能的访问权限。",
+          "confirm": "是，取消",
+          "keep": "保持订阅"
+        },
+        "nextBilling": "下次计费日期：{date}",
+        "renewsOn": "续订于{date}",
+        "expiresOn": "过期于{date}"
+      },
+      "account": {
+        "title": "账户设置",
+        "description": "管理您的账户信息和偏好",
+        "deleteAccount": {
+          "title": "删除账户",
+          "description": "永久删除您的账户",
+          "button": "删除我的账户",
+          "warning": "此操作无法撤销。您的账户将被永久删除。",
+          "confirmation": {
+            "title": "确认删除账户",
+            "message": "您确定要删除您的账户吗？这将永久删除您的账户访问权限。此操作无法撤销。",
+            "type": "输入 'DELETE' 以确认",
+            "placeholder": "输入 DELETE",
+            "confirm": "删除账户",
+            "cancel": "取消"
+          }
+        }
+      },
+      "security": {
+        "title": "安全设置",
+        "description": "管理您的密码和安全偏好",
+        "changePassword": {
+          "title": "更改密码",
+          "description": "更新您的密码以提高安全性",
+          "currentPassword": "当前密码",
+          "newPassword": "新密码",
+          "confirmPassword": "确认新密码",
+          "button": "更改密码",
+          "success": "密码更改成功",
+          "requirements": "密码必须至少8个字符，包含大写字母、小写字母和数字"
+        },
+        "unavailable": {
+          "title": "密码设置不可用",
+          "message": "您使用Google登录。密码设置通过您的Google账户管理。",
+          "action": "管理Google账户"
+        }
+      },
+      "usage": {
+        "title": "使用情况和配额",
+        "description": "监控您的使用情况和套餐限制",
+        "period": "当前计费周期",
+        "images": {
+          "title": "图像生成",
+          "daily": "每日使用",
+          "monthly": "每月使用",
+          "total": "总生成数",
+          "remaining": "剩余"
+        },
+        "quotas": {
+          "imagesGenerated": "生成的图像",
+          "imagesPerDay": "每天",
+          "imagesPerMonth": "每月",
+          "unlimited": "无限制",
+          "of": "/"
+        },
+        "resetInfo": {
+          "daily": "每日配额在午夜重置",
+          "monthly": "每月配额在{date}重置",
+          "billingCycle": "基于您的计费周期"
+        }
+      },
+      "messages": {
+        "saveSuccess": "设置保存成功",
+        "saveError": "保存设置失败",
+        "updateSuccess": "更新成功",
+        "updateError": "更新失败",
+        "confirmAction": "您确定吗？",
+        "actionCannotBeUndone": "此操作无法撤销"
+      }
     }
   },
   "media": {

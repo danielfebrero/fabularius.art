@@ -204,6 +204,32 @@
         "title": "Verificar email - PornSpot.ai",
         "description": "Verifica tu dirección de correo electrónico"
       }
+    },
+    "whyRegister": {
+      "title": "¿Por qué registrarse?",
+      "subtitle": "Descubre todos los beneficios de unirte a nuestra comunidad",
+      "benefits": {
+        "freeGenerations": {
+          "title": "5 generaciones gratuitas",
+          "description": "Crea tus primeras imágenes de IA sin compromiso"
+        },
+        "saveImages": {
+          "title": "Guarda tus imágenes",
+          "description": "Mantén una lista personalizada de tus creaciones"
+        },
+        "createAlbums": {
+          "title": "Crea álbumes",
+          "description": "Organiza tus imágenes por temas y colecciones"
+        },
+        "community": {
+          "title": "Interactúa con la comunidad",
+          "description": "Comenta, da me gusta y gestiona tus favoritos"
+        }
+      },
+      "gallery": {
+        "title": "Ejemplos de creaciones",
+        "description": "Aquí tienes algunos ejemplos de lo que puedes crear"
+      }
     }
   },
   "site": {
@@ -375,6 +401,139 @@
       "emailNotVerified": "Email no verificado",
       "signingOut": "Cerrando sesión...",
       "signOut": "Cerrar sesión"
+    },
+    "settings": {
+      "title": "Configuración",
+      "description": "Gestiona las preferencias y configuración de tu cuenta",
+      "sections": {
+        "language": "Idioma",
+        "subscription": "Suscripción",
+        "account": "Cuenta",
+        "security": "Seguridad",
+        "usage": "Uso y Cuotas"
+      },
+      "language": {
+        "title": "Configuración de idioma",
+        "description": "Elige tu idioma preferido para la interfaz",
+        "current": "Idioma actual",
+        "automatic": "Automático (Idioma del navegador)",
+        "selectLanguage": "Seleccionar idioma",
+        "languages": {
+          "en": "English",
+          "fr": "Français",
+          "de": "Deutsch",
+          "es": "Español",
+          "ru": "Русский",
+          "zh": "中文"
+        },
+        "updated": "Idioma actualizado correctamente"
+      },
+      "subscription": {
+        "title": "Suscripción y Plan",
+        "description": "Gestiona tu plan de suscripción y facturación",
+        "currentPlan": "Plan actual",
+        "billing": "Facturación",
+        "upgrade": "Mejorar plan",
+        "downgrade": "Degradar plan",
+        "cancel": "Cancelar suscripción",
+        "plans": {
+          "free": "Plan gratuito",
+          "starter": "Plan básico",
+          "unlimited": "Plan ilimitado",
+          "pro": "Plan pro"
+        },
+        "status": {
+          "active": "Activo",
+          "canceled": "Cancelado",
+          "expired": "Expirado",
+          "trial": "Prueba"
+        },
+        "actions": {
+          "upgradeTo": "Mejorar a {plan}",
+          "downgradeTo": "Degradar a {plan}",
+          "cancelSubscription": "Cancelar suscripción",
+          "reactivate": "Reactivar suscripción",
+          "manageBilling": "Gestionar facturación"
+        },
+        "confirmCancel": {
+          "title": "Cancelar suscripción",
+          "message": "¿Estás seguro de que quieres cancelar tu suscripción? Perderás el acceso a las funciones premium al final de tu período de facturación.",
+          "confirm": "Sí, cancelar",
+          "keep": "Mantener suscripción"
+        },
+        "nextBilling": "Próxima facturación: {date}",
+        "renewsOn": "Se renueva el {date}",
+        "expiresOn": "Expira el {date}"
+      },
+      "account": {
+        "title": "Configuración de cuenta",
+        "description": "Gestiona la información y preferencias de tu cuenta",
+        "deleteAccount": {
+          "title": "Eliminar cuenta",
+          "description": "Eliminar permanentemente tu cuenta",
+          "button": "Eliminar mi cuenta",
+          "warning": "Esta acción no se puede deshacer. Tu cuenta se eliminará permanentemente.",
+          "confirmation": {
+            "title": "Confirmar eliminación de cuenta",
+            "message": "¿Estás seguro de que quieres eliminar tu cuenta? Esto eliminará permanentemente el acceso a tu cuenta. Esta acción no se puede deshacer.",
+            "type": "Escribe 'DELETE' para confirmar",
+            "placeholder": "Escribe DELETE",
+            "confirm": "Eliminar cuenta",
+            "cancel": "Cancelar"
+          }
+        }
+      },
+      "security": {
+        "title": "Configuración de seguridad",
+        "description": "Gestiona tu contraseña y preferencias de seguridad",
+        "changePassword": {
+          "title": "Cambiar contraseña",
+          "description": "Actualiza tu contraseña para mayor seguridad",
+          "currentPassword": "Contraseña actual",
+          "newPassword": "Nueva contraseña",
+          "confirmPassword": "Confirmar nueva contraseña",
+          "button": "Cambiar contraseña",
+          "success": "Contraseña cambiada correctamente",
+          "requirements": "La contraseña debe tener al menos 8 caracteres con mayúscula, minúscula y número"
+        },
+        "unavailable": {
+          "title": "Configuración de contraseña no disponible",
+          "message": "Iniciaste sesión con Google. La configuración de contraseña se gestiona a través de tu cuenta de Google.",
+          "action": "Gestionar cuenta de Google"
+        }
+      },
+      "usage": {
+        "title": "Uso y Cuotas",
+        "description": "Monitorea tu uso y los límites de tu plan",
+        "period": "Período de facturación actual",
+        "images": {
+          "title": "Generación de imágenes",
+          "daily": "Uso diario",
+          "monthly": "Uso mensual",
+          "total": "Total generado",
+          "remaining": "Restante"
+        },
+        "quotas": {
+          "imagesGenerated": "Imágenes generadas",
+          "imagesPerDay": "por día",
+          "imagesPerMonth": "por mes",
+          "unlimited": "Ilimitado",
+          "of": "de"
+        },
+        "resetInfo": {
+          "daily": "La cuota diaria se reinicia a medianoche",
+          "monthly": "La cuota mensual se reinicia el {date}",
+          "billingCycle": "Basado en tu ciclo de facturación"
+        }
+      },
+      "messages": {
+        "saveSuccess": "Configuración guardada correctamente",
+        "saveError": "Error al guardar la configuración",
+        "updateSuccess": "Actualizado correctamente",
+        "updateError": "Error al actualizar",
+        "confirmAction": "¿Estás seguro?",
+        "actionCannotBeUndone": "Esta acción no se puede deshacer"
+      }
     }
   },
   "media": {

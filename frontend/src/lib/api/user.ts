@@ -208,4 +208,95 @@ export const userApi = {
 
     return response.json();
   },
+
+  // Change password
+  changePassword: async (passwordData: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<{ success: boolean; message: string }> => {
+    const response = await fetch(`${API_URL}/user/auth/change-password`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(passwordData),
+    });
+
+    if (!response.ok) {
+      let errorData = null;
+      try {
+        errorData = await response.json();
+      } catch {
+        // response body is not JSON
+      }
+      const errorMessage =
+        (errorData && (errorData.error || errorData.message)) ||
+        `Password change failed: ${response.statusText}`;
+      const error = new Error(errorMessage);
+      if (errorData) {
+        (error as any).response = errorData;
+      }
+      throw error;
+    }
+
+    return response.json();
+  },
+
+  // Delete account
+  deleteAccount: async (): Promise<{ success: boolean; message: string }> => {
+    const response = await fetch(`${API_URL}/user/account/delete`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      let errorData = null;
+      try {
+        errorData = await response.json();
+      } catch {
+        // response body is not JSON
+      }
+      const errorMessage =
+        (errorData && (errorData.error || errorData.message)) ||
+        `Account deletion failed: ${response.statusText}`;
+      const error = new Error(errorMessage);
+      if (errorData) {
+        (error as any).response = errorData;
+      }
+      throw error;
+    }
+
+    return response.json();
+  },
+
+  // Cancel subscription
+  cancelSubscription: async (): Promise<{
+    success: boolean;
+    message: string;
+  }> => {
+    const response = await fetch(`${API_URL}/user/subscription/cancel`, {
+      method: "POST",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      let errorData = null;
+      try {
+        errorData = await response.json();
+      } catch {
+        // response body is not JSON
+      }
+      const errorMessage =
+        (errorData && (errorData.error || errorData.message)) ||
+        `Subscription cancellation failed: ${response.statusText}`;
+      const error = new Error(errorMessage);
+      if (errorData) {
+        (error as any).response = errorData;
+      }
+      throw error;
+    }
+
+    return response.json();
+  },
 };

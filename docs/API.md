@@ -764,6 +764,109 @@ All fields are optional. Only provided fields will be updated.
 - `405 Method Not Allowed`: Only PUT method allowed
 - `500 Internal Server Error`: Server error
 
+## User Account Management API
+
+### Delete Account
+
+Permanently delete a user account (soft delete). This anonymizes the user's personal information but preserves their content, which will be attributed to "[deleted]" user.
+
+```http
+DELETE /user/account/delete
+Authorization: User session required
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Account deleted successfully. Your content will remain but show as '[deleted]' user"
+  }
+}
+```
+
+**Behavior:**
+
+- User account is marked as inactive and anonymized
+- Personal information (name, email, etc.) is removed
+- Content (albums, media, comments) remains but shows "[deleted]" as username
+- User sessions are invalidated
+- Account cannot be recovered
+
+**Error Responses:**
+
+- `401 Unauthorized`: User session required
+- `405 Method Not Allowed`: Only DELETE method allowed
+- `500 Internal Server Error`: Server error
+
+### Change Password
+
+Change the current user's password (only available for email-authenticated users).
+
+```http
+PUT /user/auth/change-password
+Content-Type: application/json
+Authorization: User session required
+
+{
+  "currentPassword": "oldpassword",
+  "newPassword": "newpassword"
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Password changed successfully"
+  }
+}
+```
+
+**Error Responses:**
+
+- `400 Bad Request`: Validation errors (weak password, incorrect current password)
+- `401 Unauthorized`: User session required
+- `403 Forbidden`: Not available for OAuth users
+- `405 Method Not Allowed`: Only PUT method allowed
+- `500 Internal Server Error`: Server error
+
+### Cancel Subscription
+
+Cancel the current user's subscription (keeps access until end of billing period).
+
+```http
+POST /user/subscription/cancel
+Authorization: User session required
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "Subscription canceled successfully. You will retain access to your current plan until the end of your billing period."
+  }
+}
+```
+
+**Behavior:**
+
+- Subscription is marked as canceled but remains active until billing period ends
+- User retains all plan features until expiration
+- No prorated refund (depends on payment provider policies)
+
+**Error Responses:**
+
+- `400 Bad Request`: No active subscription or already canceled
+- `401 Unauthorized`: User session required
+- `405 Method Not Allowed`: Only POST method allowed
+- `500 Internal Server Error`: Server error
+
 ## User Interactions API
 
 ### Like Media
