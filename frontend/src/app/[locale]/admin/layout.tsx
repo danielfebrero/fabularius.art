@@ -4,6 +4,10 @@ import { usePathname } from "next/navigation";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
 import { AdminNav } from "@/components/admin/AdminNav";
+import {
+  PageErrorBoundary,
+  AdminErrorBoundary,
+} from "@/components/ErrorBoundaries";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -15,11 +19,13 @@ export default function AdminLayout({
   params: { locale },
 }: AdminLayoutProps) {
   return (
-    <AdminProvider>
-      <div className="min-h-screen bg-muted/30">
-        <AdminLayoutContent locale={locale}>{children}</AdminLayoutContent>
-      </div>
-    </AdminProvider>
+    <PageErrorBoundary context={`Admin Layout (${locale})`}>
+      <AdminProvider>
+        <div className="min-h-screen bg-muted/30">
+          <AdminLayoutContent locale={locale}>{children}</AdminLayoutContent>
+        </div>
+      </AdminProvider>
+    </PageErrorBoundary>
   );
 }
 
@@ -41,19 +47,21 @@ function AdminLayoutContent({
   // Render protected admin content with layout
   return (
     <ProtectedRoute>
-      <div className="flex h-screen">
-        {/* Sidebar Navigation */}
-        <AdminNav />
+      <AdminErrorBoundary>
+        <div className="flex h-screen">
+          {/* Sidebar Navigation */}
+          <AdminNav />
 
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header */}
-          {/* <AdminHeader /> */}
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {/* Header */}
+            {/* <AdminHeader /> */}
 
-          {/* Main Content */}
-          <main className="flex-1 overflow-y-auto p-6">{children}</main>
+            {/* Main Content */}
+            <main className="flex-1 overflow-y-auto p-6">{children}</main>
+          </div>
         </div>
-      </div>
+      </AdminErrorBoundary>
     </ProtectedRoute>
   );
 }

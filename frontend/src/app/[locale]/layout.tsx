@@ -9,6 +9,10 @@ import { Header } from "@/components/Header";
 import { PermissionsWrapper } from "@/components/PermissionsWrapper";
 import { MainContentWrapper } from "@/components/MainContentWrapper";
 import { NavigationLoadingOverlay } from "@/components/ui/NavigationLoadingOverlay";
+import {
+  PageErrorBoundary,
+  SectionErrorBoundary,
+} from "@/components/ErrorBoundaries";
 
 type Props = {
   children: React.ReactNode;
@@ -96,30 +100,38 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
-      <UserProvider>
-        <UserInteractionProvider>
-          <PermissionsWrapper>
-            <AdminProvider>
-              <NavigationLoadingProvider>
-                <div className="min-h-screen bg-background flex flex-col">
-                  <Header />
-                  <MainContentWrapper>{children}</MainContentWrapper>
-                  <footer className="border-t border-border mt-16">
-                    <div className="container mx-auto px-4 py-8">
-                      <div className="text-center">
-                        <p className="text-muted-foreground">
-                          &copy; 2024 PornSpot.ai. All rights reserved.
-                        </p>
-                      </div>
-                    </div>
-                  </footer>
-                </div>
-                <NavigationLoadingOverlay />
-              </NavigationLoadingProvider>
-            </AdminProvider>
-          </PermissionsWrapper>
-        </UserInteractionProvider>
-      </UserProvider>
+      <PageErrorBoundary context={`Locale Layout (${locale})`}>
+        <UserProvider>
+          <UserInteractionProvider>
+            <PermissionsWrapper>
+              <AdminProvider>
+                <NavigationLoadingProvider>
+                  <div className="min-h-screen bg-background flex flex-col">
+                    <SectionErrorBoundary context="Header">
+                      <Header />
+                    </SectionErrorBoundary>
+                    <SectionErrorBoundary context="Main Content">
+                      <MainContentWrapper>{children}</MainContentWrapper>
+                    </SectionErrorBoundary>
+                    <SectionErrorBoundary context="Footer">
+                      <footer className="border-t border-border mt-16">
+                        <div className="container mx-auto px-4 py-8">
+                          <div className="text-center">
+                            <p className="text-muted-foreground">
+                              &copy; 2024 PornSpot.ai. All rights reserved.
+                            </p>
+                          </div>
+                        </div>
+                      </footer>
+                    </SectionErrorBoundary>
+                  </div>
+                  <NavigationLoadingOverlay />
+                </NavigationLoadingProvider>
+              </AdminProvider>
+            </PermissionsWrapper>
+          </UserInteractionProvider>
+        </UserProvider>
+      </PageErrorBoundary>
     </NextIntlClientProvider>
   );
 }

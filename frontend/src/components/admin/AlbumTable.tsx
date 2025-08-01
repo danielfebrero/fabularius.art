@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/Button";
 import { Tag } from "@/components/ui/Tag";
 import { formatDate } from "@/lib/utils";
 import {
-  composeMediaUrl,
   getBestThumbnailUrl,
   composeThumbnailUrls,
   composeAlbumCoverUrl,
 } from "@/lib/urlUtils";
+import { ComponentErrorBoundary } from "../ErrorBoundaries";
 
 interface AlbumTableProps {
   albums: Album[];
@@ -108,107 +108,114 @@ export function AlbumTable({
           </thead>
           <tbody className="bg-card divide-y divide-border">
             {albums.map((album) => (
-              <tr
+              <ComponentErrorBoundary
                 key={album.id}
-                className="hover:bg-muted/20 transition-colors"
+                context={`Album Row (${album.id})`}
               >
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <input
-                    type="checkbox"
-                    checked={selectedAlbums.includes(album.id)}
-                    onChange={(e) => onSelectAlbum(album.id, e.target.checked)}
-                    className="h-4 w-4 text-admin-primary focus:ring-admin-primary border-border rounded"
-                  />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    {(album.thumbnailUrls || album.coverImageUrl) && (
-                      <div className="flex-shrink-0 h-12 w-12">
-                        <img
-                          className="h-12 w-12 rounded-lg object-cover border border-border"
-                          src={getBestThumbnailUrl(
-                            composeThumbnailUrls(album.thumbnailUrls),
-                            composeAlbumCoverUrl(album.coverImageUrl),
-                            "small"
-                          )}
-                          alt={album.title}
-                        />
-                      </div>
-                    )}
-                    <div className={album.coverImageUrl ? "ml-4" : ""}>
-                      <div className="text-sm font-semibold text-foreground">
-                        {album.title}
-                      </div>
-                      {album.tags && album.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2 max-w-xs">
-                          {album.tags.slice(0, 2).map((tag, index) => (
-                            <Tag key={index} size="sm">
-                              {tag}
-                            </Tag>
-                          ))}
-                          {album.tags.length > 2 && (
-                            <span className="text-xs text-muted-foreground font-medium">
-                              +{album.tags.length - 2} more
-                            </span>
-                          )}
+                <tr
+                  key={album.id}
+                  className="hover:bg-muted/20 transition-colors"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={selectedAlbums.includes(album.id)}
+                      onChange={(e) =>
+                        onSelectAlbum(album.id, e.target.checked)
+                      }
+                      className="h-4 w-4 text-admin-primary focus:ring-admin-primary border-border rounded"
+                    />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      {(album.thumbnailUrls || album.coverImageUrl) && (
+                        <div className="flex-shrink-0 h-12 w-12">
+                          <img
+                            className="h-12 w-12 rounded-lg object-cover border border-border"
+                            src={getBestThumbnailUrl(
+                              composeThumbnailUrls(album.thumbnailUrls),
+                              composeAlbumCoverUrl(album.coverImageUrl),
+                              "small"
+                            )}
+                            alt={album.title}
+                          />
                         </div>
                       )}
+                      <div className={album.coverImageUrl ? "ml-4" : ""}>
+                        <div className="text-sm font-semibold text-foreground">
+                          {album.title}
+                        </div>
+                        {album.tags && album.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2 max-w-xs">
+                            {album.tags.slice(0, 2).map((tag, index) => (
+                              <Tag key={index} size="sm">
+                                {tag}
+                              </Tag>
+                            ))}
+                            {album.tags.length > 2 && (
+                              <span className="text-xs text-muted-foreground font-medium">
+                                +{album.tags.length - 2} more
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
-                      album.isPublic
-                        ? "bg-admin-success/10 text-admin-success border border-admin-success/20"
-                        : "bg-muted text-muted-foreground border border-border"
-                    }`}
-                  >
-                    {album.isPublic ? "Public" : "Private"}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <span className="text-sm font-medium text-foreground">
-                      {album.mediaCount}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${
+                        album.isPublic
+                          ? "bg-admin-success/10 text-admin-success border border-admin-success/20"
+                          : "bg-muted text-muted-foreground border border-border"
+                      }`}
+                    >
+                      {album.isPublic ? "Public" : "Private"}
                     </span>
-                    <span className="text-xs text-muted-foreground ml-1">
-                      items
-                    </span>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                  {formatDate(album.createdAt)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onEdit(album.id)}
-                      className="border-admin-primary/30 text-admin-primary hover:bg-admin-primary hover:text-admin-primary-foreground"
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onManageMedia(album.id)}
-                      className="border-admin-secondary/30 text-admin-secondary hover:bg-admin-secondary hover:text-admin-secondary-foreground"
-                    >
-                      Media
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onDelete(album)}
-                      className="text-destructive border-destructive/30 hover:bg-destructive hover:text-destructive-foreground"
-                    >
-                      Delete
-                    </Button>
-                  </div>
-                </td>
-              </tr>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <span className="text-sm font-medium text-foreground">
+                        {album.mediaCount}
+                      </span>
+                      <span className="text-xs text-muted-foreground ml-1">
+                        items
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                    {formatDate(album.createdAt)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onEdit(album.id)}
+                        className="border-admin-primary/30 text-admin-primary hover:bg-admin-primary hover:text-admin-primary-foreground"
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onManageMedia(album.id)}
+                        className="border-admin-secondary/30 text-admin-secondary hover:bg-admin-secondary hover:text-admin-secondary-foreground"
+                      >
+                        Media
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onDelete(album)}
+                        className="text-destructive border-destructive/30 hover:bg-destructive hover:text-destructive-foreground"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              </ComponentErrorBoundary>
             ))}
           </tbody>
         </table>

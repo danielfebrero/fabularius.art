@@ -12,6 +12,11 @@ import { Comments } from "@/components/ui/Comments";
 import { useUser } from "@/hooks/useUser";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { formatDistanceToNow } from "@/lib/dateUtils";
+import {
+  SectionErrorBoundary,
+  MediaGalleryErrorBoundary,
+  CommentsErrorBoundary,
+} from "./ErrorBoundaries";
 
 interface AlbumDetailClientProps {
   album: Album;
@@ -153,29 +158,35 @@ export function AlbumDetailClient({
             </div>
           )}
 
-          <MediaGallery
-            albumId={album.id}
-            initialMedia={initialMedia}
-            initialPagination={initialPagination}
-          />
+          <MediaGalleryErrorBoundary>
+            <MediaGallery
+              albumId={album.id}
+              initialMedia={initialMedia}
+              initialPagination={initialPagination}
+            />
+          </MediaGalleryErrorBoundary>
 
           {/* Comments Section */}
-          <div className="max-w-4xl mx-auto mt-8">
-            <div className="bg-card rounded-lg border border-border/20 p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <MessageCircle className="w-5 h-5 text-primary" />
-                <h2 className="text-lg font-semibold text-foreground">
-                  Comments
-                </h2>
+          <SectionErrorBoundary context="Album Comments">
+            <div className="max-w-4xl mx-auto mt-8">
+              <div className="bg-card rounded-lg border border-border/20 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <MessageCircle className="w-5 h-5 text-primary" />
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Comments
+                  </h2>
+                </div>
+                <CommentsErrorBoundary>
+                  <Comments
+                    targetType="album"
+                    targetId={album.id}
+                    initialComments={album.comments}
+                    currentUserId={user?.userId}
+                  />
+                </CommentsErrorBoundary>
               </div>
-              <Comments
-                targetType="album"
-                targetId={album.id}
-                initialComments={album.comments}
-                currentUserId={user?.userId}
-              />
             </div>
-          </div>
+          </SectionErrorBoundary>
         </div>
       </main>
     </div>

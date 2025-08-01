@@ -8,6 +8,10 @@ import { Button } from "./ui/Button";
 import { cn } from "../lib/utils";
 import { getMediaForAlbum } from "../lib/data";
 import { useUserInteractionStatus } from "../hooks/useUserInteractionStatus";
+import {
+  ComponentErrorBoundary,
+  LightboxErrorBoundary,
+} from "./ErrorBoundaries";
 
 interface MediaGalleryProps {
   albumId: string;
@@ -137,22 +141,27 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
             };
 
             return (
-              <ContentCard
+              <ComponentErrorBoundary
                 key={mediaItem.id}
-                item={mediaItem}
-                type="media"
-                aspectRatio="square"
-                canLike={true}
-                canBookmark={true}
-                canFullscreen={true}
-                canAddToAlbum={true}
-                canDownload={true}
-                canDelete={false}
-                context="albums"
-                columns={getColumns()}
-                mediaList={media}
-                currentIndex={index}
-              />
+                context={`Media Card (${mediaItem.id})`}
+              >
+                <ContentCard
+                  key={mediaItem.id}
+                  item={mediaItem}
+                  type="media"
+                  aspectRatio="square"
+                  canLike={true}
+                  canBookmark={true}
+                  canFullscreen={true}
+                  canAddToAlbum={true}
+                  canDownload={true}
+                  canDelete={false}
+                  context="albums"
+                  columns={getColumns()}
+                  mediaList={media}
+                  currentIndex={index}
+                />
+              </ComponentErrorBoundary>
             );
           })}
         </div>
@@ -201,14 +210,16 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
         )}
       </div>
 
-      <Lightbox
-        media={media}
-        currentIndex={currentMediaIndex}
-        isOpen={lightboxOpen}
-        onClose={handleLightboxClose}
-        onNext={handleLightboxNext}
-        onPrevious={handleLightboxPrevious}
-      />
+      <LightboxErrorBoundary>
+        <Lightbox
+          media={media}
+          currentIndex={currentMediaIndex}
+          isOpen={lightboxOpen}
+          onClose={handleLightboxClose}
+          onNext={handleLightboxNext}
+          onPrevious={handleLightboxPrevious}
+        />
+      </LightboxErrorBoundary>
     </>
   );
 };

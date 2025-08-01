@@ -1,11 +1,15 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { Button } from "./ui/Button";
 
+// Backward compatibility - re-export the original ErrorBoundary as a component-level boundary
+import { ComponentErrorBoundary } from "./ErrorBoundaries";
+
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (_error: Error, _errorInfo: ErrorInfo) => void;
   resetKeys?: string[];
+  context?: string;
 }
 
 interface State {
@@ -14,6 +18,8 @@ interface State {
   errorInfo: ErrorInfo | null;
 }
 
+// Legacy ErrorBoundary - maintained for backward compatibility
+// New implementations should use the granular error boundaries from ErrorBoundaries.tsx
 export class ErrorBoundary extends Component<Props, State> {
   private resetTimeoutId: number | null = null;
 
@@ -179,3 +185,12 @@ export class ErrorBoundary extends Component<Props, State> {
     return children;
   }
 }
+
+// For new code, prefer the granular error boundaries from ErrorBoundaries.tsx
+// This is a convenience wrapper that uses ComponentErrorBoundary
+export const SimpleErrorBoundary: React.FC<{
+  children: ReactNode;
+  context?: string;
+}> = ({ children, context = "Component" }) => (
+  <ComponentErrorBoundary context={context}>{children}</ComponentErrorBoundary>
+);

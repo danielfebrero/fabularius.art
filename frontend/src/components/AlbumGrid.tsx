@@ -6,6 +6,7 @@ import { useInView } from "react-intersection-observer";
 import { useEffect } from "react";
 import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
 import { useTranslations } from "next-intl";
+import { ComponentErrorBoundary } from "./ErrorBoundaries";
 
 interface AlbumGridProps {
   albums: Album[];
@@ -105,20 +106,25 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({
     <div className={cn("space-y-6", className)}>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {albums.map((album) => (
-          <ContentCard
+          <ComponentErrorBoundary
             key={album.id}
-            item={album}
-            type="album"
-            aspectRatio="square"
-            canLike={true}
-            canBookmark={true}
-            canFullscreen={false}
-            canAddToAlbum={false}
-            canDownload={false}
-            canDelete={false}
-            context={context}
-            columns={getColumnCount()}
-          />
+            context={`Album Card (${album.id})`}
+          >
+            <ContentCard
+              key={album.id}
+              item={album}
+              type="album"
+              aspectRatio="square"
+              canLike={true}
+              canBookmark={true}
+              canFullscreen={false}
+              canAddToAlbum={false}
+              canDownload={false}
+              canDelete={false}
+              context={context}
+              columns={getColumnCount()}
+            />
+          </ComponentErrorBoundary>
         ))}
       </div>
 
