@@ -709,7 +709,6 @@ Resources:
       LambdaPermissionId: !Ref ProcessUploadFunctionS3Permission
     DependsOn:
       - MediaBucket
-      - ProcessUploadFunctionS3Permission
 
   # Configuration API Functions
   GetPermissionsConfigFunction:
@@ -1320,8 +1319,6 @@ Resources:
             TableName: !Ref MediaTable
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
-        - S3FullAccessPolicy:
-            BucketName: !Ref S3Bucket
 
   UserCancelSubscriptionFunction:
     Type: AWS::Serverless::Function
