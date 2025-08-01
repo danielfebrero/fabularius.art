@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -14,6 +14,8 @@ import { useProfileData } from "@/hooks/useProfileData";
 import { useAlbums } from "@/hooks/useAlbums";
 import { useComments } from "@/hooks/useComments";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
+import { useUser } from "@/hooks/useUser";
 import { formatDistanceToNow } from "@/lib/dateUtils";
 import { userApi } from "@/lib/api/user";
 import {
@@ -72,6 +74,7 @@ export default function ProfileComponent({
 
   const t = useTranslations("common");
   const isMobile = useIsMobile();
+  const { user: loggedInUser } = useUser();
 
   // Get real profile data
   const {
@@ -83,6 +86,24 @@ export default function ProfileComponent({
     isOwner,
     limit: 6, // Fetch 6 recent likes for the scrollable preview
   });
+
+  // Preload interaction statuses for liked content
+  const { preloadStatuses } = useUserInteractionStatus();
+
+  // Effect to preload interaction statuses for liked content
+  useEffect(() => {
+    if (recentLikes.length > 0 && loggedInUser) {
+      const targets = recentLikes.map((item) => ({
+        targetType: item.type as "album" | "media",
+        targetId: item.id,
+      }));
+
+      // Preload the current logged-in user's statuses for these items
+      // This will show the actual like/bookmark status of the current viewer,
+      // not the profile owner's status
+      preloadStatuses(targets).catch(console.error);
+    }
+  }, [recentLikes, loggedInUser, preloadStatuses]);
 
   // Get real comments data
   const {
@@ -732,6 +753,8 @@ export default function ProfileComponent({
                         context="albums"
                         columns={1}
                         className="w-full"
+                        canAddToAlbum={item.type !== "album"} // Disable for albums
+                        canFullscreen={item.type !== "album"} // Disable for albums
                       />
                     ))}
                   </HorizontalScroll>

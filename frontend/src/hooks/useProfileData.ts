@@ -57,6 +57,7 @@ export function useProfileData({
                 if (interaction.targetType === "media") {
                   return {
                     id: interaction.target.id,
+                    albumId: interaction.target.albumId || "", // Include albumId for bookmark functionality
                     filename: interaction.target.id + ".jpg", // Backend doesn't return filename, generate one
                     originalName: interaction.target.title || "Untitled Media",
                     mimeType: interaction.target.mimeType || "image/jpeg",
@@ -76,6 +77,7 @@ export function useProfileData({
                     likeCount: 0, // Would need separate call to get like counts
                     viewCount: interaction.target.viewCount || 0,
                     title: interaction.target.title || "Untitled Media",
+                    type: "media", // Add type for easier handling in UI
                   };
                 } else if (interaction.targetType === "album") {
                   return {
@@ -95,6 +97,7 @@ export function useProfileData({
                     updatedAt: interaction.target.updatedAt,
                     likeCount: 0, // Would need separate call to get like counts
                     viewCount: interaction.target.viewCount || 0,
+                    type: "album", // Add type for easier handling in UI
                   };
                 }
               }

@@ -453,10 +453,10 @@ export function ContentCard({
                         e.stopPropagation();
                         handleFullscreen();
                       }}
-                      className="p-1.5 sm:p-2 rounded-lg bg-black/50 hover:bg-black/70 text-white transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      className="p-2.5 sm:p-2 rounded-lg bg-black/50 hover:bg-black/70 text-white transition-colors shadow-lg hover:shadow-xl hover:scale-110"
                       aria-label="View fullscreen"
                     >
-                      <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <Maximize2 className="h-4 w-4 sm:h-4 sm:w-4" />
                     </button>
                   </Tooltip>
                 )}
@@ -467,10 +467,10 @@ export function ContentCard({
                         e.stopPropagation();
                         handleAddToAlbum();
                       }}
-                      className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      className="p-2.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
                       aria-label="Add to album"
                     >
-                      <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <Plus className="h-4 w-4 sm:h-4 sm:w-4" />
                     </button>
                   </Tooltip>
                 )}
@@ -481,10 +481,10 @@ export function ContentCard({
                         e.stopPropagation();
                         handleDownload();
                       }}
-                      className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      className="p-2.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
                       aria-label="Download"
                     >
-                      <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <Download className="h-4 w-4 sm:h-4 sm:w-4" />
                     </button>
                   </Tooltip>
                 )}
@@ -495,10 +495,10 @@ export function ContentCard({
                         e.stopPropagation();
                         handleDelete();
                       }}
-                      className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-red-600 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      className="p-2.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-red-600 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
                       aria-label="Delete"
                     >
-                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <Trash2 className="h-4 w-4 sm:h-4 sm:w-4" />
                     </button>
                   </Tooltip>
                 )}
@@ -541,6 +541,7 @@ export function ContentCard({
                         <BookmarkButton
                           targetType="media"
                           targetId={media.id}
+                          albumId={media.albumId}
                           size="sm"
                           className="text-white hover:text-blue-400 transition-colors duration-200"
                           useCache={true}
@@ -780,10 +781,10 @@ export function ContentCard({
                         e.stopPropagation();
                         handleFullscreen();
                       }}
-                      className="p-1.5 sm:p-2 rounded-lg bg-black/50 hover:bg-black/70 text-white transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      className="p-2.5 sm:p-2 rounded-lg bg-black/50 hover:bg-black/70 text-white transition-colors shadow-lg hover:shadow-xl hover:scale-110"
                       aria-label="View fullscreen"
                     >
-                      <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <Maximize2 className="h-4 w-4 sm:h-4 sm:w-4" />
                     </button>
                   </Tooltip>
                 )}
@@ -794,10 +795,10 @@ export function ContentCard({
                         e.stopPropagation();
                         handleAddToAlbum();
                       }}
-                      className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      className="p-2.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
                       aria-label="Add to album"
                     >
-                      <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <Plus className="h-4 w-4 sm:h-4 sm:w-4" />
                     </button>
                   </Tooltip>
                 )}
@@ -808,10 +809,10 @@ export function ContentCard({
                         e.stopPropagation();
                         handleDownload();
                       }}
-                      className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      className="p-2.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
                       aria-label="Download"
                     >
-                      <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <Download className="h-4 w-4 sm:h-4 sm:w-4" />
                     </button>
                   </Tooltip>
                 )}
@@ -822,10 +823,10 @@ export function ContentCard({
                         e.stopPropagation();
                         handleDelete();
                       }}
-                      className="p-1.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-red-600 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      className="p-2.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-red-600 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
                       aria-label="Delete"
                     >
-                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                      <Trash2 className="h-4 w-4 sm:h-4 sm:w-4" />
                     </button>
                   </Tooltip>
                 )}
