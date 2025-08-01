@@ -22,6 +22,7 @@ import {
 import { Media } from "@/types";
 import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
 import { useUser } from "@/hooks/useUser";
+import { useNavigationLoading } from "@/contexts/NavigationLoadingContext";
 import { ShareDropdown } from "@/components/ui/ShareDropdown";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Lightbox } from "@/components/ui/Lightbox";
@@ -164,6 +165,7 @@ const GenerationPrompt: FC<GenerationPromptProps> = ({ title, prompt }) => (
 
 export function MediaDetailClient({ media }: MediaDetailClientProps) {
   const router = useLocaleRouter();
+  const { startNavigation } = useNavigationLoading();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
   const metadata = useMediaMetadata(media);
@@ -391,7 +393,10 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
                     (siblingId: string, index: number) => (
                       <button
                         key={siblingId}
-                        onClick={() => router.push(`/media/${siblingId}`)}
+                        onClick={() => {
+                          startNavigation("media");
+                          router.push(`/media/${siblingId}`);
+                        }}
                         className="aspect-square bg-muted/50 rounded-lg overflow-hidden hover:ring-2 hover:ring-primary transition-all hover:scale-[1.02] w-full"
                       >
                         <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocaleRouter } from "@/lib/navigation";
+import { useNavigationLoading } from "@/contexts/NavigationLoadingContext";
 import { Media, Album, ThumbnailContext, ThumbnailSize } from "@/types";
 import { LikeButton } from "@/components/user/LikeButton";
 import { BookmarkButton } from "@/components/user/BookmarkButton";
@@ -111,6 +112,7 @@ export function ContentCard({
   currentIndex = 0,
 }: ContentCardProps) {
   const router = useLocaleRouter();
+  const { startNavigation } = useNavigationLoading();
   const { user } = useUser();
   const { redirectToLogin } = useAuthRedirect();
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -198,8 +200,10 @@ export function ContentCard({
         if (showMobileActions) {
           // Actions are already showing, navigate to content page
           if (isMedia && media) {
+            startNavigation("media");
             router.push(`/media/${media.id}`);
           } else if (album) {
+            startNavigation("album");
             router.push(`/albums/${album.id}`);
           }
         } else {
@@ -213,8 +217,10 @@ export function ContentCard({
 
       // Default behavior: navigate to content page (desktop only)
       if (isMedia && media) {
+        startNavigation("media");
         router.push(`/media/${media.id}`);
       } else if (album) {
+        startNavigation("album");
         router.push(`/albums/${album.id}`);
       }
     }

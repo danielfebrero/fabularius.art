@@ -3,10 +3,12 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { UserProvider } from "@/contexts/UserContext";
+import { NavigationLoadingProvider } from "@/contexts/NavigationLoadingContext";
 import { UserInteractionProvider } from "@/hooks/useUserInteractionStatus";
 import { Header } from "@/components/Header";
 import { PermissionsWrapper } from "@/components/PermissionsWrapper";
 import { MainContentWrapper } from "@/components/MainContentWrapper";
+import { NavigationLoadingOverlay } from "@/components/ui/NavigationLoadingOverlay";
 
 type Props = {
   children: React.ReactNode;
@@ -98,19 +100,22 @@ export default async function LocaleLayout({
         <UserInteractionProvider>
           <PermissionsWrapper>
             <AdminProvider>
-              <div className="min-h-screen bg-background flex flex-col">
-                <Header />
-                <MainContentWrapper>{children}</MainContentWrapper>
-                <footer className="border-t border-border mt-16">
-                  <div className="container mx-auto px-4 py-8">
-                    <div className="text-center">
-                      <p className="text-muted-foreground">
-                        &copy; 2024 PornSpot.ai. All rights reserved.
-                      </p>
+              <NavigationLoadingProvider>
+                <div className="min-h-screen bg-background flex flex-col">
+                  <Header />
+                  <MainContentWrapper>{children}</MainContentWrapper>
+                  <footer className="border-t border-border mt-16">
+                    <div className="container mx-auto px-4 py-8">
+                      <div className="text-center">
+                        <p className="text-muted-foreground">
+                          &copy; 2024 PornSpot.ai. All rights reserved.
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                </footer>
-              </div>
+                  </footer>
+                </div>
+                <NavigationLoadingOverlay />
+              </NavigationLoadingProvider>
             </AdminProvider>
           </PermissionsWrapper>
         </UserInteractionProvider>

@@ -8,7 +8,7 @@ At some point, I deleted an album without deleting its comments, which caused so
 
 ## UI/UX
 
-### Opening an album from the discover page should show a loding indicator
+### Opening an album from the discover page should show a loading indicator
 
 When opening an album from the discover page, it should show a loading indicator until the album is fully loaded. Eventually, apply to other pages as well. Also, we could show a skeleton loader for the album page.
 
