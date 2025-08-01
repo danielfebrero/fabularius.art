@@ -75,6 +75,10 @@ export interface UpdateAlbumRequest {
   coverImageUrl?: string | undefined;
 }
 
+export interface BulkDeleteAlbumsRequest {
+  albumIds: string[];
+}
+
 export interface UploadMediaRequest {
   filename: string;
   mimeType: string;
