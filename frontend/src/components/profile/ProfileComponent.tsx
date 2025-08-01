@@ -40,7 +40,6 @@ import { cn } from "@/lib/utils";
 
 interface ProfileUser {
   userId: string;
-  email: string;
   username?: string;
   bio?: string;
   location?: string;
@@ -261,7 +260,7 @@ export default function ProfileComponent({
     }
   };
 
-  const displayName = currentUser.username || currentUser.email.split("@")[0];
+  const displayName = currentUser.username ?? "Anonymous";
   const initials = displayName.slice(0, 2).toUpperCase();
 
   // Mock data for content - in real app, this would be passed as props or fetched

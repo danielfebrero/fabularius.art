@@ -1258,6 +1258,35 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref MediaTable
 
+  UserProfileGetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-profile-get"
+      CodeUri: backend/dist/functions/user/profile/
+      Handler: get.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        GetProfile:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/profile/get
+            Method: GET
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsProfile:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/profile/get
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
   UserChangePasswordFunction:
     Type: AWS::Serverless::Function
     Properties:

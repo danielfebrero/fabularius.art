@@ -11,6 +11,7 @@ import {
   UsernameAvailabilityResponse,
   UserProfileUpdateRequest,
   UserProfileUpdateResponse,
+  GetPublicProfileResponse,
 } from "@/types/user";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -327,6 +328,38 @@ export const userApi = {
       const errorMessage =
         (errorData && (errorData.error || errorData.message)) ||
         `Language update failed: ${response.statusText}`;
+      const error = new Error(errorMessage);
+      if (errorData) {
+        (error as any).response = errorData;
+      }
+      throw error;
+    }
+
+    return response.json();
+  },
+
+  // Get public user profile by username
+  getPublicProfile: async (
+    username: string
+  ): Promise<GetPublicProfileResponse> => {
+    const response = await fetch(
+      `${API_URL}/user/profile/get?username=${encodeURIComponent(username)}`,
+      {
+        method: "GET",
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      let errorData = null;
+      try {
+        errorData = await response.json();
+      } catch {
+        // response body is not JSON
+      }
+      const errorMessage =
+        (errorData && (errorData.error || errorData.message)) ||
+        `Failed to fetch profile: ${response.statusText}`;
       const error = new Error(errorMessage);
       if (errorData) {
         (error as any).response = errorData;

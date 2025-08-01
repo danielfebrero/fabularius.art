@@ -312,3 +312,24 @@ export interface UserProfileUpdateResponse {
   };
   error?: string;
 }
+
+// Public Profile Types
+export interface PublicUserProfile {
+  userId: string;
+  username?: string;
+  createdAt: string;
+  isActive: boolean;
+  isEmailVerified: boolean;
+  lastLoginAt?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+}
+
+export interface GetPublicProfileResponse {
+  success: boolean;
+  data?: {
+    user: PublicUserProfile;
+  };
+  error?: string;
+}

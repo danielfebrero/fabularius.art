@@ -764,6 +764,49 @@ All fields are optional. Only provided fields will be updated.
 - `405 Method Not Allowed`: Only PUT method allowed
 - `500 Internal Server Error`: Server error
 
+### Get Public User Profile
+
+Get public profile information for a user by username.
+
+```http
+GET /user/profile/get?username={username}
+Cookie: sessionId=session-token-here
+```
+
+**Query Parameters:**
+
+- `username` (string, required): The username of the user to fetch
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "userId": "user123",
+      "email": "user@example.com",
+      "username": "johndoe",
+      "createdAt": "2023-01-01T00:00:00.000Z",
+      "isActive": true,
+      "isEmailVerified": true,
+      "lastLoginAt": "2023-01-02T00:00:00.000Z",
+      "bio": "User biography",
+      "location": "New York, USA",
+      "website": "https://example.com"
+    }
+  }
+}
+```
+
+**Error Responses:**
+
+- `400 Bad Request`: Missing username parameter
+- `401 Unauthorized`: User session required
+- `404 Not Found`: User not found or inactive
+- `405 Method Not Allowed`: Only GET method allowed
+- `500 Internal Server Error`: Server error
+
 ## User Account Management API
 
 ### Delete Account
