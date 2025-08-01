@@ -21,8 +21,4 @@ When opening an album from the discover page, it should show a loading indicator
 
 ## Videos and Gifs
 
-### Components should be able to play videos and gifs
-
-On click on the video icon, when being on media page or lightbox, it should show the video component or play the gif. Also, we should avoid Gifs maybe because they are really heavy.
-
 ## Admin
