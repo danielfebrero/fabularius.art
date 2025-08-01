@@ -40,8 +40,8 @@ const UserLayout: React.FC<UserLayoutProps> = ({
       <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* Sidebar Skeleton */}
-            <aside className="lg:w-64 flex-shrink-0">
+            {/* Desktop Sidebar Skeleton - Hidden on mobile/tablet */}
+            <aside className="hidden lg:block lg:w-64 flex-shrink-0">
               <nav className="md:bg-card/80 md:backdrop-blur-sm md:rounded-xl md:shadow-lg md:border md:border-admin-primary/10 p-4">
                 <ul className="space-y-2">
                   {[...Array(5)].map((_, i) => (
@@ -57,7 +57,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({
             </aside>
 
             {/* Main Content Skeleton */}
-            <main className="flex-1">
+            <main className="flex-1 pb-20 lg:pb-0">
               <div className="space-y-6">
                 <HeaderSkeleton />
                 <GridSkeleton itemCount={8} itemType="card" />
@@ -65,6 +65,21 @@ const UserLayout: React.FC<UserLayoutProps> = ({
             </main>
           </div>
         </div>
+
+        {/* Mobile/Tablet Sticky Footer Skeleton */}
+        <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border shadow-lg lg:hidden z-40">
+          <div className="flex items-center justify-around py-2 px-4 max-w-screen-sm mx-auto">
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="flex flex-col items-center space-y-1 py-2 px-1 min-w-0 flex-1"
+              >
+                <Skeleton className="h-5 w-5" />
+                <Skeleton className="h-3 w-12 hidden md:block lg:hidden" />
+              </div>
+            ))}
+          </div>
+        </nav>
       </div>
     );
   }
@@ -103,10 +118,10 @@ const UserLayout: React.FC<UserLayoutProps> = ({
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto  sm:px-6 lg:px-8 md:py-8">
+      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 md:py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Sidebar Navigation */}
-          <aside className="lg:w-64 flex-shrink-0">
+          {/* Desktop Sidebar Navigation - Hidden on mobile/tablet */}
+          <aside className="hidden lg:block lg:w-64 flex-shrink-0">
             <nav className="md:bg-card/80 md:backdrop-blur-sm md:rounded-xl md:shadow-lg md:border md:border-admin-primary/10 p-4">
               <ul className="space-y-2">
                 {navigationItems.map((item) => {
@@ -134,9 +149,51 @@ const UserLayout: React.FC<UserLayoutProps> = ({
           </aside>
 
           {/* Main Content */}
-          <main className="flex-1">{children}</main>
+          <main className="flex-1 pb-20 lg:pb-0">{children}</main>
         </div>
       </div>
+
+      {/* Mobile/Tablet Sticky Footer Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-sm border-t border-border shadow-lg lg:hidden z-40">
+        <div className="flex items-center justify-around py-2 px-4 max-w-screen-sm mx-auto">
+          {navigationItems.map((item) => {
+            const isActive = pathname.includes(item.href);
+
+            return (
+              <LocaleLink
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  "flex flex-col items-center space-y-1 py-2 px-1 rounded-lg transition-all duration-200 min-w-0 flex-1",
+                  isActive
+                    ? "text-admin-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <item.icon
+                  className={cn(
+                    "h-5 w-5 transition-transform duration-200",
+                    isActive ? "scale-110" : "scale-100"
+                  )}
+                />
+                {/* Show labels on tablet (md) and up, hide on mobile */}
+                <span
+                  className={cn(
+                    "text-xs font-medium truncate w-full text-center transition-opacity duration-200",
+                    "hidden md:block lg:hidden"
+                  )}
+                >
+                  {item.label}
+                </span>
+                {/* Show active indicator dot on mobile when no label */}
+                {isActive && (
+                  <div className="w-1 h-1 bg-admin-primary rounded-full md:hidden" />
+                )}
+              </LocaleLink>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 };
