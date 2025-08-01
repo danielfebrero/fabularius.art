@@ -97,14 +97,16 @@ export class DynamoDBService {
     return album;
   }
 
-  private static async convertAlbumEntityToAlbumWithCreator(entity: AlbumEntity): Promise<Album> {
+  private static async convertAlbumEntityToAlbumWithCreator(
+    entity: AlbumEntity
+  ): Promise<Album> {
     const album = this.convertAlbumEntityToAlbum(entity);
 
     // Fetch creator username dynamically if createdBy exists
     if (entity.createdBy) {
       try {
         const creator = await this.getUserById(entity.createdBy);
-        
+
         if (creator && creator.username) {
           // Add creator information to metadata
           if (!album.metadata) {
