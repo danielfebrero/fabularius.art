@@ -4,11 +4,15 @@
 
 ## UI/UX
 
+### Verification and welcome emails
+
+They are really ugly, we need to improve them.
+
 ## User profile
 
-### By default, when registering, we should give a username to every user
+### Upload avatar
 
-Currently, users can register without a username, which can lead to confusion and empty username on profile page.
+Users should be able to upload an avatar image.
 
 ## Videos
 

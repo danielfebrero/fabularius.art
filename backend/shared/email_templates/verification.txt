@@ -1,0 +1,15 @@
+Hello {{displayName}},
+
+Thank you for signing up for PornSpot.ai! To complete your registration, please verify your email address.
+
+Verification Link: {{verificationUrl}}
+
+Alternative - Verification Code: {{verificationToken}}
+(Enter this code on the verification page if the link doesn't work)
+
+This verification link will expire in 24 hours for security reasons. If you don't verify your email within this time, you'll need to request a new verification email.
+
+If you didn't create an account with PornSpot.ai, please ignore this email.
+
+© 2024 PornSpot.ai. All rights reserved.
+This is an automated email. Please do not reply to this message.
