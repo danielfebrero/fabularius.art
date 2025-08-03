@@ -10,7 +10,6 @@ import {
   AdminErrorBoundary,
   SectionErrorBoundary,
 } from "@/components/ErrorBoundaries";
-import { useIsMobile } from "@/hooks/useIsMobile";
 import { LayoutDashboard, FolderOpen, Image, Users } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -25,7 +24,7 @@ export default function AdminLayout({
   return (
     <PageErrorBoundary context={`Admin Layout (${locale})`}>
       <AdminProvider>
-        <div className="min-h-screen bg-muted/30">
+        <div className="min-h-screen">
           <AdminLayoutContent locale={locale}>{children}</AdminLayoutContent>
         </div>
       </AdminProvider>
@@ -42,7 +41,6 @@ function AdminLayoutContent({
 }) {
   const pathname = usePathname();
   const isLoginPage = pathname === `/${locale}/admin/login`;
-  const isMobile = useIsMobile();
 
   const adminNavigationItems = [
     {
@@ -77,7 +75,7 @@ function AdminLayoutContent({
   return (
     <ProtectedRoute>
       <AdminErrorBoundary>
-        <div className="min-h-screen bg-muted/30">
+        <div className="min-h-screen">
           <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 md:py-8">
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Navigation */}
