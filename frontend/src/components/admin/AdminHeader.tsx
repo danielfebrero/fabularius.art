@@ -1,7 +1,8 @@
 "use client";
 
-import { useAdminContext } from "../../contexts/AdminContext";
-import { Button } from "../ui/Button";
+import { useAdminContext } from "@/contexts/AdminContext";
+import { Button } from "@/components/ui/Button";
+import Avatar from "@/components/ui/Avatar";
 
 export function AdminHeader() {
   const { user, logout, loading } = useAdminContext();
@@ -46,11 +47,7 @@ export function AdminHeader() {
                   {user.role === "admin" ? "Administrator" : "Moderator"}
                 </p>
               </div>
-              <div className="w-8 h-8 bg-gradient-to-br from-admin-accent to-admin-primary rounded-full flex items-center justify-center">
-                <span className="text-xs font-bold text-white">
-                  {(user.username || user.email).charAt(0).toUpperCase()}
-                </span>
-              </div>
+              <Avatar user={user} size="small" className="bg-gradient-to-br from-admin-accent to-admin-primary" />
             </div>
           )}
           <Button

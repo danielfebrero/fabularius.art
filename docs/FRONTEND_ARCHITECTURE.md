@@ -147,6 +147,25 @@ The application has a collection of reusable UI components in the `frontend/src/
 - **Usage**: Used in Lightbox, media detail pages, and any component requiring stable media playback
 - **Container Strategy**: Both preview and video modes use identical container structure with CSS aspect-ratio for perfect dimensional consistency
 
+### Avatar Component
+
+- **File**: [`frontend/src/components/ui/Avatar.tsx`](../frontend/src/components/ui/Avatar.tsx)
+- **Purpose**: Unified user avatar display component with automatic fallback to initials
+- **Features**:
+  - **Responsive Sizing**: Four size variants (small: 32px, medium: 48px, large: 64px, xlarge: 96px)
+  - **Intelligent Thumbnail Selection**: Automatically chooses optimal avatar thumbnail based on size
+  - **Fallback Handling**: Shows user initials when no avatar is available
+  - **Consistent Styling**: Maintains uniform avatar appearance across the application
+  - **Optional Indicators**: Support for online status indicators
+- **Usage**:
+  ```jsx
+  <Avatar user={user} size="small" />  // Header menu
+  <Avatar user={user} size="medium" /> // User dropdowns
+  <Avatar user={user} size="large" />  // Profile cards
+  <Avatar user={user} size="xlarge" /> // Profile headers
+  ```
+- **Integration**: Used in Header, UserMenu, AdminHeader, and ProfileComponent
+
 ### ContentCard Component
 
 - **File**: [`frontend/src/components/ui/ContentCard.tsx`](../frontend/src/components/ui/ContentCard.tsx)

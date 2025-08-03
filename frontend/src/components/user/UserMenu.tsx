@@ -7,6 +7,7 @@ import { useAdminContext } from "@/contexts/AdminContext";
 import { useLocaleRouter } from "@/lib/navigation";
 import { User } from "@/types/user";
 import { UserPlanBadge } from "@/components/UserPlanBadge";
+import Avatar from "@/components/ui/Avatar";
 import {
   Compass,
   DollarSign,
@@ -63,8 +64,6 @@ export function UserMenu({ user }: UserMenuProps) {
 
   const displayName = user.username || user.email.split("@")[0];
 
-  const initials = displayName.slice(0, 2);
-
   return (
     <div className="relative" ref={menuRef}>
       {/* User Avatar Button */}
@@ -74,9 +73,7 @@ export function UserMenu({ user }: UserMenuProps) {
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        <div className="w-8 h-8 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-          {initials.toUpperCase()}
-        </div>
+        <Avatar user={user} size="small" />
         <div className="hidden md:block text-left">
           <div className="text-sm font-medium text-foreground">
             {displayName}
@@ -113,9 +110,7 @@ export function UserMenu({ user }: UserMenuProps) {
             onClick={() => setIsOpen(false)}
           >
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-sm font-medium">
-                {initials.toUpperCase()}
-              </div>
+              <Avatar user={user} size="small" />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-foreground truncate">
                   {displayName}
