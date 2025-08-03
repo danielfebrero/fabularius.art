@@ -160,6 +160,15 @@ The application supports automatic redirect functionality for unauthenticated us
   - Login form processes the `returnTo` query parameter for post-login navigation
   - Protected features in `ContentCard`, `LikeButton`, and `BookmarkButton` components automatically redirect unauthenticated users
 
+### Protected Pages
+
+The following pages require user authentication:
+
+- **User Profiles**: Both own profile (`/user/profile`) and public profiles (`/profile/[username]`) require authentication. Unauthenticated users see the message "You must be logged in to view this profile."
+- **Album Management**: Creating, editing, and managing albums requires authentication
+- **Media Upload**: Uploading and managing media content requires authentication
+- **User Interactions**: Liking, bookmarking, and commenting require authentication
+
 ### Session Expiration and Cleanup
 
 - Sessions expire after 30 days of inactivity.

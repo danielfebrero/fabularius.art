@@ -4,10 +4,6 @@
 
 ## UI/UX
 
-### On tablet, ContentCard should display actions after one tap instead of navigating
-
-Currently, on tablet devices, the ContentCard navigates to the content page when tapped. Instead, it should display actions (like share, save, etc.) after one tap, similar to how it works on mobile devices.
-
 ### Make admin page responsive
 
 Currently, it's unusable on mobile devices. We need to ensure that the admin page is fully responsive and functional on smaller screens.
@@ -33,10 +29,6 @@ The content card should automatically choose the best media to display based on 
 ### On tablet, when uploading an avatar, there is a UI bug under the avatar
 
 When uploading an avatar on tablet devices, there is a UI bug where the upload button appears under the avatar image, making it ugly.
-
-### If loggeed out, accessing a user profile display Profile Not Found while it should display "You must be logged in to view this profile"
-
-This is not correct. It should display "You must be logged in to view this profile" instead of "Profile Not Found".
 
 ### Creator Insights
 

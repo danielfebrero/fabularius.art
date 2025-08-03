@@ -5,18 +5,24 @@ import { useParams } from "next/navigation";
 import ProfileComponent from "@/components/profile/ProfileComponent";
 import { userApi } from "@/lib/api";
 import { PublicUserProfile } from "@/types/user";
+import { useUser } from "@/hooks/useUser";
 
 export default function PublicProfilePage() {
   const params = useParams();
   const username = params.username as string;
-  const [user, setUser] = useState<PublicUserProfile | null>(null);
+  const [profileUser, setProfileUser] = useState<PublicUserProfile | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Get current user authentication status
+  const { user: currentUser, loading: authLoading } = useUser();
 
   // Fetch user profile data
   useEffect(() => {
     const fetchUserProfile = async () => {
-      if (!username) return;
+      if (!username || !currentUser) return;
 
       try {
         setLoading(true);
@@ -27,7 +33,7 @@ export default function PublicProfilePage() {
         const response = await userApi.getPublicProfile(username);
 
         if (response.success && response.data?.user) {
-          setUser(response.data.user);
+          setProfileUser(response.data.user);
         } else {
           setError(response.error || "Failed to load user profile");
         }
@@ -44,7 +50,23 @@ export default function PublicProfilePage() {
     };
 
     fetchUserProfile();
-  }, [username]);
+  }, [username, currentUser]);
+
+  // Authentication check: require user to be logged in to view any profile
+  if (!currentUser && !authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-foreground">
+            Authentication Required
+          </h2>
+          <p className="text-muted-foreground mt-2">
+            You must be logged in to view this profile.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // Error state
   if (error) {
@@ -66,7 +88,7 @@ export default function PublicProfilePage() {
   return (
     <ProfileComponent
       user={
-        user || {
+        profileUser || {
           userId: "",
           createdAt: new Date().toISOString(),
         }
