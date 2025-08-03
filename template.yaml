@@ -1287,6 +1287,44 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
 
+  UserAvatarUploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-user-avatar-upload"
+      CodeUri: backend/dist/functions/user/profile/avatar/
+      Handler: upload.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        PostAvatarUpload:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/profile/avatar/upload
+            Method: POST
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsAvatarUpload:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/profile/avatar/upload
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+        - S3WritePolicy:
+            BucketName: !Ref MediaBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - s3:PutObject
+              Resource: !Sub "arn:aws:s3:::${Environment}-pornspot-media-${AWS::AccountId}/*"
+
   UserChangePasswordFunction:
     Type: AWS::Serverless::Function
     Properties:
