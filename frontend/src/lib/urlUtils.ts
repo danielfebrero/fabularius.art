@@ -17,7 +17,10 @@ export function composeMediaUrl(
   if (!relativePath) return "";
 
   // If it's already a full URL (backward compatibility), return as is
-  if (typeof relativePath === "string" && relativePath.startsWith("http")) {
+  if (
+    typeof relativePath === "string" &&
+    (relativePath.startsWith("http") || relativePath.startsWith("blob"))
+  ) {
     return relativePath;
   }
 

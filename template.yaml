@@ -704,7 +704,7 @@ Resources:
       BucketName: !Sub "${Environment}-pornspot-media-${AWS::AccountId}"
       FunctionArn: !GetAtt ProcessUploadFunction.Arn
       # Force update by changing this timestamp when needed
-      Version: "2025-07-20-002"
+      Version: "2025-08-03-001"
       # Ensure permission exists before configuring notification
       LambdaPermissionId: !Ref ProcessUploadFunctionS3Permission
     DependsOn:
