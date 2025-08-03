@@ -9,6 +9,7 @@ import { Header } from "@/components/Header";
 import { PermissionsWrapper } from "@/components/PermissionsWrapper";
 import { MainContentWrapper } from "@/components/MainContentWrapper";
 import { NavigationLoadingOverlay } from "@/components/ui/NavigationLoadingOverlay";
+import { MobileNavigationWrapper } from "@/components/MobileNavigationWrapper";
 import { LanguageRedirect } from "@/components/LanguageRedirect";
 import {
   PageErrorBoundary,
@@ -128,6 +129,7 @@ export default async function LocaleLayout({
                     </SectionErrorBoundary>
                   </div>
                   <NavigationLoadingOverlay />
+                  <MobileNavigationWrapper />
                 </NavigationLoadingProvider>
               </AdminProvider>
             </PermissionsWrapper>

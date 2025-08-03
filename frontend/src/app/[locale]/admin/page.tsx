@@ -121,7 +121,7 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6 sm:space-y-8">
       {/* Welcome Section */}
-      <div className="px-4 sm:px-0">
+      <div className="px-4 sm:px-0 py-4 sm:py-0">
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
           Welcome back, {user?.username}!
         </h1>

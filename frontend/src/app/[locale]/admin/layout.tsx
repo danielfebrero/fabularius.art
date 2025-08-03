@@ -3,7 +3,8 @@
 import { usePathname } from "next/navigation";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { ProtectedRoute } from "@/components/admin/ProtectedRoute";
-import { ResponsiveNavigation } from "@/components/ui/ResponsiveNavigation";
+import { DesktopNavigation } from "@/components/ui/DesktopNavigation";
+import { MobileNavigation } from "@/components/ui/MobileNavigation";
 import {
   PageErrorBoundary,
   AdminErrorBoundary,
@@ -80,20 +81,11 @@ function AdminLayoutContent({
           <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 md:py-8">
             <div className="flex flex-col lg:flex-row gap-8">
               {/* Navigation */}
-              <ResponsiveNavigation navigationItems={adminNavigationItems} />
+              <DesktopNavigation navigationItems={adminNavigationItems} />
+              <MobileNavigation navigationItems={adminNavigationItems} />
 
               {/* Main Content */}
               <SectionErrorBoundary context="Admin Main Content">
-                {/* Mobile Header */}
-                {isMobile && (
-                  <div className="lg:hidden bg-admin-sidebar border-b border-border p-4 mb-4 rounded-xl">
-                    <div className="flex items-center justify-center">
-                      <h2 className="text-lg font-bold text-admin-sidebar-foreground">
-                        Admin Panel
-                      </h2>
-                    </div>
-                  </div>
-                )}
                 <main className="flex-1 pb-20 lg:pb-6">{children}</main>
               </SectionErrorBoundary>
             </div>

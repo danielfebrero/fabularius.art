@@ -132,41 +132,7 @@ export function UserMenu({ user }: UserMenuProps) {
 
           <div className="p-2">
             {/* Mobile Navigation Items - Only show on mobile */}
-            <div className="sm:hidden border-b border-border pb-2 mb-2">
-              <button
-                onClick={() => handleMenuItemClick(() => router.push("/"))}
-                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
-              >
-                <div className="flex items-center space-x-2">
-                  <Compass className="w-4 h-4" />
-                  <span>{t("discover")}</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() =>
-                  handleMenuItemClick(() => router.push("/generate"))
-                }
-                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
-              >
-                <div className="flex items-center space-x-2">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 10V3L4 14h7v7l9-11h-7z"
-                    />
-                  </svg>
-                  <span>{t("generate")}</span>
-                </div>
-              </button>
-
+            <div className="sm:hidden">
               <button
                 onClick={() =>
                   handleMenuItemClick(() => router.push("/pricing"))
@@ -176,54 +142,6 @@ export function UserMenu({ user }: UserMenuProps) {
                 <div className="flex items-center space-x-2">
                   <DollarSign className="w-4 h-4" />
                   <span>{t("pricing")}</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() =>
-                  handleMenuItemClick(() => router.push("/user/medias"))
-                }
-                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
-              >
-                <div className="flex items-center space-x-2">
-                  <ImageIcon className="w-4 h-4" />
-                  <span>{tNav("medias")}</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() =>
-                  handleMenuItemClick(() => router.push("/user/bookmarks"))
-                }
-                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
-              >
-                <div className="flex items-center space-x-2">
-                  <Bookmark className="w-4 h-4" />
-                  <span>{tNav("bookmarks")}</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() =>
-                  handleMenuItemClick(() => router.push("/user/likes"))
-                }
-                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
-              >
-                <div className="flex items-center space-x-2">
-                  <Heart className="w-4 h-4" />
-                  <span>{tNav("likes")}</span>
-                </div>
-              </button>
-
-              <button
-                onClick={() =>
-                  handleMenuItemClick(() => router.push("/user/albums"))
-                }
-                className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-accent rounded-md transition-colors"
-              >
-                <div className="flex items-center space-x-2">
-                  <FolderOpen className="w-4 h-4" />
-                  <span>{tNav("albums")}</span>
                 </div>
               </button>
             </div>

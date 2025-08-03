@@ -14,7 +14,7 @@ import {
   PageErrorBoundary,
   SectionErrorBoundary,
 } from "@/components/ErrorBoundaries";
-import { ResponsiveNavigation } from "@/components/ui/ResponsiveNavigation";
+import { DesktopNavigation } from "@/components/ui/DesktopNavigation";
 
 interface UserLayoutProps {
   children: React.ReactNode;
@@ -123,11 +123,11 @@ const UserLayout: React.FC<UserLayoutProps> = ({
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 md:py-8">
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Navigation */}
-            <ResponsiveNavigation navigationItems={navigationItems} />
+            <DesktopNavigation navigationItems={navigationItems} />
 
             {/* Main Content */}
             <SectionErrorBoundary context="User Main Content">
-              <main className="flex-1 pb-20 lg:pb-0">{children}</main>
+              <main className="flex-1">{children}</main>
             </SectionErrorBoundary>
           </div>
         </div>
