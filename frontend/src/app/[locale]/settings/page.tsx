@@ -295,7 +295,7 @@ export default function SettingsPage() {
               <div className="grid gap-4">
                 <div>
                   <div className="text-sm font-medium text-foreground">
-                    {t("settings.language.current")}
+                    {tSettings("language.current")}
                   </div>
                   <select
                     id="language-select"
