@@ -16,7 +16,7 @@ export async function generateStaticParams() {
 }
 
 // Enable static generation with periodic revalidation
-export const revalidate = 86400; // Revalidate every 24 hours (privacy policy changes rarely)
+export const revalidate = false; // No revalidation needed, static generation only
 export const dynamic = "force-static";
 
 export async function generateMetadata({

@@ -18,9 +18,9 @@ type AlbumDetailPageProps = {
   };
 };
 
-// Enable ISR for album pages
-export const revalidate = 0;
-export const dynamic = "force-static";
+// SSG for existing albums at build time, ISR for new albums, revalidate on demand
+export const revalidate = false;
+export const dynamic = "auto";
 export const dynamicParams = true;
 
 export async function generateMetadata({

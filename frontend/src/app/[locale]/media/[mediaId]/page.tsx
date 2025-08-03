@@ -15,6 +15,11 @@ interface MediaDetailPageProps {
   };
 }
 
+// SSG for existing albums at build time, ISR for new albums, revalidate on demand
+export const revalidate = false;
+export const dynamic = "auto";
+export const dynamicParams = true;
+
 export async function generateMetadata({
   params,
 }: MediaDetailPageProps): Promise<Metadata> {
@@ -42,9 +47,6 @@ export async function generateMetadata({
 
   return generateMediaMetadata(locale, mediaId, media, displayImageUrl);
 }
-
-export const revalidate = 0;
-export const dynamic = "force-static"; // Force static generation at build time
 
 export async function generateStaticParams() {
   const media = await fetchAllPublicMedia();
