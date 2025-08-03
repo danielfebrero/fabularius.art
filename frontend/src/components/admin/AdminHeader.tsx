@@ -47,7 +47,11 @@ export function AdminHeader() {
                   {user.role === "admin" ? "Administrator" : "Moderator"}
                 </p>
               </div>
-              <Avatar user={user} size="small" className="bg-gradient-to-br from-admin-accent to-admin-primary" />
+              <Avatar
+                user={user}
+                size="small"
+                className="bg-gradient-to-br from-admin-accent to-admin-primary"
+              />
             </div>
           )}
           <Button

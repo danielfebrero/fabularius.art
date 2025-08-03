@@ -13,24 +13,24 @@ interface AvatarProps {
 
 /**
  * Avatar component for displaying user avatars with automatic fallback to initials
- * 
+ *
  * Features:
  * - Responsive avatar thumbnails with optimal size selection
  * - Automatic fallback to user initials if no avatar
  * - Consistent styling across the application
  * - Support for online indicators
- * 
+ *
  * Size mapping:
  * - small: 32px (w-8 h-8) - for small UI elements, header menu
- * - medium: 48px (w-12 h-12) - for regular UI elements  
+ * - medium: 48px (w-12 h-12) - for regular UI elements
  * - large: 64px (w-16 h-16) - for profile cards, user info
  * - xlarge: 96px (w-24 h-24) - for profile headers, large displays
  */
-export function Avatar({ 
-  user, 
-  size = "medium", 
+export function Avatar({
+  user,
+  size = "medium",
   className,
-  showOnlineIndicator = false 
+  showOnlineIndicator = false,
 }: AvatarProps) {
   const displayName = user.username || user.email.split("@")[0];
   const initials = displayName.slice(0, 2).toUpperCase();
@@ -112,7 +112,7 @@ export function Avatar({
           initials
         )}
       </div>
-      
+
       {showOnlineIndicator && (
         <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-background rounded-full"></div>
       )}
