@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
+import { headers } from "next/headers";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { NavigationLoadingProvider } from "@/contexts/NavigationLoadingContext";
+import { DeviceProvider } from "@/contexts/DeviceContext";
 import { UserInteractionProvider } from "@/hooks/useUserInteractionStatus";
 import { Header } from "@/components/Header";
 import { PermissionsWrapper } from "@/components/PermissionsWrapper";
@@ -11,6 +13,7 @@ import { MainContentWrapper } from "@/components/MainContentWrapper";
 import { NavigationLoadingOverlay } from "@/components/ui/NavigationLoadingOverlay";
 import { MobileNavigationWrapper } from "@/components/MobileNavigationWrapper";
 import { LanguageRedirect } from "@/components/LanguageRedirect";
+import { detectDevice } from "@/lib/deviceUtils";
 import {
   PageErrorBoundary,
   SectionErrorBoundary,
@@ -99,42 +102,49 @@ export default async function LocaleLayout({
   params: { locale },
 }: Props) {
   const messages = await getMessages({ locale });
+  
+  // Server-side device detection
+  const headersList = headers();
+  const userAgent = headersList.get("user-agent");
+  const deviceInfo = detectDevice(userAgent);
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
       <PageErrorBoundary context={`Locale Layout (${locale})`}>
-        <UserProvider>
-          <UserInteractionProvider>
-            <PermissionsWrapper>
-              <AdminProvider>
-                <NavigationLoadingProvider>
-                  <LanguageRedirect />
-                  <div className="min-h-screen bg-background flex flex-col">
-                    <SectionErrorBoundary context="Header">
-                      <Header />
-                    </SectionErrorBoundary>
-                    <SectionErrorBoundary context="Main Content">
-                      <MainContentWrapper>{children}</MainContentWrapper>
-                    </SectionErrorBoundary>
-                    <SectionErrorBoundary context="Footer">
-                      <footer className="border-t border-border mt-16">
-                        <div className="container mx-auto px-4 py-8">
-                          <div className="text-center">
-                            <p className="text-muted-foreground">
-                              &copy; 2024 PornSpot.ai. All rights reserved.
-                            </p>
+        <DeviceProvider initialDeviceInfo={deviceInfo}>
+          <UserProvider>
+            <UserInteractionProvider>
+              <PermissionsWrapper>
+                <AdminProvider>
+                  <NavigationLoadingProvider>
+                    <LanguageRedirect />
+                    <div className="min-h-screen bg-background flex flex-col">
+                      <SectionErrorBoundary context="Header">
+                        <Header />
+                      </SectionErrorBoundary>
+                      <SectionErrorBoundary context="Main Content">
+                        <MainContentWrapper>{children}</MainContentWrapper>
+                      </SectionErrorBoundary>
+                      <SectionErrorBoundary context="Footer">
+                        <footer className="border-t border-border mt-16">
+                          <div className="container mx-auto px-4 py-8">
+                            <div className="text-center">
+                              <p className="text-muted-foreground">
+                                &copy; 2024 PornSpot.ai. All rights reserved.
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </footer>
-                    </SectionErrorBoundary>
-                  </div>
-                  <NavigationLoadingOverlay />
-                  <MobileNavigationWrapper />
-                </NavigationLoadingProvider>
-              </AdminProvider>
-            </PermissionsWrapper>
-          </UserInteractionProvider>
-        </UserProvider>
+                        </footer>
+                      </SectionErrorBoundary>
+                    </div>
+                    <NavigationLoadingOverlay />
+                    <MobileNavigationWrapper />
+                  </NavigationLoadingProvider>
+                </AdminProvider>
+              </PermissionsWrapper>
+            </UserInteractionProvider>
+          </UserProvider>
+        </DeviceProvider>
       </PageErrorBoundary>
     </NextIntlClientProvider>
   );

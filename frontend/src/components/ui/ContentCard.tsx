@@ -10,7 +10,7 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { Tag } from "@/components/ui/Tag";
 import { cn, isVideo } from "@/lib/utils";
 import { composeMediaUrl } from "@/lib/urlUtils";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useDevice } from "@/contexts/DeviceContext";
 import { useUser } from "@/hooks/useUser";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import {
@@ -121,7 +121,7 @@ export function ContentCard({
   const [isHovered, setIsHovered] = useState(false);
   const [addToAlbumDialogOpen, setAddToAlbumDialogOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const isMobile = useIsMobile();
+  const { isMobileInterface: isMobile } = useDevice();
   const cardRef = useRef<HTMLDivElement>(null);
 
   const isMedia = type === "media";

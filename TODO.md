@@ -8,10 +8,6 @@
 
 Currently, on tablet devices, the ContentCard navigates to the content page when tapped. Instead, it should display actions (like share, save, etc.) after one tap, similar to how it works on mobile devices.
 
-### On tablet, show textual menu instead of icons in app header
-
-Currently, the app header on tablet devices shows only icons. There is space for text.
-
 ### Make admin page responsive
 
 Currently, it's unusable on mobile devices. We need to ensure that the admin page is fully responsive and functional on smaller screens.

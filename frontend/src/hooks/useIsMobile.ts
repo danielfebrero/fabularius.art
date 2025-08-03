@@ -1,23 +1,21 @@
 import { useEffect, useState } from "react";
+import { detectDeviceClientSide } from "@/lib/deviceUtils";
 
 /**
- * Hook to detect if the user is on a mobile device based on screen width and touch capability.
- * Returns true when viewport is <= 768px and device supports touch.
+ * Hook to detect if the user is on a mobile device (phone or tablet).
+ * This hook provides backward compatibility while using improved device detection.
+ * 
+ * @deprecated Consider using useDevice() from DeviceContext for more granular control
+ * @returns true for mobile phones and tablets
  */
 export function useIsMobile(): boolean {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     function checkMobile() {
-      // 768px threshold covers typical mobile/tablet breakpoints
-      const isTouch =
-        typeof window !== "undefined" &&
-        ("ontouchstart" in window || navigator.maxTouchPoints > 0);
-
-      const isSmallScreen =
-        typeof window !== "undefined" && window.innerWidth <= 768;
-
-      setIsMobile(!!(isTouch && isSmallScreen));
+      const deviceInfo = detectDeviceClientSide();
+      // Include both mobile phones and tablets for mobile interface
+      setIsMobile(deviceInfo.isMobile || deviceInfo.isTablet);
     }
 
     checkMobile();
