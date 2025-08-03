@@ -281,6 +281,7 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
                 onFullscreen={() => setLightboxOpen(true)}
                 className="w-fit h-fit max-w-full max-h-[80vh]"
                 imageClassName="w-auto h-auto object-contain"
+                canFullscreen={true}
               />
             </div>
           </div>
@@ -434,7 +435,6 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
                       canDownload={false}
                       canDelete={false}
                       showTags={false}
-                      context="albums"
                       columns={1}
                       className="w-full"
                     />

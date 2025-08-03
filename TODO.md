@@ -4,9 +4,21 @@
 
 ## UI/UX
 
-### Verification and welcome emails
+### Rework Welcome email
 
-They are really ugly, we need to improve them.
+The "what you can do now" section is not coherent and should be reworked.
+
+### Auto connect the user when he verifies his email
+
+When the user clicks the verification link, he should be automatically logged in.
+
+### Improve skeleton
+
+Currently, the backward and share buttons are on the edge sides instead of being in the container.
+
+### Content card should automatically detect the best media to display depending on the container size
+
+The content card should automatically choose the best media to display based on the container size, rather than using an algo based on columns/viewport. Preferred size must have predominance over the algorithm.
 
 ## User profile
 
@@ -15,10 +27,6 @@ They are really ugly, we need to improve them.
 Users should be able to upload an avatar image.
 
 ## Videos
-
-### In lightbox, the fullscreen button is still appearing
-
-It happens to videos only.
 
 ### In lightbox, the video preview should be fullscreen like image
 

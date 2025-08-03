@@ -15,6 +15,7 @@ interface MediaPlayerProps {
   onFullscreen?: () => void;
   className?: string;
   imageClassName?: string;
+  canFullscreen?: boolean; // Whether to show fullscreen option
 }
 
 export const MediaPlayer: FC<MediaPlayerProps> = ({
@@ -25,6 +26,7 @@ export const MediaPlayer: FC<MediaPlayerProps> = ({
   onFullscreen,
   className,
   imageClassName,
+  canFullscreen,
 }) => {
   const isMobile = useIsMobile();
   const isVideoMedia = isVideo(media);
@@ -109,7 +111,7 @@ export const MediaPlayer: FC<MediaPlayerProps> = ({
         preferredThumbnailSize="originalSize"
         canLike={true}
         canBookmark={true}
-        canFullscreen={true}
+        canFullscreen={canFullscreen}
         canAddToAlbum={true}
         canDownload={true}
         canDelete={false}
@@ -142,10 +144,7 @@ export const MediaPlayer: FC<MediaPlayerProps> = ({
           <video
             ref={videoRef}
             src={composeMediaUrl(media.url)}
-            className={cn(
-              "w-full h-auto max-h-[80vh] object-contain",
-              imageClassName
-            )}
+            className={cn("w-full h-auto object-contain", imageClassName)}
             controls
             autoPlay
             muted
@@ -180,32 +179,24 @@ export const MediaPlayer: FC<MediaPlayerProps> = ({
         </div>
       ) : (
         // Preview mode (thumbnail with play button overlay)
-        <div
-          className="relative w-full h-full"
-          style={
-            aspectRatio
-              ? { aspectRatio: `${media.width} / ${media.height}` }
-              : undefined
-          }
-        >
-          <ContentCard
-            item={media}
-            type="media"
-            aspectRatio="auto"
-            className="w-full h-full"
-            imageClassName={imageClassName}
-            preferredThumbnailSize="originalSize"
-            canLike={true}
-            canBookmark={true}
-            canFullscreen={true}
-            canAddToAlbum={true}
-            canDownload={true}
-            canDelete={false}
-            useAllAvailableSpace={true}
-            onClick={isMobile ? onMobileClick : onTogglePlay}
-            onFullscreen={onFullscreen}
-          />
-        </div>
+
+        <ContentCard
+          item={media}
+          type="media"
+          aspectRatio="auto"
+          className={className}
+          imageClassName={imageClassName}
+          preferredThumbnailSize="originalSize"
+          canLike={true}
+          canBookmark={true}
+          canFullscreen={canFullscreen}
+          canAddToAlbum={true}
+          canDownload={true}
+          canDelete={false}
+          useAllAvailableSpace={true}
+          onClick={isMobile ? onMobileClick : onTogglePlay}
+          onFullscreen={onFullscreen}
+        />
       )}
     </div>
   );
