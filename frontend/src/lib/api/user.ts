@@ -375,8 +375,8 @@ export const userApi = {
     filename: string,
     contentType: string
   ): Promise<{
-    uploadUrl: string;
-    avatarKey: string;
+    success: boolean;
+    data: { uploadUrl: string; avatarKey: string };
   }> => {
     const response = await fetch(`${API_URL}/user/profile/avatar/upload`, {
       method: "POST",
