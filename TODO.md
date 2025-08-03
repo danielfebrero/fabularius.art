@@ -4,6 +4,18 @@
 
 ## UI/UX
 
+### On tablet, ContentCard should display actions after one tap instead of navigating
+
+Currently, on tablet devices, the ContentCard navigates to the content page when tapped. Instead, it should display actions (like share, save, etc.) after one tap, similar to how it works on mobile devices.
+
+### On tablet, show textual menu instead of icons in app header
+
+Currently, the app header on tablet devices shows only icons. There is space for text.
+
+### Make admin page responsive
+
+Currently, it's unusable on mobile devices. We need to ensure that the admin page is fully responsive and functional on smaller screens.
+
 ### Rework Welcome email
 
 The "what you can do now" section is not coherent and should be reworked.
@@ -22,9 +34,13 @@ The content card should automatically choose the best media to display based on 
 
 ## User profile
 
-### Upload avatar
+### On tablet, when uploading an avatar, there is a UI bug under the avatar
 
-Users should be able to upload an avatar image.
+When uploading an avatar on tablet devices, there is a UI bug where the upload button appears under the avatar image, making it ugly.
+
+### If loggeed out, accessing a user profile display Profile Not Found while it should display "You must be logged in to view this profile"
+
+This is not correct. It should display "You must be logged in to view this profile" instead of "Profile Not Found".
 
 ### Creator Insights
 
@@ -37,3 +53,9 @@ Currently we show mocked data for creator insights. We should implement the real
 Currently, the video preview is of the size of the video.
 
 ## Admin
+
+## Settings
+
+### BUG on change language to default navigator
+
+Currently, when changing the language to the default navigator language, it does not work as expected. It stays on the previous language.

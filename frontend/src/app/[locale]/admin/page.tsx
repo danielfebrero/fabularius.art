@@ -119,34 +119,39 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Welcome Section */}
-      <div>
-        <h1 className="text-3xl font-bold text-foreground mb-2">
+      <div className="px-4 sm:px-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
           Welcome back, {user?.username}!
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground">
           Manage your gallery content from this admin dashboard.
         </p>
       </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 px-4 sm:px-0">
         {statsConfig.map((stat, index) => (
-          <Card key={index} className="p-6">
+          <Card
+            key={index}
+            className="p-4 sm:p-6 hover:shadow-lg transition-shadow duration-200 cursor-default"
+          >
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-muted-foreground truncate">
                   {stat.title}
                 </p>
-                <p className="text-2xl font-bold text-foreground">
+                <p className="text-xl sm:text-2xl font-bold text-foreground mt-1 break-all">
                   {stat.value}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground mt-1">
                   {stat.description}
                 </p>
               </div>
-              <div className="text-muted-foreground">{stat.icon}</div>
+              <div className="text-muted-foreground ml-3 flex-shrink-0 opacity-60">
+                {stat.icon}
+              </div>
             </div>
           </Card>
         ))}
