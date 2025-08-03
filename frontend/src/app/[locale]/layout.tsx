@@ -102,7 +102,7 @@ export default async function LocaleLayout({
   params: { locale },
 }: Props) {
   const messages = await getMessages({ locale });
-  
+
   // Server-side device detection
   const headersList = headers();
   const userAgent = headersList.get("user-agent");
@@ -126,8 +126,8 @@ export default async function LocaleLayout({
                         <MainContentWrapper>{children}</MainContentWrapper>
                       </SectionErrorBoundary>
                       <SectionErrorBoundary context="Footer">
-                        <footer className="border-t border-border mt-16">
-                          <div className="container mx-auto px-4 py-8">
+                        <footer className="border-t border-border mt-16 pb-[55px] lg:pb-0">
+                          <div className="container mx-auto py-4">
                             <div className="text-center">
                               <p className="text-muted-foreground">
                                 &copy; 2024 PornSpot.ai. All rights reserved.
