@@ -47,7 +47,9 @@ export function Header() {
             <LocaleLink
               href="/"
               className={`flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ${
-                isActivePath(pathname, "/") ? "border-b-2 border-foreground" : ""
+                isActivePath(pathname, "/")
+                  ? "border-b-2 border-foreground"
+                  : ""
               }`}
             >
               <span>{t("discover")}</span>
@@ -55,7 +57,9 @@ export function Header() {
             <LocaleLink
               href="/generate"
               className={`flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ${
-                isActivePath(pathname, "/generate") ? "border-b-2 border-foreground" : ""
+                isActivePath(pathname, "/generate")
+                  ? "border-b-2 border-foreground"
+                  : ""
               }`}
             >
               <span>{t("generate")}</span>
@@ -63,7 +67,9 @@ export function Header() {
             <LocaleLink
               href="/pricing"
               className={`flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ${
-                isActivePath(pathname, "/pricing") ? "border-b-2 border-foreground" : ""
+                isActivePath(pathname, "/pricing")
+                  ? "border-b-2 border-foreground"
+                  : ""
               }`}
             >
               <span>{t("pricing")}</span>
@@ -73,7 +79,9 @@ export function Header() {
                 <LocaleLink
                   href="/user/medias"
                   className={`flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ${
-                    isActivePath(pathname, "/user/medias") ? "border-b-2 border-foreground" : ""
+                    isActivePath(pathname, "/user/medias")
+                      ? "border-b-2 border-foreground"
+                      : ""
                   }`}
                 >
                   <span>{tNav("medias")}</span>
@@ -81,7 +89,9 @@ export function Header() {
                 <LocaleLink
                   href="/user/bookmarks"
                   className={`flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ${
-                    isActivePath(pathname, "/user/bookmarks") ? "border-b-2 border-foreground" : ""
+                    isActivePath(pathname, "/user/bookmarks")
+                      ? "border-b-2 border-foreground"
+                      : ""
                   }`}
                 >
                   <span>{tNav("bookmarks")}</span>
@@ -89,7 +99,9 @@ export function Header() {
                 <LocaleLink
                   href="/user/likes"
                   className={`flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ${
-                    isActivePath(pathname, "/user/likes") ? "border-b-2 border-foreground" : ""
+                    isActivePath(pathname, "/user/likes")
+                      ? "border-b-2 border-foreground"
+                      : ""
                   }`}
                 >
                   <span>{tNav("likes")}</span>
@@ -97,7 +109,9 @@ export function Header() {
                 <LocaleLink
                   href="/user/albums"
                   className={`flex items-center space-x-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors ${
-                    isActivePath(pathname, "/user/albums") ? "border-b-2 border-foreground" : ""
+                    isActivePath(pathname, "/user/albums")
+                      ? "border-b-2 border-foreground"
+                      : ""
                   }`}
                 >
                   <span>{tNav("albums")}</span>
