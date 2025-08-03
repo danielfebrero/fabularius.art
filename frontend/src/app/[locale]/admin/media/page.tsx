@@ -113,7 +113,7 @@ export default function AdminMediaPage() {
 
   if (loading || albumsLoading) {
     return (
-      <div className="p-6 space-y-6">
+      <div className="px-6 space-y-6">
         {/* Header Skeleton */}
         <div className="bg-gradient-to-r from-admin-primary/10 to-admin-secondary/10 rounded-xl p-6 border border-admin-primary/20">
           <div className="flex items-center justify-between">
@@ -162,7 +162,7 @@ export default function AdminMediaPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="px-6 space-y-6">
       <div className="bg-gradient-to-r from-admin-primary/10 to-admin-secondary/10 rounded-xl p-6 border border-admin-primary/20">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
