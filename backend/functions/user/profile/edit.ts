@@ -156,10 +156,10 @@ export const handler = async (
       typeof updateData.preferredLanguage !== "string"
     ) {
       validationErrors.push("Preferred language must be a string");
-    } else if (updateData.preferredLanguage) {
-      // Validate against supported locales
-      const supportedLanguages = ["de", "en", "es", "fr", "ru", "zh"];
-      if (!supportedLanguages.includes(updateData.preferredLanguage)) {
+    } else if (updateData.preferredLanguage !== undefined) {
+      // Validate against supported locales (empty string is allowed for auto mode)
+      const supportedLanguages = ["", "de", "en", "es", "fr", "ru", "zh"];
+      if (!supportedLanguages.includes(updateData.preferredLanguage.trim())) {
         validationErrors.push(
           `Preferred language must be one of: ${supportedLanguages.join(", ")}`
         );
@@ -231,11 +231,9 @@ export const handler = async (
     }
 
     if (updateData.preferredLanguage !== undefined) {
-      if (updateData.preferredLanguage.trim()) {
-        updates.preferredLanguage = updateData.preferredLanguage.trim();
-      } else {
-        delete updates.preferredLanguage; // Remove the field entirely if empty
-      }
+      // Always set the preferredLanguage field to support "auto" mode
+      // Empty string means automatic language detection
+      updates.preferredLanguage = updateData.preferredLanguage.trim();
     }
 
     // Only proceed if there are actually changes to make

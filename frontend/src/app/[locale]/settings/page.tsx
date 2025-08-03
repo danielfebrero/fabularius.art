@@ -74,19 +74,38 @@ export default function SettingsPage() {
 
   useEffect(() => {
     // Check if user has a language preference
-    if (user?.preferredLanguage) {
-      // User has a preference set
+    if (user?.preferredLanguage && user.preferredLanguage !== "") {
+      // User has a specific language preference set
       setSelectedLanguage(user.preferredLanguage);
       setIsLanguageAutomatic(false);
       // If current locale doesn't match preference, redirect
       if (currentLocale !== user.preferredLanguage) {
         router.replace(`/${user.preferredLanguage}/settings`);
       }
-    } else {
-      // No preference set, detect if browser language matches current locale
+    } else if (user?.preferredLanguage === "") {
+      // User explicitly chose "auto" mode (empty string)
       const browserLang = navigator.language.split("-")[0];
+      const supportedLang = locales.includes(browserLang as any)
+        ? browserLang
+        : "en";
+
+      setSelectedLanguage(supportedLang);
+      setIsLanguageAutomatic(true);
+
+      // If current locale doesn't match browser language, redirect
+      if (currentLocale !== supportedLang) {
+        router.replace(`/${supportedLang}/settings`);
+      }
+    } else {
+      // User has never set a preference (undefined/null)
+      // Show automatic if browser language matches current locale
+      const browserLang = navigator.language.split("-")[0];
+      const isBrowserLangSupported = locales.includes(browserLang as any);
+      const browserLangMatches =
+        isBrowserLangSupported && browserLang === currentLocale;
+
       setSelectedLanguage(currentLocale);
-      setIsLanguageAutomatic(browserLang === currentLocale);
+      setIsLanguageAutomatic(browserLangMatches);
     }
   }, [currentLocale, user?.preferredLanguage, router]);
 
@@ -96,25 +115,35 @@ export default function SettingsPage() {
 
     try {
       if (languageCode === "auto") {
-        // Get browser language
+        // Clear user's language preference to enable automatic detection
+        await userApi.updateLanguage("");
+
+        // Get browser language and determine target locale
         const browserLang = navigator.language.split("-")[0];
         const supportedLang = locales.includes(browserLang as any)
           ? browserLang
           : "en";
 
-        // Clear user's language preference
-        await userApi.updateLanguage("");
-        // Navigate to browser language
-        router.push(`/${supportedLang}/settings`);
+        // Set the UI state to show automatic mode
         setIsLanguageAutomatic(true);
         setSelectedLanguage(supportedLang);
+
+        // Only navigate if we need to change locale
+        if (currentLocale !== supportedLang) {
+          router.push(`/${supportedLang}/settings`);
+        }
       } else {
         // Save language preference to user profile
         await userApi.updateLanguage(languageCode);
-        // Navigate to selected language
-        router.push(`/${languageCode}/settings`);
+
+        // Set manual mode and selection
         setIsLanguageAutomatic(false);
         setSelectedLanguage(languageCode);
+
+        // Navigate to selected language if different
+        if (currentLocale !== languageCode) {
+          router.push(`/${languageCode}/settings`);
+        }
       }
     } catch (error: any) {
       alert(error.message || "Failed to update language preference");
