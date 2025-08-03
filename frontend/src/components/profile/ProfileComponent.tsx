@@ -200,7 +200,7 @@ export default function ProfileComponent({
       const data = await userApi.uploadAvatar(file.name, file.type);
 
       // Step 2: Upload file to S3
-      console.log("🔄 Uploading avatar to S3...");
+      console.log("🔄 Uploading avatar to S3...", { data });
       const uploadResponse = await fetch(data.uploadUrl, {
         method: "PUT",
         body: file,
@@ -208,6 +208,7 @@ export default function ProfileComponent({
           "Content-Type": file.type,
         },
       });
+      console.log("Fetched ", data.uploadUrl);
 
       if (!uploadResponse.ok) {
         throw new Error(`Upload failed: ${uploadResponse.statusText}`);
