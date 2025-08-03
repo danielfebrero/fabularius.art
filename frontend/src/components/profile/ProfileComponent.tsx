@@ -37,6 +37,7 @@ import {
   Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { composeMediaUrl } from "@/lib/urlUtils";
 
 interface ProfileUser {
   userId: string;
@@ -646,7 +647,7 @@ export default function ProfileComponent({
                   <div className="w-24 h-24 sm:w-32 sm:h-32 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl sm:text-3xl font-bold shadow-lg overflow-hidden">
                     {avatarUrl ? (
                       <img
-                        src={avatarUrl}
+                        src={composeMediaUrl(avatarUrl)}
                         alt={`${displayName}'s avatar`}
                         className="w-full h-full object-cover"
                       />
