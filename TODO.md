@@ -26,6 +26,10 @@ The content card should automatically choose the best media to display based on 
 
 Users should be able to upload an avatar image.
 
+### Creator Insights
+
+Currently we show mocked data for creator insights. We should implement the real data.
+
 ## Videos
 
 ### In lightbox, the video preview should be fullscreen like image
