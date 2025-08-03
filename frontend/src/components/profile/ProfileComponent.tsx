@@ -197,14 +197,11 @@ export default function ProfileComponent({
 
       // Step 1: Get presigned upload URL
       console.log("🔄 Getting presigned upload URL for avatar...");
-      const { uploadUrl, avatarKey } = await userApi.uploadAvatar(
-        file.name,
-        file.type
-      );
+      const data = await userApi.uploadAvatar(file.name, file.type);
 
       // Step 2: Upload file to S3
       console.log("🔄 Uploading avatar to S3...");
-      const uploadResponse = await fetch(uploadUrl, {
+      const uploadResponse = await fetch(data.uploadUrl, {
         method: "PUT",
         body: file,
         headers: {
@@ -223,7 +220,7 @@ export default function ProfileComponent({
       // Return success with the avatar key (thumbnails will be processed by S3 notifications)
       return {
         success: true,
-        avatarUrl: avatarKey,
+        avatarUrl: data.avatarKey,
         avatarThumbnails: {}, // Thumbnails will be available after S3 processing
       };
     } catch (error) {
