@@ -12,6 +12,15 @@ export interface User {
   lastActive?: string; // Last time user was seen active (updated on each request)
   googleId?: string; // For future Google OAuth integration
   preferredLanguage?: string; // User's preferred language (ISO 639-1 code: en, fr, de, etc.)
+
+  // Avatar information
+  avatarUrl?: string; // Original avatar image URL
+  avatarThumbnails?: {
+    originalSize?: string; // WebP optimized version of original (full resolution)
+    small?: string; // Small size (max 32px, preserves aspect ratio)
+    medium?: string; // Medium size (max 96px, preserves aspect ratio)
+    large?: string; // Large size (max 128px, preserves aspect ratio)
+  };
 }
 
 export interface UserSession {
@@ -144,6 +153,15 @@ export interface UserEntity {
   location?: string; // User location (city, country)
   website?: string; // User website URL
   preferredLanguage?: string; // User's preferred language (ISO 639-1 code: en, fr, de, etc.)
+
+  // Avatar information
+  avatarUrl?: string; // Original avatar image URL
+  avatarThumbnails?: {
+    originalSize?: string; // WebP optimized version of original (full resolution)
+    small?: string; // Small size (max 32px, preserves aspect ratio)
+    medium?: string; // Medium size (max 96px, preserves aspect ratio)
+    large?: string; // Large size (max 128px, preserves aspect ratio)
+  };
 
   // Plan and subscription information
   role?: "user" | "admin" | "moderator"; // User role

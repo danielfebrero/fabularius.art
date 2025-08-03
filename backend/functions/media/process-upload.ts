@@ -2,6 +2,7 @@ import { S3Event, S3EventRecord } from "aws-lambda";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { ThumbnailService } from "@shared/utils/thumbnail";
+import { AvatarThumbnailService } from "@shared/utils/avatar-thumbnail";
 import { RevalidationService } from "@shared/utils/revalidation";
 import { S3Service } from "@shared/utils/s3";
 import { Readable } from "stream";
@@ -101,7 +102,6 @@ export const handler = async (event: S3Event): Promise<void> => {
 };
 
 async function processUploadRecord(record: S3EventRecord): Promise<void> {
-  const bucket = record.s3.bucket.name;
   const key = decodeURIComponent(record.s3.object.key.replace(/\+/g, " "));
 
   console.log(`Processing uploaded file: ${key}`);
@@ -112,17 +112,101 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
     return;
   }
 
-  // Extract album ID and media ID from the key
+  // Determine upload type based on key pattern
   const keyParts = key.split("/");
+
   if (
-    keyParts.length < 4 ||
-    keyParts[0] !== "albums" ||
-    keyParts[2] !== "media"
+    keyParts.length >= 4 &&
+    keyParts[0] === "users" &&
+    keyParts[2] === "avatar"
   ) {
-    console.log("Invalid key format, skipping:", key);
+    // Avatar upload: users/{userId}/avatar/{filename}
+    await processAvatarUpload(record, key, keyParts);
+  } else if (
+    keyParts.length >= 4 &&
+    keyParts[0] === "albums" &&
+    keyParts[2] === "media"
+  ) {
+    // Media upload: albums/{albumId}/media/{filename}
+    await processMediaUpload(record, key, keyParts);
+  } else {
+    console.log("Unknown key format, skipping:", key);
+    return;
+  }
+}
+
+async function processAvatarUpload(
+  record: S3EventRecord,
+  key: string,
+  keyParts: string[]
+): Promise<void> {
+  const userId = keyParts[1];
+  const filename = keyParts[3];
+
+  if (!userId || !filename) {
+    console.log("No user ID or filename found in avatar key:", key);
     return;
   }
 
+  console.log(`Processing avatar for user: ${userId}, file: ${filename}`);
+
+  // Get the file from S3
+  const getObjectCommand = new GetObjectCommand({
+    Bucket: record.s3.bucket.name,
+    Key: key,
+  });
+
+  try {
+    const response = await s3Client.send(getObjectCommand);
+    if (!response.Body) {
+      console.log("No body in S3 response");
+      return;
+    }
+
+    // Get metadata to determine content type
+    const contentType = response.ContentType || "image/jpeg";
+
+    console.log(`Avatar content type: ${contentType}`);
+
+    // Validate that it's an image
+    if (!contentType.startsWith("image/")) {
+      console.log("Not an image file, skipping avatar processing");
+      return;
+    }
+
+    // Convert stream to buffer
+    const chunks: Buffer[] = [];
+    const stream = response.Body as Readable;
+
+    for await (const chunk of stream) {
+      chunks.push(Buffer.from(chunk));
+    }
+
+    const buffer = Buffer.concat(chunks);
+
+    // Generate avatar thumbnails
+    const thumbnailUrls = await AvatarThumbnailService.generateAvatarThumbnails(
+      buffer,
+      userId,
+      contentType
+    );
+
+    // Update user entity with avatar information
+    await updateUserAvatar(userId, key, thumbnailUrls);
+
+    console.log(`✅ Successfully processed avatar for user: ${userId}`);
+  } catch (error) {
+    console.error(`❌ Failed to process avatar for user ${userId}:`, error);
+    throw error;
+  }
+}
+
+async function processMediaUpload(
+  record: S3EventRecord,
+  key: string,
+  keyParts: string[]
+): Promise<void> {
+  const bucket = record.s3.bucket.name;
   const albumId = keyParts[1];
 
   if (!albumId) {
@@ -287,5 +371,30 @@ async function processUploadRecord(record: S3EventRecord): Promise<void> {
       error
     );
     // Don't fail the entire operation if revalidation fails
+  }
+}
+
+/**
+ * Update user entity with avatar information
+ */
+async function updateUserAvatar(
+  userId: string,
+  avatarUrl: string,
+  thumbnailUrls: {
+    originalSize?: string;
+    small?: string;
+    medium?: string;
+    large?: string;
+  }
+): Promise<void> {
+  try {
+    await DynamoDBService.updateUser(userId, {
+      avatarUrl,
+      avatarThumbnails: thumbnailUrls,
+    });
+    console.log(`✅ Updated user ${userId} with avatar information`);
+  } catch (error) {
+    console.error(`❌ Failed to update user ${userId} with avatar:`, error);
+    throw error;
   }
 }

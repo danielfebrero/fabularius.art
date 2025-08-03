@@ -24,6 +24,15 @@ interface UpdateProfileResponse {
     preferredLanguage?: string;
     createdAt: string;
     lastLoginAt?: string;
+
+    // Avatar information
+    avatarUrl?: string;
+    avatarThumbnails?: {
+      originalSize?: string;
+      small?: string;
+      medium?: string;
+      large?: string;
+    };
   };
 }
 
@@ -293,6 +302,10 @@ export const handler = async (
         createdAt: updatedUser.createdAt,
         ...(updatedUser.lastLoginAt && {
           lastLoginAt: updatedUser.lastLoginAt,
+        }),
+        ...(updatedUser.avatarUrl && { avatarUrl: updatedUser.avatarUrl }),
+        ...(updatedUser.avatarThumbnails && {
+          avatarThumbnails: updatedUser.avatarThumbnails,
         }),
       },
     };

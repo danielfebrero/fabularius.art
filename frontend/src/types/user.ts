@@ -10,6 +10,15 @@ export interface User {
   lastActive?: string; // Last time user was seen active (updated on each request)
   googleId?: string;
   preferredLanguage?: string; // User's preferred language (ISO 639-1 code: en, fr, de, etc.)
+
+  // Avatar information
+  avatarUrl?: string; // Original avatar image URL
+  avatarThumbnails?: {
+    originalSize?: string; // WebP optimized version of original (full resolution)
+    small?: string; // Small size (max 32px, preserves aspect ratio)
+    medium?: string; // Medium size (max 96px, preserves aspect ratio)
+    large?: string; // Large size (max 128px, preserves aspect ratio)
+  };
 }
 
 export interface UserSession {
@@ -308,6 +317,15 @@ export interface UserProfileUpdateResponse {
       preferredLanguage?: string;
       createdAt: string;
       lastLoginAt?: string;
+
+      // Avatar information
+      avatarUrl?: string;
+      avatarThumbnails?: {
+        originalSize?: string;
+        small?: string;
+        medium?: string;
+        large?: string;
+      };
     };
   };
   error?: string;
@@ -324,6 +342,15 @@ export interface PublicUserProfile {
   bio?: string;
   location?: string;
   website?: string;
+
+  // Avatar information
+  avatarUrl?: string; // Original avatar image URL
+  avatarThumbnails?: {
+    originalSize?: string; // WebP optimized version of original (full resolution)
+    small?: string; // Small size (max 32px, preserves aspect ratio)
+    medium?: string; // Medium size (max 96px, preserves aspect ratio)
+    large?: string; // Large size (max 128px, preserves aspect ratio)
+  };
 }
 
 export interface GetPublicProfileResponse {

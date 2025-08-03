@@ -43,22 +43,39 @@ const CLOUDFRONT_DOMAIN = process.env["CLOUDFRONT_DOMAIN"]!;
 
 export class S3Service {
   static async generatePresignedUploadUrl(
-    albumId: string,
+    context: string, // Either "media" or "avatar"
+    identifier: string, // albumId for media, userId for avatar
     filename: string,
     mimeType: string,
     expiresIn: number = 3600
   ): Promise<{ uploadUrl: string; key: string }> {
     const fileExtension = path.extname(filename);
-    const key = `albums/${albumId}/media/${uuidv4()}${fileExtension}`;
+    let key: string;
+    let metadata: Record<string, string>;
+
+    if (context === "avatar") {
+      // Avatar uploads: users/{userId}/avatar/{uuid}.ext
+      key = `users/${identifier}/avatar/${uuidv4()}${fileExtension}`;
+      metadata = {
+        "original-filename": filename,
+        "user-id": identifier,
+        "upload-type": "avatar",
+      };
+    } else {
+      // Default to media uploads: albums/{albumId}/media/{uuid}.ext
+      key = `albums/${identifier}/media/${uuidv4()}${fileExtension}`;
+      metadata = {
+        "original-filename": filename,
+        "album-id": identifier,
+        "upload-type": "media",
+      };
+    }
 
     const command = new PutObjectCommand({
       Bucket: BUCKET_NAME,
       Key: key,
       ContentType: mimeType,
-      Metadata: {
-        "original-filename": filename,
-        "album-id": albumId,
-      },
+      Metadata: metadata,
       // Explicitly disable checksums for LocalStack compatibility
       ...(isLocal && { ChecksumAlgorithm: undefined }),
     });
@@ -96,6 +113,8 @@ export class S3Service {
         "content-type",
         "x-amz-meta-original-filename",
         "x-amz-meta-album-id",
+        "x-amz-meta-user-id",
+        "x-amz-meta-upload-type",
       ]),
     };
 
@@ -115,6 +134,38 @@ export class S3Service {
       : rawUrl;
 
     return { uploadUrl, key };
+  }
+
+  // Backward compatibility method for media uploads
+  static async generateMediaPresignedUploadUrl(
+    albumId: string,
+    filename: string,
+    mimeType: string,
+    expiresIn: number = 3600
+  ): Promise<{ uploadUrl: string; key: string }> {
+    return this.generatePresignedUploadUrl(
+      "media",
+      albumId,
+      filename,
+      mimeType,
+      expiresIn
+    );
+  }
+
+  // Specific method for avatar uploads
+  static async generateAvatarPresignedUploadUrl(
+    userId: string,
+    filename: string,
+    mimeType: string,
+    expiresIn: number = 300 // 5 minutes for avatars
+  ): Promise<{ uploadUrl: string; key: string }> {
+    return this.generatePresignedUploadUrl(
+      "avatar",
+      userId,
+      filename,
+      mimeType,
+      expiresIn
+    );
   }
 
   static async generatePresignedDownloadUrl(

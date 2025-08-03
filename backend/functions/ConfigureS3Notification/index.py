@@ -33,7 +33,7 @@ def handler(event, context):
             notification_config = {
                 "LambdaFunctionConfigurations": [
                     {
-                        "Id": "ProcessUploadTrigger",
+                        "Id": "ProcessMediaUploadTrigger",
                         "LambdaFunctionArn": function_arn,
                         "Events": ["s3:ObjectCreated:*"],
                         "Filter": {
@@ -41,7 +41,17 @@ def handler(event, context):
                                 "FilterRules": [{"Name": "prefix", "Value": "albums/"}]
                             }
                         },
-                    }
+                    },
+                    {
+                        "Id": "ProcessAvatarUploadTrigger",
+                        "LambdaFunctionArn": function_arn,
+                        "Events": ["s3:ObjectCreated:*"],
+                        "Filter": {
+                            "Key": {
+                                "FilterRules": [{"Name": "prefix", "Value": "users/"}]
+                            }
+                        },
+                    },
                 ]
             }
             print(

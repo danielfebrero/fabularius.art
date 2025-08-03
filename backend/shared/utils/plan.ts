@@ -35,6 +35,17 @@ export interface EnhancedUser {
   lastLoginAt?: string;
   lastActive?: string; // Last time user was seen active
   googleId?: string;
+  preferredLanguage?: string;
+
+  // Avatar information
+  avatarUrl?: string;
+  avatarThumbnails?: {
+    originalSize?: string;
+    small?: string;
+    medium?: string;
+    large?: string;
+  };
+
   role: UserRole;
   planInfo: UserPlanInfo;
   usageStats: UserUsageStats;
@@ -169,6 +180,12 @@ export class PlanUtil {
       lastLoginAt: userEntity.lastLoginAt,
       lastActive: userEntity.lastActive,
       googleId: userEntity.googleId,
+      preferredLanguage: userEntity.preferredLanguage,
+
+      // Avatar information
+      avatarUrl: userEntity.avatarUrl,
+      avatarThumbnails: userEntity.avatarThumbnails,
+
       role,
       planInfo,
       usageStats,

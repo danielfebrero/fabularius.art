@@ -369,4 +369,41 @@ export const userApi = {
 
     return response.json();
   },
+
+  // Upload avatar - request presigned URL
+  uploadAvatar: async (
+    filename: string,
+    contentType: string
+  ): Promise<{
+    uploadUrl: string;
+    avatarKey: string;
+  }> => {
+    const response = await fetch(`${API_URL}/user/profile/avatar/upload`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ filename, contentType }),
+    });
+
+    if (!response.ok) {
+      let errorData = null;
+      try {
+        errorData = await response.json();
+      } catch {
+        // response body is not JSON
+      }
+      const errorMessage =
+        (errorData && (errorData.error || errorData.message)) ||
+        `Avatar upload failed: ${response.statusText}`;
+      const error = new Error(errorMessage);
+      if (errorData) {
+        (error as any).response = errorData;
+      }
+      throw error;
+    }
+
+    return response.json();
+  },
 };

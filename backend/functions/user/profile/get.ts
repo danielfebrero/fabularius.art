@@ -13,6 +13,15 @@ interface PublicUserProfile {
   bio?: string;
   location?: string;
   website?: string;
+
+  // Avatar information
+  avatarUrl?: string;
+  avatarThumbnails?: {
+    originalSize?: string;
+    small?: string;
+    medium?: string;
+    large?: string;
+  };
 }
 
 interface GetPublicProfileResponse {
@@ -103,6 +112,10 @@ export const handler = async (
       ...(userEntity.bio && { bio: userEntity.bio }),
       ...(userEntity.location && { location: userEntity.location }),
       ...(userEntity.website && { website: userEntity.website }),
+      ...(userEntity.avatarUrl && { avatarUrl: userEntity.avatarUrl }),
+      ...(userEntity.avatarThumbnails && {
+        avatarThumbnails: userEntity.avatarThumbnails,
+      }),
     };
 
     console.log("✅ Returning public profile for user:", username);

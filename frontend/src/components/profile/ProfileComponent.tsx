@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -49,6 +49,15 @@ interface ProfileUser {
   lastActive?: string; // Last time user was seen active
   plan?: string;
   role?: string;
+
+  // Avatar information
+  avatarUrl?: string;
+  avatarThumbnails?: {
+    originalSize?: string;
+    small?: string;
+    medium?: string;
+    large?: string;
+  };
 }
 
 interface ProfileComponentProps {
@@ -71,6 +80,14 @@ export default function ProfileComponent({
     location: "",
     website: "",
   });
+
+  // Avatar management state
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(
+    null
+  );
+  const [previewAvatarUrl, setPreviewAvatarUrl] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
 
   const t = useTranslations("common");
   const isMobile = useIsMobile();
@@ -134,6 +151,94 @@ export default function ProfileComponent({
   useEffect(() => {
     setCurrentUser(user);
   }, [user]);
+
+  // Avatar handling functions
+  const handleAvatarFileSelect = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      console.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      console.error("File size must be less than 10MB");
+      return;
+    }
+
+    setSelectedAvatarFile(file);
+
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setPreviewAvatarUrl(previewUrl);
+
+    // Clean up previous preview URL
+    return () => {
+      if (previewAvatarUrl) {
+        URL.revokeObjectURL(previewAvatarUrl);
+      }
+    };
+  };
+
+  const handleAvatarUpload = async (
+    file: File
+  ): Promise<{
+    success: boolean;
+    avatarUrl?: string;
+    avatarThumbnails?: any;
+  }> => {
+    try {
+      setIsUploadingAvatar(true);
+
+      // Step 1: Get presigned upload URL
+      console.log("🔄 Getting presigned upload URL for avatar...");
+      const { uploadUrl, avatarKey } = await userApi.uploadAvatar(
+        file.name,
+        file.type
+      );
+
+      // Step 2: Upload file to S3
+      console.log("🔄 Uploading avatar to S3...");
+      const uploadResponse = await fetch(uploadUrl, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed: ${uploadResponse.statusText}`);
+      }
+
+      console.log(
+        "✅ Avatar upload completed. Thumbnails will be generated automatically."
+      );
+
+      // Return success with the avatar key (thumbnails will be processed by S3 notifications)
+      return {
+        success: true,
+        avatarUrl: avatarKey,
+        avatarThumbnails: {}, // Thumbnails will be available after S3 processing
+      };
+    } catch (error) {
+      console.error("❌ Avatar upload failed:", error);
+      return { success: false };
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleCameraClick = () => {
+    if (avatarFileInputRef.current) {
+      avatarFileInputRef.current.click();
+    }
+  };
 
   // Get real comments data
   const {
@@ -209,6 +314,23 @@ export default function ProfileComponent({
         return;
       }
 
+      // Handle avatar upload if a new file was selected
+      let avatarUpdateData = {};
+      if (selectedAvatarFile) {
+        console.log("🔄 Uploading new avatar...");
+        const avatarResult = await handleAvatarUpload(selectedAvatarFile);
+        if (avatarResult.success) {
+          avatarUpdateData = {
+            avatarUrl: avatarResult.avatarUrl,
+            avatarThumbnails: avatarResult.avatarThumbnails,
+          };
+          console.log("✅ Avatar uploaded successfully");
+        } else {
+          console.error("❌ Avatar upload failed");
+          // Continue with profile update even if avatar upload fails
+        }
+      }
+
       // Call the API to update the profile
       const result = await userApi.updateProfile(formData);
 
@@ -222,10 +344,26 @@ export default function ProfileComponent({
           bio: result.data.user.bio,
           location: result.data.user.location,
           website: result.data.user.website,
+          // Include avatar updates if they were successful
+          ...avatarUpdateData,
+          // Also include any avatar data from the API response
+          ...(result.data.user.avatarUrl && {
+            avatarUrl: result.data.user.avatarUrl,
+          }),
+          ...(result.data.user.avatarThumbnails && {
+            avatarThumbnails: result.data.user.avatarThumbnails,
+          }),
         });
 
         // Reset username status since we've successfully saved
         resetUsernameStatus();
+
+        // Reset avatar selection state
+        setSelectedAvatarFile(null);
+        if (previewAvatarUrl) {
+          URL.revokeObjectURL(previewAvatarUrl);
+          setPreviewAvatarUrl(null);
+        }
 
         // Optionally show a success message or trigger a refresh
         // For now, we'll just log the success
@@ -255,6 +393,13 @@ export default function ProfileComponent({
     });
     // Reset username status
     resetUsernameStatus();
+
+    // Reset avatar state
+    setSelectedAvatarFile(null);
+    if (previewAvatarUrl) {
+      URL.revokeObjectURL(previewAvatarUrl);
+      setPreviewAvatarUrl(null);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -266,6 +411,34 @@ export default function ProfileComponent({
 
   const displayName = currentUser.username ?? "Anonymous";
   const initials = displayName.slice(0, 2).toUpperCase();
+
+  // Get the best avatar URL to display
+  const getAvatarUrl = () => {
+    // If editing and there's a preview, show the preview
+    if (isEditing && previewAvatarUrl) {
+      return previewAvatarUrl;
+    }
+
+    // Otherwise, show the best available avatar thumbnail
+    if (currentUser.avatarThumbnails?.large) {
+      return currentUser.avatarThumbnails.large;
+    }
+    if (currentUser.avatarThumbnails?.medium) {
+      return currentUser.avatarThumbnails.medium;
+    }
+    if (currentUser.avatarThumbnails?.small) {
+      return currentUser.avatarThumbnails.small;
+    }
+    if (currentUser.avatarThumbnails?.originalSize) {
+      return currentUser.avatarThumbnails.originalSize;
+    }
+    if (currentUser.avatarUrl) {
+      return currentUser.avatarUrl;
+    }
+    return null;
+  };
+
+  const avatarUrl = getAvatarUrl();
 
   // Mock data for content - in real app, this would be passed as props or fetched
   const mockData = {
@@ -479,13 +652,42 @@ export default function ProfileComponent({
               <div className="flex flex-col sm:flex-row gap-6">
                 {/* Avatar Section */}
                 <div className="relative inline-block w-fit">
-                  <div className="w-24 h-24 sm:w-32 sm:h-32 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl sm:text-3xl font-bold shadow-lg">
-                    {initials}
+                  <div className="w-24 h-24 sm:w-32 sm:h-32 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl sm:text-3xl font-bold shadow-lg overflow-hidden">
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt={`${displayName}'s avatar`}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      initials
+                    )}
                   </div>
                   {isOwner && isEditing && (
-                    <button className="absolute -top-1 -right-1 w-8 h-8 bg-background text-foreground border-2 border-primary rounded-full flex items-center justify-center hover:bg-muted transition-colors shadow-lg z-10">
-                      <Camera className="w-4 h-4" />
-                    </button>
+                    <>
+                      <button
+                        onClick={handleCameraClick}
+                        className="absolute -top-1 -right-1 w-8 h-8 bg-background text-foreground border-2 border-primary rounded-full flex items-center justify-center hover:bg-muted transition-colors shadow-lg z-10"
+                      >
+                        <Camera className="w-4 h-4" />
+                      </button>
+
+                      {/* Hidden file input */}
+                      <input
+                        ref={avatarFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarFileSelect}
+                        className="hidden"
+                      />
+                    </>
+                  )}
+
+                  {/* Loading indicator for avatar upload */}
+                  {isUploadingAvatar && (
+                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                      <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </div>
                   )}
                 </div>
 
@@ -737,13 +939,18 @@ export default function ProfileComponent({
                               className="flex items-center gap-2"
                               disabled={
                                 isSaving ||
+                                isUploadingAvatar ||
                                 usernameStatus === "checking" ||
                                 usernameStatus === "taken"
                               }
                             >
                               <Save className="w-4 h-4" />
                               {isSaving
-                                ? "Saving..."
+                                ? selectedAvatarFile
+                                  ? "Saving profile & avatar..."
+                                  : "Saving..."
+                                : isUploadingAvatar
+                                ? "Uploading avatar..."
                                 : usernameStatus === "checking"
                                 ? "Checking username..."
                                 : usernameStatus === "taken"
@@ -755,7 +962,7 @@ export default function ProfileComponent({
                               variant="outline"
                               size="sm"
                               className="flex items-center gap-2"
-                              disabled={isSaving}
+                              disabled={isSaving || isUploadingAvatar}
                             >
                               <X className="w-4 h-4" />
                               {t("cancel")}

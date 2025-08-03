@@ -126,7 +126,7 @@ export const handler = async (
     }
 
     // Generate presigned upload URL
-    const { uploadUrl, key } = await S3Service.generatePresignedUploadUrl(
+    const { uploadUrl, key } = await S3Service.generateMediaPresignedUploadUrl(
       albumId,
       uploadRequest.filename,
       uploadRequest.mimeType
