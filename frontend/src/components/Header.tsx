@@ -32,7 +32,7 @@ export function Header() {
           {/* Logo/Brand - Always visible */}
           <LocaleLink href="/" className="flex items-center space-x-3">
             <img src="/logo.svg" alt="PornSpot.ai" className="w-8 h-8" />
-            <div>
+            <div className="bg-muted/20 rounded-lg px-3 py-2 border border-border/60">
               <h1 className="text-xl font-bold text-foreground">
                 {tSite("name")}
               </h1>
