@@ -67,7 +67,7 @@ export const handler = async (
     try {
       const emailResult = await EmailService.sendWelcomeEmail(
         updatedUser.email,
-        updatedUser.firstName
+        updatedUser.username
       );
 
       console.log("Welcome email sent:", {

@@ -122,9 +122,9 @@ export class EmailService {
    */
   static async sendWelcomeEmail(
     email: string,
-    firstName?: string
+    username?: string
   ): Promise<EmailSendResult> {
-    const displayName = firstName ? firstName : email;
+    const displayName = username ? username : email;
     const frontendUrl = await ParameterStoreService.getFrontendUrl();
     const loginUrl = `${frontendUrl}/auth/login`;
 
