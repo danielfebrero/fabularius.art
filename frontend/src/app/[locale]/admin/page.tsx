@@ -1,12 +1,12 @@
 "use client";
 
 import { useAdminContext } from "@/contexts/AdminContext";
-import { useAdminStats } from "@/hooks/useAdminStats";
+import { useAdminStatsQuery } from "@/hooks/queries/useAdminStatsQuery";
 import { Card } from "@/components/ui/Card";
 
 export default function AdminDashboard() {
   const { user } = useAdminContext();
-  const { stats, loading, error } = useAdminStats();
+  const { data: stats, isLoading: loading, error } = useAdminStatsQuery();
 
   const getStatValue = (key: string, fallback: string = "—") => {
     if (loading) return "Loading...";
@@ -23,7 +23,7 @@ export default function AdminDashboard() {
     return fallback;
   };
 
-  const getStatDescription = (loading: boolean, error: string | null) => {
+  const getStatDescription = (loading: boolean, error: Error | null) => {
     if (loading) return "Loading...";
     if (error) return "Failed to load";
     return "Updated just now";

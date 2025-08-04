@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocaleRouter } from "@/lib/navigation";
 import { MediaManager } from "@/components/admin/MediaManager";
-import { useAdminAlbums } from "@/hooks/useAdminAlbums";
-import { useAdminMedia } from "@/hooks/useAdminMedia";
-import { Album } from "@/types";
+import {
+  useAdminAlbum,
+  useUpdateAdminAlbum,
+} from "@/hooks/queries/useAdminAlbumsQuery";
+import { useAdminAlbumMedia } from "@/hooks/queries/useAdminMediaQuery";
 
 interface MediaManagementPageProps {
   params: {
@@ -17,30 +19,17 @@ export default function MediaManagementPage({
   params,
 }: MediaManagementPageProps) {
   const router = useLocaleRouter();
-  const { getAlbum, updateAlbum } = useAdminAlbums();
-  const { media, fetchAlbumMedia } = useAdminMedia();
-  const [album, setAlbum] = useState<Album | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: album, isLoading: albumLoading } = useAdminAlbum(
+    params.albumId
+  );
+  const { data: mediaData, isLoading: mediaLoading } = useAdminAlbumMedia(
+    params.albumId
+  );
+  const updateAlbumMutation = useUpdateAdminAlbum();
   const [error, setError] = useState<string | null>(null);
-  const [coverUpdateLoading, setCoverUpdateLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [albumData] = await Promise.all([
-          getAlbum(params.albumId),
-          fetchAlbumMedia(params.albumId),
-        ]);
-        setAlbum(albumData);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch data");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [params.albumId, getAlbum, fetchAlbumMedia]);
+  const loading = albumLoading || mediaLoading;
+  const media = mediaData?.data?.media || [];
 
   const handleBack = () => {
     router.push("/admin/albums");
@@ -49,21 +38,21 @@ export default function MediaManagementPage({
   const handleCoverSelect = async (coverUrl: string | undefined) => {
     if (!album) return;
 
-    setCoverUpdateLoading(true);
+    setError(null);
     try {
       const updateData: { coverImageUrl?: string } = {};
       if (coverUrl) {
         updateData.coverImageUrl = coverUrl;
       }
 
-      const updatedAlbum = await updateAlbum(album.id, updateData);
-      setAlbum(updatedAlbum);
+      await updateAlbumMutation.mutateAsync({
+        albumId: album.id,
+        updates: updateData,
+      });
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to update cover image"
       );
-    } finally {
-      setCoverUpdateLoading(false);
     }
   };
 
@@ -248,10 +237,13 @@ export default function MediaManagementPage({
         albumId={params.albumId}
         albumTitle={album.title}
         media={media}
-        onMediaChange={() => fetchAlbumMedia(params.albumId)}
+        onMediaChange={() => {
+          // TanStack Query will automatically refetch when mutations complete
+          // No manual refetch needed
+        }}
         currentCoverUrl={album.coverImageUrl}
         onCoverSelect={handleCoverSelect}
-        coverUpdateLoading={coverUpdateLoading}
+        coverUpdateLoading={updateAlbumMutation.isPending}
       />
     </div>
   );

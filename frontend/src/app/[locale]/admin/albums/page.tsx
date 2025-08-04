@@ -1,17 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocaleRouter } from "@/lib/navigation";
 import { Album } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { AlbumTable } from "@/components/admin/AlbumTable";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
-import { useAdminAlbums } from "@/hooks/useAdminAlbums";
+import {
+  useAdminAlbumsData,
+  useDeleteAdminAlbum,
+  useBulkDeleteAdminAlbums,
+} from "@/hooks/queries/useAdminAlbumsQuery";
 
 export default function AdminAlbumsPage() {
   const router = useLocaleRouter();
-  const { albums, loading, error, fetchAlbums, deleteAlbum, bulkDeleteAlbums } =
-    useAdminAlbums();
+  const {
+    albums,
+    isLoading: loading,
+    error,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useAdminAlbumsData({ limit: 20 });
+
+  const deleteAlbumMutation = useDeleteAdminAlbum();
+  const bulkDeleteMutation = useBulkDeleteAdminAlbums();
 
   const [selectedAlbums, setSelectedAlbums] = useState<string[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -22,10 +35,6 @@ export default function AdminAlbumsPage() {
   }>({
     isOpen: false,
   });
-
-  useEffect(() => {
-    fetchAlbums();
-  }, [fetchAlbums]);
 
   const handleSelectAlbum = (albumId: string, selected: boolean) => {
     setSelectedAlbums((prev) =>
@@ -56,13 +65,12 @@ export default function AdminAlbumsPage() {
   const handleConfirmDelete = async () => {
     try {
       if (deleteConfirm.isBulk) {
-        await bulkDeleteAlbums(selectedAlbums);
+        await bulkDeleteMutation.mutateAsync(selectedAlbums);
         setSelectedAlbums([]);
       } else if (deleteConfirm.albumId) {
-        await deleteAlbum(deleteConfirm.albumId);
+        await deleteAlbumMutation.mutateAsync(deleteConfirm.albumId);
       }
       setDeleteConfirm({ isOpen: false });
-      await fetchAlbums();
     } catch (error) {
       console.error("Delete failed:", error);
     }
@@ -197,7 +205,9 @@ export default function AdminAlbumsPage() {
                 clipRule="evenodd"
               />
             </svg>
-            <p className="text-destructive font-medium">{error}</p>
+            <p className="text-destructive font-medium">
+              {error?.message || "An error occurred"}
+            </p>
           </div>
         </div>
       )}
@@ -212,6 +222,27 @@ export default function AdminAlbumsPage() {
         onManageMedia={handleManageMedia}
         loading={loading}
       />
+
+      {/* Load More Button for infinite scroll */}
+      {hasNextPage && (
+        <div className="flex justify-center mt-6">
+          <Button
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+            variant="outline"
+            className="min-w-[150px]"
+          >
+            {isFetchingNextPage ? (
+              <>
+                <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin mr-2"></div>
+                Loading...
+              </>
+            ) : (
+              "Load More Albums"
+            )}
+          </Button>
+        </div>
+      )}
 
       <ConfirmDialog
         isOpen={deleteConfirm.isOpen}

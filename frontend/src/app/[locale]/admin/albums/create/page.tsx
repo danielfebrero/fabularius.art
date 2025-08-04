@@ -3,12 +3,11 @@
 import { useState } from "react";
 import { useLocaleRouter } from "@/lib/navigation";
 import { AlbumForm } from "@/components/admin/AlbumForm";
-import { useAdminAlbums } from "@/hooks/useAdminAlbums";
+import { useCreateAdminAlbum } from "@/hooks/queries/useAdminAlbumsQuery";
 
 export default function CreateAlbumPage() {
   const router = useLocaleRouter();
-  const { createAlbum } = useAdminAlbums();
-  const [loading, setLoading] = useState(false);
+  const createAlbumMutation = useCreateAdminAlbum();
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (data: {
@@ -17,16 +16,13 @@ export default function CreateAlbumPage() {
     isPublic: boolean;
     coverImageUrl?: string;
   }) => {
-    setLoading(true);
     setError(null);
 
     try {
-      const album = await createAlbum(data);
+      const album = await createAlbumMutation.mutateAsync(data);
       router.push(`/admin/albums/${album.id}/media`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create album");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -78,7 +74,7 @@ export default function CreateAlbumPage() {
       <AlbumForm
         onSubmit={handleSubmit}
         onCancel={handleCancel}
-        loading={loading}
+        loading={createAlbumMutation.isPending}
         submitText="Create Album"
       />
     </div>

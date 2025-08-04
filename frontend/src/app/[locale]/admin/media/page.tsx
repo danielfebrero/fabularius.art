@@ -1,51 +1,30 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useAdminMedia } from "@/hooks/useAdminMedia";
-import { useAdminAlbums } from "@/hooks/useAdminAlbums";
+import { useState } from "react";
+import { useAdminAlbumsData } from "@/hooks/queries/useAdminAlbumsQuery";
+import { useAdminBatchDeleteMedia } from "@/hooks/queries/useAdminMediaQuery";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
-import { Media, Album } from "@/types";
+import { Media } from "@/types";
 import { getThumbnailUrl } from "@/lib/utils";
 
 export default function AdminMediaPage() {
-  const { albums, loading: albumsLoading, fetchAlbums } = useAdminAlbums();
-  const { deleteMedia } = useAdminMedia();
-  const [allMedia, setAllMedia] = useState<(Media & { albumTitle: string })[]>(
-    []
-  );
-  const [loading, setLoading] = useState(true);
+  const { albums, isLoading: albumsLoading } = useAdminAlbumsData({
+    limit: 100,
+  });
+  const batchDeleteMutation = useAdminBatchDeleteMedia();
   const [selectedMedia, setSelectedMedia] = useState<Set<string>>(new Set());
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [mediaToDelete, setMediaToDelete] = useState<string[]>([]);
 
-  // Fetch all media from all albums
-  useEffect(() => {
-    const loadAllMedia = async () => {
-      setLoading(true);
-      try {
-        await fetchAlbums();
-      } catch (error) {
-        console.error("Error loading albums:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadAllMedia();
-  }, [fetchAlbums]);
-
   // Combine media from all albums
-  useEffect(() => {
-    if (albums.length > 0) {
-      const combined = albums.flatMap((album: Album) =>
-        (album.media || []).map((media: Media) => ({
-          ...media,
-          albumTitle: album.title,
-        }))
-      );
-      setAllMedia(combined);
-    }
-  }, [albums]);
+  const allMedia: (Media & { albumTitle: string; albumId: string })[] =
+    albums.flatMap((album) =>
+      (album.media || []).map((media: Media) => ({
+        ...media,
+        albumTitle: album.title,
+        albumId: album.id,
+      }))
+    );
 
   const handleSelectMedia = (mediaId: string) => {
     const newSelected = new Set(selectedMedia);
@@ -81,7 +60,7 @@ export default function AdminMediaPage() {
         const media = allMedia.find((m) => m.id === mediaId);
         if (media) {
           const album = albums.find((a) =>
-            a.media?.some((m) => m.id === mediaId)
+            a.media?.some((m: any) => m.id === mediaId)
           );
           if (album) {
             if (!mediaByAlbum.has(album.id)) {
@@ -92,16 +71,15 @@ export default function AdminMediaPage() {
         }
       });
 
-      // Delete media from each album
-      for (const albumId of Array.from(mediaByAlbum.keys())) {
-        const mediaIds = mediaByAlbum.get(albumId)!;
-        for (const mediaId of mediaIds) {
-          await deleteMedia(albumId, mediaId);
-        }
-      }
+      // Prepare batch delete data
+      const mediaItems = Array.from(mediaByAlbum.entries()).flatMap(
+        ([albumId, mediaIds]) =>
+          mediaIds.map((mediaId) => ({ albumId, mediaId }))
+      );
 
-      // Refresh albums to update media lists
-      await fetchAlbums();
+      // Delete media using batch mutation
+      await batchDeleteMutation.mutateAsync(mediaItems);
+
       setSelectedMedia(new Set());
     } catch (error) {
       console.error("Error deleting media:", error);
@@ -111,7 +89,7 @@ export default function AdminMediaPage() {
     }
   };
 
-  if (loading || albumsLoading) {
+  if (albumsLoading) {
     return (
       <div className="px-6 space-y-6">
         {/* Header Skeleton */}

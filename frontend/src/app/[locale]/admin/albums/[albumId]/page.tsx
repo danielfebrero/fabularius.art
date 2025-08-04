@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLocaleRouter } from "@/lib/navigation";
 import { AlbumForm } from "@/components/admin/AlbumForm";
-import { useAdminAlbums } from "@/hooks/useAdminAlbums";
-import { Album } from "@/types";
+import {
+  useAdminAlbum,
+  useUpdateAdminAlbum,
+} from "@/hooks/queries/useAdminAlbumsQuery";
 
 interface EditAlbumPageProps {
   params: {
@@ -14,26 +16,13 @@ interface EditAlbumPageProps {
 
 export default function EditAlbumPage({ params }: EditAlbumPageProps) {
   const router = useLocaleRouter();
-  const { updateAlbum, getAlbum } = useAdminAlbums();
-  const [album, setAlbum] = useState<Album | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [fetchLoading, setFetchLoading] = useState(true);
+  const {
+    data: album,
+    isLoading: fetchLoading,
+    error: fetchError,
+  } = useAdminAlbum(params.albumId);
+  const updateAlbumMutation = useUpdateAdminAlbum();
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchAlbum = async () => {
-      try {
-        const albumData = await getAlbum(params.albumId);
-        setAlbum(albumData);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch album");
-      } finally {
-        setFetchLoading(false);
-      }
-    };
-
-    fetchAlbum();
-  }, [params.albumId, getAlbum]);
 
   const handleSubmit = async (data: {
     title: string;
@@ -41,16 +30,16 @@ export default function EditAlbumPage({ params }: EditAlbumPageProps) {
     isPublic: boolean;
     coverImageUrl?: string;
   }) => {
-    setLoading(true);
     setError(null);
 
     try {
-      await updateAlbum(params.albumId, data);
+      await updateAlbumMutation.mutateAsync({
+        albumId: params.albumId,
+        updates: data,
+      });
       router.push("/admin/albums");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update album");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -69,7 +58,7 @@ export default function EditAlbumPage({ params }: EditAlbumPageProps) {
     );
   }
 
-  if (error && !album) {
+  if (fetchError && !album) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
         <div className="bg-gradient-to-r from-admin-primary/10 to-admin-secondary/10 rounded-xl p-6 border border-admin-primary/20">
@@ -179,7 +168,7 @@ export default function EditAlbumPage({ params }: EditAlbumPageProps) {
         }}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
-        loading={loading}
+        loading={updateAlbumMutation.isPending}
         submitText="Update Album"
         albumId={params.albumId}
       />
