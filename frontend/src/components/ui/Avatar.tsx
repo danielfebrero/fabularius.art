@@ -155,7 +155,7 @@ export function Avatar({
   const { containerRef, dimensions } = useContainerDimensions();
   const containerWidth = dimensions.width;
   const containerHeight = dimensions.height;
-  
+
   // Track image loading state
   const [isImageLoading, setIsImageLoading] = useState(true);
   const [hasImageError, setHasImageError] = useState(false);
@@ -245,11 +245,7 @@ export function Avatar({
         {avatarUrl && !hasImageError ? (
           <>
             {/* Show initials while loading */}
-            {isImageLoading && (
-              <span className="select-none">
-                {initials}
-              </span>
-            )}
+            {isImageLoading && <span className="select-none">{initials}</span>}
             {/* The actual image - hidden during loading */}
             <img
               src={composeMediaUrl(avatarUrl)}

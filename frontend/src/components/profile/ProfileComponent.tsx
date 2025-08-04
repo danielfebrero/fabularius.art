@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -253,6 +253,14 @@ export default function ProfileComponent({
     isPublic: true,
     limit: 6, // Fetch 6 recent albums for the scrollable preview
   });
+
+  // Check if user is online (last active less than 5 minutes ago)
+  const isUserOnline = useMemo(() => {
+    if (!currentUser.lastActive) return false;
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const lastActiveDate = new Date(currentUser.lastActive);
+    return lastActiveDate > fiveMinutesAgo;
+  }, [currentUser.lastActive]);
 
   // Loading state
   if (loading) {
@@ -619,6 +627,7 @@ export default function ProfileComponent({
                     customSizeClasses="w-24 h-24 sm:w-32 sm:h-32"
                     customTextClasses="text-2xl sm:text-3xl font-bold"
                     className="shadow-lg"
+                    showOnlineIndicator={isUserOnline}
                   />
                   {isOwner && isEditing && (
                     <>

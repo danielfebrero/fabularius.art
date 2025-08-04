@@ -8,6 +8,7 @@ interface PublicUserProfile {
   userId: string;
   username?: string;
   createdAt: string;
+  lastActive?: string; // Last time user was seen active (updated on each request)
   isActive: boolean;
   isEmailVerified: boolean;
   lastLoginAt?: string;
@@ -133,6 +134,7 @@ export const handler = async (
       userId: userEntity.userId,
       username: userEntity.username,
       createdAt: userEntity.createdAt,
+      ...(userEntity.lastActive && { lastActive: userEntity.lastActive }),
       isActive: userEntity.isActive,
       isEmailVerified: userEntity.isEmailVerified,
       ...(userEntity.lastLoginAt && { lastLoginAt: userEntity.lastLoginAt }),
