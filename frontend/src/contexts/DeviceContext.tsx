@@ -19,18 +19,13 @@ export function DeviceProvider({
   children,
   initialDeviceInfo,
 }: DeviceProviderProps) {
-  console.log("DeviceProvider initialized with:", initialDeviceInfo);
-
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo>(() => {
     // Always prefer server-side detection when available
     if (initialDeviceInfo) {
-      console.log("Using server-side device detection:", initialDeviceInfo);
       return initialDeviceInfo;
     }
     // Only use client-side as absolute fallback
-    console.log("Falling back to client-side device detection");
     const clientSideInfo = detectDeviceClientSide();
-    console.log("Client-side detection result:", clientSideInfo);
     return clientSideInfo;
   });
 
@@ -40,7 +35,6 @@ export function DeviceProvider({
     if (!initialDeviceInfo) {
       const updateDeviceInfo = () => {
         const newDeviceInfo = detectDeviceClientSide();
-        console.log("Device info updated (resize):", newDeviceInfo);
         setDeviceInfo(newDeviceInfo);
       };
 
