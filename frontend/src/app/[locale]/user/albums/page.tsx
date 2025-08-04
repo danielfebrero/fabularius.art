@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/Button";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { cn } from "@/lib/utils";
-import { useAlbums } from "@/hooks/useAlbums";
-import { useUser } from "@/hooks/useUser";
+import { useAlbums, useUpdateAlbum, useDeleteAlbum } from "@/hooks/queries/useAlbumsQuery";
+import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { EditAlbumDialog } from "@/components/albums/EditAlbumDialog";
 import { DeleteAlbumDialog } from "@/components/albums/DeleteAlbumDialog";
 import { Album } from "@/types";
@@ -19,17 +19,20 @@ const UserAlbumsPage: React.FC = () => {
   const [deletingAlbum, setDeletingAlbum] = useState<Album | null>(null);
 
   // Get current user info
-  const { user } = useUser();
+  const { data: userResponse } = useUserProfile();
+  const user = userResponse?.data?.user;
 
-  // Use the albums hook with user parameter to fetch current user's own albums (both public and private)
-  const {
-    albums,
-    loading: isLoading,
-    error,
-    totalCount,
-    updateAlbum,
-    deleteAlbum,
-  } = useAlbums({ user: user?.username });
+  // Use TanStack Query hooks for album operations
+  const { data: albumsData, isLoading, error: queryError } = useAlbums({ 
+    user: user?.username 
+  });
+  const updateAlbumMutation = useUpdateAlbum();
+  const deleteAlbumMutation = useDeleteAlbum();
+
+  // Extract albums and pagination from infinite query data
+  const albums = albumsData?.pages.flatMap((page: any) => page.albums) || [];
+  const totalCount = albums.length;
+  const error = queryError?.message;
 
   // Handle album edit
   const handleEditAlbum = (album: Album) => {
@@ -43,13 +46,13 @@ const UserAlbumsPage: React.FC = () => {
 
   // Handle save album
   const handleSaveAlbum = async (albumId: string, data: any) => {
-    updateAlbum && (await updateAlbum(albumId, data));
+    await updateAlbumMutation.mutateAsync({ albumId, data });
   };
 
   // Handle confirm delete
   const handleConfirmDelete = async () => {
     if (deletingAlbum) {
-      deleteAlbum && (await deleteAlbum(deletingAlbum.id));
+      await deleteAlbumMutation.mutateAsync(deletingAlbum.id);
       setDeletingAlbum(null);
     }
   };
@@ -232,7 +235,7 @@ const UserAlbumsPage: React.FC = () => {
                 : "space-y-4"
             )}
           >
-            {albums.map((album, index) => (
+            {albums.map((album: Album, index: number) => (
               <ContentCard
                 key={`${album.id}-${index}`}
                 item={album}
@@ -297,7 +300,7 @@ const UserAlbumsPage: React.FC = () => {
         open={!!editingAlbum}
         onClose={() => setEditingAlbum(null)}
         onSave={handleSaveAlbum}
-        loading={isLoading}
+        loading={updateAlbumMutation.isPending}
       />
 
       {/* Delete Album Dialog */}
@@ -306,7 +309,7 @@ const UserAlbumsPage: React.FC = () => {
         open={!!deletingAlbum}
         onClose={() => setDeletingAlbum(null)}
         onConfirm={handleConfirmDelete}
-        loading={isLoading}
+        loading={deleteAlbumMutation.isPending}
       />
     </div>
   );

@@ -2,23 +2,23 @@
 
 import { useState } from "react";
 import { Bookmark, Grid, List } from "lucide-react";
-import { useBookmarks } from "@/hooks/useBookmarks";
+import { useBookmarksQuery } from "@/hooks/queries/useBookmarksQuery";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { Lightbox } from "@/components/ui/Lightbox";
 
 const UserBookmarksPage: React.FC = () => {
-  const {
-    bookmarks,
-    totalCount,
-    hasMore,
-    isLoading,
-    isLoadingMore,
-    loadMore,
-    refresh,
-    error,
-  } = useBookmarks(true);
+  // Use TanStack Query hook for bookmarks
+  const { data: bookmarksData, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useBookmarksQuery();
+  
+  // Extract bookmarks from infinite query data
+  const bookmarks = bookmarksData?.pages.flatMap((page: any) => page.bookmarks) || [];
+  const totalCount = bookmarks.length;
+  const hasMore = hasNextPage;
+  const isLoadingMore = isFetchingNextPage;
+  const loadMore = () => fetchNextPage();
+  const refresh = () => {}; // TanStack Query handles background refetching
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -26,8 +26,8 @@ const UserBookmarksPage: React.FC = () => {
 
   // Get media items for lightbox (only media type bookmarks)
   const mediaItems = bookmarks
-    .filter((bookmark) => bookmark.targetType === "media")
-    .map((bookmark) => ({
+    .filter((bookmark: any) => bookmark.targetType === "media")
+    .map((bookmark: any) => ({
       id: bookmark.targetId,
       albumId: bookmark.target?.albumId || bookmark.albumId || "",
       filename: bookmark.target?.title || "",
@@ -107,7 +107,7 @@ const UserBookmarksPage: React.FC = () => {
           <p className="text-lg font-medium text-foreground">
             Failed to load bookmarks
           </p>
-          <p className="text-sm text-muted-foreground mt-1">{error}</p>
+          <p className="text-sm text-muted-foreground mt-1">{error?.message}</p>
         </div>
         <Button onClick={refresh} variant="outline">
           Try Again
@@ -225,7 +225,7 @@ const UserBookmarksPage: React.FC = () => {
                   : "space-y-4"
               )}
             >
-              {bookmarks.map((bookmark, index) => {
+              {bookmarks.map((bookmark: any, index: number) => {
                 const media = createMediaFromBookmark(bookmark);
                 const album = createAlbumFromBookmark(bookmark);
 

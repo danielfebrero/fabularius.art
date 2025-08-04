@@ -3,15 +3,12 @@
 import { useState } from "react";
 import { useLocaleRouter } from "@/lib/navigation";
 import { UserAlbumForm } from "@/components/user/UserAlbumForm";
-import { useAlbums } from "@/hooks/useAlbums";
-import { useUser } from "@/hooks/useUser";
+import { useCreateAlbum } from "@/hooks/queries/useAlbumsQuery";
 import { FolderPlus } from "lucide-react";
 
 export default function CreateUserAlbumPage() {
   const router = useLocaleRouter();
-  const { user } = useUser();
-  const { createAlbum } = useAlbums({ user: user?.username });
-  const [loading, setLoading] = useState(false);
+  const createAlbumMutation = useCreateAlbum();
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (data: {
@@ -20,16 +17,13 @@ export default function CreateUserAlbumPage() {
     isPublic: boolean;
     mediaIds?: string[];
   }) => {
-    setLoading(true);
     setError(null);
 
     try {
-      createAlbum && (await createAlbum(data));
+      await createAlbumMutation.mutateAsync(data);
       router.push("/user/albums");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create album");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -80,7 +74,7 @@ export default function CreateUserAlbumPage() {
         <UserAlbumForm
           onSubmit={handleSubmit}
           onCancel={handleCancel}
-          loading={loading}
+          loading={createAlbumMutation.isPending}
           submitText="Create Album"
         />
       </div>

@@ -2,23 +2,23 @@
 
 import { useState } from "react";
 import { Heart, Grid, List } from "lucide-react";
-import { useLikes } from "@/hooks/useLikes";
+import { useLikesQuery } from "@/hooks/queries/useLikesQuery";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { Lightbox } from "@/components/ui/Lightbox";
 
 const UserLikesPage: React.FC = () => {
-  const {
-    likes,
-    totalCount,
-    hasMore,
-    isLoading,
-    isLoadingMore,
-    loadMore,
-    refresh,
-    error,
-  } = useLikes(true);
+  // Use TanStack Query hook for likes
+  const { data: likesData, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useLikesQuery();
+  
+  // Extract likes from infinite query data
+  const likes = likesData?.pages.flatMap((page: any) => page.likes) || [];
+  const totalCount = likes.length;
+  const hasMore = hasNextPage;
+  const isLoadingMore = isFetchingNextPage;
+  const loadMore = () => fetchNextPage();
+  const refresh = () => {}; // TanStack Query handles background refetching
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -26,8 +26,8 @@ const UserLikesPage: React.FC = () => {
 
   // Get media items for lightbox (only media type likes)
   const mediaItems = likes
-    .filter((like) => like.targetType === "media")
-    .map((like) => ({
+    .filter((like: any) => like.targetType === "media")
+    .map((like: any) => ({
       id: like.targetId,
       albumId: like.target?.albumId || like.albumId || "",
       filename: like.target?.title || "",
@@ -107,7 +107,7 @@ const UserLikesPage: React.FC = () => {
           <p className="text-lg font-medium text-foreground">
             Failed to load likes
           </p>
-          <p className="text-sm text-muted-foreground mt-1">{error}</p>
+          <p className="text-sm text-muted-foreground mt-1">{error?.message}</p>
         </div>
         <Button onClick={refresh} variant="outline">
           Try Again
@@ -223,7 +223,7 @@ const UserLikesPage: React.FC = () => {
                   : "space-y-4"
               )}
             >
-              {likes.map((like, index) => {
+              {likes.map((like: any, index: number) => {
                 const media = createMediaFromLike(like);
                 const album = createAlbumFromLike(like);
 

@@ -2,6 +2,10 @@
 
 ## Error handling
 
+### Never use any
+
+We should avoid using `any` type in TypeScript. Instead, we should define proper types for our data structures.
+
 ## UI/UX
 
 ### Make admin page responsive

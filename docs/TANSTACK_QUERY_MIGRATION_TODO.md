@@ -197,59 +197,61 @@ This comprehensive todo list covers the complete migration from custom hooks to 
   - ✅ Test mobile user experience
   - ✅ Verify navigation performance
 
-### 3.2 User Dashboard Components
+### 3.2 User Dashboard Components ✅ COMPLETE
+
+**Summary**: Successfully migrated 7 user dashboard components from legacy hooks to TanStack Query hooks with improved caching, infinite scroll, optimistic updates, and better error handling.
 
 #### Album Management Pages
 
-- [ ] **Migrate /user/albums/page.tsx**
+- [x] **Migrate /user/albums/page.tsx** ✅ COMPLETE
 
-  - Replace `useAlbums` and `useUser` with query hooks
-  - Update user album list loading
-  - Test album creation flow
-  - Verify album management operations
+  - ✅ Replace `useAlbums` and `useUser` with `useAlbums` and `useUserProfile` query hooks
+  - ✅ Update user album list loading with infinite scroll support
+  - ✅ Test album creation flow with optimistic updates
+  - ✅ Verify album management operations (edit/delete) with mutation hooks
 
-- [ ] **Migrate /user/albums/create/page.tsx**
-  - Replace `useAlbums` and `useUser` with query hooks
-  - Update album creation with optimistic updates
-  - Test form submission flow
-  - Verify successful album creation
+- [x] **Migrate /user/albums/create/page.tsx** ✅ COMPLETE
+  - ✅ Replace `useAlbums` and `useUser` with `useCreateAlbum` and `useUserProfile` query hooks
+  - ✅ Update album creation with optimistic updates
+  - ✅ Test form submission flow
+  - ✅ Verify successful album creation
 
 #### User Content Pages
 
-- [ ] **Migrate /user/bookmarks/page.tsx**
+- [x] **Migrate /user/bookmarks/page.tsx** ✅ COMPLETE
 
-  - Replace `useBookmarks` with `useBookmarksQuery`
-  - Update bookmark list loading
-  - Test bookmark management
-  - Verify bookmark removal operations
+  - ✅ Replace `useBookmarks` with `useBookmarksQuery`
+  - ✅ Update bookmark list loading with infinite scroll
+  - ✅ Test bookmark management
+  - ✅ Verify bookmark removal operations
 
-- [ ] **Migrate /user/likes/page.tsx**
-  - Replace `useLikes` with `useLikesQuery`
-  - Update liked content loading
-  - Test like history functionality
-  - Verify like removal operations
+- [x] **Migrate /user/likes/page.tsx** ✅ COMPLETE
+  - ✅ Replace `useLikes` with `useLikesQuery`
+  - ✅ Update liked content loading with infinite scroll
+  - ✅ Test like history functionality
+  - ✅ Verify like removal operations
 
 #### User Profile
 
-- [ ] **Migrate /user/profile/page.tsx**
+- [x] **Migrate /user/profile/page.tsx** ✅ COMPLETE
 
-  - Replace `useUser` with `useUserQuery`
-  - Update profile data management
-  - Test profile editing with optimistic updates
-  - Verify profile image uploads
+  - ✅ Replace `useUser` with `useUserProfile`
+  - ✅ Update profile data management
+  - ✅ Test profile editing with optimistic updates
+  - ✅ Verify profile image uploads
 
-- [ ] **Migrate /user/layout.tsx**
+- [x] **Migrate /user/layout.tsx** ✅ COMPLETE
 
-  - Replace `useUser` with `useUserQuery`
-  - Update user layout authentication
-  - Test user area access control
-  - Verify user state consistency
+  - ✅ Replace `useUser` with `useUserProfile`
+  - ✅ Update user layout authentication
+  - ✅ Test user area access control
+  - ✅ Verify user state consistency
 
-- [ ] **Migrate /user/medias/page.tsx**
-  - Replace `useMedia` and `useUser` with query hooks
-  - Update user media gallery
-  - Test user media management
-  - Verify media operations functionality
+- [x] **Migrate /user/medias/page.tsx** ✅ COMPLETE
+  - ✅ Replace placeholder data with `useUserMedia` query hook
+  - ✅ Update user media gallery with infinite scroll
+  - ✅ Test user media management
+  - ✅ Verify media operations functionality
 
 ### 3.3 Public Profile Components
 

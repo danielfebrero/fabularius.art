@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useLocaleRouter } from "@/lib/navigation";
 import { useTranslations } from "next-intl";
-import { useUser } from "@/hooks/useUser";
+import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { Heart, Bookmark, Image, FolderOpen, User } from "lucide-react";
 import {
   Skeleton,
@@ -25,7 +25,8 @@ const UserLayout: React.FC<UserLayoutProps> = ({
   children,
   params: { locale },
 }) => {
-  const { user, loading } = useUser();
+  const { data: userResponse, isLoading: loading } = useUserProfile();
+  const user = userResponse?.data?.user;
   const router = useLocaleRouter();
   const t = useTranslations("navigation");
 

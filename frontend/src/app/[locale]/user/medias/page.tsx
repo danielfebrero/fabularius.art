@@ -7,6 +7,7 @@ import { ContentCard } from "@/components/ui/ContentCard";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { cn } from "@/lib/utils";
 import LocaleLink from "@/components/ui/LocaleLink";
+import { useUserMedia } from "@/hooks/queries/useMediaQuery";
 import { Media } from "@/types";
 
 const UserMediasPage: React.FC = () => {
@@ -15,178 +16,11 @@ const UserMediasPage: React.FC = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
-  // Placeholder data - replace with actual API calls when mediaApi.getUserMedia() is implemented
-  const [medias] = useState<Media[]>([
-    {
-      id: "image1",
-      filename: "ai-generated-portrait.jpg",
-      originalFilename: "AI Generated Portrait",
-      mimeType: "image/jpeg",
-      size: 2048000,
-      width: 1920,
-      height: 1080,
-      url: "/media/image1/ai-generated-portrait.jpg",
-      thumbnailUrls: {
-        originalSize:
-          "/albums/c51b2a84-072d-4f95-904c-ee926bec7f91/media/3591ebb5-f901-499f-9edd-f95713e5c4e2_display.webp",
-        cover:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
-        small:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
-        medium:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
-        large:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
-        xlarge:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
-      },
-      createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      likeCount: 24,
-      viewCount: 89,
-    },
-    {
-      id: "image2",
-      filename: "fantasy-landscape.jpg",
-      originalFilename: "Fantasy Landscape",
-      mimeType: "image/jpeg",
-      size: 3024000,
-      width: 2560,
-      height: 1440,
-      url: "/media/image2/fantasy-landscape.jpg",
-      thumbnailUrls: {
-        originalSize:
-          "/albums/c51b2a84-072d-4f95-904c-ee926bec7f91/media/3591ebb5-f901-499f-9edd-f95713e5c4e2_display.webp",
-        cover:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
-        small:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
-        medium:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
-        large:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
-        xlarge:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
-      },
-      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      likeCount: 156,
-      viewCount: 432,
-    },
-    {
-      id: "image3",
-      filename: "abstract-art.jpg",
-      originalFilename: "Abstract Art Creation",
-      mimeType: "image/jpeg",
-      size: 1856000,
-      width: 1600,
-      height: 900,
-      url: "/media/image3/abstract-art.jpg",
-      thumbnailUrls: {
-        originalSize:
-          "/albums/c51b2a84-072d-4f95-904c-ee926bec7f91/media/3591ebb5-f901-499f-9edd-f95713e5c4e2_display.webp",
-        cover:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
-        small:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
-        medium:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
-        large:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
-        xlarge:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
-      },
-      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      likeCount: 67,
-      viewCount: 203,
-    },
-    {
-      id: "image4",
-      filename: "sci-fi-character.jpg",
-      originalFilename: "Sci-Fi Character Design",
-      mimeType: "image/jpeg",
-      size: 2512000,
-      width: 1920,
-      height: 1080,
-      url: "/media/image4/sci-fi-character.jpg",
-      thumbnailUrls: {
-        originalSize:
-          "/albums/c51b2a84-072d-4f95-904c-ee926bec7f91/media/3591ebb5-f901-499f-9edd-f95713e5c4e2_display.webp",
-        cover:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
-        small:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
-        medium:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
-        large:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
-        xlarge:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
-      },
-      createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      likeCount: 95,
-      viewCount: 298,
-    },
-    {
-      id: "image5",
-      filename: "nature-scene.jpg",
-      originalFilename: "Peaceful Nature Scene",
-      mimeType: "image/jpeg",
-      size: 2800000,
-      width: 2048,
-      height: 1152,
-      url: "/media/image5/nature-scene.jpg",
-      thumbnailUrls: {
-        originalSize:
-          "/albums/c51b2a84-072d-4f95-904c-ee926bec7f91/media/3591ebb5-f901-499f-9edd-f95713e5c4e2_display.webp",
-        cover:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
-        small:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
-        medium:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
-        large:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
-        xlarge:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
-      },
-      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      likeCount: 183,
-      viewCount: 521,
-    },
-    {
-      id: "image6",
-      filename: "digital-artwork.jpg",
-      originalFilename: "Digital Artwork Experiment",
-      mimeType: "image/jpeg",
-      size: 2200000,
-      width: 1800,
-      height: 1200,
-      url: "/media/image6/digital-artwork.jpg",
-      thumbnailUrls: {
-        originalSize:
-          "/albums/c51b2a84-072d-4f95-904c-ee926bec7f91/media/3591ebb5-f901-499f-9edd-f95713e5c4e2_display.webp",
-        cover:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
-        small:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_small.webp",
-        medium:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_medium.webp",
-        large:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_large.webp",
-        xlarge:
-          "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_xlarge.webp",
-      },
-      createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      likeCount: 42,
-      viewCount: 167,
-    },
-  ]);
-  const [isLoading] = useState(false);
+  // Use TanStack Query hook for user media
+  const { data: mediaData, isLoading } = useUserMedia();
+  
+  // Extract media from infinite query data  
+  const medias = mediaData?.pages.flatMap((page: any) => page.media) || [];
   const totalCount = medias.length;
 
   // Lightbox handlers
@@ -329,7 +163,7 @@ const UserMediasPage: React.FC = () => {
                 : "space-y-4"
             )}
           >
-            {medias.map((media, index) => (
+            {medias.map((media: Media, index: number) => (
               <ContentCard
                 key={media.id}
                 item={media}
