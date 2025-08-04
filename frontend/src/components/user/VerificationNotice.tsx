@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { useUser } from "@/hooks/useUser";
+import { useResendVerification } from "@/hooks/queries/useUserQuery";
 
 interface VerificationNoticeProps {
   email: string;
@@ -15,22 +15,25 @@ export function VerificationNotice({
   onDismiss,
   showDismiss = false,
 }: VerificationNoticeProps) {
-  const { resendVerification, loading, error, clearError } = useUser();
+  const {
+    mutateAsync: resendVerification,
+    isPending: loading,
+    error,
+  } = useResendVerification();
   const [resendSuccess, setResendSuccess] = useState(false);
   const [resendAttempted, setResendAttempted] = useState(false);
 
   const handleResendVerification = async () => {
     try {
-      clearError();
       setResendAttempted(true);
 
-      const success = await resendVerification(email);
+      const result = await resendVerification(email);
 
-      if (success) {
+      if (result.success) {
         setResendSuccess(true);
       }
     } catch (err) {
-      // Error is handled by the context
+      // Error is handled by the TanStack Query mutation
       console.error("Failed to resend verification:", err);
     }
   };
@@ -72,7 +75,9 @@ export function VerificationNotice({
             )}
 
             {error && (
-              <p className="mt-2 text-red-700 dark:text-red-300">{error}</p>
+              <p className="mt-2 text-red-700 dark:text-red-300">
+                {error.message || "Failed to send verification email"}
+              </p>
             )}
           </div>
 

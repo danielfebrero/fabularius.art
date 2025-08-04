@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { useInteractions } from "@/hooks/useInteractions";
+import {
+  useToggleBookmark,
+  useInteractionStatus,
+} from "@/hooks/queries/useInteractionsQuery";
 import { useUser } from "@/hooks/useUser";
-import { useTargetInteractionStatus } from "@/hooks/useUserInteractionStatus";
 import { InteractionButtonSkeleton } from "@/components/ui/Skeleton";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { cn } from "@/lib/utils";
@@ -35,17 +37,24 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
   useCache = false,
 }) => {
   const { user } = useUser();
-  const { toggleBookmark, isToggling, error } = useInteractions();
-  const { userBookmarked, isLoading, updateStatusOptimistically } =
-    useTargetInteractionStatus(targetType, targetId, { useCache });
-  const [bookmarkCount, setBookmarkCount] = useState<number | null>(null);
+  const [bookmarkCount] = useState<number | null>(null);
   const { redirectToLogin } = useAuthRedirect();
 
   const t = useTranslations("common");
   const tUser = useTranslations("user.bookmarks");
 
-  // Use the cached status instead of local state
-  const isBookmarked = user ? userBookmarked : initialBookmarked;
+  // Use TanStack Query hooks for interaction status and toggle
+  // Only fetch status if user is logged in to avoid unnecessary requests
+  const targets = user ? [{ targetType, targetId }] : [];
+  const { data: statusData, isLoading } = useInteractionStatus(targets);
+  const { mutateAsync: toggleBookmarkMutation, isPending: isToggling } =
+    useToggleBookmark();
+
+  // Get current bookmark status from TanStack Query data
+  const interactionStatus = statusData?.data?.statuses?.[0];
+  const isBookmarked = user
+    ? interactionStatus?.userBookmarked ?? false
+    : initialBookmarked;
 
   // Size configurations
   const sizeConfig = {
@@ -75,26 +84,15 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
       return;
     }
 
-    const newBookmarkedState = !isBookmarked;
-
     try {
-      // Update status optimistically first
-      updateStatusOptimistically({ userBookmarked: newBookmarkedState });
-
-      // Update count optimistically
-      if (bookmarkCount !== null) {
-        setBookmarkCount(
-          newBookmarkedState ? bookmarkCount + 1 : bookmarkCount - 1
-        );
-      }
-
-      await toggleBookmark(targetType, targetId, albumId, isBookmarked);
+      // Use TanStack Query mutation with optimistic updates
+      await toggleBookmarkMutation({
+        targetType,
+        targetId,
+        albumId,
+        isCurrentlyBookmarked: isBookmarked,
+      });
     } catch (err) {
-      // Revert optimistic update on error
-      updateStatusOptimistically({ userBookmarked: isBookmarked });
-      if (bookmarkCount !== null) {
-        setBookmarkCount(isBookmarked ? bookmarkCount + 1 : bookmarkCount - 1);
-      }
       console.error("Failed to toggle bookmark:", err);
     }
   };
@@ -138,10 +136,6 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
         <span className={cn("font-medium text-gray-600", config.text)}>
           {bookmarkCount.toLocaleString()}
         </span>
-      )}
-
-      {error && (
-        <span className="text-xs text-red-500 ml-2">{t("failedToUpdate")}</span>
       )}
     </div>
   );

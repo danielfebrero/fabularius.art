@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { useMedia } from "@/hooks/useMedia";
+import { useAlbumMedia } from "@/hooks/queries/useMediaQuery";
 import ResponsivePicture from "@/components/ui/ResponsivePicture";
 import {
   composeMediaUrl,
@@ -23,7 +23,16 @@ export function CoverImageSelector({
   disabled = false,
 }: CoverImageSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { media, loading, error } = useMedia({ albumId });
+
+  // Use TanStack Query hook for album media
+  const {
+    data: mediaData,
+    isLoading: loading,
+    error,
+  } = useAlbumMedia({ albumId });
+
+  // Extract media from the paginated response
+  const media = mediaData?.pages?.[0]?.data?.media || [];
 
   const selectedCoverUrl = currentCoverUrl || "";
 
@@ -44,7 +53,7 @@ export function CoverImageSelector({
           Cover Image
         </h3>
         <div className="text-destructive text-sm">
-          Error loading album media: {error}
+          Error loading album media: {error?.message || "Unknown error"}
         </div>
       </div>
     );

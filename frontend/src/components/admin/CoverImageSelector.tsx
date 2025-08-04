@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/Button";
-import { useAdminMedia } from "@/hooks/useAdminMedia";
+import { useAdminAlbumMedia } from "@/hooks/queries/useAdminMediaQuery";
 import { Media } from "@/types";
 import ResponsivePicture from "@/components/ui/ResponsivePicture";
 import {
@@ -25,17 +25,20 @@ export function CoverImageSelector({
   onCoverSelect,
   disabled = false,
 }: CoverImageSelectorProps) {
-  const { media, loading, error, fetchAlbumMedia } = useAdminMedia();
+  // Use TanStack Query hook for admin album media
+  const {
+    data: mediaData,
+    isLoading: loading,
+    error,
+  } = useAdminAlbumMedia(albumId);
+
+  // Extract media from the response
+  const media = mediaData?.data?.media || [];
+
   const [selectedCoverUrl, setSelectedCoverUrl] = useState<string | undefined>(
     currentCoverUrl
   );
   const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (isOpen && albumId) {
-      fetchAlbumMedia(albumId);
-    }
-  }, [isOpen, albumId, fetchAlbumMedia]);
 
   useEffect(() => {
     setSelectedCoverUrl(currentCoverUrl);
@@ -138,7 +141,9 @@ export function CoverImageSelector({
 
         {error && (
           <div className="bg-destructive/10 border border-destructive/20 rounded-md p-3 mb-4">
-            <p className="text-destructive text-sm">{error}</p>
+            <p className="text-destructive text-sm">
+              {error?.message || "Unknown error"}
+            </p>
           </div>
         )}
 

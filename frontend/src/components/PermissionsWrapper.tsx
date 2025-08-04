@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode, useState, useEffect } from "react";
-import { useUser } from "@/hooks/useUser";
+import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { PermissionsProvider } from "@/contexts/PermissionsContext";
 import { createUserWithPlan, createMockUser } from "@/lib/userUtils";
 import { UserWithPlan } from "@/types/permissions";
@@ -16,7 +16,8 @@ interface PermissionsWrapperProps {
 }
 
 export function PermissionsWrapper({ children }: PermissionsWrapperProps) {
-  const { user, loading } = useUser();
+  const { data: userResponse, isLoading: loading } = useUserProfile();
+  const user = userResponse?.data?.user || null;
   const [userWithPermissions, setUserWithPermissions] =
     useState<UserWithPlan | null>(null);
   const [lastProcessedUserId, setLastProcessedUserId] = useState<string | null>(

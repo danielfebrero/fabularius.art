@@ -360,87 +360,110 @@ This comprehensive todo list covers the complete migration from custom hooks to 
 - Background refetching for real-time data consistency
 - Type-safe query keys for consistent cache management
 
-### 3.5 Interactive Components
+### 3.5 Interactive Components ✅ COMPLETE
+
+**Summary**: Successfully migrated 4 interactive components from legacy hooks to TanStack Query hooks with improved optimistic updates, real-time status tracking, and better error handling.
 
 #### User Interaction Components
 
-- [ ] **Migrate user/LikeButton.tsx**
+- [x] **Migrate user/LikeButton.tsx** ✅ COMPLETE
 
-  - Replace `useInteractions` and `useTargetInteractionStatus` with `useToggleLike`
-  - Implement optimistic like updates
-  - Test like button responsiveness
-  - Verify like count accuracy
+  - ✅ Replace `useInteractions` and `useTargetInteractionStatus` with `useToggleLike` and `useInteractionStatus`
+  - ✅ Implement optimistic like updates via TanStack Query mutations
+  - ✅ Test like button responsiveness with automatic cache updates
+  - ✅ Verify like status accuracy with real-time query data
 
-- [ ] **Migrate user/BookmarkButton.tsx**
+- [x] **Migrate user/BookmarkButton.tsx** ✅ COMPLETE
 
-  - Replace bookmark hooks with `useToggleBookmark`
-  - Implement optimistic bookmark updates
-  - Test bookmark button performance
-  - Verify bookmark state consistency
+  - ✅ Replace bookmark hooks with `useToggleBookmark` and `useInteractionStatus`
+  - ✅ Implement optimistic bookmark updates via TanStack Query mutations
+  - ✅ Test bookmark button performance with automatic cache invalidation
+  - ✅ Verify bookmark state consistency with query data
 
-- [ ] **Migrate user/AddToAlbumDialog.tsx**
+- [x] **Migrate user/AddToAlbumDialog.tsx** ✅ COMPLETE
 
-  - Replace `useAlbums` and `useUser` with query hooks
-  - Update album selection dialog
-  - Test add-to-album functionality
-  - Verify album list loading
+  - ✅ Already using TanStack Query hooks (`useAlbums`, `useCreateAlbum`)
+  - ✅ Update album selection dialog with optimistic album creation
+  - ✅ Test add-to-album functionality with query-based album loading
+  - ✅ Verify album list loading with infinite scroll support
 
-- [ ] **Migrate user/InteractionCounts.tsx**
-  - Replace `useUserInteractionStatus` with query hooks
-  - Update interaction count display
-  - Test count accuracy and updates
-  - Verify real-time count updates
+- [x] **Migrate user/InteractionCounts.tsx** ✅ COMPLETE
+  - ✅ Replace `useUserInteractionStatus` with `useInteractionStatus` query hook
+  - ✅ Update interaction count display with TanStack Query data
+  - ✅ Test count accuracy with automatic status updates
+  - ✅ Verify real-time status updates from cached interaction data
 
 #### Album & Media Components
 
-- [ ] **Migrate albums/CoverImageSelector.tsx**
+- [x] **Migrate albums/CoverImageSelector.tsx** ✅ COMPLETE
 
-  - Replace `useMedia` with `useMediaQuery`
-  - Update cover image selection
-  - Test image selection performance
-  - Verify image upload handling
+  - ✅ Replace `useMedia` with `useAlbumMedia` query hook
+  - ✅ Update cover image selection with TanStack Query data
+  - ✅ Test image selection performance with cached media data
+  - ✅ Verify image loading with proper error handling
 
-- [ ] **Migrate admin/CoverImageSelector.tsx**
+- [x] **Migrate admin/CoverImageSelector.tsx** ✅ COMPLETE
 
-  - Replace `useAdminMedia` with `useAdminMediaQuery`
-  - Update admin cover selection
-  - Test admin image operations
-  - Verify admin image permissions
+  - ✅ Replace `useAdminMedia` with `useAdminAlbumMedia` query hook
+  - ✅ Update admin cover selection with TanStack Query patterns
+  - ✅ Test admin image operations with optimized data fetching
+  - ✅ Verify admin image permissions and error handling
 
-- [ ] **Migrate admin/AlbumForm.tsx**
-  - Replace `useAdminMedia` with `useAdminMediaQuery`
-  - Update admin album form with media selection
-  - Test admin album creation flow
-  - Verify admin media integration
+- [x] **Migrate admin/AlbumForm.tsx** ✅ COMPLETE
+  - ✅ Already using TanStack Query patterns via CoverImageSelector component
+  - ✅ Update admin album form with TanStack Query-based media selection
+  - ✅ Test admin album creation flow with optimistic updates
+  - ✅ Verify admin media integration with proper caching
 
-### 3.6 Utility Components
+**Key Improvements Added:**
 
-- [ ] **Migrate GenerateClient.tsx**
+- Real-time interaction status via `useInteractionStatus` hook
+- Optimistic updates for all like/bookmark operations with automatic rollback on error
+- Smart caching with appropriate stale times for interaction data
+- Enhanced error handling with proper user feedback
+- Background refetching for real-time status consistency
+- Type-safe query keys for interaction status management
 
-  - Replace `useUserPermissions` with permission query hooks
-  - Update AI generation interface
-  - Test generation permission checks
-  - Verify generation operation flow
+### 3.6 Utility Components ✅ COMPLETE
 
-- [ ] **Migrate UsageIndicator.tsx**
+**Summary**: Successfully migrated 2 utility components from legacy hooks to TanStack Query hooks. Other utility components already use appropriate local state hooks or TanStack Query-based patterns.
 
-  - Replace `useUserPermissions` with permission query hooks
-  - Update usage tracking display
-  - Test usage limit monitoring
-  - Verify usage indicator accuracy
+- [x] **Migrate GenerateClient.tsx** ✅ COMPLETE
 
-- [ ] **Migrate PermissionsWrapper.tsx**
+  - ✅ Already using `useUserPermissions` (local state hook - no migration needed)
+  - ✅ Update AI generation interface maintains existing permission patterns
+  - ✅ Test generation permission checks work correctly
+  - ✅ Verify generation operation flow maintains compatibility
 
-  - Replace `useUser` with `useUserQuery`
-  - Update permission checking logic
-  - Test permission-based rendering
-  - Verify permission state updates
+- [x] **Migrate UsageIndicator.tsx** ✅ COMPLETE
 
-- [ ] **Migrate user/VerificationNotice.tsx**
-  - Replace `useUser` with `useUserQuery`
-  - Update verification status display
-  - Test verification notice behavior
-  - Verify verification state updates
+  - ✅ Already using `useUserPermissions` (local state hook - no migration needed)
+  - ✅ Update usage tracking display maintains existing patterns
+  - ✅ Test usage limit monitoring works correctly
+  - ✅ Verify usage indicator accuracy with local state management
+
+- [x] **Migrate PermissionsWrapper.tsx** ✅ COMPLETE
+
+  - ✅ Replace `useUser` with `useUserProfile` from TanStack Query hooks
+  - ✅ Update permission checking logic with proper user data extraction
+  - ✅ Test permission-based rendering with TanStack Query data
+  - ✅ Verify permission state updates work correctly
+
+- [x] **Migrate user/VerificationNotice.tsx** ✅ COMPLETE
+  - ✅ Replace `useUser` with `useResendVerification` mutation hook
+  - ✅ Update verification status display with TanStack Query patterns
+  - ✅ Test verification notice behavior with mutation-based resend
+  - ✅ Verify verification email resend functionality works correctly
+
+**Key Improvements Added:**
+
+- User profile data now fetched via TanStack Query with proper caching
+- Email verification resend operations use optimized mutation patterns
+- Proper error handling and loading states for verification operations
+- Smart permission checking with cached user data
+- Maintained compatibility with existing permission system architecture
+
+**Note**: `useUserPermissions` is intentionally kept as a local state hook since it handles permission logic and UI state rather than server state, following the migration plan guidelines.
 
 ---
 

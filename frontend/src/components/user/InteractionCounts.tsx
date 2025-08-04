@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { Heart, Bookmark, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
+import { useInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
+import { useUser } from "@/hooks/useUser";
 
 interface InteractionCountsProps {
   targetType: "album" | "media";
@@ -26,9 +27,17 @@ export const InteractionCounts: React.FC<InteractionCountsProps> = ({
   size = "md",
   className,
 }) => {
-  const { getStatus } = useUserInteractionStatus();
+  const { user } = useUser();
   const [userLiked, setUserLiked] = useState<boolean>(false);
   const [userBookmarked, setUserBookmarked] = useState<boolean>(false);
+
+  // Use TanStack Query hook for interaction status
+  // Only fetch status if user is logged in to avoid unnecessary requests
+  const targets = user ? [{ targetType, targetId }] : [];
+  const { data: statusData } = useInteractionStatus(targets);
+
+  // Get current interaction status from TanStack Query data
+  const interactionStatus = statusData?.data?.statuses?.[0];
 
   // Size configurations
   const sizeConfig = {
@@ -53,12 +62,15 @@ export const InteractionCounts: React.FC<InteractionCountsProps> = ({
 
   // Load user interaction status on mount and when status changes
   useEffect(() => {
-    const status = getStatus(targetType, targetId);
-    if (status) {
-      setUserLiked(status.userLiked);
-      setUserBookmarked(status.userBookmarked);
+    if (interactionStatus) {
+      setUserLiked(interactionStatus.userLiked);
+      setUserBookmarked(interactionStatus.userBookmarked);
+    } else {
+      // Reset to false if no status data (e.g., user not logged in)
+      setUserLiked(false);
+      setUserBookmarked(false);
     }
-  }, [targetType, targetId, getStatus]);
+  }, [interactionStatus]);
 
   return (
     <div className={cn("flex items-center", config.gap, className)}>
