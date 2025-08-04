@@ -14,7 +14,6 @@ import { Media } from "@/types";
 import { useProfileData } from "@/hooks/useProfileData";
 import { useAlbums } from "@/hooks/useAlbums";
 import { useComments } from "@/hooks/useComments";
-import { useIsMobile } from "@/hooks/useIsMobile";
 import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
 import { useUser } from "@/hooks/useUser";
 import { useUsernameAvailability } from "@/hooks/useUsernameAvailability";
@@ -39,6 +38,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserProfileInsights } from "@/types/user";
+import { useDevice } from "@/contexts/DeviceContext";
 
 interface ProfileUser {
   userId: string;
@@ -95,7 +95,7 @@ export default function ProfileComponent({
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
 
   const t = useTranslations("common");
-  const isMobile = useIsMobile();
+  const { isMobile } = useDevice();
   const { user: loggedInUser } = useUser();
 
   // Use the abstracted username availability hook
