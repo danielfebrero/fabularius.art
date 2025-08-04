@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { headers } from "next/headers";
+import { QueryProvider } from "@/providers/QueryProvider";
 import { AdminProvider } from "@/contexts/AdminContext";
 import { UserProvider } from "@/contexts/UserContext";
 import { NavigationLoadingProvider } from "@/contexts/NavigationLoadingContext";
@@ -110,42 +111,44 @@ export default async function LocaleLayout({
 
   return (
     <NextIntlClientProvider messages={messages} locale={locale}>
-      <PageErrorBoundary context={`Locale Layout (${locale})`}>
-        <DeviceProvider initialDeviceInfo={deviceInfo}>
-          <UserProvider>
-            <UserInteractionProvider>
-              <PermissionsWrapper>
-                <AdminProvider>
-                  <NavigationLoadingProvider>
-                    <LanguageRedirect />
-                    <div className="min-h-screen bg-background flex flex-col">
-                      <SectionErrorBoundary context="Header">
-                        <Header />
-                      </SectionErrorBoundary>
-                      <SectionErrorBoundary context="Main Content">
-                        <MainContentWrapper>{children}</MainContentWrapper>
-                      </SectionErrorBoundary>
-                      <SectionErrorBoundary context="Footer">
-                        <footer className="border-t border-border mt-16 pb-[55px] lg:pb-0">
-                          <div className="container mx-auto py-4">
-                            <div className="text-center">
-                              <p className="text-muted-foreground">
-                                &copy; 2024 PornSpot.ai. All rights reserved.
-                              </p>
+      <QueryProvider>
+        <PageErrorBoundary context={`Locale Layout (${locale})`}>
+          <DeviceProvider initialDeviceInfo={deviceInfo}>
+            <UserProvider>
+              <UserInteractionProvider>
+                <PermissionsWrapper>
+                  <AdminProvider>
+                    <NavigationLoadingProvider>
+                      <LanguageRedirect />
+                      <div className="min-h-screen bg-background flex flex-col">
+                        <SectionErrorBoundary context="Header">
+                          <Header />
+                        </SectionErrorBoundary>
+                        <SectionErrorBoundary context="Main Content">
+                          <MainContentWrapper>{children}</MainContentWrapper>
+                        </SectionErrorBoundary>
+                        <SectionErrorBoundary context="Footer">
+                          <footer className="border-t border-border mt-16 pb-[55px] lg:pb-0">
+                            <div className="container mx-auto py-4">
+                              <div className="text-center">
+                                <p className="text-muted-foreground">
+                                  &copy; 2024 PornSpot.ai. All rights reserved.
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </footer>
-                      </SectionErrorBoundary>
-                    </div>
-                    <NavigationLoadingOverlay />
-                    <MobileNavigationWrapper />
-                  </NavigationLoadingProvider>
-                </AdminProvider>
-              </PermissionsWrapper>
-            </UserInteractionProvider>
-          </UserProvider>
-        </DeviceProvider>
-      </PageErrorBoundary>
+                          </footer>
+                        </SectionErrorBoundary>
+                      </div>
+                      <NavigationLoadingOverlay />
+                      <MobileNavigationWrapper />
+                    </NavigationLoadingProvider>
+                  </AdminProvider>
+                </PermissionsWrapper>
+              </UserInteractionProvider>
+            </UserProvider>
+          </DeviceProvider>
+        </PageErrorBoundary>
+      </QueryProvider>
     </NextIntlClientProvider>
   );
 }
