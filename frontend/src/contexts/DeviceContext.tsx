@@ -50,8 +50,6 @@ export function DeviceProvider({
     isMobileInterface: deviceInfo.isMobile || deviceInfo.isTablet,
   };
 
-  console.log("DeviceContext value:", contextValue);
-
   return (
     <DeviceContext.Provider value={contextValue}>
       {children}
