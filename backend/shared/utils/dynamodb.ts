@@ -1873,16 +1873,13 @@ export class DynamoDBService {
           UpdateExpression: `ADD 
             profileInsights.#metric :increment 
             SET 
-            profileInsights.lastUpdated = :lastUpdated,
-            #lastActive = :lastActive`,
+            profileInsights.lastUpdated = :lastUpdated`,
           ExpressionAttributeNames: {
             "#metric": metric,
-            "#lastActive": "lastActive",
           },
           ExpressionAttributeValues: {
             ":increment": increment,
             ":lastUpdated": now,
-            ":lastActive": now,
           },
           // Ensure profileInsights exists
           ConditionExpression: "attribute_exists(profileInsights)",
@@ -1920,14 +1917,9 @@ export class DynamoDBService {
                 SK: "METADATA",
               },
               UpdateExpression: `SET 
-                profileInsights = :insights,
-                #lastActive = :lastActive`,
-              ExpressionAttributeNames: {
-                "#lastActive": "lastActive",
-              },
+                profileInsights = :insights`,
               ExpressionAttributeValues: {
                 ":insights": initialInsights,
-                ":lastActive": now,
               },
               // Only initialize if profileInsights doesn't exist
               ConditionExpression: "attribute_not_exists(profileInsights)",
