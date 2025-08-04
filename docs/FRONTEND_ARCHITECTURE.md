@@ -150,21 +150,42 @@ The application has a collection of reusable UI components in the `frontend/src/
 ### Avatar Component
 
 - **File**: [`frontend/src/components/ui/Avatar.tsx`](../frontend/src/components/ui/Avatar.tsx)
-- **Purpose**: Unified user avatar display component with automatic fallback to initials
+- **Purpose**: Intelligent user avatar display component with automatic fallback to initials
 - **Features**:
-  - **Responsive Sizing**: Four size variants (small: 32px, medium: 48px, large: 64px, xlarge: 96px)
-  - **Intelligent Thumbnail Selection**: Automatically chooses optimal avatar thumbnail based on size
+  - **Intelligent Container Dimension-Based Selection**: Uses ResizeObserver to select optimal avatar thumbnail based on actual container size and device pixel ratio
+  - **Responsive Sizing**: Four predefined size variants (small: 32px, medium: 48px, large: 64px, xlarge: 96px) plus custom responsive sizing
+  - **Custom Responsive Sizing**: Support for custom size classes (e.g., `w-24 h-24 sm:w-32 sm:h-32`) via `size="custom"` prop
+  - **Flexible User Interface**: Accepts both User type and extended user types with compatible avatar fields
+  - **Smart Thumbnail Selection**: Automatically chooses the best avatar thumbnail size based on container dimensions, overriding static size props
   - **Fallback Handling**: Shows user initials when no avatar is available
+  - **High-DPI Support**: Factors in device pixel ratio for crisp images on retina displays
   - **Consistent Styling**: Maintains uniform avatar appearance across the application
   - **Optional Indicators**: Support for online status indicators
+  - **Performance Optimized**: Uses useContainerDimensions hook for efficient dimension tracking
+- **Avatar Thumbnail Configurations**:
+  - `small`: 32x32px (quality: 85%)
+  - `medium`: 96x96px (quality: 90%)
+  - `large`: 128x128px (quality: 95%)
+  - `originalSize`: Full resolution (quality: 95%)
+- **Intelligence Algorithm**: Scores available thumbnails based on:
+  - Container size fit (prefers slightly larger thumbnails)
+  - Quality bonus for higher-quality thumbnails
+  - Device pixel ratio compensation
+  - Fallback priorities when optimal size unavailable
 - **Usage**:
   ```jsx
-  <Avatar user={user} size="small" />  // Header menu
-  <Avatar user={user} size="medium" /> // User dropdowns
-  <Avatar user={user} size="large" />  // Profile cards
-  <Avatar user={user} size="xlarge" /> // Profile headers
+  <Avatar user={user} size="small" />  // Header menu - auto-selects based on container
+  <Avatar user={user} size="medium" /> // User dropdowns - intelligent sizing
+  <Avatar user={user} size="large" />  // Profile cards - optimal thumbnail
+  <Avatar user={user} size="xlarge" /> // Profile headers - highest quality
+  <Avatar
+    user={user}
+    size="custom"
+    customSizeClasses="w-24 h-24 sm:w-32 sm:h-32"
+    customTextClasses="text-2xl sm:text-3xl font-bold"
+  />  // Custom responsive sizing for special use cases
   ```
-- **Integration**: Used in Header, UserMenu, AdminHeader, and ProfileComponent
+- **Integration**: Used in Header, UserMenu, AdminHeader, and ProfileComponent with automatic intelligent sizing
 
 ### ContentCard Component
 

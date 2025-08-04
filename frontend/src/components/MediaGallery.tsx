@@ -157,7 +157,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
                   canDownload={true}
                   canDelete={false}
                   context="albums"
-                  columns={getColumns()}
                   mediaList={media}
                   currentIndex={index}
                 />

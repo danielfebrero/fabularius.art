@@ -236,7 +236,6 @@ export function selectThumbnailSize(
  * <ResponsivePicture
  *   thumbnailUrls={media.thumbnailUrls}
  *   fallbackUrl={media.url}
- *   context={context}
  *   alt="..."
  * />
  */

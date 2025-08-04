@@ -20,10 +20,6 @@ When the user clicks the verification link, he should be automatically logged in
 
 Currently, the backward and share buttons are on the edge sides instead of being in the container.
 
-### Content card should automatically detect the best media to display depending on the container size
-
-The content card should automatically choose the best media to display based on the container size, rather than using an algo based on columns/viewport. Preferred size must have predominance over the algorithm.
-
 ## User profile
 
 ### On tablet, when uploading an avatar, there is a UI bug under the avatar

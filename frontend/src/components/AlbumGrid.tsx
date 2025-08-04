@@ -112,7 +112,6 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({
               canDownload={false}
               canDelete={false}
               context={context}
-              columns={getColumnCount()}
             />
           </ComponentErrorBoundary>
         ))}

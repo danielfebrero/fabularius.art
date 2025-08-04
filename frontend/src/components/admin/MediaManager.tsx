@@ -327,7 +327,6 @@ export function MediaManager({
                           )}
                           alt={mediaItem.originalFilename || mediaItem.filename}
                           className="w-full h-full object-cover"
-                          context="admin"
                           loading="lazy"
                         />
                       ) : (

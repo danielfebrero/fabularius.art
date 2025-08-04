@@ -357,8 +357,6 @@ export function EditAlbumDialog({
                                   media.originalFilename || `Media ${media.id}`
                                 }
                                 className="w-full h-full object-cover"
-                                context="albums"
-                                columns={5}
                                 loading="lazy"
                               />
                             </div>

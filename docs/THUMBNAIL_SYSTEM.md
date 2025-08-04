@@ -81,6 +81,7 @@ const THUMBNAIL_CONFIGS = {
   medium: { width: 300, height: 300, quality: 90, suffix: "_thumb_medium" }, // Discover large + Albums medium
   large: { width: 365, height: 365, quality: 90, suffix: "_thumb_large" }, // Discover medium/very large + Albums very large
   xlarge: { width: 600, height: 600, quality: 95, suffix: "_thumb_xlarge" }, // Small screens for both contexts
+  originalSize: { width: ?, height: ?, quality: 95, suffix: "_display" }, // Original image size
 };
 ```
 

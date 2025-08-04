@@ -447,7 +447,6 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
                       canDownload={false}
                       canDelete={false}
                       showTags={false}
-                      columns={1}
                       className="w-full"
                     />
                   ))}

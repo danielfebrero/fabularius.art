@@ -93,7 +93,6 @@ export function CoverImageSelector({
               )}
               alt={currentCoverMedia.originalFilename || "Cover image"}
               className="w-full h-full object-cover"
-              context="cover-selector"
             />
           </div>
         </div>
@@ -131,7 +130,6 @@ export function CoverImageSelector({
                       )}
                       alt={media.originalFilename || media.filename}
                       className="w-full h-full object-cover"
-                      context="cover-selector"
                       loading="lazy"
                     />
                     {isSelected && (

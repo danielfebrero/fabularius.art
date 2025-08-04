@@ -8,14 +8,7 @@ import { useLocaleRouter } from "@/lib/navigation";
 import { User } from "@/types/user";
 import { UserPlanBadge } from "@/components/UserPlanBadge";
 import Avatar from "@/components/ui/Avatar";
-import {
-  Compass,
-  DollarSign,
-  ImageIcon,
-  Bookmark,
-  Heart,
-  FolderOpen,
-} from "lucide-react";
+import { DollarSign } from "lucide-react";
 import LocaleLink from "../ui/LocaleLink";
 
 interface UserMenuProps {

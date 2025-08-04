@@ -290,7 +290,6 @@ export function UserAlbumForm({
                   alt={media.originalFilename || "User image"}
                   className="w-full h-full object-cover"
                   loading="lazy"
-                  context="create-album"
                 />
                 {media.selected && (
                   <div className="absolute top-2 right-2 w-5 h-5 bg-admin-primary rounded-full flex items-center justify-center">

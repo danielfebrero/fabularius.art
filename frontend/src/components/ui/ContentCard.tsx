@@ -105,8 +105,6 @@ export function ContentCard({
   onAddToAlbum,
   onDownload,
   onDelete,
-  context = "default",
-  columns,
   preferredThumbnailSize,
   mediaList,
   currentIndex = 0,
@@ -418,8 +416,6 @@ export function ContentCard({
                     "scale-105",
                   imageClassName
                 )}
-                context={context}
-                columns={columns}
                 loading="lazy"
               />
             )}
@@ -632,8 +628,6 @@ export function ContentCard({
                     "scale-105",
                   imageClassName
                 )}
-                context={context}
-                columns={columns}
                 loading="lazy"
               />
             )}

@@ -84,7 +84,6 @@ export function CoverImageSelector({
               fallbackUrl={composeMediaUrl(selectedCoverUrl)}
               alt="Current cover"
               className="w-full h-full object-cover"
-              context="cover-selector"
             />
           </div>
         </div>
@@ -127,7 +126,6 @@ export function CoverImageSelector({
                       )}
                       alt={image.originalFilename || image.filename}
                       className="w-full h-full object-cover"
-                      context="cover-selector"
                       loading="lazy"
                     />
                     {isSelected && (

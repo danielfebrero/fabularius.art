@@ -9,6 +9,7 @@ import { UserPlanBadge } from "@/components/UserPlanBadge";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { HorizontalScroll } from "@/components/ui/HorizontalScroll";
+import { Avatar } from "@/components/ui/Avatar";
 import { Media } from "@/types";
 import { useProfileData } from "@/hooks/useProfileData";
 import { useAlbums } from "@/hooks/useAlbums";
@@ -37,7 +38,6 @@ import {
   Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { composeMediaUrl } from "@/lib/urlUtils";
 
 interface ProfileUser {
   userId: string;
@@ -404,33 +404,12 @@ export default function ProfileComponent({
   const displayName = currentUser.username ?? "Anonymous";
   const initials = displayName.slice(0, 2).toUpperCase();
 
-  // Get the best avatar URL to display
-  const getAvatarUrl = () => {
-    // If editing and there's a preview, show the preview
-    if (isEditing && previewAvatarUrl) {
-      return previewAvatarUrl;
-    }
-
-    // Otherwise, show the best available avatar thumbnail
-    if (currentUser.avatarThumbnails?.large) {
-      return currentUser.avatarThumbnails.large;
-    }
-    if (currentUser.avatarThumbnails?.medium) {
-      return currentUser.avatarThumbnails.medium;
-    }
-    if (currentUser.avatarThumbnails?.small) {
-      return currentUser.avatarThumbnails.small;
-    }
-    if (currentUser.avatarThumbnails?.originalSize) {
-      return currentUser.avatarThumbnails.originalSize;
-    }
-    if (currentUser.avatarUrl) {
-      return currentUser.avatarUrl;
-    }
-    return null;
+  // Create a user object for the Avatar component with preview support
+  const avatarUser = {
+    ...currentUser,
+    // Override avatarUrl with preview when editing
+    ...(isEditing && previewAvatarUrl && { avatarUrl: previewAvatarUrl }),
   };
-
-  const avatarUrl = getAvatarUrl();
 
   // Mock data for content - in real app, this would be passed as props or fetched
   const mockData = {
@@ -644,17 +623,13 @@ export default function ProfileComponent({
               <div className="flex flex-col sm:flex-row gap-6">
                 {/* Avatar Section */}
                 <div className="relative inline-block w-fit">
-                  <div className="w-24 h-24 sm:w-32 sm:h-32 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl sm:text-3xl font-bold shadow-lg overflow-hidden">
-                    {avatarUrl ? (
-                      <img
-                        src={composeMediaUrl(avatarUrl)}
-                        alt={`${displayName}'s avatar`}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      initials
-                    )}
-                  </div>
+                  <Avatar
+                    user={avatarUser}
+                    size="custom"
+                    customSizeClasses="w-24 h-24 sm:w-32 sm:h-32"
+                    customTextClasses="text-2xl sm:text-3xl font-bold"
+                    className="shadow-lg"
+                  />
                   {isOwner && isEditing && (
                     <>
                       <button
@@ -1089,7 +1064,6 @@ export default function ProfileComponent({
                         type={"filename" in item ? "media" : "album"}
                         showTags={false}
                         context="albums"
-                        columns={1}
                         className="w-full"
                         canAddToAlbum={item.type !== "album"} // Disable for albums
                         canFullscreen={item.type !== "album"} // Disable for albums
@@ -1146,7 +1120,6 @@ export default function ProfileComponent({
                       type={"filename" in item ? "media" : "album"}
                       showTags={false}
                       context="albums"
-                      columns={1}
                       className="w-full"
                     />
                   ))}
@@ -1214,7 +1187,6 @@ export default function ProfileComponent({
                         canAddToAlbum={false}
                         showTags={false}
                         context="albums"
-                        columns={1}
                         className="w-full"
                       />
                     ))}

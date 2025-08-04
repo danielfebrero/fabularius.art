@@ -47,6 +47,8 @@ Located: [`frontend/src/components/ui/ResponsivePicture.tsx`](../frontend/src/co
 - Mobile-first default selection
 - Automatic fallback chain
 - SSR-compatible
+- Intelligent container-based sizing
+- Wrapper div with containerRef for proper dimension measurement
 
 **Usage:**
 
@@ -55,11 +57,16 @@ Located: [`frontend/src/components/ui/ResponsivePicture.tsx`](../frontend/src/co
   thumbnailUrls={media.thumbnailUrls}
   fallbackUrl={media.url}
   alt="Description"
-  context="discover"
-  columns={4}
   loading="lazy"
+  onClick={handleClick}
 />
 ```
+
+**Architecture:**
+
+The component uses a wrapper `<div>` with `containerRef` that measures the available space, allowing the intelligent thumbnail selection algorithm to choose the optimal image size based on actual container dimensions rather than viewport breakpoints alone.
+
+````
 
 ### Context-Specific Optimization
 
@@ -69,7 +76,7 @@ Located: [`frontend/src/components/ui/ResponsivePicture.tsx`](../frontend/src/co
 // Mobile/tablet: xlarge (600px) - High quality for featured content
 // Large screens: large (365px) - Balanced quality and loading
 // Very large: medium (300px) - Efficient loading
-```
+````
 
 #### Albums Context
 

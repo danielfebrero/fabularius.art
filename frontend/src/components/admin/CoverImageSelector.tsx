@@ -179,7 +179,6 @@ export function CoverImageSelector({
                       )}
                       alt={image.originalFilename || image.filename}
                       className="w-full h-full object-cover"
-                      context="cover-selector"
                       loading="lazy"
                     />
                   </div>
