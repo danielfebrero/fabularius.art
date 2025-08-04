@@ -25,7 +25,7 @@ interface PublicUserProfile {
   };
 
   // Profile insights
-  insights?: UserProfileInsights;
+  profileInsights?: UserProfileInsights;
 }
 
 interface GetPublicProfileResponse {
@@ -106,23 +106,26 @@ export const handler = async (
     console.log("✅ Found user:", userEntity.userId, userEntity.email);
 
     // Get user profile insights
-    let insights: UserProfileInsights | undefined;
-    try {
-      console.log("🔍 Fetching profile insights...");
-      const insightsData = await DynamoDBService.getUserProfileInsights(
-        userEntity.userId
-      );
+    let profileInsights: UserProfileInsights | undefined =
+      userEntity.profileInsights;
+    if (!userEntity.profileInsights) {
+      try {
+        console.log("🔍 Fetching profile insights...");
+        const insightsData = await DynamoDBService.getUserProfileInsights(
+          userEntity.userId
+        );
 
-      insights = {
-        ...insightsData,
-        lastUpdated: new Date().toISOString(), // Update the timestamp
-      };
+        profileInsights = {
+          ...insightsData,
+          lastUpdated: new Date().toISOString(), // Update the timestamp
+        };
 
-      console.log("✅ Profile insights fetched and view count incremented");
-    } catch (error) {
-      console.error("❌ Failed to get profile insights:", error);
-      // Continue without insights rather than failing the whole request
-      insights = undefined;
+        console.log("✅ Profile insights fetched and view count incremented");
+      } catch (error) {
+        console.error("❌ Failed to get profile insights:", error);
+        // Continue without insights rather than failing the whole request
+        profileInsights = undefined;
+      }
     }
 
     // Prepare public profile response (excluding sensitive information)
@@ -140,7 +143,7 @@ export const handler = async (
       ...(userEntity.avatarThumbnails && {
         avatarThumbnails: userEntity.avatarThumbnails,
       }),
-      ...(insights && { insights }),
+      ...(profileInsights && { profileInsights }),
     };
 
     console.log("✅ Returning public profile for user:", username);

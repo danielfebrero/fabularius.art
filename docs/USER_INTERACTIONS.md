@@ -1,6 +1,6 @@
 # User Interactions
 
-This document provides a detailed overview of the user interaction system for the PornSpot.ai application, which includes features like "likes" and "bookmarks".
+This document provides a detailed overview of the user interaction system for the PornSpot.ai application, which includes features like "likes" and "bookmarks", as well as user profile insights and metrics.
 
 ## Interaction System
 
@@ -17,6 +17,57 @@ The interaction system allows users to engage with content by liking or bookmark
 - `POST /user/interactions/bookmark`: Bookmark or unbookmark an item.
 - `GET /user/interactions/likes`: Get a list of items liked by the user.
 - `GET /user/interactions/bookmarks`: Get a list of items bookmarked by the user.
+
+## User Profile Insights
+
+The system tracks comprehensive user profile metrics that provide insights into user engagement and content performance.
+
+### Profile Metrics
+
+- **totalLikesReceived**: Total number of likes received on all user's content
+- **totalBookmarksReceived**: Total number of bookmarks received on all user's content
+- **totalMediaViews**: Total number of views on all user's media content
+- **totalProfileViews**: Total number of times the user's profile has been viewed
+- **totalGeneratedMedias**: Total number of media items created by the user
+- **totalAlbums**: Total number of albums created by the user
+
+### Profile Insights Storage
+
+Profile insights are stored in the user entity with automatic caching and incremental updates:
+
+```typescript
+// User entity profileInsights structure
+profileInsights: {
+  totalLikesReceived: number;
+  totalBookmarksReceived: number;
+  totalMediaViews: number;
+  totalProfileViews: number;
+  totalGeneratedMedias: number;
+  totalAlbums: number;
+  lastUpdated: string; // ISO 8601 timestamp
+}
+```
+
+### Real-time Metric Updates
+
+The system provides efficient real-time metric updates through the `incrementUserProfileMetric` method:
+
+- **Atomic Operations**: Uses DynamoDB's `ADD` operation for thread-safe increments
+- **Auto-initialization**: Handles cases where `profileInsights` doesn't exist yet
+- **Race Condition Safety**: Uses conditional expressions to prevent conflicts
+- **Efficient**: Only increments specific metrics without recomputing all values
+
+### Error Handling for Profile Insights
+
+The profile insights system handles several edge cases:
+
+1. **Missing profileInsights**: If the `profileInsights` attribute doesn't exist, the system automatically initializes it with the current increment value and zeros for other metrics.
+
+2. **Concurrent Updates**: Uses conditional expressions (`attribute_exists` and `attribute_not_exists`) to handle concurrent initialization attempts safely.
+
+3. **Fallback Computation**: If cached insights are missing, the system can compute them from scratch by aggregating data across all user content.
+
+4. **Graceful Degradation**: Returns default values (zeros) if computation fails, ensuring the application continues to function.
 
 ## Database Schema
 

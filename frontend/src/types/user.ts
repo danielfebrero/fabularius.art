@@ -21,7 +21,7 @@ export interface User {
   };
 
   // Profile insights - optional for public profiles
-  insights?: UserProfileInsights;
+  profileInsights?: UserProfileInsights;
 }
 
 // User insights/profile metrics types
@@ -373,7 +373,7 @@ export interface PublicUserProfile {
   };
 
   // Profile insights
-  insights?: UserProfileInsights;
+  profileInsights?: UserProfileInsights;
 }
 
 export interface GetPublicProfileResponse {

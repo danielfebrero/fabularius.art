@@ -1859,9 +1859,10 @@ export class DynamoDBService {
   ): Promise<void> {
     console.log(`📈 Incrementing ${metric} for user ${userId} by ${increment}`);
 
-    try {
-      const now = new Date().toISOString();
+    const now = new Date().toISOString();
 
+    try {
+      // First attempt: Try to increment assuming profileInsights exists
       await docClient.send(
         new UpdateCommand({
           TableName: TABLE_NAME,
@@ -1883,20 +1884,74 @@ export class DynamoDBService {
             ":lastUpdated": now,
             ":lastActive": now,
           },
+          // Ensure profileInsights exists
+          ConditionExpression: "attribute_exists(profileInsights)",
         })
       );
 
       console.log(`✅ Incremented ${metric} for user ${userId}`);
     } catch (error: any) {
-      // If profileInsights doesn't exist yet, initialize it first
-      if (error.name === "ValidationException") {
+      // If profileInsights doesn't exist, initialize it with the increment
+      if (error.name === "ConditionalCheckFailedException") {
         console.log(
-          `⚠️ Profile insights not initialized for user ${userId}, initializing...`
+          `⚠️ Profile insights not initialized for user ${userId}, initializing with increment...`
         );
-        await this.getUserProfileInsights(userId); // This will initialize the insights
 
-        // Retry the increment
-        await this.incrementUserProfileMetric(userId, metric, increment);
+        try {
+          // Initialize profileInsights structure with the metric set to the increment value
+          // and all other metrics set to 0
+          const initialInsights = {
+            totalLikesReceived: metric === "totalLikesReceived" ? increment : 0,
+            totalBookmarksReceived:
+              metric === "totalBookmarksReceived" ? increment : 0,
+            totalMediaViews: metric === "totalMediaViews" ? increment : 0,
+            totalProfileViews: metric === "totalProfileViews" ? increment : 0,
+            totalGeneratedMedias:
+              metric === "totalGeneratedMedias" ? increment : 0,
+            totalAlbums: metric === "totalAlbums" ? increment : 0,
+            lastUpdated: now,
+          };
+
+          await docClient.send(
+            new UpdateCommand({
+              TableName: TABLE_NAME,
+              Key: {
+                PK: `USER#${userId}`,
+                SK: "METADATA",
+              },
+              UpdateExpression: `SET 
+                profileInsights = :insights,
+                #lastActive = :lastActive`,
+              ExpressionAttributeNames: {
+                "#lastActive": "lastActive",
+              },
+              ExpressionAttributeValues: {
+                ":insights": initialInsights,
+                ":lastActive": now,
+              },
+              // Only initialize if profileInsights doesn't exist
+              ConditionExpression: "attribute_not_exists(profileInsights)",
+            })
+          );
+
+          console.log(
+            `✅ Initialized and incremented ${metric} for user ${userId}`
+          );
+        } catch (initError: any) {
+          if (initError.name === "ConditionalCheckFailedException") {
+            // profileInsights was created by another process, retry the original increment
+            console.log(
+              `🔄 Profile insights was created concurrently for user ${userId}, retrying increment...`
+            );
+            return this.incrementUserProfileMetric(userId, metric, increment);
+          } else {
+            console.error(
+              `❌ Failed to initialize profile insights for user ${userId}:`,
+              initError
+            );
+            throw initError;
+          }
+        }
       } else {
         console.error(
           `❌ Failed to increment ${metric} for user ${userId}:`,

@@ -50,7 +50,7 @@ export interface EnhancedUser {
   planInfo: UserPlanInfo;
   usageStats: UserUsageStats;
 
-  insights?: UserProfileInsights;
+  profileInsights?: UserProfileInsights;
 }
 
 export class PlanUtil {
@@ -192,7 +192,7 @@ export class PlanUtil {
       planInfo,
       usageStats,
 
-      insights: userEntity.insights,
+      profileInsights: userEntity.profileInsights,
     };
   }
 
