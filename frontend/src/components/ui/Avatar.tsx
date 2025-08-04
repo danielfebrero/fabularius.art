@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { User } from "@/types/user";
 import { composeMediaUrl } from "@/lib/urlUtils";
 import { cn } from "@/lib/utils";
@@ -130,6 +131,7 @@ function selectOptimalAvatarSize(
  * - Intelligent container dimension-based avatar thumbnail selection
  * - Responsive avatar thumbnails with optimal size selection
  * - Automatic fallback to user initials if no avatar
+ * - Shows initials as placeholder while image is loading
  * - Consistent styling across the application
  * - Support for online indicators
  * - Flexible user type support (works with User and extended user types)
@@ -153,6 +155,10 @@ export function Avatar({
   const { containerRef, dimensions } = useContainerDimensions();
   const containerWidth = dimensions.width;
   const containerHeight = dimensions.height;
+  
+  // Track image loading state
+  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [hasImageError, setHasImageError] = useState(false);
 
   const displayName =
     user.username || (user.email ? user.email.split("@")[0] : "Anonymous");
@@ -182,6 +188,14 @@ export function Avatar({
 
   const avatarUrl = getAvatarUrl();
 
+  // Reset loading state when URL changes
+  useEffect(() => {
+    if (avatarUrl) {
+      setIsImageLoading(true);
+      setHasImageError(false);
+    }
+  }, [avatarUrl]);
+
   // Size class mapping
   const sizeClasses = {
     small: "w-8 h-8 text-sm",
@@ -206,6 +220,16 @@ export function Avatar({
     return ""; // Text size is included in sizeClasses for non-custom sizes
   };
 
+  const handleImageLoad = () => {
+    setIsImageLoading(false);
+    setHasImageError(false);
+  };
+
+  const handleImageError = () => {
+    setIsImageLoading(false);
+    setHasImageError(true);
+  };
+
   return (
     <div
       ref={containerRef as React.RefObject<HTMLDivElement>}
@@ -218,13 +242,28 @@ export function Avatar({
           getTextClasses()
         )}
       >
-        {avatarUrl ? (
-          <img
-            src={composeMediaUrl(avatarUrl)}
-            alt={`${displayName}'s avatar`}
-            className="w-full h-full object-cover"
-          />
+        {avatarUrl && !hasImageError ? (
+          <>
+            {/* Show initials while loading */}
+            {isImageLoading && (
+              <span className="select-none">
+                {initials}
+              </span>
+            )}
+            {/* The actual image - hidden during loading */}
+            <img
+              src={composeMediaUrl(avatarUrl)}
+              alt={`${displayName}'s avatar`}
+              className={cn(
+                "w-full h-full object-cover transition-opacity duration-200",
+                isImageLoading ? "opacity-0 absolute" : "opacity-100"
+              )}
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+            />
+          </>
         ) : (
+          // Show initials when no avatar URL or image error
           initials
         )}
       </div>
