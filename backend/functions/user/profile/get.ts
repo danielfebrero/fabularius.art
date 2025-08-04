@@ -118,13 +118,6 @@ export const handler = async (
         lastUpdated: new Date().toISOString(), // Update the timestamp
       };
 
-      // Increment profile view count for the viewed user (not the current user)
-      console.log("📈 Incrementing profile view count...");
-      await DynamoDBService.incrementUserProfileMetric(
-        userEntity.userId,
-        "totalProfileViews"
-      );
-
       console.log("✅ Profile insights fetched and view count incremented");
     } catch (error) {
       console.error("❌ Failed to get profile insights:", error);
