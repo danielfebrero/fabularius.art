@@ -7,6 +7,7 @@ import LocaleLink from "@/components/ui/LocaleLink";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { cn } from "@/lib/utils";
 import { useAlbums } from "@/hooks/useAlbums";
+import { useUser } from "@/hooks/useUser";
 import { EditAlbumDialog } from "@/components/albums/EditAlbumDialog";
 import { DeleteAlbumDialog } from "@/components/albums/DeleteAlbumDialog";
 import { Album } from "@/types";
@@ -17,7 +18,10 @@ const UserAlbumsPage: React.FC = () => {
   const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
   const [deletingAlbum, setDeletingAlbum] = useState<Album | null>(null);
 
-  // Use the proper user albums hook - rely on session authentication
+  // Get current user info
+  const { user } = useUser();
+
+  // Use the proper user albums hook - pass user parameter to fetch only current user's albums
   const {
     albums,
     loading: isLoading,
@@ -25,7 +29,7 @@ const UserAlbumsPage: React.FC = () => {
     totalCount,
     updateAlbum,
     deleteAlbum,
-  } = useAlbums();
+  } = useAlbums({ user: user?.username });
 
   // Handle album edit
   const handleEditAlbum = (album: Album) => {

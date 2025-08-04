@@ -128,7 +128,7 @@ export const handler = async (
       );
 
       // Filter to only show public albums if finalCreatedBy !== currentUserId
-      if (finalCreatedBy !== currentUserId) {
+      if (finalCreatedBy !== currentUserId || isPublicParam) {
         result.albums = result.albums.filter(
           (album) => album.isPublic === true
         );
