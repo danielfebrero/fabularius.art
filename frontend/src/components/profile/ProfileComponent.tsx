@@ -14,7 +14,7 @@ import { Media, Comment as CommentType } from "@/types";
 import { useProfileDataQuery } from "@/hooks/queries/useProfileDataQuery";
 import { useAlbums } from "@/hooks/queries/useAlbumsQuery";
 import { useCommentsQuery } from "@/hooks/queries/useCommentsQuery";
-import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
+import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 import { useUser } from "@/hooks/useUser";
 import { useUsernameAvailability } from "@/hooks/useUsernameAvailability";
 import { formatDistanceToNow } from "@/lib/dateUtils";
@@ -123,7 +123,7 @@ export default function ProfileComponent({
   );
 
   // Preload interaction statuses for liked content
-  const { preloadStatuses } = useUserInteractionStatus();
+  const { prefetch } = usePrefetchInteractionStatus();
 
   // Effect to preload interaction statuses for liked content
   useEffect(() => {
@@ -136,9 +136,9 @@ export default function ProfileComponent({
       // Preload the current logged-in user's statuses for these items
       // This will show the actual like/bookmark status of the current viewer,
       // not the profile owner's status
-      preloadStatuses(targets).catch(console.error);
+      prefetch(targets);
     }
-  }, [recentLikes, loggedInUser, preloadStatuses]);
+  }, [recentLikes, loggedInUser, prefetch]);
 
   // Debounce username checking when form data changes
   useEffect(() => {
