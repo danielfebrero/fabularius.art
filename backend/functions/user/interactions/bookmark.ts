@@ -151,11 +151,7 @@ export const handler = async (
       });
     } else {
       // Remove bookmark
-      await DynamoDBService.deleteUserInteraction(
-        userId,
-        "bookmark",
-        targetId
-      );
+      await DynamoDBService.deleteUserInteraction(userId, "bookmark", targetId);
 
       // Decrement bookmark count for the target
       if (targetType === "album") {

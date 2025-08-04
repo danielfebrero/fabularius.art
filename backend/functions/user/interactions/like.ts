@@ -145,11 +145,7 @@ export const handler = async (
       console.log(`✅ Like added for ${targetType} ${targetId}`);
     } else {
       // Remove like
-      await DynamoDBService.deleteUserInteraction(
-        userId,
-        "like",
-        targetId
-      );
+      await DynamoDBService.deleteUserInteraction(userId, "like", targetId);
 
       // Decrement like count for the target
       if (targetType === "album") {

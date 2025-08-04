@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "@shared/utils/response";
 import { DynamoDBService } from "@shared/utils/dynamodb";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserAuthUtil } from "@shared/utils/user-auth";
 import { UserEntity } from "@shared/types/user";
 
 interface UpdateProfileRequest {
@@ -55,26 +55,21 @@ export const handler = async (
   }
 
   try {
-    // Validate user session
+    // Extract user authentication using centralized utility
     console.log("🔑 Validating user session...");
-    const validation = await UserAuthMiddleware.validateSession(event);
+    const authResult = await UserAuthUtil.requireAuth(event);
 
-    if (!validation.isValid || !validation.user) {
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
       console.log("❌ User session validation failed");
-      return ResponseUtil.unauthorized(event, "User session required");
+      return authResult;
     }
 
-    const currentUser = validation.user;
-    console.log(
-      "👤 Authenticated user:",
-      currentUser.userId,
-      currentUser.email
-    );
+    const userId = authResult.userId!;
+    console.log("👤 Authenticated user:", userId);
 
     // Get the full user entity to access profile fields
-    const currentUserEntity = await DynamoDBService.getUserById(
-      currentUser.userId
-    );
+    const currentUserEntity = await DynamoDBService.getUserById(userId);
     if (!currentUserEntity) {
       console.log("❌ User entity not found");
       return ResponseUtil.notFound(event, "User not found");

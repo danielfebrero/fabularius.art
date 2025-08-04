@@ -109,7 +109,7 @@ export const handler = async (
     try {
       const albums = await DynamoDBService.getAlbumsForMedia(mediaId);
       if (albums.length > 0) {
-        mediaResponse.albums = albums;
+        mediaResponse.albums = albums.filter((album) => album.isPublic);
       }
     } catch (error) {
       console.error("Failed to fetch albums for media:", error);

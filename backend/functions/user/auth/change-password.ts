@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "@shared/utils/response";
 import { DynamoDBService } from "@shared/utils/dynamodb";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserAuthUtil } from "@shared/utils/user-auth";
 import bcrypt from "bcryptjs";
 
 interface ChangePasswordRequest {
@@ -32,21 +32,22 @@ export const handler = async (
   }
 
   try {
-    // Validate user session
+    // Extract user authentication using centralized utility
     console.log("🔑 Validating user session...");
-    const validation = await UserAuthMiddleware.validateSession(event);
+    const authResult = await UserAuthUtil.requireAuth(event);
 
-    if (!validation.isValid || !validation.user) {
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
       console.log("❌ User session validation failed");
-      return ResponseUtil.unauthorized(event, "Invalid session");
+      return authResult;
     }
 
-    const user = validation.user;
-    console.log(`✅ User session valid: ${user.userId}`);
+    const userId = authResult.userId!;
+    console.log(`✅ User session valid: ${userId}`);
 
     // Get full user entity to access password information
     console.log("📋 Fetching user authentication details...");
-    const userEntity = await DynamoDBService.getUserById(user.userId);
+    const userEntity = await DynamoDBService.getUserById(userId);
 
     if (!userEntity) {
       console.log("❌ User entity not found");
@@ -128,7 +129,7 @@ export const handler = async (
 
     // Update password in database
     console.log("💾 Updating password in database...");
-    await DynamoDBService.updateUser(user.userId, {
+    await DynamoDBService.updateUser(userId, {
       passwordHash: newPasswordHash,
     });
 

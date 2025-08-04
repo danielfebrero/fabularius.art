@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "@shared/utils/response";
 import { DynamoDBService } from "@shared/utils/dynamodb";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserAuthUtil } from "@shared/utils/user-auth";
 import { UserEntity } from "@shared/types/user";
 
 interface DeleteAccountResponse {
@@ -27,28 +27,29 @@ export const handler = async (
   }
 
   try {
-    // Validate user session
+    // Extract user authentication using centralized utility
     console.log("🔑 Validating user session...");
-    const validation = await UserAuthMiddleware.validateSession(event);
+    const authResult = await UserAuthUtil.requireAuth(event);
 
-    if (!validation.isValid || !validation.user) {
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
       console.log("❌ User session validation failed");
-      return ResponseUtil.unauthorized(event, "Invalid session");
+      return authResult;
     }
 
-    const user = validation.user;
-    console.log(`✅ User session valid: ${user.userId}`);
+    const userId = authResult.userId!;
+    console.log(`✅ User session valid: ${userId}`);
 
     // Start the account deletion process (soft delete)
     console.log("🗑️ Starting account deletion process (soft delete)...");
 
     // 1. Mark user account as deleted and anonymize personal data
-    console.log("� Anonymizing user account...");
-    await anonymizeUserAccount(user.userId);
+    console.log("📝 Anonymizing user account...");
+    await anonymizeUserAccount(userId);
 
     // 2. Delete active user sessions
-    console.log("� Deleting user sessions...");
-    await deleteUserSessions(user.userId);
+    console.log("🚪 Deleting user sessions...");
+    await deleteUserSessions(userId);
 
     // Note: We keep media, albums, and interactions but they will show as "[deleted]" user
 
