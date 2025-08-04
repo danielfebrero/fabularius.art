@@ -171,6 +171,8 @@ export function Avatar({
       );
       if (optimalSize && user.avatarThumbnails[optimalSize]) {
         return user.avatarThumbnails[optimalSize];
+      } else {
+        return user.avatarUrl;
       }
     } else {
       // Fallback to original avatar URL if no thumbnails available

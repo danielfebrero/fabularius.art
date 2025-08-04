@@ -292,8 +292,6 @@ export default function ProfileComponent({
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      console.log("Saving profile:", formData);
-
       // Check username availability before submission if username changed
       if (
         formData.username !== currentUser.username &&
@@ -313,14 +311,12 @@ export default function ProfileComponent({
       // Handle avatar upload if a new file was selected
       let avatarUpdateData = {};
       if (selectedAvatarFile) {
-        console.log("🔄 Uploading new avatar...");
         const avatarResult = await handleAvatarUpload(selectedAvatarFile);
         if (avatarResult.success) {
           avatarUpdateData = {
             avatarUrl: avatarResult.avatarUrl,
             avatarThumbnails: avatarResult.avatarThumbnails,
           };
-          console.log("✅ Avatar uploaded successfully");
         } else {
           console.error("❌ Avatar upload failed");
           // Continue with profile update even if avatar upload fails
@@ -331,8 +327,6 @@ export default function ProfileComponent({
       const result = await userApi.updateProfile(formData);
 
       if (result.success && result.data?.user) {
-        console.log("Profile updated successfully:", result.data.user);
-
         // Update the current user state with the response data
         setCurrentUser({
           ...currentUser,
@@ -618,7 +612,7 @@ export default function ProfileComponent({
             <CardHeader className="pb-6">
               <div className="flex flex-col sm:flex-row gap-6">
                 {/* Avatar Section */}
-                <div className="relative inline-block w-fit">
+                <div className="relative inline-block w-fit h-fit">
                   <Avatar
                     user={avatarUser}
                     size="custom"
