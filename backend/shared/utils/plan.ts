@@ -1,6 +1,6 @@
 // Plan and subscription utilities
 import { DynamoDBService } from "./dynamodb";
-import { UserEntity } from "../types/user";
+import { UserEntity, UserProfileInsights } from "../types/user";
 
 export type UserPlan = "free" | "starter" | "unlimited" | "pro";
 export type UserRole = "user" | "admin" | "moderator";
@@ -49,6 +49,8 @@ export interface EnhancedUser {
   role: UserRole;
   planInfo: UserPlanInfo;
   usageStats: UserUsageStats;
+
+  insights?: UserProfileInsights;
 }
 
 export class PlanUtil {
@@ -189,6 +191,8 @@ export class PlanUtil {
       role,
       planInfo,
       usageStats,
+
+      insights: userEntity.insights,
     };
   }
 
