@@ -4,8 +4,7 @@ import { DynamoDBService } from "@shared/utils/dynamodb";
 import { S3Service } from "@shared/utils/s3";
 import { ResponseUtil } from "@shared/utils/response";
 import { UploadMediaRequest } from "@shared/types";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
-import { PlanUtil } from "@shared/utils/plan";
+import { UserAuthUtil } from "@shared/utils/user-auth";
 import { RevalidationService } from "@shared/utils/revalidation";
 
 export const handler = async (
@@ -16,47 +15,55 @@ export const handler = async (
   }
 
   try {
-    // Get user ID from request context (set by the admin authorizer)
-    let userId = event.requestContext.authorizer?.["userId"];
+    // Extract user authentication with role information using centralized utility
+    const authResult = await UserAuthUtil.requireAuth(event, {
+      includeRole: true,
+    });
 
-    console.log("👤 UserId from authorizer:", userId);
-
-    // Fallback for local development or when authorizer context is missing
-    if (!userId) {
-      console.log(
-        "⚠️ No userId from authorizer, falling back to session validation"
-      );
-      const validation = await UserAuthMiddleware.validateSession(event);
-
-      if (!validation.isValid || !validation.user) {
-        console.log("❌ Session validation failed");
-        return ResponseUtil.unauthorized(event, "No user session found");
-      }
-
-      userId = validation.user.userId;
-      console.log("✅ Got userId from session validation:", userId);
-
-      // Verify user has admin privileges when using fallback
-      const userRole = await PlanUtil.getUserRole(
-        validation.user.userId,
-        validation.user.email
-      );
-
-      if (userRole !== "admin") {
-        console.log("❌ User does not have admin privileges:", userRole);
-        return ResponseUtil.forbidden(
-          event,
-          "Access denied: insufficient privileges"
-        );
-      }
-
-      console.log("✅ User has admin/moderator privileges:", userRole);
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
+      return authResult;
     }
+
+    const userId = authResult.userId!;
+    const userRole = authResult.userRole || "user";
+
+    console.log("✅ Authenticated user:", userId);
+    console.log("🎭 User role:", userRole);
+
     const albumId = event.pathParameters?.["albumId"];
 
     if (!albumId) {
       return ResponseUtil.badRequest(event, "Album ID is required");
     }
+
+    // Verify album exists and check ownership
+    const album = await DynamoDBService.getAlbum(albumId);
+    if (!album) {
+      return ResponseUtil.notFound(event, "Album not found");
+    }
+
+    // Check if user owns this album or has admin privileges
+    const isOwner = album.createdBy === userId;
+    const isAdmin = userRole === "admin" || userRole === "moderator";
+
+    if (!isOwner && !isAdmin) {
+      console.log("❌ User does not own album and is not admin:", {
+        userId,
+        albumCreatedBy: album.createdBy,
+        userRole,
+      });
+      return ResponseUtil.forbidden(
+        event,
+        "Access denied: You can only add media to your own albums"
+      );
+    }
+
+    console.log("✅ User authorized to add media to album:", {
+      isOwner,
+      isAdmin,
+      userRole,
+    });
 
     if (!event.body) {
       return ResponseUtil.badRequest(event, "Request body is required");
@@ -76,17 +83,14 @@ export const handler = async (
         );
       }
 
-      // Verify album exists
-      const album = await DynamoDBService.getAlbum(albumId);
-      if (!album) {
-        return ResponseUtil.notFound(event, "Album not found");
-      }
-
+      // Album was already verified above, so we can proceed
       // Verify media exists
       const media = await DynamoDBService.getMedia(mediaId);
       if (!media) {
         return ResponseUtil.notFound(event, "Media not found");
       }
+
+      console.log("✅ User authorized to add media to their album");
 
       // Add media to album
       try {
@@ -119,12 +123,7 @@ export const handler = async (
       );
     }
 
-    // Verify album exists
-    const album = await DynamoDBService.getAlbum(albumId);
-    if (!album) {
-      return ResponseUtil.notFound(event, "Album not found");
-    }
-
+    // Album was already verified above, so we can proceed directly
     // Generate presigned upload URL
     const { uploadUrl, key } = await S3Service.generateMediaPresignedUploadUrl(
       albumId,

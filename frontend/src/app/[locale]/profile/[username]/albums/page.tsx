@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { ContentCard } from "@/components/ui/ContentCard";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
-import { useAlbums } from "@/hooks/useAlbums";
+import { useAlbums } from "@/hooks/queries/useAlbumsQuery";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 export default function UserAlbumsPage() {
@@ -19,11 +19,26 @@ export default function UserAlbumsPage() {
 
   const isMobile = useIsMobile();
 
-  // Use the custom hook to fetch albums data
-  const { albums, loading, loadingMore, error, pagination, loadMore } =
-    useAlbums({ user: username, limit: 12 });
+  // Use TanStack Query hook to fetch albums data
+  const {
+    data: albumsData,
+    isLoading: loading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage: loadingMore,
+  } = useAlbums({ user: username, limit: 12 });
 
-  const hasNext = pagination?.hasNext || false;
+  // Extract all albums from paginated data
+  const albums = albumsData?.pages.flatMap((page) => page.data.albums) || [];
+
+  const hasNext = hasNextPage || false;
+
+  const loadMore = () => {
+    if (hasNextPage) {
+      fetchNextPage();
+    }
+  };
 
   const displayName = username;
   const initials = displayName.slice(0, 2).toUpperCase();
@@ -72,7 +87,7 @@ export default function UserAlbumsPage() {
           <h2 className="text-xl font-semibold text-foreground">
             Albums not found
           </h2>
-          <p className="text-muted-foreground mt-2">{error}</p>
+          <p className="text-muted-foreground mt-2">{error?.message}</p>
         </div>
       </div>
     );

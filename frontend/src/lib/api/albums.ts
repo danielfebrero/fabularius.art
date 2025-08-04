@@ -4,6 +4,9 @@ if (!API_URL) {
   throw new Error("NEXT_PUBLIC_API_URL is not set");
 }
 
+// Import the new unified types
+import { UnifiedAlbumsResponse } from "@/types";
+
 // Albums API Functions
 export const albumsApi = {
   // Get albums with optional filtering
@@ -13,17 +16,7 @@ export const albumsApi = {
     limit?: number;
     cursor?: string;
     tag?: string;
-  }): Promise<{
-    success: boolean;
-    data?: {
-      albums: any[];
-      pagination: {
-        hasNext: boolean;
-        cursor?: string;
-      };
-    };
-    error?: string;
-  }> => {
+  }): Promise<UnifiedAlbumsResponse> => {
     const searchParams = new URLSearchParams();
 
     if (params?.user) searchParams.set("user", params.user);
@@ -56,17 +49,7 @@ export const albumsApi = {
     limit?: number;
     cursor?: string;
     tag?: string;
-  }): Promise<{
-    success: boolean;
-    data?: {
-      albums: any[];
-      pagination: {
-        hasNext: boolean;
-        cursor?: string;
-      };
-    };
-    error?: string;
-  }> => {
+  }): Promise<UnifiedAlbumsResponse> => {
     // Fetch current user's albums via session (no user parameter = session-based lookup)
     return albumsApi.getAlbums({
       ...params,

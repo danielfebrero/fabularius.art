@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { interactionApi } from "@/lib/api";
-import { UserInteractionsResponse } from "@/types/user";
+import { UnifiedUserInteractionsResponse } from "@/types/user";
 
 interface UseProfileDataOptions {
   username?: string;
@@ -34,18 +34,14 @@ export function useProfileData({
         setLoading(true);
         setError(null);
 
-        let response: UserInteractionsResponse;
+        let response: UnifiedUserInteractionsResponse;
 
         if (username) {
           // Fetch likes for specific user by username
-          response = await interactionApi.getLikesByUsername(
-            username,
-            1,
-            limit
-          );
+          response = await interactionApi.getLikesByUsername(username, limit);
         } else {
           // Fetch current user's likes (for owner view)
-          response = await interactionApi.getLikes(1, limit);
+          response = await interactionApi.getLikes(limit);
         }
 
         if (response.success && response.data) {

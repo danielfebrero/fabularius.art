@@ -2,8 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { ResponseUtil } from "@shared/utils/response";
 import { RevalidationService } from "@shared/utils/revalidation";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
-import { PlanUtil } from "@shared/utils/plan";
+import { UserAuthUtil } from "@shared/utils/user-auth";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -18,38 +17,21 @@ export const handler = async (
       return ResponseUtil.badRequest(event, "Album ID is required");
     }
 
-    // Determine user context - check if admin authorizer or user authorizer
-    let userId = event.requestContext.authorizer?.["userId"];
-    let userRole = "user"; // default to user
+    // Extract user authentication with role information using centralized utility
+    const authResult = await UserAuthUtil.requireAuth(event, {
+      includeRole: true,
+    });
 
-    console.log("👤 UserId from authorizer:", userId);
-
-    // If no userId from authorizer, try session-based validation
-    if (!userId) {
-      console.log(
-        "⚠️ No userId from authorizer, falling back to session validation"
-      );
-      const validation = await UserAuthMiddleware.validateSession(event);
-
-      if (!validation.isValid || !validation.user) {
-        console.log("❌ Session validation failed");
-        return ResponseUtil.unauthorized(event, "No user session found");
-      }
-
-      userId = validation.user.userId;
-      console.log("✅ Got userId from session validation:", userId);
-
-      // Check if user has admin privileges
-      userRole = await PlanUtil.getUserRole(
-        validation.user.userId,
-        validation.user.email
-      );
-      console.log("✅ User role:", userRole);
-    } else {
-      // If userId came from authorizer, check if it's admin context
-      // This would be set by admin authorizer vs user authorizer
-      userRole = event.requestContext.authorizer?.["role"] || "user";
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
+      return authResult;
     }
+
+    const userId = authResult.userId!;
+    const userRole = authResult.userRole || "user";
+
+    console.log("✅ Authenticated user:", userId);
+    console.log("🎭 User role:", userRole);
 
     // Check if album exists
     const existingAlbum = await DynamoDBService.getAlbum(albumId);

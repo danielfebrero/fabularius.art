@@ -74,7 +74,7 @@ export function useAdminMediaList(albumIds: string[] = []) {
       );
 
       const results = await Promise.all(promises);
-      const allMedia = results.flatMap((result) => result.media);
+      const allMedia = results.flatMap((result) => result.data.media);
 
       return { media: allMedia };
     },

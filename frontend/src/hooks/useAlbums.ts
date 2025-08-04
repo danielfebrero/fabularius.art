@@ -118,20 +118,20 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
 
         if (append) {
           setAlbums((prev) => {
-            const updated = [...prev, ...response.albums];
+            const updated = [...prev, ...response.data.albums];
             return updated;
           });
         } else {
           setAlbums(() => {
-            return response.albums;
+            return response.data.albums;
           });
-          setTotalCount(response.albums.length);
+          setTotalCount(response.data.albums.length);
         }
 
         setPagination(() => {
           const newPagination = {
-            hasNext: response.hasNext,
-            cursor: response.nextCursor || null,
+            hasNext: response.data.pagination.hasNext,
+            cursor: response.data.pagination.cursor || null,
           };
           return newPagination;
         });

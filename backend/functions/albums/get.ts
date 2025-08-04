@@ -1,7 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "@shared/utils/response";
 import { DynamoDBService } from "@shared/utils/dynamodb";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserAuthUtil } from "@shared/utils/user-auth";
+import {
+  PaginationUtil,
+  DEFAULT_PAGINATION_LIMITS,
+  MAX_PAGINATION_LIMITS,
+} from "@shared/utils/pagination";
 
 /**
  * Albums GET endpoint with intelligent filtering based on user permissions:
@@ -31,37 +36,42 @@ export const handler = async (
   }
 
   try {
-    // Get user ID from request context (set by the user authorizer)
-    let currentUserId = event.requestContext.authorizer?.["userId"];
-
-    console.log("👤 CurrentUserId from authorizer:", currentUserId);
-    console.log(
-      "🔍 Event authorizer:",
-      JSON.stringify(event.requestContext.authorizer, null, 2)
-    );
-
-    // Optional authentication - try to get user ID if available
+    // Extract user authentication with anonymous access allowed
     // This endpoint supports both authenticated and anonymous requests
-    if (!currentUserId) {
-      console.log(
-        "⚠️ No userId from authorizer, attempting session validation (optional)"
-      );
-      const validation = await UserAuthMiddleware.validateSession(event);
+    const authResult = await UserAuthUtil.allowAnonymous(event);
 
-      if (validation.isValid && validation.user) {
-        currentUserId = validation.user.userId;
-        console.log(
-          "✅ Got currentUserId from session validation:",
-          currentUserId
-        );
-      } else {
-        console.log("ℹ️ No valid session - proceeding as anonymous user");
-        currentUserId = null;
-      }
+    // Handle error response from authentication (should not happen with allowAnonymous)
+    if (UserAuthUtil.isErrorResponse(authResult)) {
+      return authResult;
     }
-    const limit = parseInt(event.queryStringParameters?.["limit"] || "20");
+
+    const currentUserId = authResult.userId; // Can be null for anonymous users
+
+    if (currentUserId) {
+      console.log("✅ Authenticated user:", currentUserId);
+    } else {
+      console.log("ℹ️ Anonymous user - proceeding with public content only");
+    }
+
+    // Parse pagination parameters using unified utility
+    let paginationParams;
+    try {
+      paginationParams = PaginationUtil.parseRequestParams(
+        event.queryStringParameters as Record<string, string> | null,
+        DEFAULT_PAGINATION_LIMITS.albums,
+        MAX_PAGINATION_LIMITS.albums
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Invalid pagination parameters";
+      return ResponseUtil.badRequest(event, errorMessage);
+    }
+
+    const { cursor: lastEvaluatedKey, limit } = paginationParams;
+
     const isPublicParam = event.queryStringParameters?.["isPublic"];
-    const rawCursor = event.queryStringParameters?.["cursor"];
     const tag = event.queryStringParameters?.["tag"]; // Tag filter parameter
     const userParam = event.queryStringParameters?.["user"]; // User parameter for username lookup
 
@@ -70,7 +80,7 @@ export const handler = async (
       isPublicParam,
       tag,
       userParam,
-      cursor: rawCursor ? "present" : "none",
+      cursor: lastEvaluatedKey ? "present" : "none",
     });
 
     // Handle user parameter lookup
@@ -92,18 +102,6 @@ export const handler = async (
       }
       finalCreatedBy = targetUser.userId;
       console.log("[Albums API] Resolved username to userId:", finalCreatedBy);
-    }
-
-    // Parse DynamoDB native LastEvaluatedKey as the cursor (base64-encoded JSON)
-    let lastEvaluatedKey: any = undefined;
-    if (rawCursor) {
-      try {
-        lastEvaluatedKey = JSON.parse(
-          Buffer.from(rawCursor, "base64").toString("utf-8")
-        );
-      } catch {
-        return ResponseUtil.error(event, "Invalid cursor");
-      }
     }
 
     let result;
@@ -147,15 +145,15 @@ export const handler = async (
       );
     }
 
-    const nextCursor = result.lastEvaluatedKey
-      ? Buffer.from(JSON.stringify(result.lastEvaluatedKey)).toString("base64")
-      : null;
-    const hasNext = !!result.lastEvaluatedKey;
+    // Create pagination metadata using unified utility
+    const paginationMeta = PaginationUtil.createPaginationMeta(
+      result.lastEvaluatedKey,
+      limit
+    );
 
     return ResponseUtil.success(event, {
       albums: result.albums,
-      nextCursor,
-      hasNext,
+      pagination: paginationMeta,
     });
   } catch (err) {
     console.error("Error fetching albums:", err);

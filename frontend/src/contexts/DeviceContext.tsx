@@ -22,6 +22,7 @@ export function DeviceProvider({
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo>(() => {
     // Always prefer server-side detection when available
     if (initialDeviceInfo) {
+      console.log({ initialDeviceInfo });
       return initialDeviceInfo;
     }
     // Only use client-side as absolute fallback

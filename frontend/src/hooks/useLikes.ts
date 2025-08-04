@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { interactionApi } from "@/lib/api";
-import { UserInteractionsResponse, UserInteraction } from "@/types/user";
+import { UnifiedUserInteractionsResponse, UserInteraction } from "@/types/user";
 import { useUser } from "./useUser";
 import { useUserInteractionStatus } from "./useUserInteractionStatus";
 
@@ -87,19 +87,18 @@ export const useLikes = (
 
       try {
         const keyToUse = isFirstPage ? undefined : lastKey;
-        let response: UserInteractionsResponse;
+        let response: UnifiedUserInteractionsResponse;
 
         if (targetUser) {
           // Fetch likes for specific user by username
           response = await interactionApi.getLikesByUsername(
             targetUser,
-            page,
             limit,
             keyToUse
           );
         } else {
           // Fetch current user's likes
-          response = await interactionApi.getLikes(page, limit, keyToUse);
+          response = await interactionApi.getLikes(limit, keyToUse);
         }
 
         if (response.data) {
@@ -121,9 +120,9 @@ export const useLikes = (
             preloadStatuses(targets).catch(console.error);
           }
 
-          setTotalCount(pagination.total);
+          setTotalCount(interactions.length); // In cursor pagination, we don't have total count
           setHasMore(pagination.hasNext);
-          setLastKey(pagination.nextKey);
+          setLastKey(pagination.cursor || undefined);
         }
         setCurrentPage(page);
       } catch (err) {

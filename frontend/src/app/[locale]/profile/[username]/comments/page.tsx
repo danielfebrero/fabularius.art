@@ -9,8 +9,8 @@ import { ContentCard } from "@/components/ui/ContentCard";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { useComments } from "@/hooks/useComments";
-import { Media, Album } from "@/types";
+import { useCommentsQuery } from "@/hooks/queries/useCommentsQuery";
+import { Media, Album, Comment as CommentType } from "@/types";
 import { formatDistanceToNow } from "@/lib/dateUtils";
 
 export default function UserCommentsPage() {
@@ -21,18 +21,34 @@ export default function UserCommentsPage() {
 
   const isMobile = useIsMobile();
 
-  // Use the existing useComments hook to fetch user comments
+  // Use the new TanStack Query hook for fetching user comments
   const {
-    comments,
-    totalCount,
-    hasMore,
+    data: commentsData,
     isLoading,
-    isLoadingMore,
-    loadMore,
-    refresh,
     error,
-    clearError,
-  } = useComments(username, true); // Auto-load comments
+    fetchNextPage,
+    hasNextPage: hasMore,
+    isFetchingNextPage: isLoadingMore,
+    refetch: refresh,
+  } = useCommentsQuery({ username });
+
+  // Extract comments from paginated data and explicitly type them
+  const extractedComments =
+    commentsData?.pages.flatMap((page) => page.data.comments) || [];
+  const comments: CommentType[] = extractedComments as unknown as CommentType[];
+  const totalCount = comments.length; // TanStack Query doesn't provide total count in unified pagination
+
+  // Load more function that handles the click event
+  const loadMore = () => {
+    if (hasMore && !isLoadingMore) {
+      fetchNextPage();
+    }
+  };
+
+  // Refresh function for button clicks
+  const handleRefresh = () => {
+    refresh();
+  };
 
   const displayName = username;
   const initials = displayName.slice(0, 2).toUpperCase();
@@ -87,7 +103,9 @@ export default function UserCommentsPage() {
           <h2 className="text-xl font-semibold text-foreground mb-2">
             Failed to load comments
           </h2>
-          <p className="text-muted-foreground mb-4">{error}</p>
+          <p className="text-muted-foreground mb-4">
+            {(error as Error)?.message || "An error occurred"}
+          </p>
           <Button onClick={() => window.location.reload()} variant="outline">
             Try Again
           </Button>
@@ -311,12 +329,11 @@ export default function UserCommentsPage() {
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 text-destructive text-sm">
                   <Mail className="w-4 h-4 flex-shrink-0" />
-                  <span>{error}</span>
+                  <span>
+                    {(error as Error)?.message || "An error occurred"}
+                  </span>
                   <Button
-                    onClick={() => {
-                      clearError();
-                      refresh();
-                    }}
+                    onClick={handleRefresh}
                     variant="ghost"
                     size="sm"
                     className="ml-auto text-xs"

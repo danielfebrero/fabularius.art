@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { interactionApi } from "@/lib/api";
-import { UserInteractionsResponse, UserInteraction } from "@/types/user";
+import { UnifiedUserInteractionsResponse, UserInteraction } from "@/types/user";
 import { useUser } from "./useUser";
 import { useUserInteractionStatus } from "./useUserInteractionStatus";
 
@@ -58,8 +58,8 @@ export const useBookmarks = (
 
       try {
         const keyToUse = isFirstPage ? undefined : lastKey;
-        const response: UserInteractionsResponse =
-          await interactionApi.getBookmarks(page, 20, keyToUse);
+        const response: UnifiedUserInteractionsResponse =
+          await interactionApi.getBookmarks(20, keyToUse);
 
         if (response.data) {
           const { interactions, pagination } = response.data;
@@ -80,9 +80,9 @@ export const useBookmarks = (
             preloadStatuses(targets).catch(console.error);
           }
 
-          setTotalCount(pagination.total);
+          setTotalCount(interactions.length); // In cursor pagination, we don't have total count
           setHasMore(pagination.hasNext);
-          setLastKey(pagination.nextKey);
+          setLastKey(pagination.cursor || undefined);
         }
         setCurrentPage(page);
       } catch (err) {

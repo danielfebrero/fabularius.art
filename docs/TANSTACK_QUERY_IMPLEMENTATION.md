@@ -19,6 +19,13 @@ This guide demonstrates how to migrate from the existing custom hooks to TanStac
 - `useAlbums` - Backward-compatible wrapper (in `useAlbumsWithQuery.ts`)
 - `useCreateAlbum`, `useUpdateAlbum`, `useDeleteAlbum` - Optimistic mutations
 
+### Admin Albums
+
+- `useAdminAlbumsQuery` - Admin album management with infinite scroll pagination
+- `useAdminAlbumsData` - Helper to extract all albums from paginated data
+- `useCreateAdminAlbum`, `useUpdateAdminAlbum`, `useDeleteAdminAlbum` - Admin mutations
+- `useBulkDeleteAdminAlbums` - Bulk delete operations with optimistic updates
+
 ### User Interactions
 
 - `useInteractionStatus` - Efficient batch loading of like/bookmark status
@@ -94,6 +101,65 @@ function AlbumList() {
   };
 
   // ... rest of component
+}
+```
+
+### 3. Admin Albums Example (Infinite Scroll + Mutations)
+
+```typescript
+import {
+  useAdminAlbumsData,
+  useDeleteAdminAlbum,
+  useBulkDeleteAdminAlbums,
+} from "@/hooks/queries/useAdminAlbumsQuery";
+
+function AdminAlbumsPage() {
+  const {
+    albums,
+    isLoading,
+    error,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useAdminAlbumsData({ limit: 20 });
+
+  const deleteAlbumMutation = useDeleteAdminAlbum();
+  const bulkDeleteMutation = useBulkDeleteAdminAlbums();
+
+  const handleDelete = async (albumId: string) => {
+    try {
+      await deleteAlbumMutation.mutateAsync(albumId);
+      // Optimistic updates handle UI changes automatically
+    } catch (error) {
+      // Error handling
+    }
+  };
+
+  const handleBulkDelete = async (albumIds: string[]) => {
+    try {
+      await bulkDeleteMutation.mutateAsync(albumIds);
+      // Bulk operations with optimistic updates
+    } catch (error) {
+      // Error handling
+    }
+  };
+
+  return (
+    <div>
+      {albums.map((album) => (
+        <div key={album.id}>
+          {album.title}
+          <button onClick={() => handleDelete(album.id)}>Delete</button>
+        </div>
+      ))}
+
+      {hasNextPage && (
+        <button onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+          {isFetchingNextPage ? "Loading..." : "Load More"}
+        </button>
+      )}
+    </div>
+  );
 }
 ```
 

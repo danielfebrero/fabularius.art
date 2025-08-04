@@ -10,7 +10,7 @@ import { TagManager } from "@/components/ui/TagManager";
 import { Media } from "@/types";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { cn } from "@/lib/utils";
-import { useAlbums } from "@/hooks/useAlbums";
+import { useAlbums, useCreateAlbum } from "@/hooks/queries/useAlbumsQuery";
 import { useUser } from "@/hooks/useUser";
 import { albumsApi } from "@/lib/api";
 
@@ -30,17 +30,22 @@ export function AddToAlbumDialog({
   const { canCreatePrivateContent } = usePermissions();
   const { user } = useUser();
 
-  // Use the useAlbums hook to get albums and CRUD operations
+  // Use TanStack Query hooks for albums and creation
   const {
-    albums,
-    loading: albumsLoading,
+    data: albumsData,
+    isLoading: albumsLoading,
     error: albumsError,
-    createAlbum: createAlbumHook,
     refetch: refetchAlbums,
   } = useAlbums({
     user: user?.username,
     limit: 50,
   });
+
+  // Extract albums from paginated data
+  const albums = albumsData?.pages[0]?.data.albums || [];
+
+  // Use the create album mutation
+  const { mutateAsync: createAlbumHook } = useCreateAlbum();
 
   // UI state
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -62,10 +67,6 @@ export function AddToAlbumDialog({
     mediaIds?: string[];
     coverImageId?: string;
   }) => {
-    if (!createAlbumHook) {
-      throw new Error("Create album function not available");
-    }
-
     return await createAlbumHook(albumData);
   };
 
@@ -242,8 +243,14 @@ export function AddToAlbumDialog({
                 </div>
               ) : albumsError ? (
                 <div className="text-center py-8">
-                  <p className="text-sm text-red-500 mb-2">{albumsError}</p>
-                  <Button onClick={refetchAlbums} variant="outline" size="sm">
+                  <p className="text-sm text-red-500 mb-2">
+                    {albumsError.message}
+                  </p>
+                  <Button
+                    onClick={() => refetchAlbums()}
+                    variant="outline"
+                    size="sm"
+                  >
                     Try Again
                   </Button>
                 </div>

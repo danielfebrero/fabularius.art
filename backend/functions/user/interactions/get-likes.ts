@@ -1,7 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { ResponseUtil } from "@shared/utils/response";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserAuthUtil } from "@shared/utils/user-auth";
+import {
+  PaginationUtil,
+  DEFAULT_PAGINATION_LIMITS,
+  MAX_PAGINATION_LIMITS,
+} from "@shared/utils/pagination";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -11,29 +16,16 @@ export const handler = async (
   }
 
   try {
-    // Get user ID from request context (set by the user authorizer)
-    let requestingUserId = event.requestContext.authorizer?.["userId"];
+    // Extract user authentication using centralized utility
+    const authResult = await UserAuthUtil.requireAuth(event);
 
-    console.log("👤 RequestingUserId from authorizer:", requestingUserId);
-
-    // Fallback for local development or when authorizer context is missing
-    if (!requestingUserId) {
-      console.log(
-        "⚠️ No userId from authorizer, falling back to session validation"
-      );
-      const validation = await UserAuthMiddleware.validateSession(event);
-
-      if (!validation.isValid || !validation.user) {
-        console.log("❌ Session validation failed");
-        return ResponseUtil.unauthorized(event, "No user session found");
-      }
-
-      requestingUserId = validation.user.userId;
-      console.log(
-        "✅ Got requestingUserId from session validation:",
-        requestingUserId
-      );
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
+      return authResult;
     }
+
+    const requestingUserId = authResult.userId!;
+    console.log("✅ Authenticated user:", requestingUserId);
 
     // Check if we're querying for a specific user's likes
     const queryParams = event.queryStringParameters || {};
@@ -52,14 +44,23 @@ export const handler = async (
       targetUserId = targetUser.userId;
     }
 
-    // Get pagination parameters
-    const page = parseInt(queryParams["page"] || "1");
-    const limit = Math.min(parseInt(queryParams["limit"] || "20"), 100);
+    // Parse pagination parameters using unified utility
+    let paginationParams;
+    try {
+      paginationParams = PaginationUtil.parseRequestParams(
+        event.queryStringParameters as Record<string, string> | null,
+        DEFAULT_PAGINATION_LIMITS.interactions,
+        MAX_PAGINATION_LIMITS.interactions
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Invalid pagination parameters";
+      return ResponseUtil.badRequest(event, errorMessage);
+    }
 
-    // Calculate offset for pagination
-    const lastEvaluatedKey = queryParams["lastKey"]
-      ? JSON.parse(decodeURIComponent(queryParams["lastKey"]))
-      : undefined;
+    const { cursor: lastEvaluatedKey, limit } = paginationParams;
 
     // Get user's likes from DynamoDB
     const result = await DynamoDBService.getUserInteractions(
@@ -125,20 +126,14 @@ export const handler = async (
     );
 
     // Calculate pagination info
-    const hasNext = !!result.lastEvaluatedKey;
-    const nextKey = result.lastEvaluatedKey
-      ? encodeURIComponent(JSON.stringify(result.lastEvaluatedKey))
-      : undefined;
+    const paginationMeta = PaginationUtil.createPaginationMeta(
+      result.lastEvaluatedKey,
+      limit
+    );
 
     return ResponseUtil.success(event, {
       interactions: enrichedInteractions,
-      pagination: {
-        page,
-        limit,
-        hasNext,
-        nextKey,
-        total: enrichedInteractions.length, // Note: This is count for current page, not total count
-      },
+      pagination: paginationMeta,
     });
   } catch (error) {
     console.error("❌ Error in get-likes function:", error);

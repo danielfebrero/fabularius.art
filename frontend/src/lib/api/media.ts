@@ -1,4 +1,4 @@
-import { Media } from "@/types";
+import { Media, UnifiedMediaResponse } from "@/types";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -8,21 +8,11 @@ if (!API_URL) {
 
 // Media API Functions
 export const mediaApi = {
-  // Get user's media
+  // Get user's media - NEW UNIFIED FORMAT
   getUserMedia: async (params?: {
     limit?: number;
     cursor?: string;
-  }): Promise<{
-    success: boolean;
-    data?: {
-      media: Media[];
-      pagination: {
-        hasNext: boolean;
-        cursor?: string;
-      };
-    };
-    error?: string;
-  }> => {
+  }): Promise<UnifiedMediaResponse> => {
     const searchParams = new URLSearchParams();
 
     if (params?.limit) searchParams.set("limit", params.limit.toString());
@@ -43,24 +33,14 @@ export const mediaApi = {
     return response.json();
   },
 
-  // Get album media
+  // Get album media - NEW UNIFIED FORMAT
   getAlbumMedia: async (
     albumId: string,
     params?: {
       limit?: number;
       cursor?: string;
     }
-  ): Promise<{
-    success: boolean;
-    data?: {
-      media: Media[];
-      pagination: {
-        hasNext: boolean;
-        cursor?: string;
-      };
-    };
-    error?: string;
-  }> => {
+  ): Promise<UnifiedMediaResponse> => {
     const searchParams = new URLSearchParams();
 
     if (params?.limit) searchParams.set("limit", params.limit.toString());

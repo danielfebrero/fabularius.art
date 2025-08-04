@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useInfiniteQuery } from "@tanstack/react-query";
 import { mediaApi } from "@/lib/api";
 import { queryKeys, queryClient, invalidateQueries } from "@/lib/queryClient";
-import { Media } from "@/types";
+import { UnifiedMediaResponse } from "@/types";
 
 // Types
 interface UploadMediaData {
@@ -21,17 +21,8 @@ interface AlbumMediaQueryParams {
   cursor?: string;
 }
 
-interface MediaResponse {
-  success: boolean;
-  data?: {
-    media: Media[];
-    pagination: {
-      hasNext: boolean;
-      cursor?: string;
-    };
-  };
-  error?: string;
-}
+// Use the new unified response type
+type MediaResponse = UnifiedMediaResponse;
 
 // Hook for fetching user's media with infinite scroll support
 export function useUserMedia(params: MediaQueryParams = {}) {
@@ -47,7 +38,7 @@ export function useUserMedia(params: MediaQueryParams = {}) {
     },
     initialPageParam: undefined,
     getNextPageParam: (lastPage: MediaResponse) => {
-      return lastPage.data?.pagination?.hasNext
+      return lastPage.data.pagination?.hasNext
         ? lastPage.data.pagination.cursor
         : undefined;
     },
@@ -72,7 +63,7 @@ export function useAlbumMedia(params: AlbumMediaQueryParams) {
     },
     initialPageParam: undefined,
     getNextPageParam: (lastPage: MediaResponse) => {
-      return lastPage.data?.pagination?.hasNext
+      return lastPage.data.pagination?.hasNext
         ? lastPage.data.pagination.cursor
         : undefined;
     },

@@ -1,7 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { interactionApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryClient";
-import { UserInteraction } from "@/types/user";
+import { UnifiedUserInteractionsResponse } from "@/types/user";
 
 // Types
 interface LikesQueryParams {
@@ -9,19 +9,8 @@ interface LikesQueryParams {
   limit?: number;
 }
 
-interface LikesResponse {
-  success: boolean;
-  data?: {
-    interactions: UserInteraction[];
-    pagination: {
-      page: number;
-      limit: number;
-      hasNext: boolean;
-      total: number;
-    };
-  };
-  error?: string;
-}
+// Use the new unified response type
+type LikesResponse = UnifiedUserInteractionsResponse;
 
 // Hook for fetching user's likes with infinite scroll
 export function useLikesQuery(params: LikesQueryParams = {}) {
@@ -30,17 +19,21 @@ export function useLikesQuery(params: LikesQueryParams = {}) {
   return useInfiniteQuery({
     queryKey: queryKeys.user.interactions.likes(params),
     queryFn: async ({ pageParam }): Promise<LikesResponse> => {
-      const page = pageParam || 1;
       if (targetUser) {
-        return await interactionApi.getLikesByUsername(targetUser, page, limit);
+        return await interactionApi.getLikesByUsername(
+          targetUser,
+          limit,
+          pageParam
+        );
       } else {
-        return await interactionApi.getLikes(page, limit);
+        return await interactionApi.getLikes(limit, pageParam);
       }
     },
-    initialPageParam: 1,
+    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage: LikesResponse) => {
-      if (!lastPage.data?.pagination?.hasNext) return undefined;
-      return (lastPage.data.pagination.page || 1) + 1;
+      return lastPage.data.pagination.hasNext
+        ? lastPage.data.pagination.cursor
+        : undefined;
     },
     enabled: !targetUser || !!targetUser, // Always enabled for own likes, enabled only if targetUser provided for others
     // Keep likes fresh for 1 minute

@@ -32,20 +32,20 @@ export function useInteractionStatus(targets: InteractionTarget[]) {
   });
 }
 
-// Hook for fetching user's bookmarks with infinite scroll
+// Hook for fetching user's bookmarks with infinite scroll - UPDATED for unified pagination
 export function useBookmarks(params: { limit?: number } = {}) {
   const { limit = 20 } = params;
 
   return useInfiniteQuery({
     queryKey: queryKeys.user.interactions.bookmarks(params),
     queryFn: async ({ pageParam }) => {
-      const page = pageParam || 1;
-      return await interactionApi.getBookmarks(page, limit);
+      return await interactionApi.getBookmarks(limit, pageParam);
     },
-    initialPageParam: 1,
+    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage: any) => {
-      if (!lastPage.data?.pagination?.hasNext) return undefined;
-      return (lastPage.data.pagination.page || 1) + 1;
+      return lastPage.data?.pagination?.hasNext
+        ? lastPage.data.pagination.cursor
+        : undefined;
     },
     // Keep bookmarks fresh for 1 minute
     staleTime: 60 * 1000,
@@ -54,24 +54,28 @@ export function useBookmarks(params: { limit?: number } = {}) {
   });
 }
 
-// Hook for fetching user's likes with infinite scroll
+// Hook for fetching user's likes with infinite scroll - UPDATED for unified pagination
 export function useLikes(targetUser?: string, params: { limit?: number } = {}) {
   const { limit = 20 } = params;
 
   return useInfiniteQuery({
     queryKey: queryKeys.user.interactions.likes({ ...params }),
     queryFn: async ({ pageParam }) => {
-      const page = pageParam || 1;
       if (targetUser) {
-        return await interactionApi.getLikesByUsername(targetUser, page, limit);
+        return await interactionApi.getLikesByUsername(
+          targetUser,
+          limit,
+          pageParam
+        );
       } else {
-        return await interactionApi.getLikes(page, limit);
+        return await interactionApi.getLikes(limit, pageParam);
       }
     },
-    initialPageParam: 1,
+    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage: any) => {
-      if (!lastPage.data?.pagination?.hasNext) return undefined;
-      return (lastPage.data.pagination.page || 1) + 1;
+      return lastPage.data?.pagination?.hasNext
+        ? lastPage.data.pagination.cursor
+        : undefined;
     },
     enabled: !!targetUser || true, // Always enabled for own likes, enabled only if targetUser provided for others
     // Keep likes fresh for 1 minute
@@ -81,20 +85,24 @@ export function useLikes(targetUser?: string, params: { limit?: number } = {}) {
   });
 }
 
-// Hook for fetching user's comments with infinite scroll
+// Hook for fetching user's comments with infinite scroll - UPDATED for unified pagination
 export function useComments(username: string, params: { limit?: number } = {}) {
   const { limit = 20 } = params;
 
   return useInfiniteQuery({
     queryKey: queryKeys.user.interactions.comments({ username, ...params }),
     queryFn: async ({ pageParam }) => {
-      const page = pageParam || 1;
-      return await interactionApi.getCommentsByUsername(username, page, limit);
+      return await interactionApi.getCommentsByUsername(
+        username,
+        limit,
+        pageParam
+      );
     },
-    initialPageParam: 1,
+    initialPageParam: undefined as string | undefined,
     getNextPageParam: (lastPage: any) => {
-      if (!lastPage.data?.pagination?.hasNext) return undefined;
-      return (lastPage.data.pagination.page || 1) + 1;
+      return lastPage.data?.pagination?.hasNext
+        ? lastPage.data.pagination.cursor
+        : undefined;
     },
     enabled: !!username,
     // Keep comments fresh for 1 minute

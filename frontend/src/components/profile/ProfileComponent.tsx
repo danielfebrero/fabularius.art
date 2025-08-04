@@ -10,10 +10,10 @@ import LocaleLink from "@/components/ui/LocaleLink";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { HorizontalScroll } from "@/components/ui/HorizontalScroll";
 import { Avatar } from "@/components/ui/Avatar";
-import { Media } from "@/types";
-import { useProfileData } from "@/hooks/useProfileData";
-import { useAlbums } from "@/hooks/useAlbums";
-import { useComments } from "@/hooks/useComments";
+import { Media, Comment as CommentType } from "@/types";
+import { useProfileDataQuery } from "@/hooks/queries/useProfileDataQuery";
+import { useAlbums } from "@/hooks/queries/useAlbumsQuery";
+import { useCommentsQuery } from "@/hooks/queries/useCommentsQuery";
 import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
 import { useUser } from "@/hooks/useUser";
 import { useUsernameAvailability } from "@/hooks/useUsernameAvailability";
@@ -108,14 +108,19 @@ export default function ProfileComponent({
 
   // Get real profile data
   const {
-    recentLikes,
-    loading: profileDataLoading,
+    data: profileData,
+    isLoading: profileDataLoading,
     error: profileDataError,
-  } = useProfileData({
+  } = useProfileDataQuery({
     username: currentUser.username,
     isOwner,
     limit: 6, // Fetch 6 recent likes for the scrollable preview
   });
+
+  const recentLikes = useMemo(
+    () => profileData?.recentLikes || [],
+    [profileData?.recentLikes]
+  );
 
   // Preload interaction statuses for liked content
   const { preloadStatuses } = useUserInteractionStatus();
@@ -237,22 +242,30 @@ export default function ProfileComponent({
   };
 
   // Get real comments data
+  // Get real comments data using TanStack Query
   const {
-    comments: recentComments,
+    data: commentsData,
     isLoading: commentsLoading,
     error: commentsError,
-  } = useComments(currentUser.username || "", true, 3); // Fetch 6 recent comments for the profile preview
+  } = useCommentsQuery({ username: currentUser.username || "", limit: 3 });
 
-  // Get real recent albums
+  // Extract recent comments from paginated data (only need first page for profile preview)
+  const recentComments: CommentType[] = (commentsData?.pages[0]?.data
+    .comments || []) as unknown as CommentType[];
+
+  // Get real recent albums using TanStack Query
   const {
-    albums: recentAlbums,
-    loading: albumsLoading,
+    data: albumsData,
+    isLoading: albumsLoading,
     error: albumsError,
   } = useAlbums({
     user: currentUser.username || "",
     isPublic: true,
     limit: 6, // Fetch 6 recent albums for the scrollable preview
   });
+
+  // Extract albums from paginated data (only need first page for profile preview)
+  const recentAlbums = albumsData?.pages[0]?.data.albums || [];
 
   // Check if user is online (last active less than 5 minutes ago)
   const isUserOnline = useMemo(() => {
@@ -1048,7 +1061,7 @@ export default function ProfileComponent({
                 ) : profileDataError ? (
                   <div className="text-center py-8">
                     <p className="text-muted-foreground text-sm">
-                      {profileDataError}
+                      {profileDataError.message}
                     </p>
                   </div>
                 ) : recentLikes.length > 0 ? (
@@ -1169,7 +1182,7 @@ export default function ProfileComponent({
                 ) : albumsError ? (
                   <div className="text-center py-8">
                     <p className="text-muted-foreground text-sm">
-                      {albumsError}
+                      {albumsError.message}
                     </p>
                   </div>
                 ) : recentAlbums.length > 0 ? (

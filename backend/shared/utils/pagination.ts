@@ -1,0 +1,230 @@
+/**
+ * Unified Pagination System for PornSpot.ai Backend
+ *
+ * This module provides standardized pagination utilities for consistent
+ * DynamoDB cursor-based pagination across all Lambda functions.
+ *
+ * @fileoverview Centralized pagination utilities
+ * @author PornSpot.ai Development Team
+ * @since 2024-12
+ */
+
+/**
+ * Standard pagination request parameters
+ */
+export interface PaginationRequest {
+  cursor?: string; // Base64-encoded JSON of DynamoDB lastEvaluatedKey
+  limit?: number; // Number of items per page
+}
+
+/**
+ * Standard pagination metadata in responses
+ */
+export interface PaginationMeta {
+  hasNext: boolean; // Whether more pages are available
+  cursor: string | null; // Base64-encoded cursor for next page, null if no more pages
+  limit: number; // Actual limit used (may differ from requested)
+}
+
+/**
+ * Generic paginated API response structure
+ */
+export interface PaginatedApiResponse<T> {
+  success: boolean;
+  data: T[];
+  pagination: PaginationMeta;
+  error?: string;
+}
+
+/**
+ * DynamoDB query result structure
+ */
+export interface DynamoDBPaginationResult<T> {
+  items: T[];
+  lastEvaluatedKey?: Record<string, any>;
+}
+
+/**
+ * Pagination utility class with static methods for cursor management
+ */
+export class PaginationUtil {
+  /**
+   * Encode DynamoDB lastEvaluatedKey as Base64 cursor
+   *
+   * @param lastEvaluatedKey - DynamoDB LastEvaluatedKey object
+   * @returns Base64-encoded cursor string or null if no more pages
+   */
+  static encodeCursor(
+    lastEvaluatedKey: Record<string, any> | undefined
+  ): string | null {
+    if (!lastEvaluatedKey) return null;
+
+    try {
+      return Buffer.from(JSON.stringify(lastEvaluatedKey)).toString("base64");
+    } catch (error) {
+      console.error("❌ Error encoding cursor:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Decode Base64 cursor to DynamoDB lastEvaluatedKey
+   *
+   * @param cursor - Base64-encoded cursor string
+   * @returns Decoded lastEvaluatedKey object or undefined
+   * @throws Error if cursor format is invalid
+   */
+  static decodeCursor(
+    cursor: string | undefined
+  ): Record<string, any> | undefined {
+    if (!cursor) return undefined;
+
+    try {
+      const decoded = Buffer.from(cursor, "base64").toString();
+      return JSON.parse(decoded);
+    } catch (error) {
+      throw new Error("Invalid cursor format");
+    }
+  }
+
+  /**
+   * Create standardized pagination metadata
+   *
+   * @param lastEvaluatedKey - DynamoDB LastEvaluatedKey from query result
+   * @param limit - Actual limit used in the query
+   * @returns Standardized pagination metadata object
+   */
+  static createPaginationMeta(
+    lastEvaluatedKey: Record<string, any> | undefined,
+    limit: number
+  ): PaginationMeta {
+    return {
+      hasNext: !!lastEvaluatedKey,
+      cursor: this.encodeCursor(lastEvaluatedKey),
+      limit,
+    };
+  }
+
+  /**
+   * Parse and validate pagination parameters from API Gateway event
+   *
+   * @param queryParams - Query string parameters from API Gateway event
+   * @param defaultLimit - Default limit if not provided
+   * @param maxLimit - Maximum allowed limit
+   * @returns Validated pagination parameters
+   */
+  static parseRequestParams(
+    queryParams: Record<string, string> | null,
+    defaultLimit: number = 20,
+    maxLimit: number = 100
+  ): { cursor: Record<string, any> | undefined; limit: number } {
+    const params = queryParams || {};
+
+    // Parse and validate limit
+    let limit = defaultLimit;
+    if (params.limit) {
+      const parsedLimit = parseInt(params.limit, 10);
+      if (!isNaN(parsedLimit) && parsedLimit > 0) {
+        limit = Math.min(parsedLimit, maxLimit);
+      }
+    }
+
+    // Parse and validate cursor
+    let cursor: Record<string, any> | undefined;
+    if (params.cursor) {
+      try {
+        cursor = this.decodeCursor(params.cursor);
+      } catch (error) {
+        throw new Error("Invalid cursor parameter");
+      }
+    }
+
+    return { cursor, limit };
+  }
+
+  /**
+   * Create a complete paginated response
+   *
+   * @param items - Array of items for current page
+   * @param lastEvaluatedKey - DynamoDB LastEvaluatedKey
+   * @param limit - Actual limit used
+   * @returns Complete paginated response object
+   */
+  static createPaginatedResponse<T>(
+    items: T[],
+    lastEvaluatedKey: Record<string, any> | undefined,
+    limit: number
+  ): Omit<PaginatedApiResponse<T>, "success"> {
+    return {
+      data: items,
+      pagination: this.createPaginationMeta(lastEvaluatedKey, limit),
+    };
+  }
+
+  /**
+   * Validate cursor format without throwing
+   *
+   * @param cursor - Cursor string to validate
+   * @returns True if cursor is valid, false otherwise
+   */
+  static isValidCursor(cursor: string): boolean {
+    try {
+      this.decodeCursor(cursor);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+/**
+ * Type guard to check if response is paginated
+ */
+export function isPaginatedResponse<T>(
+  response: any
+): response is PaginatedApiResponse<T> {
+  return (
+    response &&
+    typeof response === "object" &&
+    Array.isArray(response.data) &&
+    response.pagination &&
+    typeof response.pagination.hasNext === "boolean" &&
+    (response.pagination.cursor === null ||
+      typeof response.pagination.cursor === "string") &&
+    typeof response.pagination.limit === "number"
+  );
+}
+
+/**
+ * Default pagination limits for different entity types
+ */
+export const DEFAULT_PAGINATION_LIMITS = {
+  albums: 20,
+  media: 50,
+  comments: 20,
+  interactions: 20,
+  users: 25,
+  admin: 25,
+} as const;
+
+/**
+ * Maximum pagination limits for different entity types
+ */
+export const MAX_PAGINATION_LIMITS = {
+  albums: 100,
+  media: 100,
+  comments: 50,
+  interactions: 100,
+  users: 100,
+  admin: 100,
+} as const;
+
+/**
+ * Common pagination error messages
+ */
+export const PAGINATION_ERRORS = {
+  INVALID_CURSOR: "Invalid cursor parameter",
+  INVALID_LIMIT: "Invalid limit parameter",
+  LIMIT_EXCEEDED: "Limit exceeds maximum allowed value",
+  CURSOR_REQUIRED: "Cursor parameter is required for this operation",
+} as const;

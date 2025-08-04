@@ -39,8 +39,9 @@ const UserAlbumsPage: React.FC = () => {
 
   // Extract albums and pagination from infinite query data
   // Extract albums from infinite query data
-  const allAlbums = albumsData?.pages.flatMap((page: any) => page.data?.albums || []) || [];
-  
+  const allAlbums =
+    albumsData?.pages.flatMap((page: any) => page.data?.albums || []) || [];
+
   // Filter out invalid albums before counting
   const albums = allAlbums.filter((album: any) => album && album.id);
   const totalCount = albums.length;

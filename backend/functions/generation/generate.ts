@@ -2,7 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "@shared/utils/response";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { PlanUtil } from "@shared/utils/plan";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserAuthUtil } from "@shared/utils/user-auth";
 import { getGenerationPermissions } from "@shared/utils/permissions";
 
 interface GenerationRequest {
@@ -45,16 +45,16 @@ export const handler = async (
   }
 
   try {
-    // Validate user authentication
-    let userId = event.requestContext.authorizer?.["userId"] as string;
+    // Extract user authentication using centralized utility
+    const authResult = await UserAuthUtil.requireAuth(event);
 
-    if (!userId) {
-      const validation = await UserAuthMiddleware.validateSession(event);
-      if (!validation.isValid || !validation.user) {
-        return ResponseUtil.unauthorized(event, "Authentication required");
-      }
-      userId = validation.user.userId;
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
+      return authResult;
     }
+
+    const userId = authResult.userId!;
+    console.log("✅ Authenticated user:", userId);
 
     // Get user from database to check plan and usage
     const userEntity = await DynamoDBService.getUserById(userId);

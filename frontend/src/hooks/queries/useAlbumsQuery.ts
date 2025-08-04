@@ -6,7 +6,7 @@ import {
   updateCache,
   invalidateQueries,
 } from "@/lib/queryClient";
-import { Album } from "@/types";
+import { Album, UnifiedAlbumsResponse } from "@/types";
 
 // Types
 interface CreateAlbumData {
@@ -39,17 +39,8 @@ interface AlbumsQueryParams {
   };
 }
 
-interface AlbumsResponse {
-  success: boolean;
-  data?: {
-    albums: Album[];
-    pagination: {
-      hasNext: boolean;
-      cursor?: string;
-    };
-  };
-  error?: string;
-}
+// Use the new unified response type
+type AlbumsResponse = UnifiedAlbumsResponse;
 
 // Hook for fetching albums list with infinite scroll support
 export function useAlbums(params: AlbumsQueryParams = {}) {
@@ -65,7 +56,8 @@ export function useAlbums(params: AlbumsQueryParams = {}) {
               albums: initialData.albums,
               pagination: {
                 hasNext: initialData.pagination?.hasNext || false,
-                cursor: initialData.pagination?.cursor || undefined,
+                cursor: initialData.pagination?.cursor || null,
+                limit: limit, // Include the limit field
               },
             },
           },
@@ -87,7 +79,9 @@ export function useAlbums(params: AlbumsQueryParams = {}) {
     // Use initial data from SSG/ISR if provided
     initialData: transformedInitialData,
     getNextPageParam: (lastPage: AlbumsResponse) => {
-      return lastPage.data?.pagination?.hasNext ? lastPage.data.pagination.cursor : undefined;
+      return lastPage.data.pagination?.hasNext
+        ? lastPage.data.pagination.cursor
+        : undefined;
     },
     getPreviousPageParam: () => undefined, // We don't support backward pagination
     // Fresh data for 30 seconds, then stale-while-revalidate

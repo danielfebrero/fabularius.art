@@ -2,6 +2,11 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { ResponseUtil } from "@shared/utils/response";
 import { Comment } from "@shared/types";
+import {
+  PaginationUtil,
+  DEFAULT_PAGINATION_LIMITS,
+  MAX_PAGINATION_LIMITS,
+} from "@shared/utils/pagination";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -54,18 +59,23 @@ export const handler = async (
       }
     }
 
-    // Get pagination parameters
-    const limit = parseInt(queryParams["limit"] || "20");
-    const cursor = queryParams["cursor"];
-
-    let lastEvaluatedKey: Record<string, any> | undefined;
-    if (cursor) {
-      try {
-        lastEvaluatedKey = JSON.parse(Buffer.from(cursor, "base64").toString());
-      } catch (error) {
-        return ResponseUtil.badRequest(event, "Invalid cursor format");
-      }
+    // Parse pagination parameters using unified utility
+    let paginationParams;
+    try {
+      paginationParams = PaginationUtil.parseRequestParams(
+        event.queryStringParameters as Record<string, string> | null,
+        DEFAULT_PAGINATION_LIMITS.comments,
+        MAX_PAGINATION_LIMITS.comments
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Invalid pagination parameters";
+      return ResponseUtil.badRequest(event, errorMessage);
     }
+
+    const { cursor: lastEvaluatedKey, limit } = paginationParams;
 
     // Get comments for the target
     const result = await DynamoDBService.getCommentsForTarget(
@@ -89,30 +99,20 @@ export const handler = async (
       isEdited: comment.isEdited || false,
     }));
 
-    // Prepare response
-    const response: any = {
-      success: true,
-      data: {
-        comments,
-        pagination: {
-          limit,
-          hasNext: !!result.lastEvaluatedKey,
-        },
-      },
-    };
-
-    // Add cursor for next page if there are more results
-    if (result.lastEvaluatedKey) {
-      response.data.pagination.cursor = Buffer.from(
-        JSON.stringify(result.lastEvaluatedKey)
-      ).toString("base64");
-    }
+    // Create standardized pagination metadata
+    const paginationMeta = PaginationUtil.createPaginationMeta(
+      result.lastEvaluatedKey,
+      limit
+    );
 
     console.log(
       `✅ Retrieved ${comments.length} comments for ${targetType} ${targetId}`
     );
 
-    return ResponseUtil.success(event, response.data);
+    return ResponseUtil.success(event, {
+      comments,
+      pagination: paginationMeta,
+    });
   } catch (error) {
     console.error("❌ Error in get comments function:", error);
     return ResponseUtil.internalError(event, "Internal server error");
@@ -133,15 +133,23 @@ async function getUserComments(
 
     const targetUserId = targetUser.userId;
 
-    // Get pagination parameters
-    const queryParams = event.queryStringParameters || {};
-    const page = parseInt(queryParams["page"] || "1");
-    const limit = Math.min(parseInt(queryParams["limit"] || "20"), 100);
+    // Parse pagination parameters using unified utility
+    let paginationParams;
+    try {
+      paginationParams = PaginationUtil.parseRequestParams(
+        event.queryStringParameters as Record<string, string> | null,
+        DEFAULT_PAGINATION_LIMITS.comments,
+        MAX_PAGINATION_LIMITS.comments
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Invalid pagination parameters";
+      return ResponseUtil.badRequest(event, errorMessage);
+    }
 
-    // Calculate offset for pagination
-    const lastEvaluatedKey = queryParams["lastKey"]
-      ? JSON.parse(decodeURIComponent(queryParams["lastKey"]))
-      : undefined;
+    const { cursor: lastEvaluatedKey, limit } = paginationParams;
 
     // Get user's comments from DynamoDB
     const result = await DynamoDBService.getCommentsByUser(
@@ -217,11 +225,11 @@ async function getUserComments(
       })
     );
 
-    // Calculate pagination info
-    const hasNext = !!result.lastEvaluatedKey;
-    const nextKey = result.lastEvaluatedKey
-      ? encodeURIComponent(JSON.stringify(result.lastEvaluatedKey))
-      : undefined;
+    // Create standardized pagination metadata
+    const paginationMeta = PaginationUtil.createPaginationMeta(
+      result.lastEvaluatedKey,
+      limit
+    );
 
     console.log(
       `✅ Retrieved ${enrichedComments.length} comments for user ${targetUsername}`
@@ -229,13 +237,7 @@ async function getUserComments(
 
     return ResponseUtil.success(event, {
       comments: enrichedComments,
-      pagination: {
-        page,
-        limit,
-        hasNext,
-        nextKey,
-        total: enrichedComments.length, // Note: This is count for current page, not total count
-      },
+      pagination: paginationMeta,
     });
   } catch (error) {
     console.error("❌ Error in get user comments function:", error);

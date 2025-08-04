@@ -77,12 +77,12 @@ export function EditAlbumDialog({
 
       // Track which media are currently in the album
       const albumMediaIds = new Set(
-        albumMediaResponse.media.map((m: Media) => m.id)
+        albumMediaResponse.data.media.map((m: Media) => m.id)
       );
       setInitiallySelectedMediaIds(albumMediaIds);
 
       // Mark user media as selected if they're in the album
-      const mediaWithSelection = userMediaResponse.media.map(
+      const mediaWithSelection = userMediaResponse.data.media.map(
         (media: Media) => ({
           ...media,
           selected: albumMediaIds.has(media.id),
@@ -90,7 +90,7 @@ export function EditAlbumDialog({
       );
 
       // Sort media so that images already in the album appear first
-      const sortedMedia = mediaWithSelection.sort((a, b) => {
+      const sortedMedia = mediaWithSelection.sort((a: any, b: any) => {
         // If a is selected and b is not, a comes first
         if (a.selected && !b.selected) return -1;
         // If b is selected and a is not, b comes first

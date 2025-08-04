@@ -96,6 +96,8 @@ export interface ApiResponse<T = any> {
   message?: string | undefined;
 }
 
+// Legacy pagination interface - DEPRECATED
+// Use PaginatedApiResponse from /shared/utils/pagination.ts instead
 export interface PaginatedResponse<T> extends ApiResponse<T[]> {
   pagination: {
     page: number;
@@ -104,6 +106,25 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
     hasNext: boolean;
     hasPrev: boolean;
   };
+}
+
+// Standard pagination interfaces - use these for new implementations
+export interface PaginationRequest {
+  cursor?: string;
+  limit?: number;
+}
+
+export interface PaginationMeta {
+  hasNext: boolean;
+  cursor: string | null;
+  limit: number;
+}
+
+export interface PaginatedApiResponse<T> {
+  success: boolean;
+  data: T[];
+  pagination: PaginationMeta;
+  error?: string;
 }
 
 // DynamoDB Entity Types

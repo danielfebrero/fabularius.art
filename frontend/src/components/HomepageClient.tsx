@@ -1,7 +1,7 @@
 "use client";
 
 import { AlbumGrid } from "./AlbumGrid";
-import { useAlbums } from "@/hooks/useAlbums";
+import { useAlbums } from "@/hooks/queries/useAlbumsQuery";
 import { Album } from "@/types";
 
 interface DiscoverClientProps {
@@ -18,16 +18,33 @@ export function DiscoverClient({
   initialPagination,
   initialError,
 }: DiscoverClientProps) {
-  const { albums, loading, error, pagination, loadMore } = useAlbums({
+  const {
+    data: albumsData,
+    isLoading: loading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+  } = useAlbums({
     isPublic: true,
     limit: 12,
-    initialAlbums,
-    initialPagination,
+    initialData: {
+      albums: initialAlbums,
+      pagination: initialPagination || undefined,
+    },
   });
+
+  // Extract all albums from paginated data
+  const albums = albumsData?.pages.flatMap((page) => page.data.albums) || [];
 
   // Use initial error if no albums were loaded initially
   const displayError =
-    albums.length === 0 && initialError ? initialError : error;
+    albums.length === 0 && initialError ? initialError : error?.message;
+
+  const loadMore = () => {
+    if (hasNextPage) {
+      fetchNextPage();
+    }
+  };
 
   return (
     <AlbumGrid
@@ -35,7 +52,7 @@ export function DiscoverClient({
       context="discover"
       loadMore={loadMore}
       loading={loading}
-      hasMore={pagination?.hasNext || false}
+      hasMore={hasNextPage || false}
       error={displayError}
     />
   );

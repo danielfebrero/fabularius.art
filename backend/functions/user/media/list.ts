@@ -1,8 +1,13 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { ResponseUtil } from "@shared/utils/response";
+import {
+  PaginationUtil,
+  DEFAULT_PAGINATION_LIMITS,
+  MAX_PAGINATION_LIMITS,
+} from "@shared/utils/pagination";
 import { Media } from "@shared/types";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserAuthUtil } from "@shared/utils/user-auth";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -12,39 +17,34 @@ export const handler = async (
   }
 
   try {
-    // Get user ID from request context (set by the user authorizer)
-    let userId = event.requestContext.authorizer?.["userId"];
+    // Extract user authentication using centralized utility
+    const authResult = await UserAuthUtil.requireAuth(event);
 
-    console.log("👤 UserId from authorizer:", userId);
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
+      return authResult;
+    }
 
-    // Fallback for local development or when authorizer context is missing
-    if (!userId) {
-      console.log(
-        "⚠️ No userId from authorizer, falling back to session validation"
+    const userId = authResult.userId!;
+    console.log("✅ Authenticated user:", userId);
+
+    // Parse pagination parameters using unified utility
+    let paginationParams;
+    try {
+      paginationParams = PaginationUtil.parseRequestParams(
+        event.queryStringParameters as Record<string, string> | null,
+        DEFAULT_PAGINATION_LIMITS.media,
+        MAX_PAGINATION_LIMITS.media
       );
-      const validation = await UserAuthMiddleware.validateSession(event);
-
-      if (!validation.isValid || !validation.user) {
-        console.log("❌ Session validation failed");
-        return ResponseUtil.unauthorized(event, "No user session found");
-      }
-
-      userId = validation.user.userId;
-      console.log("✅ Got userId from session validation:", userId);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Invalid pagination parameters";
+      return ResponseUtil.badRequest(event, errorMessage);
     }
 
-    // Parse pagination parameters
-    const limit = parseInt(event.queryStringParameters?.["limit"] || "50");
-    const cursor = event.queryStringParameters?.["cursor"];
-
-    let lastEvaluatedKey;
-    if (cursor) {
-      try {
-        lastEvaluatedKey = JSON.parse(Buffer.from(cursor, "base64").toString());
-      } catch (error) {
-        return ResponseUtil.badRequest(event, "Invalid cursor");
-      }
-    }
+    const { cursor: lastEvaluatedKey, limit } = paginationParams;
 
     // Get user's media
     const { media, nextKey } = await DynamoDBService.getUserMedia(
@@ -96,17 +96,13 @@ export const handler = async (
       return response;
     });
 
-    const response = {
-      media: mediaResponse,
-      pagination: {
-        hasNext: !!nextKey,
-        cursor: nextKey
-          ? Buffer.from(JSON.stringify(nextKey)).toString("base64")
-          : null,
-      },
-    };
+    // Create pagination metadata using unified utility
+    const paginationMeta = PaginationUtil.createPaginationMeta(nextKey, limit);
 
-    return ResponseUtil.success(event, response);
+    return ResponseUtil.success(event, {
+      media: mediaResponse,
+      pagination: paginationMeta,
+    });
   } catch (error) {
     console.error("Error fetching user media:", error);
     return ResponseUtil.internalError(event, "Failed to fetch user media");

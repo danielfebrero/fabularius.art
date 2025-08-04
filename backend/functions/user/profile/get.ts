@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "@shared/utils/response";
 import { DynamoDBService } from "@shared/utils/dynamodb";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserAuthUtil } from "@shared/utils/user-auth";
 import { UserProfileInsights } from "@shared/types/user";
 
 interface PublicUserProfile {
@@ -52,35 +52,16 @@ export const handler = async (
   }
 
   try {
-    // Get user ID from request context (set by the user authorizer)
-    let currentUserId = event.requestContext.authorizer?.["userId"];
+    // Extract user authentication using centralized utility
+    const authResult = await UserAuthUtil.requireAuth(event);
 
-    console.log("👤 CurrentUserId from authorizer:", currentUserId);
-    console.log(
-      "🔍 Event authorizer:",
-      JSON.stringify(event.requestContext.authorizer, null, 2)
-    );
-
-    // Authentication is required - try to get user ID if available
-    if (!currentUserId) {
-      console.log(
-        "⚠️ No userId from authorizer, attempting session validation"
-      );
-      const validation = await UserAuthMiddleware.validateSession(event);
-
-      if (!validation.isValid || !validation.user) {
-        console.log("❌ Session validation failed");
-        return ResponseUtil.unauthorized(event, "User session required");
-      }
-
-      currentUserId = validation.user.userId;
-      console.log(
-        "✅ Got currentUserId from session validation:",
-        currentUserId
-      );
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
+      return authResult;
     }
 
-    console.log("👤 Authenticated user ID:", currentUserId);
+    const currentUserId = authResult.userId!;
+    console.log("✅ Authenticated user:", currentUserId);
 
     // Get username from query parameter
     const username = event.queryStringParameters?.["username"];

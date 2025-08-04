@@ -278,6 +278,33 @@ export interface UserInteractionsResponse {
   error?: string;
 }
 
+// NEW UNIFIED PAGINATION FORMAT - Used after backend migration
+export interface UnifiedUserInteractionsResponse {
+  success: boolean;
+  data: {
+    interactions: UserInteraction[];
+    pagination: {
+      hasNext: boolean;
+      cursor: string | null;
+      limit: number;
+    };
+  };
+  error?: string;
+}
+
+export interface UnifiedCommentsResponse {
+  success: boolean;
+  data: {
+    comments: Comment[];
+    pagination: {
+      hasNext: boolean;
+      cursor: string | null;
+      limit: number;
+    };
+  };
+  error?: string;
+}
+
 export interface UserInteractionStatsResponse {
   success: boolean;
   data?: {

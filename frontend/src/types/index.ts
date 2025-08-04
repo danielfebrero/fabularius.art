@@ -68,22 +68,33 @@ export interface ApiResponse<T = any> {
   message?: string;
 }
 
-export interface PaginatedResponse<T = any> extends ApiResponse<T[]> {
-  pagination: {
-    page: number;
-    limit: number;
-    total: number;
-    hasNext: boolean;
-    hasPrev: boolean;
+// NEW UNIFIED PAGINATION TYPES - Used by all backend endpoints after migration
+export interface UnifiedPaginationMeta {
+  hasNext: boolean; // Whether more pages exist
+  cursor: string | null; // Base64-encoded cursor for next page
+  limit: number; // Actual limit used
+}
+
+// Base unified paginated response type
+export interface UnifiedPaginatedResponse<T = any> extends ApiResponse {
+  data: {
+    pagination: UnifiedPaginationMeta;
+  } & Record<string, T[] | UnifiedPaginationMeta>;
+}
+
+// Specific unified response types for type safety
+export interface UnifiedAlbumsResponse extends ApiResponse {
+  data: {
+    albums: Album[];
+    pagination: UnifiedPaginationMeta;
   };
 }
 
-export interface Pagination {
-  page: number;
-  limit: number;
-  total: number;
-  hasNext: boolean;
-  hasPrev: boolean;
+export interface UnifiedMediaResponse extends ApiResponse {
+  data: {
+    media: Media[];
+    pagination: UnifiedPaginationMeta;
+  };
 }
 
 // Admin types

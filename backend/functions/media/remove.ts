@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { ResponseUtil } from "@shared/utils/response";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserAuthUtil } from "@shared/utils/user-auth";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -22,25 +22,16 @@ export const handler = async (
       return ResponseUtil.badRequest(event, "Media ID is required");
     }
 
-    // Get userId from authorizer first, then fallback to session validation
-    let userId = event.requestContext.authorizer?.["userId"];
+    // Extract user authentication using centralized utility
+    const authResult = await UserAuthUtil.requireAuth(event);
 
-    if (!userId) {
-      console.log(
-        "⚠️ No userId from authorizer, falling back to session validation"
-      );
-      const validation = await UserAuthMiddleware.validateSession(event);
-
-      if (!validation.isValid || !validation.user) {
-        console.log("❌ Session validation failed");
-        return ResponseUtil.unauthorized(event, "No user session found");
-      }
-
-      userId = validation.user.userId;
-      console.log("✅ Got userId from session validation:", userId);
-    } else {
-      console.log("✅ Got userId from authorizer:", userId);
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
+      return authResult;
     }
+
+    const userId = authResult.userId!;
+    console.log("✅ Authenticated user:", userId);
 
     // Check if album exists
     const existingAlbum = await DynamoDBService.getAlbum(albumId);

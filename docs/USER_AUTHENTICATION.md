@@ -2,6 +2,108 @@
 
 This document provides a comprehensive overview of the user authentication and session management system for the PornSpot.ai application.
 
+## Centralized Authentication Utility
+
+### UserAuthUtil - Modern Authentication Pattern
+
+The `UserAuthUtil` class (`backend/shared/utils/user-auth.ts`) provides a centralized, consistent way to handle user authentication across all Lambda functions. This utility replaces the repetitive pattern of manually checking authorizer context and falling back to session validation.
+
+#### Key Features
+
+- **Unified Authentication Flow**: Automatically handles authorizer context extraction and session validation fallback
+- **Anonymous Access Support**: Configurable support for endpoints that allow anonymous access
+- **Role Integration**: Optional user role fetching for permission-based access control
+- **Consistent Error Handling**: Standardized error responses and logging
+- **Type Safety**: Full TypeScript support with proper type guards
+
+#### Usage Examples
+
+```typescript
+// Basic required authentication
+const authResult = await UserAuthUtil.requireAuth(event);
+if (UserAuthUtil.isErrorResponse(authResult)) {
+  return authResult; // Return error response
+}
+const userId = authResult.userId!; // User ID is guaranteed to exist
+
+// Authentication with role information
+const authResult = await UserAuthUtil.requireAuth(event, { includeRole: true });
+if (UserAuthUtil.isErrorResponse(authResult)) {
+  return authResult;
+}
+const userId = authResult.userId!;
+const userRole = authResult.userRole; // "admin", "moderator", or "user"
+
+// Allow anonymous access (for public endpoints)
+const authResult = await UserAuthUtil.allowAnonymous(event);
+if (UserAuthUtil.isErrorResponse(authResult)) {
+  return authResult; // Unlikely with allowAnonymous
+}
+const userId = authResult.userId; // Can be null for anonymous users
+
+// Advanced configuration
+const authResult = await UserAuthUtil.extractUserAuth(event, {
+  allowAnonymous: true,
+  includeRole: true,
+});
+```
+
+#### Migration from Legacy Pattern
+
+**Before (Legacy Pattern):**
+
+```typescript
+// Old repetitive pattern found throughout the codebase
+let userId = event.requestContext.authorizer?.["userId"];
+
+if (!userId) {
+  const validation = await UserAuthMiddleware.validateSession(event);
+  if (!validation.isValid || !validation.user) {
+    return ResponseUtil.unauthorized(event, "No user session found");
+  }
+  userId = validation.user.userId;
+}
+```
+
+**After (UserAuthUtil):**
+
+```typescript
+// New centralized pattern
+const authResult = await UserAuthUtil.requireAuth(event);
+if (UserAuthUtil.isErrorResponse(authResult)) {
+  return authResult;
+}
+const userId = authResult.userId!;
+```
+
+#### Configuration Options
+
+| Option           | Type    | Default | Description                                                                |
+| ---------------- | ------- | ------- | -------------------------------------------------------------------------- |
+| `allowAnonymous` | boolean | `false` | If true, returns null userId instead of error for unauthenticated requests |
+| `includeRole`    | boolean | `false` | If true, fetches and includes user role information                        |
+
+#### Return Types
+
+The utility returns either a `UserAuthResult` object or an `APIGatewayProxyResult` error response:
+
+```typescript
+interface UserAuthResult {
+  userId: string | null; // User ID or null if anonymous
+  userRole?: string; // User role if includeRole is true
+  userEmail?: string; // User email if available
+  authSource: "authorizer" | "session" | "anonymous"; // How user was authenticated
+}
+```
+
+#### Benefits
+
+- **Reduced Code Duplication**: Eliminates 20+ lines of repetitive authentication code
+- **Consistent Behavior**: Standardized authentication flow across all endpoints
+- **Better Error Handling**: Centralized error messages and logging
+- **Easier Testing**: Single utility to mock for authentication tests
+- **Future-Proof**: Easy to extend with additional authentication features
+
 ## Authentication Flow
 
 The user authentication system supports both email/password registration and Google OAuth.
@@ -173,6 +275,31 @@ The following pages require user authentication:
 
 - Sessions expire after 30 days of inactivity.
 - The `cleanupExpiredUserSessions` function in [`backend/shared/utils/dynamodb.ts`](../backend/shared/utils/dynamodb.ts) is responsible for deleting expired sessions from the database. This is typically run as a scheduled task.
+
+## Centralized Authentication Utility
+
+For a consistent and streamlined approach to handling user authentication across all Lambda functions, see the [User Authentication Utility Guide](USER_AUTH_UTILITY.md). This utility replaces the repetitive authentication pattern with a centralized, type-safe solution.
+
+### Quick Example
+
+```typescript
+import { UserAuthUtil } from "@shared/utils/user-auth";
+
+export const handler = async (event: APIGatewayProxyEvent) => {
+  // Extract user authentication using centralized utility
+  const authResult = await UserAuthUtil.requireAuth(event);
+
+  // Handle error response from authentication
+  if (UserAuthUtil.isErrorResponse(authResult)) {
+    return authResult;
+  }
+
+  const userId = authResult.userId!;
+  console.log("✅ Authenticated user:", userId);
+
+  // Your endpoint logic here...
+};
+```
 
 ## Security Considerations
 

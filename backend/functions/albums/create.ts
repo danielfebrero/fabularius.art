@@ -4,7 +4,7 @@ import { DynamoDBService } from "@shared/utils/dynamodb";
 import { ResponseUtil } from "@shared/utils/response";
 import { RevalidationService } from "@shared/utils/revalidation";
 import { CreateAlbumRequest, AlbumEntity, Album } from "@shared/types";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserAuthUtil } from "@shared/utils/user-auth";
 import { PlanUtil } from "@shared/utils/plan";
 import { CoverThumbnailUtil } from "@shared/utils/cover-thumbnail";
 import { getPlanPermissions } from "@shared/utils/permissions";
@@ -17,46 +17,21 @@ export const handler = async (
   }
 
   try {
-    // Determine user context - check if admin authorizer or user authorizer
-    let userId = event.requestContext.authorizer?.["userId"];
-    let userRole = event.requestContext.authorizer?.["role"] || "user"; // Try to get role from authorizer first
+    // Extract user authentication with role information using centralized utility
+    const authResult = await UserAuthUtil.requireAuth(event, {
+      includeRole: true,
+    });
 
-    console.log("👤 UserId from authorizer:", userId);
-    console.log("👤 UserRole from authorizer:", userRole);
-
-    // If no userId from authorizer, try session-based validation
-    if (!userId) {
-      console.log(
-        "⚠️ No userId from authorizer, falling back to session validation"
-      );
-      const validation = await UserAuthMiddleware.validateSession(event);
-
-      if (!validation.isValid || !validation.user) {
-        console.log("❌ Session validation failed");
-        return ResponseUtil.unauthorized(event, "No user session found");
-      }
-
-      userId = validation.user.userId;
-      console.log("✅ Got userId from session validation:", userId);
-
-      // Check if user has admin privileges through PlanUtil
-      userRole = await PlanUtil.getUserRole(
-        validation.user.userId,
-        validation.user.email
-      );
-      console.log("✅ User role from PlanUtil:", userRole);
-    } else {
-      // If userId came from authorizer but no role was provided, check through PlanUtil as fallback
-      if (!event.requestContext.authorizer?.["role"]) {
-        console.log("⚠️ No role from authorizer, checking through PlanUtil");
-        // We need user email for PlanUtil.getUserRole, let's try to get it from authorizer or fetch user data
-        const userEmail = event.requestContext.authorizer?.["email"];
-        if (userEmail) {
-          userRole = await PlanUtil.getUserRole(userId, userEmail);
-          console.log("✅ User role from PlanUtil fallback:", userRole);
-        }
-      }
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
+      return authResult;
     }
+
+    const userId = authResult.userId!;
+    const userRole = authResult.userRole || "user";
+
+    console.log("✅ Authenticated user:", userId);
+    console.log("🎭 User role:", userRole);
 
     if (!event.body) {
       return ResponseUtil.badRequest(event, "Request body is required");

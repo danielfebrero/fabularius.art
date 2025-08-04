@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useInfiniteQuery } from "@tanstack/react-query";
 import { adminAlbumsApi } from "@/lib/api";
 import { queryKeys, queryClient, invalidateQueries } from "@/lib/queryClient";
 
@@ -16,18 +16,57 @@ interface UpdateAdminAlbumData {
   coverImageUrl?: string;
 }
 
-// Hook for fetching all albums (admin view)
-export function useAdminAlbums() {
-  return useQuery({
+// Hook for fetching all albums with infinite scroll (admin view)
+export function useAdminAlbumsQuery(params: { limit?: number } = {}) {
+  const { limit = 20 } = params;
+
+  return useInfiniteQuery({
     queryKey: queryKeys.admin.albums.all(),
-    queryFn: async () => {
-      return await adminAlbumsApi.getAlbums();
+    queryFn: async ({
+      pageParam,
+    }): Promise<{
+      albums: any[];
+      pagination: {
+        hasNext: boolean;
+        cursor: string | null;
+        limit: number;
+      };
+    }> => {
+      return await adminAlbumsApi.getAlbums({
+        limit,
+        cursor: pageParam,
+      });
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => {
+      return lastPage.pagination.hasNext
+        ? lastPage.pagination.cursor
+        : undefined;
     },
     // Keep admin albums fresh for 1 minute
     staleTime: 60 * 1000,
     // Enable background refetching for admin data
     refetchOnWindowFocus: true,
   });
+}
+
+// Helper function to extract all albums from infinite query
+export function useAdminAlbumsData(params: { limit?: number } = {}) {
+  const query = useAdminAlbumsQuery(params);
+
+  // Extract albums from all pages
+  const allAlbums = query.data?.pages.flatMap((page) => page.albums) || [];
+
+  return {
+    ...query,
+    albums: allAlbums,
+    // Provide a hasNextPage for easier access
+    hasNextPage: query.hasNextPage,
+    // Provide fetchNextPage for easier access
+    fetchNextPage: query.fetchNextPage,
+    // Provide isFetchingNextPage for loading states
+    isFetchingNextPage: query.isFetchingNextPage,
+  };
 }
 
 // Hook for fetching single album (admin view)
@@ -52,7 +91,7 @@ export function useCreateAdminAlbum() {
       return await adminAlbumsApi.createAlbum(albumData);
     },
     onSuccess: (data) => {
-      // Invalidate admin albums list
+      // Invalidate admin albums list to refetch with new album
       queryClient.invalidateQueries({
         queryKey: queryKeys.admin.albums.all(),
       });
@@ -114,7 +153,7 @@ export function useUpdateAdminAlbum() {
         data
       );
 
-      // Invalidate admin albums list
+      // Invalidate admin albums list to ensure fresh data
       queryClient.invalidateQueries({
         queryKey: queryKeys.admin.albums.all(),
       });
@@ -144,10 +183,14 @@ export function useDeleteAdminAlbum() {
 
       // Optimistically remove the album from admin list
       queryClient.setQueryData(queryKeys.admin.albums.all(), (old: any) => {
-        if (!old?.albums) return old;
+        if (!old?.pages) return old;
+
         return {
           ...old,
-          albums: old.albums.filter((album: any) => album.id !== albumId),
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            albums: page.albums.filter((album: any) => album.id !== albumId),
+          })),
         };
       });
 
@@ -169,7 +212,7 @@ export function useDeleteAdminAlbum() {
         queryKey: queryKeys.albums.detail(albumId),
       });
 
-      // Invalidate admin albums list
+      // Invalidate admin albums list to ensure consistency
       queryClient.invalidateQueries({
         queryKey: queryKeys.admin.albums.all(),
       });
@@ -199,12 +242,16 @@ export function useBulkDeleteAdminAlbums() {
 
       // Optimistically remove the albums from admin list
       queryClient.setQueryData(queryKeys.admin.albums.all(), (old: any) => {
-        if (!old?.albums) return old;
+        if (!old?.pages) return old;
+
         return {
           ...old,
-          albums: old.albums.filter(
-            (album: any) => !albumIds.includes(album.id)
-          ),
+          pages: old.pages.map((page: any) => ({
+            ...page,
+            albums: page.albums.filter(
+              (album: any) => !albumIds.includes(album.id)
+            ),
+          })),
         };
       });
 
@@ -228,7 +275,7 @@ export function useBulkDeleteAdminAlbums() {
         });
       });
 
-      // Invalidate admin albums list
+      // Invalidate admin albums list to ensure consistency
       queryClient.invalidateQueries({
         queryKey: queryKeys.admin.albums.all(),
       });

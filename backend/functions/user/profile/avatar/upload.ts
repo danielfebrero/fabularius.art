@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "@shared/utils/response";
 import { S3Service } from "@shared/utils/s3";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserAuthUtil } from "@shared/utils/user-auth";
 
 interface AvatarUploadRequest {
   filename: string;
@@ -32,27 +32,16 @@ export const handler = async (
   }
 
   try {
-    // Get user ID from authorizer context first
-    let userId = event.requestContext.authorizer?.["userId"] as string;
-    console.log("� UserId from authorizer:", userId);
+    // Extract user authentication using centralized utility
+    const authResult = await UserAuthUtil.requireAuth(event);
 
-    // Fallback to session validation if no userId from authorizer
-    if (!userId) {
-      console.log(
-        "⚠️ No userId from authorizer, falling back to session validation"
-      );
-      const validation = await UserAuthMiddleware.validateSession(event);
-
-      if (!validation.isValid || !validation.user) {
-        console.log("❌ User session validation failed");
-        return ResponseUtil.unauthorized(event, "User session required");
-      }
-
-      userId = validation.user.userId;
-      console.log("✅ Got userId from session validation:", userId);
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
+      return authResult;
     }
 
-    console.log("👤 Authenticated user ID:", userId);
+    const userId = authResult.userId!;
+    console.log("✅ Authenticated user:", userId);
 
     // Parse request body
     if (!event.body) {

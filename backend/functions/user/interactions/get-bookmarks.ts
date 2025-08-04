@@ -3,6 +3,11 @@ import { DynamoDBService } from "@shared/utils/dynamodb";
 import { UserAuthMiddleware } from "@shared/auth/user-middleware";
 import { ResponseUtil } from "@shared/utils/response";
 import { UserInteraction } from "@shared/types/user";
+import {
+  PaginationUtil,
+  DEFAULT_PAGINATION_LIMITS,
+  MAX_PAGINATION_LIMITS,
+} from "@shared/utils/pagination";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -24,30 +29,23 @@ export const handler = async (
 
     const user = authResult.user;
 
-    // Parse query parameters
-    const queryParams = event.queryStringParameters || {};
-    const page = parseInt(queryParams["page"] || "1", 10);
-    const limit = Math.min(parseInt(queryParams["limit"] || "20", 10), 100); // Max 100 items per page
-
-    if (page < 1) {
-      return ResponseUtil.badRequest(event, "Page must be >= 1");
+    // Parse pagination parameters using unified utility
+    let paginationParams;
+    try {
+      paginationParams = PaginationUtil.parseRequestParams(
+        event.queryStringParameters as Record<string, string> | null,
+        DEFAULT_PAGINATION_LIMITS.interactions,
+        MAX_PAGINATION_LIMITS.interactions
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Invalid pagination parameters";
+      return ResponseUtil.badRequest(event, errorMessage);
     }
 
-    if (limit < 1) {
-      return ResponseUtil.badRequest(event, "Limit must be >= 1");
-    }
-
-    // Handle pagination with lastEvaluatedKey
-    let lastEvaluatedKey: Record<string, any> | undefined;
-    if (queryParams["lastKey"]) {
-      try {
-        lastEvaluatedKey = JSON.parse(
-          decodeURIComponent(queryParams["lastKey"])
-        );
-      } catch (error) {
-        return ResponseUtil.badRequest(event, "Invalid lastKey parameter");
-      }
-    }
+    const { cursor: lastEvaluatedKey, limit } = paginationParams;
 
     // Get user bookmarks
     const result = await DynamoDBService.getUserInteractions(
@@ -120,20 +118,14 @@ export const handler = async (
     );
 
     // Calculate pagination info
-    const hasNext = !!result.lastEvaluatedKey;
-    const nextKey = result.lastEvaluatedKey
-      ? encodeURIComponent(JSON.stringify(result.lastEvaluatedKey))
-      : undefined;
+    const paginationMeta = PaginationUtil.createPaginationMeta(
+      result.lastEvaluatedKey,
+      limit
+    );
 
     return ResponseUtil.success(event, {
       interactions: enrichedInteractions,
-      pagination: {
-        page,
-        limit,
-        hasNext,
-        nextKey,
-        total: enrichedInteractions.length, // Note: This is count for current page, not total count
-      },
+      pagination: paginationMeta,
     });
   } catch (error) {
     console.error("❌ Error in get-bookmarks function:", error);

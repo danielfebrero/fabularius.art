@@ -1,7 +1,8 @@
 import {
   InteractionRequest,
   InteractionResponse,
-  UserInteractionsResponse,
+  UnifiedUserInteractionsResponse,
+  UnifiedCommentsResponse,
   UserInteractionStatsResponse,
   CommentInteractionRequest,
 } from "@/types/user";
@@ -81,19 +82,17 @@ export const interactionApi = {
     return { success: true };
   },
 
-  // Get user's likes
+  // Get user's likes - NEW UNIFIED FORMAT
   getLikes: async (
-    page: number = 1,
     limit: number = 20,
-    lastKey?: string
-  ): Promise<UserInteractionsResponse> => {
+    cursor?: string
+  ): Promise<UnifiedUserInteractionsResponse> => {
     const params = new URLSearchParams({
-      page: page.toString(),
       limit: limit.toString(),
     });
 
-    if (lastKey) {
-      params.append("lastKey", lastKey);
+    if (cursor) {
+      params.append("cursor", cursor);
     }
 
     const response = await fetch(
@@ -111,21 +110,19 @@ export const interactionApi = {
     return response.json();
   },
 
-  // Get likes by username (for profile views)
+  // Get likes by username (for profile views) - NEW UNIFIED FORMAT
   getLikesByUsername: async (
     username: string,
-    page: number = 1,
     limit: number = 20,
-    lastKey?: string
-  ): Promise<UserInteractionsResponse> => {
+    cursor?: string
+  ): Promise<UnifiedUserInteractionsResponse> => {
     const params = new URLSearchParams({
       user: username,
-      page: page.toString(),
       limit: limit.toString(),
     });
 
-    if (lastKey) {
-      params.append("lastKey", lastKey);
+    if (cursor) {
+      params.append("cursor", cursor);
     }
 
     const response = await fetch(
@@ -143,19 +140,17 @@ export const interactionApi = {
     return response.json();
   },
 
-  // Get user's bookmarks
+  // Get user's bookmarks - NEW UNIFIED FORMAT
   getBookmarks: async (
-    page: number = 1,
     limit: number = 20,
-    lastKey?: string
-  ): Promise<UserInteractionsResponse> => {
+    cursor?: string
+  ): Promise<UnifiedUserInteractionsResponse> => {
     const params = new URLSearchParams({
-      page: page.toString(),
       limit: limit.toString(),
     });
 
-    if (lastKey) {
-      params.append("lastKey", lastKey);
+    if (cursor) {
+      params.append("cursor", cursor);
     }
 
     const response = await fetch(
@@ -249,21 +244,19 @@ export const interactionApi = {
     return response.json();
   },
 
-  // Get comments by username (for profile views)
+  // Get comments by username (for profile views) - NEW UNIFIED FORMAT
   getCommentsByUsername: async (
     username: string,
-    page: number = 1,
     limit: number = 20,
-    lastKey?: string
-  ): Promise<CommentListResponse> => {
+    cursor?: string
+  ): Promise<UnifiedCommentsResponse> => {
     const params = new URLSearchParams({
       user: username,
-      page: page.toString(),
       limit: limit.toString(),
     });
 
-    if (lastKey) {
-      params.append("lastKey", lastKey);
+    if (cursor) {
+      params.append("cursor", cursor);
     }
 
     const response = await fetch(

@@ -6,13 +6,33 @@ if (!API_URL) {
 
 // Admin Albums API Functions
 export const adminAlbumsApi = {
-  // Get all albums (admin view)
-  getAlbums: async (): Promise<{
+  // Get all albums with pagination (admin view)
+  getAlbums: async (params?: {
+    limit?: number;
+    cursor?: string;
+  }): Promise<{
     albums: any[];
-    pagination?: any;
-    total?: number;
+    pagination: {
+      hasNext: boolean;
+      cursor: string | null;
+      limit: number;
+    };
   }> => {
-    const response = await fetch(`${API_URL}/admin/albums`, {
+    const searchParams = new URLSearchParams();
+
+    if (params?.limit) {
+      searchParams.set("limit", params.limit.toString());
+    }
+
+    if (params?.cursor) {
+      searchParams.set("cursor", params.cursor);
+    }
+
+    const url = `${API_URL}/admin/albums${
+      searchParams.toString() ? `?${searchParams.toString()}` : ""
+    }`;
+
+    const response = await fetch(url, {
       method: "GET",
       credentials: "include",
     });

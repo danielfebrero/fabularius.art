@@ -82,25 +82,27 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({
   return (
     <div className={cn("space-y-6", className)}>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {albums.filter(album => album && album.id).map((album) => (
-          <ComponentErrorBoundary
-            key={album.id}
-            context={`Album Card (${album.id})`}
-          >
-            <ContentCard
+        {albums
+          .filter((album) => album && album.id)
+          .map((album) => (
+            <ComponentErrorBoundary
               key={album.id}
-              item={album}
-              type="album"
-              aspectRatio="square"
-              canLike={true}
-              canBookmark={true}
-              canFullscreen={false}
-              canAddToAlbum={false}
-              canDownload={false}
-              canDelete={false}
-            />
-          </ComponentErrorBoundary>
-        ))}
+              context={`Album Card (${album.id})`}
+            >
+              <ContentCard
+                key={album.id}
+                item={album}
+                type="album"
+                aspectRatio="square"
+                canLike={true}
+                canBookmark={true}
+                canFullscreen={false}
+                canAddToAlbum={false}
+                canDownload={false}
+                canDelete={false}
+              />
+            </ComponentErrorBoundary>
+          ))}
       </div>
 
       {/* Infinite scroll loading states */}
