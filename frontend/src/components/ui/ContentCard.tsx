@@ -119,7 +119,7 @@ export function ContentCard({
   const [isHovered, setIsHovered] = useState(false);
   const [addToAlbumDialogOpen, setAddToAlbumDialogOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { isMobileInterface: isMobile } = useDevice();
+  const { isMobileInterface } = useDevice();
   const cardRef = useRef<HTMLDivElement>(null);
 
   const isMedia = type === "media";
@@ -130,7 +130,7 @@ export function ContentCard({
 
   // Simple mobile actions timeout management
   useEffect(() => {
-    if (!isMobile || !showMobileActions) return;
+    if (!isMobileInterface || !showMobileActions) return;
 
     const handleClickOutside = (event: Event) => {
       const target = event.target as Node;
@@ -164,7 +164,7 @@ export function ContentCard({
       });
       clearTimeout(timeoutId);
     };
-  }, [isMobile, showMobileActions]);
+  }, [isMobileInterface, showMobileActions]);
 
   // Handle dropdown outside clicks
   useEffect(() => {
@@ -188,7 +188,7 @@ export function ContentCard({
   const handleClick = (e: React.MouseEvent) => {
     if (onClick) {
       // Custom onClick handler provided
-      if (isMobile) {
+      if (isMobileInterface) {
         // On mobile: first tap shows actions, second tap calls onClick
         if (showMobileActions) {
           // Actions are already showing, call the custom onClick
@@ -209,7 +209,7 @@ export function ContentCard({
     } else {
       // No custom onClick handler, use default behavior
       // On mobile: first tap shows actions, second tap navigates
-      if (isMobile) {
+      if (isMobileInterface) {
         if (showMobileActions) {
           // Actions are already showing, navigate to content page
           if (isMedia && media) {
@@ -372,8 +372,8 @@ export function ContentCard({
           className
         )}
         onClick={handleClick}
-        onMouseEnter={() => !isMobile && setIsHovered(true)}
-        onMouseLeave={() => !isMobile && setIsHovered(false)}
+        onMouseEnter={() => !isMobileInterface && setIsHovered(true)}
+        onMouseLeave={() => !isMobileInterface && setIsHovered(false)}
       >
         {/* Content based on type */}
         {isMedia && media ? (
@@ -410,7 +410,7 @@ export function ContentCard({
                   useAllAvailableSpace ? "object-contain" : "object-cover",
                   !disableHoverEffects &&
                     !useAllAvailableSpace &&
-                    isHovered &&
+                    (isHovered || (isMobileInterface && showMobileActions)) &&
                     "scale-105",
                   imageClassName
                 )}
@@ -422,7 +422,7 @@ export function ContentCard({
             <div
               className={cn(
                 "absolute inset-0 transition-colors duration-300",
-                isMobile && showMobileActions
+                isMobileInterface && showMobileActions
                   ? "bg-black/30"
                   : isHovered
                   ? "bg-black/20"
@@ -434,7 +434,7 @@ export function ContentCard({
             <div
               className={cn(
                 "absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent transition-opacity duration-300",
-                isMobile
+                isMobileInterface
                   ? showMobileActions
                     ? "opacity-100"
                     : "opacity-0"
@@ -461,7 +461,7 @@ export function ContentCard({
               <div
                 className={cn(
                   "absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
-                  isMobile
+                  isMobileInterface
                     ? showMobileActions
                       ? "opacity-100"
                       : "opacity-0 pointer-events-none"
@@ -622,7 +622,7 @@ export function ContentCard({
                   useAllAvailableSpace ? "object-contain" : "object-cover",
                   !disableHoverEffects &&
                     !useAllAvailableSpace &&
-                    isHovered &&
+                    (isHovered || (isMobileInterface && showMobileActions)) &&
                     "scale-105",
                   imageClassName
                 )}
@@ -680,7 +680,7 @@ export function ContentCard({
                         onClick={(e) => e.stopPropagation()}
                         className={cn(
                           "transition-opacity duration-200",
-                          isMobile
+                          isMobileInterface
                             ? showMobileActions
                               ? "opacity-100"
                               : "opacity-0"
@@ -704,7 +704,7 @@ export function ContentCard({
                         onClick={(e) => e.stopPropagation()}
                         className={cn(
                           "transition-opacity duration-200",
-                          isMobile
+                          isMobileInterface
                             ? showMobileActions
                               ? "opacity-100"
                               : "opacity-0"
@@ -762,7 +762,7 @@ export function ContentCard({
                     }}
                     className={cn(
                       "transition-opacity duration-200 w-8 h-8 p-0 bg-black/20 hover:bg-black/40 backdrop-blur-sm rounded-lg flex items-center justify-center",
-                      isMobile
+                      isMobileInterface
                         ? showMobileActions
                           ? "opacity-100"
                           : "opacity-0 pointer-events-none"
@@ -808,7 +808,7 @@ export function ContentCard({
               <div
                 className={cn(
                   "absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
-                  isMobile
+                  isMobileInterface
                     ? showMobileActions
                       ? "opacity-100"
                       : "opacity-0 pointer-events-none"
