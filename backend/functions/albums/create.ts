@@ -177,6 +177,17 @@ export const handler = async (
 
     await DynamoDBService.createAlbum(albumEntity);
 
+    // Increment user's totalAlbums metric
+    try {
+      await DynamoDBService.incrementUserProfileMetric(userId, "totalAlbums");
+      console.log(`📈 Incremented totalAlbums for user: ${userId}`);
+    } catch (error) {
+      console.warn(
+        `⚠️ Failed to increment totalAlbums for user ${userId}:`,
+        error
+      );
+    }
+
     // Add selected media to the album if provided
     if (request.mediaIds && request.mediaIds.length > 0) {
       for (const mediaId of request.mediaIds) {

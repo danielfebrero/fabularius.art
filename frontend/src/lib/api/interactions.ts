@@ -61,7 +61,7 @@ export const interactionApi = {
 
   // Track view
   trackView: async (request: {
-    targetType: "album" | "media";
+    targetType: "album" | "media" | "profile";
     targetId: string;
   }): Promise<{ success: boolean }> => {
     const response = await fetch(`${API_URL}/user/interactions/view`, {

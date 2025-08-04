@@ -2,6 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "@shared/utils/response";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserProfileInsights } from "@shared/types/user";
 
 interface PublicUserProfile {
   userId: string;
@@ -22,6 +23,9 @@ interface PublicUserProfile {
     medium?: string;
     large?: string;
   };
+
+  // Profile insights
+  insights?: UserProfileInsights;
 }
 
 interface GetPublicProfileResponse {
@@ -101,6 +105,33 @@ export const handler = async (
 
     console.log("✅ Found user:", userEntity.userId, userEntity.email);
 
+    // Get user profile insights
+    let insights: UserProfileInsights | undefined;
+    try {
+      console.log("🔍 Fetching profile insights...");
+      const insightsData = await DynamoDBService.getUserProfileInsights(
+        userEntity.userId
+      );
+
+      insights = {
+        ...insightsData,
+        lastUpdated: new Date().toISOString(), // Update the timestamp
+      };
+
+      // Increment profile view count for the viewed user (not the current user)
+      console.log("📈 Incrementing profile view count...");
+      await DynamoDBService.incrementUserProfileMetric(
+        userEntity.userId,
+        "totalProfileViews"
+      );
+
+      console.log("✅ Profile insights fetched and view count incremented");
+    } catch (error) {
+      console.error("❌ Failed to get profile insights:", error);
+      // Continue without insights rather than failing the whole request
+      insights = undefined;
+    }
+
     // Prepare public profile response (excluding sensitive information)
     const publicProfile: PublicUserProfile = {
       userId: userEntity.userId,
@@ -116,6 +147,7 @@ export const handler = async (
       ...(userEntity.avatarThumbnails && {
         avatarThumbnails: userEntity.avatarThumbnails,
       }),
+      ...(insights && { insights }),
     };
 
     console.log("✅ Returning public profile for user:", username);

@@ -38,6 +38,7 @@ import {
   Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { UserProfileInsights } from "@/types/user";
 
 interface ProfileUser {
   userId: string;
@@ -59,6 +60,9 @@ interface ProfileUser {
     medium?: string;
     large?: string;
   };
+
+  // Profile insights
+  insights?: UserProfileInsights;
 }
 
 interface ProfileComponentProps {
@@ -413,14 +417,6 @@ export default function ProfileComponent({
 
   // Mock data for content - in real app, this would be passed as props or fetched
   const mockData = {
-    insights: {
-      likesReceived: 1247,
-      contentBookmarked: 89,
-      totalMediaViews: 15632,
-      profileViews: 324,
-      totalUploads: 156,
-      totalAlbums: 23,
-    },
     recentGeneratedMedias: [
       {
         id: "media4",
@@ -960,37 +956,37 @@ export default function ProfileComponent({
               {
                 icon: Heart,
                 label: "Likes Received",
-                value: mockData.insights.likesReceived,
+                value: user.insights?.totalLikesReceived ?? 0,
                 color: "text-red-600",
               },
               {
                 icon: Bookmark,
                 label: "Content Bookmarked",
-                value: mockData.insights.contentBookmarked,
+                value: user.insights?.totalBookmarksReceived ?? 0,
                 color: "text-purple-600",
               },
               {
                 icon: Eye,
                 label: "Total Media Views",
-                value: mockData.insights.totalMediaViews,
+                value: user.insights?.totalMediaViews ?? 0,
                 color: "text-blue-600",
               },
               {
                 icon: User,
                 label: "Profile Views",
-                value: mockData.insights.profileViews,
+                value: user.insights?.totalProfileViews ?? 0,
                 color: "text-green-600",
               },
               {
                 icon: ImageIcon,
-                label: "Total Uploads",
-                value: mockData.insights.totalUploads,
+                label: "Total Medias",
+                value: user.insights?.totalGeneratedMedias ?? 0,
                 color: "text-orange-600",
               },
               {
                 icon: FolderOpen,
                 label: "Total Albums",
-                value: mockData.insights.totalAlbums,
+                value: user.insights?.totalAlbums ?? 0,
                 color: "text-indigo-600",
               },
             ].map((insight, index) => (

@@ -844,11 +844,36 @@ Cookie: sessionId=session-token-here
       "lastLoginAt": "2023-01-02T00:00:00.000Z",
       "bio": "User biography",
       "location": "New York, USA",
-      "website": "https://example.com"
+      "website": "https://example.com",
+      "insights": {
+        "totalLikesReceived": 150,
+        "totalBookmarksReceived": 45,
+        "totalMediaViews": 2380,
+        "totalProfileViews": 89,
+        "totalGeneratedMedias": 67,
+        "totalAlbums": 12,
+        "lastUpdated": "2023-01-02T00:00:00.000Z"
+      }
     }
   }
 }
 ```
+
+**User Insights Fields:**
+
+- `totalLikesReceived`: Total number of likes received across all user's content
+- `totalBookmarksReceived`: Total number of bookmarks received across all user's content
+- `totalMediaViews`: Total number of views across all user's media and albums
+- `totalProfileViews`: Total number of times the user's profile has been viewed
+- `totalGeneratedMedias`: Total number of media items created by the user
+- `totalAlbums`: Total number of albums created by the user
+- `lastUpdated`: Timestamp when insights were last calculated or updated
+
+**Notes:**
+
+- Insights are calculated in real-time and cached for performance
+- All metrics are public and visible to any authenticated user
+- View tracking automatically increments relevant creator metrics
 
 **Error Responses:**
 
@@ -992,6 +1017,45 @@ Cookie: sessionId=session-token-here
   "action": "bookmark" // or "unbookmark"
 }
 ```
+
+### Track Views
+
+Track views for media, albums, or user profiles.
+
+```http
+POST /user/interactions/view
+Content-Type: application/json
+Cookie: sessionId=session-token-here
+
+{
+  "targetType": "media", // "media", "album", or "profile"
+  "targetId": "media123" // media ID, album ID, or username for profiles
+}
+```
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "viewTracked": true,
+    "message": "View tracked successfully"
+  }
+}
+```
+
+**Target Types:**
+
+- `media`: Track views for individual media items (targetId = media ID)
+- `album`: Track views for album pages (targetId = album ID)
+- `profile`: Track profile page views (targetId = username)
+
+**Notes:**
+
+- View tracking automatically increments relevant metrics for content creators
+- Profile views increment the `totalProfileViews` metric for the profile owner
+- Media and album views increment the `totalMediaViews` metric for the creator
 
 ### Get User Likes
 

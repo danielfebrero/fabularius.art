@@ -98,8 +98,46 @@ export const handler = async (
       // Increment bookmark count for the target
       if (targetType === "album") {
         await DynamoDBService.incrementAlbumBookmarkCount(targetId, 1);
+
+        // Get album creator and increment their totalBookmarksReceived metric
+        const album = await DynamoDBService.getAlbum(targetId);
+        if (album?.createdBy) {
+          try {
+            await DynamoDBService.incrementUserProfileMetric(
+              album.createdBy,
+              "totalBookmarksReceived"
+            );
+            console.log(
+              `📈 Incremented totalBookmarksReceived for album creator: ${album.createdBy}`
+            );
+          } catch (error) {
+            console.warn(
+              `⚠️ Failed to increment totalBookmarksReceived for user ${album.createdBy}:`,
+              error
+            );
+          }
+        }
       } else {
         await DynamoDBService.incrementMediaBookmarkCount(targetId, 1);
+
+        // Get media creator and increment their totalBookmarksReceived metric
+        const media = await DynamoDBService.getMedia(targetId);
+        if (media?.createdBy) {
+          try {
+            await DynamoDBService.incrementUserProfileMetric(
+              media.createdBy,
+              "totalBookmarksReceived"
+            );
+            console.log(
+              `📈 Incremented totalBookmarksReceived for media creator: ${media.createdBy}`
+            );
+          } catch (error) {
+            console.warn(
+              `⚠️ Failed to increment totalBookmarksReceived for user ${media.createdBy}:`,
+              error
+            );
+          }
+        }
       }
 
       return ResponseUtil.created(event, {
@@ -120,8 +158,48 @@ export const handler = async (
       // Decrement bookmark count for the target
       if (targetType === "album") {
         await DynamoDBService.incrementAlbumBookmarkCount(targetId, -1);
+
+        // Get album creator and decrement their totalBookmarksReceived metric
+        const album = await DynamoDBService.getAlbum(targetId);
+        if (album?.createdBy) {
+          try {
+            await DynamoDBService.incrementUserProfileMetric(
+              album.createdBy,
+              "totalBookmarksReceived",
+              -1
+            );
+            console.log(
+              `📉 Decremented totalBookmarksReceived for album creator: ${album.createdBy}`
+            );
+          } catch (error) {
+            console.warn(
+              `⚠️ Failed to decrement totalBookmarksReceived for user ${album.createdBy}:`,
+              error
+            );
+          }
+        }
       } else {
         await DynamoDBService.incrementMediaBookmarkCount(targetId, -1);
+
+        // Get media creator and decrement their totalBookmarksReceived metric
+        const media = await DynamoDBService.getMedia(targetId);
+        if (media?.createdBy) {
+          try {
+            await DynamoDBService.incrementUserProfileMetric(
+              media.createdBy,
+              "totalBookmarksReceived",
+              -1
+            );
+            console.log(
+              `📉 Decremented totalBookmarksReceived for media creator: ${media.createdBy}`
+            );
+          } catch (error) {
+            console.warn(
+              `⚠️ Failed to decrement totalBookmarksReceived for user ${media.createdBy}:`,
+              error
+            );
+          }
+        }
       }
 
       return ResponseUtil.success(event, {

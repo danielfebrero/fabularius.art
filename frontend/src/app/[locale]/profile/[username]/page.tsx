@@ -6,6 +6,7 @@ import ProfileComponent from "@/components/profile/ProfileComponent";
 import { userApi } from "@/lib/api";
 import { PublicUserProfile } from "@/types/user";
 import { useUser } from "@/hooks/useUser";
+import { ViewTracker } from "@/components/ui/ViewTracker";
 
 export default function PublicProfilePage() {
   const params = useParams();
@@ -86,15 +87,21 @@ export default function PublicProfilePage() {
   }
 
   return (
-    <ProfileComponent
-      user={
-        profileUser || {
-          userId: "",
-          createdAt: new Date().toISOString(),
+    <>
+      {/* Track profile view when profile is successfully loaded */}
+      {profileUser && (
+        <ViewTracker targetType="profile" targetId={username} />
+      )}
+      <ProfileComponent
+        user={
+          profileUser || {
+            userId: "",
+            createdAt: new Date().toISOString(),
+          }
         }
-      }
-      isOwner={false}
-      loading={loading}
-    />
+        isOwner={false}
+        loading={loading}
+      />
+    </>
   );
 }

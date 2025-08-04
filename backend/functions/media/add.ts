@@ -164,6 +164,20 @@ export const handler = async (
     // Create the media entity
     await DynamoDBService.createMedia(mediaEntity);
 
+    // Increment user's totalGeneratedMedias metric
+    try {
+      await DynamoDBService.incrementUserProfileMetric(
+        userId,
+        "totalGeneratedMedias"
+      );
+      console.log(`📈 Incremented totalGeneratedMedias for user: ${userId}`);
+    } catch (error) {
+      console.warn(
+        `⚠️ Failed to increment totalGeneratedMedias for user ${userId}:`,
+        error
+      );
+    }
+
     // Link media to album using new many-to-many relationship
     await DynamoDBService.addMediaToAlbum(albumId, mediaId, userId);
 

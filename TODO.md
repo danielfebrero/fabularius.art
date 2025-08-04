@@ -26,10 +26,6 @@ Currently, the backward and share buttons are on the edge sides instead of being
 
 When uploading an avatar on tablet devices, there is a UI bug where the upload button appears under the avatar image, making it ugly.
 
-### Creator Insights
-
-Currently we show mocked data for creator insights. We should implement the real data.
-
 ## Videos
 
 ### In lightbox, the video preview should be fullscreen like image
@@ -39,7 +35,3 @@ Currently, the video preview is of the size of the video.
 ## Admin
 
 ## Settings
-
-### BUG on change language to default navigator
-
-Currently, when changing the language to the default navigator language, it does not work as expected. It stays on the previous language.

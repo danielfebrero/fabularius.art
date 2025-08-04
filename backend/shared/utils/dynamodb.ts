@@ -1629,6 +1629,313 @@ export class DynamoDBService {
     return totalBookmarks;
   }
 
+  // User profile metrics methods
+  static async getUserProfileInsights(userId: string): Promise<{
+    totalLikesReceived: number;
+    totalBookmarksReceived: number;
+    totalMediaViews: number;
+    totalProfileViews: number;
+    totalGeneratedMedias: number;
+    totalAlbums: number;
+  }> {
+    console.log(`🔍 Getting profile insights for user: ${userId}`);
+
+    try {
+      // Get user entity to check for cached metrics
+      const user = await this.getUserById(userId);
+      if (user?.profileInsights) {
+        console.log("✅ Returning cached profile insights");
+        return {
+          totalLikesReceived: user.profileInsights.totalLikesReceived,
+          totalBookmarksReceived: user.profileInsights.totalBookmarksReceived,
+          totalMediaViews: user.profileInsights.totalMediaViews,
+          totalProfileViews: user.profileInsights.totalProfileViews,
+          totalGeneratedMedias: user.profileInsights.totalGeneratedMedias,
+          totalAlbums: user.profileInsights.totalAlbums,
+        };
+      }
+
+      console.log("🔄 Computing profile insights from database...");
+
+      // Compute metrics in parallel for efficiency
+      const [
+        totalLikesReceived,
+        totalBookmarksReceived,
+        totalMediaViews,
+        { totalGeneratedMedias, totalAlbums },
+      ] = await Promise.all([
+        this.getTotalLikesReceivedOnUserContent(userId),
+        this.getTotalBookmarksReceivedOnUserContent(userId),
+        this.getTotalMediaViewsForUser(userId),
+        this.getUserContentCounts(userId),
+      ]);
+
+      // Profile views start at 0 (will be incremented as users visit the profile)
+      const totalProfileViews = 0;
+
+      const insights = {
+        totalLikesReceived,
+        totalBookmarksReceived,
+        totalMediaViews,
+        totalProfileViews,
+        totalGeneratedMedias,
+        totalAlbums,
+      };
+
+      // Cache the computed insights in the user record
+      await this.updateUserProfileInsights(userId, insights);
+
+      console.log("✅ Computed and cached profile insights:", insights);
+      return insights;
+    } catch (error) {
+      console.error("❌ Failed to get user profile insights:", error);
+      // Return default values on error
+      return {
+        totalLikesReceived: 0,
+        totalBookmarksReceived: 0,
+        totalMediaViews: 0,
+        totalProfileViews: 0,
+        totalGeneratedMedias: 0,
+        totalAlbums: 0,
+      };
+    }
+  }
+
+  static async getTotalMediaViewsForUser(userId: string): Promise<number> {
+    console.log(`🔍 Computing total media views for user: ${userId}`);
+
+    try {
+      // Get all user's albums
+      const userAlbumsResult = await docClient.send(
+        new QueryCommand({
+          TableName: TABLE_NAME,
+          KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk)",
+          ExpressionAttributeValues: {
+            ":pk": `USER#${userId}`,
+            ":sk": "ALBUM#",
+          },
+        })
+      );
+
+      const userAlbums = userAlbumsResult.Items || [];
+      let totalViews = 0;
+
+      // Sum up view counts from all user's albums
+      for (const albumEntity of userAlbums) {
+        const viewCount = albumEntity["viewCount"] || 0;
+        totalViews += viewCount;
+      }
+
+      // Also get media view counts (for media not in albums or individual media views)
+      const userMediaResult = await this.getUserMedia(userId, 1000); // Get up to 1000 media items
+      for (const mediaEntity of userMediaResult.media) {
+        const viewCount = mediaEntity.viewCount || 0;
+        totalViews += viewCount;
+      }
+
+      console.log(`✅ Total media views for user ${userId}: ${totalViews}`);
+      return totalViews;
+    } catch (error) {
+      console.error(
+        `❌ Failed to compute media views for user ${userId}:`,
+        error
+      );
+      return 0;
+    }
+  }
+
+  static async getUserContentCounts(userId: string): Promise<{
+    totalGeneratedMedias: number;
+    totalAlbums: number;
+  }> {
+    console.log(`🔍 Computing content counts for user: ${userId}`);
+
+    try {
+      // Count user's albums
+      const albumsResult = await docClient.send(
+        new QueryCommand({
+          TableName: TABLE_NAME,
+          KeyConditionExpression: "PK = :pk AND begins_with(SK, :sk)",
+          ExpressionAttributeValues: {
+            ":pk": `USER#${userId}`,
+            ":sk": "ALBUM#",
+          },
+          Select: "COUNT",
+        })
+      );
+
+      const totalAlbums = albumsResult.Count || 0;
+
+      // Count user's generated media via GSI1
+      const mediaResult = await docClient.send(
+        new QueryCommand({
+          TableName: TABLE_NAME,
+          IndexName: "GSI1",
+          KeyConditionExpression: "GSI1PK = :gsi1pk",
+          FilterExpression: "createdBy = :userId",
+          ExpressionAttributeValues: {
+            ":gsi1pk": "MEDIA_BY_CREATOR",
+            ":userId": userId,
+          },
+          Select: "COUNT",
+        })
+      );
+
+      const totalGeneratedMedias = mediaResult.Count || 0;
+
+      console.log(
+        `✅ Content counts for user ${userId}: ${totalAlbums} albums, ${totalGeneratedMedias} media`
+      );
+      return { totalGeneratedMedias, totalAlbums };
+    } catch (error) {
+      console.error(
+        `❌ Failed to compute content counts for user ${userId}:`,
+        error
+      );
+      return { totalGeneratedMedias: 0, totalAlbums: 0 };
+    }
+  }
+
+  static async updateUserProfileInsights(
+    userId: string,
+    insights: {
+      totalLikesReceived: number;
+      totalBookmarksReceived: number;
+      totalMediaViews: number;
+      totalProfileViews: number;
+      totalGeneratedMedias: number;
+      totalAlbums: number;
+    }
+  ): Promise<void> {
+    console.log(`🔄 Updating profile insights for user: ${userId}`);
+
+    try {
+      const now = new Date().toISOString();
+
+      await docClient.send(
+        new UpdateCommand({
+          TableName: TABLE_NAME,
+          Key: {
+            PK: `USER#${userId}`,
+            SK: "METADATA",
+          },
+          UpdateExpression: `SET 
+            profileInsights = :insights,
+            #lastActive = :lastActive`,
+          ExpressionAttributeNames: {
+            "#lastActive": "lastActive",
+          },
+          ExpressionAttributeValues: {
+            ":insights": {
+              ...insights,
+              lastUpdated: now,
+            },
+            ":lastActive": now,
+          },
+        })
+      );
+
+      console.log(`✅ Updated profile insights for user: ${userId}`);
+    } catch (error) {
+      console.error(
+        `❌ Failed to update profile insights for user ${userId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
+  // Real-time metrics increment/decrement methods
+  static async incrementUserProfileMetric(
+    userId: string,
+    metric:
+      | "totalLikesReceived"
+      | "totalBookmarksReceived"
+      | "totalMediaViews"
+      | "totalProfileViews"
+      | "totalGeneratedMedias"
+      | "totalAlbums",
+    increment: number = 1
+  ): Promise<void> {
+    console.log(`📈 Incrementing ${metric} for user ${userId} by ${increment}`);
+
+    try {
+      const now = new Date().toISOString();
+
+      await docClient.send(
+        new UpdateCommand({
+          TableName: TABLE_NAME,
+          Key: {
+            PK: `USER#${userId}`,
+            SK: "METADATA",
+          },
+          UpdateExpression: `ADD 
+            profileInsights.#metric :increment 
+            SET 
+            profileInsights.lastUpdated = :lastUpdated,
+            #lastActive = :lastActive`,
+          ExpressionAttributeNames: {
+            "#metric": metric,
+            "#lastActive": "lastActive",
+          },
+          ExpressionAttributeValues: {
+            ":increment": increment,
+            ":lastUpdated": now,
+            ":lastActive": now,
+          },
+        })
+      );
+
+      console.log(`✅ Incremented ${metric} for user ${userId}`);
+    } catch (error: any) {
+      // If profileInsights doesn't exist yet, initialize it first
+      if (error.name === "ValidationException") {
+        console.log(
+          `⚠️ Profile insights not initialized for user ${userId}, initializing...`
+        );
+        await this.getUserProfileInsights(userId); // This will initialize the insights
+
+        // Retry the increment
+        await this.incrementUserProfileMetric(userId, metric, increment);
+      } else {
+        console.error(
+          `❌ Failed to increment ${metric} for user ${userId}:`,
+          error
+        );
+        throw error;
+      }
+    }
+  }
+
+  // Helper method to recalculate and update user profile insights
+  static async recalculateUserProfileInsights(userId: string): Promise<void> {
+    console.log(`🔄 Recalculating profile insights for user: ${userId}`);
+
+    try {
+      // Force recalculation by clearing cached insights first
+      await docClient.send(
+        new UpdateCommand({
+          TableName: TABLE_NAME,
+          Key: {
+            PK: `USER#${userId}`,
+            SK: "METADATA",
+          },
+          UpdateExpression: "REMOVE profileInsights",
+        })
+      );
+
+      // Now get fresh insights (this will trigger computation)
+      await this.getUserProfileInsights(userId);
+      console.log(`✅ Recalculated profile insights for user: ${userId}`);
+    } catch (error) {
+      console.error(
+        `❌ Failed to recalculate profile insights for user ${userId}:`,
+        error
+      );
+      throw error;
+    }
+  }
+
   // Cleanup methods for orphaned interactions
   static async deleteAllInteractionsForTarget(targetId: string): Promise<void> {
     console.log(`🧹 Cleaning up all interactions for target: ${targetId}`);

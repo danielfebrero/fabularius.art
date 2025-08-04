@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { interactionApi } from "../../lib/api";
 
 interface ViewTrackerProps {
-  targetType: "album" | "media";
+  targetType: "album" | "media" | "profile";
   targetId: string;
 }
 

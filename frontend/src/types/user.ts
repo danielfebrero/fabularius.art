@@ -19,6 +19,26 @@ export interface User {
     medium?: string; // Medium size (max 96px, preserves aspect ratio)
     large?: string; // Large size (max 128px, preserves aspect ratio)
   };
+
+  // Profile insights - optional for public profiles
+  insights?: UserProfileInsights;
+}
+
+// User insights/profile metrics types
+export interface UserProfileInsights {
+  totalLikesReceived: number;
+  totalBookmarksReceived: number;
+  totalMediaViews: number;
+  totalProfileViews: number;
+  totalGeneratedMedias: number;
+  totalAlbums: number;
+  lastUpdated: string;
+}
+
+export interface UserInsightsResponse {
+  success: boolean;
+  data?: UserProfileInsights;
+  error?: string;
 }
 
 export interface UserSession {
@@ -351,6 +371,9 @@ export interface PublicUserProfile {
     medium?: string; // Medium size (max 96px, preserves aspect ratio)
     large?: string; // Large size (max 128px, preserves aspect ratio)
   };
+
+  // Profile insights
+  insights?: UserProfileInsights;
 }
 
 export interface GetPublicProfileResponse {

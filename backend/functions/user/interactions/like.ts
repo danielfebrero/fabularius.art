@@ -98,20 +98,102 @@ export const handler = async (
       // Increment like count for the target
       if (targetType === "album") {
         await DynamoDBService.incrementAlbumLikeCount(targetId, 1);
+
+        // Get album creator and increment their totalLikesReceived metric
+        const album = await DynamoDBService.getAlbum(targetId);
+        if (album?.createdBy) {
+          try {
+            await DynamoDBService.incrementUserProfileMetric(
+              album.createdBy,
+              "totalLikesReceived"
+            );
+            console.log(
+              `📈 Incremented totalLikesReceived for album creator: ${album.createdBy}`
+            );
+          } catch (error) {
+            console.warn(
+              `⚠️ Failed to increment totalLikesReceived for user ${album.createdBy}:`,
+              error
+            );
+          }
+        }
       } else {
         await DynamoDBService.incrementMediaLikeCount(targetId, 1);
+
+        // Get media creator and increment their totalLikesReceived metric
+        const media = await DynamoDBService.getMedia(targetId);
+        if (media?.createdBy) {
+          try {
+            await DynamoDBService.incrementUserProfileMetric(
+              media.createdBy,
+              "totalLikesReceived"
+            );
+            console.log(
+              `📈 Incremented totalLikesReceived for media creator: ${media.createdBy}`
+            );
+          } catch (error) {
+            console.warn(
+              `⚠️ Failed to increment totalLikesReceived for user ${media.createdBy}:`,
+              error
+            );
+          }
+        }
       }
 
       console.log(`✅ Like added for ${targetType} ${targetId}`);
     } else {
       // Remove like
-      await DynamoDBService.deleteUserInteraction(user.userId, "like", targetId);
+      await DynamoDBService.deleteUserInteraction(
+        user.userId,
+        "like",
+        targetId
+      );
 
       // Decrement like count for the target
       if (targetType === "album") {
         await DynamoDBService.incrementAlbumLikeCount(targetId, -1);
+
+        // Get album creator and decrement their totalLikesReceived metric
+        const album = await DynamoDBService.getAlbum(targetId);
+        if (album?.createdBy) {
+          try {
+            await DynamoDBService.incrementUserProfileMetric(
+              album.createdBy,
+              "totalLikesReceived",
+              -1
+            );
+            console.log(
+              `📉 Decremented totalLikesReceived for album creator: ${album.createdBy}`
+            );
+          } catch (error) {
+            console.warn(
+              `⚠️ Failed to decrement totalLikesReceived for user ${album.createdBy}:`,
+              error
+            );
+          }
+        }
       } else {
         await DynamoDBService.incrementMediaLikeCount(targetId, -1);
+
+        // Get media creator and decrement their totalLikesReceived metric
+        const media = await DynamoDBService.getMedia(targetId);
+        if (media?.createdBy) {
+          try {
+            await DynamoDBService.incrementUserProfileMetric(
+              media.createdBy,
+              "totalLikesReceived",
+              -1
+            );
+            console.log(
+              `📉 Decremented totalLikesReceived for media creator: ${media.createdBy}`
+            );
+          } catch (error) {
+            console.warn(
+              `⚠️ Failed to decrement totalLikesReceived for user ${media.createdBy}:`,
+              error
+            );
+          }
+        }
       }
 
       console.log(`✅ Like removed for ${targetType} ${targetId}`);

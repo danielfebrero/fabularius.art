@@ -85,6 +85,25 @@ export const handler = async (
     // Delete the album
     await DynamoDBService.deleteAlbum(albumId);
 
+    // Decrement user's totalAlbums metric
+    if (existingAlbum.createdBy) {
+      try {
+        await DynamoDBService.incrementUserProfileMetric(
+          existingAlbum.createdBy,
+          "totalAlbums",
+          -1
+        );
+        console.log(
+          `📉 Decremented totalAlbums for user: ${existingAlbum.createdBy}`
+        );
+      } catch (error) {
+        console.warn(
+          `⚠️ Failed to decrement totalAlbums for user ${existingAlbum.createdBy}:`,
+          error
+        );
+      }
+    }
+
     // Trigger revalidation
     await RevalidationService.revalidateAlbums();
 
