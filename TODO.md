@@ -12,6 +12,16 @@ We should avoid using `any` type in TypeScript. Instead, we should define proper
 
 ## UI/UX
 
+### ✅ ~~Pressing backward button on the lightbox page should close it~~
+
+**COMPLETED**: Implemented browser back button handling in the Lightbox component with proper history management. When the lightbox is open, pressing the browser's back button now closes the lightbox instead of navigating to the previous page. The implementation:
+
+- Adds a dummy history entry when the lightbox opens
+- Listens for `popstate` events to intercept back button navigation
+- Uses a wrapped `onClose` function to clean up history entries when closed programmatically
+- Maintains proper browser history flow after the lightbox is closed
+- Includes comprehensive E2E tests to verify the behavior
+
 ### Make admin page responsive
 
 Currently, it's unusable on mobile devices. We need to ensure that the admin page is fully responsive and functional on smaller screens.

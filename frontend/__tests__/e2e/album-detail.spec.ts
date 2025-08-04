@@ -194,6 +194,48 @@ test.describe("Album Detail Page", () => {
     await expect(lightboxImage).toHaveAttribute("src", /image-1\.jpg/);
   });
 
+  test("closes lightbox with browser back button", async ({ page }) => {
+    // Get initial URL
+    const initialUrl = page.url();
+
+    // Open lightbox
+    await page.getByTestId("media-item-media-1").click();
+    await expect(page.getByTestId("lightbox")).toBeVisible();
+
+    // URL should remain the same (no navigation)
+    expect(page.url()).toBe(initialUrl);
+
+    // Use browser back button
+    await page.goBack();
+
+    // Lightbox should be closed, but we should still be on the same page
+    await expect(page.getByTestId("lightbox")).not.toBeVisible();
+    expect(page.url()).toBe(initialUrl);
+  });
+
+  test("maintains proper history after lightbox interaction", async ({
+    page,
+  }) => {
+    // Navigate to a different page first to create history
+    await page.goto("/");
+    await page.goto(page.url().replace("/", "/albums/album-1"));
+
+    const albumUrl = page.url();
+
+    // Open and close lightbox with back button
+    await page.getByTestId("media-item-media-1").click();
+    await expect(page.getByTestId("lightbox")).toBeVisible();
+    await page.goBack();
+    await expect(page.getByTestId("lightbox")).not.toBeVisible();
+
+    // Should still be on album page
+    expect(page.url()).toBe(albumUrl);
+
+    // Another back button should navigate to previous page (home)
+    await page.goBack();
+    expect(page.url()).toMatch(/\/$/); // Should be home page
+  });
+
   test("displays loading state while fetching media", async ({ page }) => {
     // Delay the media API response
     await page.route("**/api/albums/album-1/media**", async (route) => {

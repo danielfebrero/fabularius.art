@@ -82,10 +82,10 @@ export const Lightbox: React.FC<LightboxProps> = ({
     }
   }, [isOpen]);
 
-  const handleClose = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Only close if the backdrop itself is clicked
     if (e.target === e.currentTarget) {
-      onClose();
+      handleClose();
     }
   };
 
@@ -94,6 +94,16 @@ export const Lightbox: React.FC<LightboxProps> = ({
     setIsMounted(true);
   }, []);
 
+  // Wrap onClose to handle history cleanup
+  const handleClose = useCallback(() => {
+    // If we have a lightbox history state, go back to remove it
+    if (window.history.state?.lightbox) {
+      window.history.back();
+    }
+    // Call the original onClose
+    onClose();
+  }, [onClose]);
+
   // Keyboard navigation
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -101,7 +111,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
 
       switch (event.key) {
         case "Escape":
-          onClose();
+          handleClose();
           break;
         case "ArrowLeft":
           if (currentIndex > 0) {
@@ -117,13 +127,34 @@ export const Lightbox: React.FC<LightboxProps> = ({
           break;
       }
     },
-    [isOpen, onClose, onNext, onPrevious, currentIndex, media.length]
+    [isOpen, handleClose, onNext, onPrevious, currentIndex, media.length]
   );
 
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
+
+  // Handle browser back button to close lightbox
+  useEffect(() => {
+    const handlePopState = () => {
+      if (isOpen) {
+        handleClose();
+      }
+    };
+
+    if (isOpen) {
+      // Add a dummy history entry when lightbox opens
+      window.history.pushState({ lightbox: true }, "", window.location.href);
+
+      // Listen for popstate events (back button)
+      window.addEventListener("popstate", handlePopState);
+    }
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [isOpen]);
 
   // Prevent body scroll when lightbox is open
   useEffect(() => {
@@ -141,7 +172,11 @@ export const Lightbox: React.FC<LightboxProps> = ({
   if (!isOpen || !currentMedia || !isMounted) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 bg-black" onClick={handleClose}>
+    <div
+      className="fixed inset-0 z-50 bg-black"
+      onClick={handleBackdropClick}
+      data-testid="lightbox"
+    >
       {/* View Tracker - Track view when media is displayed */}
       {currentMedia && (
         <ViewTracker
@@ -294,7 +329,10 @@ export const Lightbox: React.FC<LightboxProps> = ({
                 zIndex: 10,
               }}
             >
-              <div className="w-fit h-fit max-w-full max-h-full">
+              <div
+                className="w-fit h-fit max-w-full max-h-full"
+                data-testid="lightbox-image"
+              >
                 {isVideoMedia ? (
                   <MediaPlayer
                     media={currentMedia}
@@ -346,10 +384,11 @@ export const Lightbox: React.FC<LightboxProps> = ({
         <motion.button
           onClick={(e) => {
             e.stopPropagation();
-            onClose();
+            handleClose();
           }}
           className="absolute top-4 right-4 p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer text-white z-20"
           aria-label="Close"
+          data-testid="lightbox-close"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
@@ -389,6 +428,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
                   : "cursor-pointer hover:scale-110"
               )}
               aria-label="Previous media"
+              data-testid="lightbox-prev"
               disabled={currentIndex === 0}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: currentIndex === 0 ? 0.3 : 1, x: 0 }}
@@ -426,6 +466,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
                   : "cursor-pointer hover:scale-110"
               )}
               aria-label="Next media"
+              data-testid="lightbox-next"
               disabled={currentIndex === media.length - 1}
               initial={{ opacity: 0, x: 20 }}
               animate={{
