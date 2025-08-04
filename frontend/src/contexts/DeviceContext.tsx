@@ -21,7 +21,6 @@ export function DeviceProvider({
 }: DeviceProviderProps) {
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo>(() => {
     // Always prefer server-side detection when available
-    console.log({ initialDeviceInfo });
     if (initialDeviceInfo) {
       return initialDeviceInfo;
     }
@@ -30,21 +29,64 @@ export function DeviceProvider({
     return clientSideInfo;
   });
 
+  // Re-validate device info on client-side after hydration
   useEffect(() => {
-    // Only use resize handling if we don't have server-side detection
-    // Server-side user agent detection is more reliable and doesn't change
-    if (!initialDeviceInfo) {
-      const updateDeviceInfo = () => {
-        const newDeviceInfo = detectDeviceClientSide();
-        setDeviceInfo(newDeviceInfo);
-      };
+    const validateDeviceInfo = () => {
+      const clientSideInfo = detectDeviceClientSide();
 
-      // Only add resize listener if relying on client-side detection
-      window.addEventListener("resize", updateDeviceInfo);
-      return () => window.removeEventListener("resize", updateDeviceInfo);
-    }
-    // No cleanup needed if we're trusting server-side detection
-  }, [initialDeviceInfo]);
+      // If server-side detection differs significantly from client-side,
+      // prefer client-side for better accuracy
+      if (
+        clientSideInfo.isMobile !== deviceInfo.isMobile ||
+        clientSideInfo.isTablet !== deviceInfo.isTablet ||
+        clientSideInfo.isDesktop !== deviceInfo.isDesktop
+      ) {
+        console.log("Device detection mismatch, updating:", {
+          server: deviceInfo,
+          client: clientSideInfo,
+          initialDeviceInfo,
+        });
+        setDeviceInfo(clientSideInfo);
+      }
+    };
+
+    // Validate on mount and after a short delay to ensure proper hydration
+    validateDeviceInfo();
+    const timeoutId = setTimeout(validateDeviceInfo, 100);
+
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialDeviceInfo]); // Only run once on mount
+
+  useEffect(() => {
+    // Always add resize and orientation change handlers to handle edge cases
+    // like screen rotation or window resizing that might affect mobile interface
+    const updateDeviceInfo = () => {
+      const newDeviceInfo = detectDeviceClientSide();
+
+      // Only update if there's an actual change to prevent unnecessary re-renders
+      if (
+        newDeviceInfo.isMobile !== deviceInfo.isMobile ||
+        newDeviceInfo.isTablet !== deviceInfo.isTablet ||
+        newDeviceInfo.isDesktop !== deviceInfo.isDesktop
+      ) {
+        console.log("Device info updated due to resize/orientation:", {
+          old: deviceInfo,
+          new: newDeviceInfo,
+        });
+        setDeviceInfo(newDeviceInfo);
+      }
+    };
+
+    // Add both resize and orientation change listeners
+    window.addEventListener("resize", updateDeviceInfo);
+    window.addEventListener("orientationchange", updateDeviceInfo);
+
+    return () => {
+      window.removeEventListener("resize", updateDeviceInfo);
+      window.removeEventListener("orientationchange", updateDeviceInfo);
+    };
+  }, [deviceInfo]);
 
   const contextValue: DeviceContextType = {
     ...deviceInfo,

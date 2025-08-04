@@ -52,7 +52,12 @@ export function isMobileInterface(userAgent: string | null): boolean {
 /**
  * Client-side fallback for device detection
  * Used when server-side detection is not available
- * @returns DeviceInfo object based on screen size and touch capability
+ * Uses multiple detection methods for robustness:
+ * - Touch events and maxTouchPoints
+ * - User agent string patterns
+ * - Screen orientation API
+ * - CSS media queries for pointer precision
+ * @returns DeviceInfo object based on combined detection methods
  */
 export function detectDeviceClientSide(): DeviceInfo {
   if (typeof window === "undefined") {
@@ -67,18 +72,36 @@ export function detectDeviceClientSide(): DeviceInfo {
   const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
   const screenWidth = window.innerWidth;
 
-  // Use screen size breakpoints to determine device type
-  // Mobile: <= 640px
-  // Tablet: 641px - 1024px (with touch)
-  // Desktop: > 1024px or no touch
+  // Check for mouse/pointer capability to distinguish tablets from desktops
+  const hasMouseSupport = window.matchMedia("(pointer: fine)").matches;
 
-  const isMobile = isTouch && screenWidth <= 640;
-  const isTablet = isTouch && screenWidth > 640 && screenWidth <= 1024;
-  const isDesktop = !isTouch || screenWidth > 1024;
+  // Additional mobile/tablet detection methods for edge cases where touch detection fails
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isMobileUserAgent =
+    /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+      userAgent
+    );
+
+  // Screen orientation API as additional indicator for mobile devices
+  const hasOrientationAPI =
+    typeof window.orientation !== "undefined" ||
+    (screen && typeof screen.orientation !== "undefined");
+
+  // Combine multiple detection methods for better accuracy
+  const isTouchDevice = isTouch || isMobileUserAgent || hasOrientationAPI;
+
+  // Use screen size breakpoints to determine device type
+  // Mobile: <= 640px (with touch indicators)
+  // Tablet: > 640px (with touch indicators but no mouse/fine pointer)
+  // Desktop: has mouse/fine pointer capability AND no mobile indicators
+
+  const isMobile = isTouchDevice && screenWidth <= 640;
+  const isTablet = isTouchDevice && screenWidth > 640 && !hasMouseSupport;
+  const isDesktop = !isTouchDevice || hasMouseSupport;
 
   return {
     isMobile,
     isTablet,
-    isDesktop: isDesktop && !isMobile && !isTablet,
+    isDesktop,
   };
 }

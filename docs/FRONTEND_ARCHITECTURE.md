@@ -63,6 +63,44 @@ The application uses React Context for state management, which provides a way to
 - **File**: `frontend/src/contexts/AdminContext.tsx`
 - **Purpose**: Manages the authentication state for admin users. The structure is similar to the `UserProvider`.
 
+### `DeviceProvider`
+
+- **File**: [`frontend/src/contexts/DeviceContext.tsx`](../frontend/src/contexts/DeviceContext.tsx)
+- **Purpose**: Provides device detection capabilities for responsive design.
+- **Features**:
+  - **Server-Side Detection**: Uses user agent parsing on the server for accurate initial device detection
+  - **Client-Side Validation**: Re-validates device info after hydration to handle edge cases
+  - **Responsive Updates**: Listens for resize and orientation change events
+  - **Hybrid Approach**: Combines server-side accuracy with client-side responsiveness
+  - **Large Tablet Support**: Detects large tablets (like iPad Pro) based on touch capability and pointer precision rather than just screen size
+- **Detection Logic**:
+  - **Server-Side**: Uses MobileDetect library for accurate user agent parsing
+  - **Client-Side**: Multi-layered approach for robustness:
+    - Touch events (`ontouchstart`, `maxTouchPoints`)
+    - User agent string patterns (fallback for Chrome "Request Desktop Site")
+    - Screen orientation API (additional mobile indicator)
+    - CSS media queries for pointer precision (`pointer: fine`)
+  - **Mobile**: Touch-enabled devices ≤ 640px width
+  - **Tablet**: Touch-enabled devices > 640px width without fine pointer (mouse) capability
+  - **Desktop**: Devices with fine pointer capability or no touch/mobile indicators
+- **State**:
+  - `isMobile`: Boolean indicating if the device is a mobile phone (excludes tablets)
+  - `isTablet`: Boolean indicating if the device is a tablet (includes large tablets)
+  - `isDesktop`: Boolean indicating if the device is a desktop/laptop
+  - `isMobileInterface`: Boolean indicating if the device should use mobile UI (includes both mobile and tablet)
+- **Hooks**:
+  - `useDevice()`: Returns the full device context
+  - `useIsMobile()`: Returns true for mobile phones and tablets
+  - `useIsMobilePhone()`: Returns true only for mobile phones
+  - `useIsTablet()`: Returns true only for tablets (including large tablets)
+  - `useIsDesktop()`: Returns true for desktop devices
+- **Key Benefits**:
+  - Prevents hydration mismatches between server and client
+  - Handles app state restoration after force-close/reopen scenarios
+  - Provides consistent device detection across the application
+  - Automatically updates when device orientation changes
+  - Accurately detects large tablets without mouse support
+
 ### Usage
 
 The `UserProvider` and `AdminProvider` are wrapped around the application in the root layout ([`frontend/src/app/layout.tsx`](../frontend/src/app/layout.tsx)), making the authentication state available to all components.
