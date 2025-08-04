@@ -204,6 +204,7 @@ export interface CommentLikeStatusResponse {
     statuses: Array<{
       commentId: string;
       isLiked: boolean;
+      likeCount: number;
     }>;
   };
   error?: string;

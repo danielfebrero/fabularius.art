@@ -1,7 +1,8 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation } from "@tanstack/react-query";
 import { interactionApi } from "@/lib/api";
-import { queryKeys } from "@/lib/queryClient";
+import { queryKeys, queryClient } from "@/lib/queryClient";
 import { UnifiedCommentsResponse } from "@/types/user";
+import { CreateCommentRequest } from "@/types";
 
 // Types
 interface CommentsQueryParams {
@@ -36,5 +37,88 @@ export function useCommentsQuery(params: CommentsQueryParams) {
     staleTime: 60 * 1000,
     // Enable background refetching for comments
     refetchOnWindowFocus: true,
+  });
+}
+
+// Hook for fetching target-specific comments (album/media comments)
+export function useTargetComments(
+  targetType: "album" | "media",
+  targetId: string,
+  params: { limit?: number; enabled?: boolean } = {}
+) {
+  const { limit = 20, enabled = true } = params;
+
+  return useInfiniteQuery({
+    queryKey: queryKeys.comments.byTarget(targetType, targetId),
+    queryFn: async ({ pageParam }) => {
+      return await interactionApi.getComments(
+        targetType,
+        targetId,
+        limit,
+        pageParam
+      );
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage: any) => {
+      return lastPage.data?.pagination?.hasNext
+        ? lastPage.data.pagination.cursor
+        : undefined;
+    },
+    enabled: enabled && !!targetType && !!targetId,
+    // Keep comments fresh for 1 minute
+    staleTime: 60 * 1000,
+  });
+}
+
+// Comment mutations
+export function useCreateComment() {
+  return useMutation({
+    mutationFn: async (request: CreateCommentRequest) => {
+      return await interactionApi.createComment(request);
+    },
+    onSuccess: (response, variables) => {
+      if (response.success && response.data) {
+        const { targetType, targetId } = variables;
+
+        // Invalidate target comments query to ensure consistency if used elsewhere
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.comments.byTarget(targetType, targetId),
+        });
+      }
+    },
+  });
+}
+
+export function useUpdateComment() {
+  return useMutation({
+    mutationFn: async (params: { commentId: string; content: string }) => {
+      return await interactionApi.updateComment(params.commentId, {
+        content: params.content,
+      });
+    },
+    onSuccess: (response) => {
+      if (response.success && response.data) {
+        // Invalidate all comment queries to ensure consistency
+        queryClient.invalidateQueries({
+          queryKey: ["comments"],
+        });
+      }
+    },
+  });
+}
+
+export function useDeleteComment() {
+  return useMutation({
+    mutationFn: async (commentId: string) => {
+      return await interactionApi.deleteComment(commentId);
+    },
+    onSuccess: (response) => {
+      if (response.success) {
+        // Invalidate all comment queries to ensure consistency
+        queryClient.invalidateQueries({
+          queryKey: ["comments"],
+        });
+      }
+    },
   });
 }

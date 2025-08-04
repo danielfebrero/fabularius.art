@@ -71,22 +71,59 @@ export const handler = async (
     }
 
     try {
-      // Check each comment for user's like status
+      // Check each comment for user's like status and get comment data including like count
       const statusChecks = commentIds.map(async (commentId) => {
-        const interaction = await DynamoDBService.getUserInteractionForComment(
-          userId,
-          "like",
-          commentId
-        );
-        return { commentId, isLiked: interaction !== null };
+        const [interaction, comment] = await Promise.all([
+          DynamoDBService.getUserInteractionForComment(
+            userId,
+            "like",
+            commentId
+          ),
+          DynamoDBService.getComment(commentId),
+        ]);
+
+        return {
+          commentId,
+          isLiked: interaction !== null,
+          likeCount: comment?.likeCount || 0,
+        };
       });
 
       const results = await Promise.all(statusChecks);
 
       // Update status map with actual results
+      const statusMapWithCount = new Map<
+        string,
+        { isLiked: boolean; likeCount: number }
+      >();
       for (const result of results) {
-        statusMap.set(result.commentId, result.isLiked);
+        statusMapWithCount.set(result.commentId, {
+          isLiked: result.isLiked,
+          likeCount: result.likeCount,
+        });
       }
+
+      // Format response
+      const statuses = commentIds.map((commentId) => {
+        const status = statusMapWithCount.get(commentId) || {
+          isLiked: false,
+          likeCount: 0,
+        };
+        return {
+          commentId,
+          isLiked: status.isLiked,
+          likeCount: status.likeCount,
+        };
+      });
+
+      const responseData = {
+        statuses,
+      };
+
+      console.log(
+        `✅ Successfully retrieved like status and counts for ${commentIds.length} comments`
+      );
+      return ResponseUtil.success(event, responseData);
     } catch (error) {
       console.error("❌ Error fetching comment like status:", error);
       return ResponseUtil.internalError(
@@ -94,21 +131,6 @@ export const handler = async (
         "Failed to fetch comment like status"
       );
     }
-
-    // Format response
-    const statuses = commentIds.map((commentId) => ({
-      commentId,
-      isLiked: statusMap.get(commentId)!,
-    }));
-
-    const responseData = {
-      statuses,
-    };
-
-    console.log(
-      `✅ Successfully retrieved like status for ${commentIds.length} comments`
-    );
-    return ResponseUtil.success(event, responseData);
   } catch (error) {
     console.error("❌ Error in get-comment-like-status function:", error);
     return ResponseUtil.internalError(event, "Internal server error");

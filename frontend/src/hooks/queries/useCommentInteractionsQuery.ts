@@ -27,13 +27,15 @@ export function useCommentInteractionsQuery(commentIds: string[]) {
         const states: CommentLikeStates = {};
 
         if (response.success && response.data?.statuses) {
-          response.data.statuses.forEach(({ commentId, isLiked }) => {
-            states[commentId] = {
-              isLiked,
-              likeCount: 0, // Note: API doesn't return like count in batch status call
-              hasBeenChecked: true,
-            };
-          });
+          response.data.statuses.forEach(
+            ({ commentId, isLiked, likeCount }) => {
+              states[commentId] = {
+                isLiked,
+                likeCount, // Now using the actual like count from the API
+                hasBeenChecked: true,
+              };
+            }
+          );
         }
 
         // For any comment IDs not in response, set default state
@@ -108,13 +110,15 @@ export function useToggleCommentLike() {
 
           const newStates = { ...old };
           if (newStates[commentId]) {
+            const currentLikeCount = newStates[commentId].likeCount || 0;
+            const newLikeCount = isCurrentlyLiked
+              ? Math.max(0, currentLikeCount - 1)
+              : currentLikeCount + 1;
+
             newStates[commentId] = {
               ...newStates[commentId],
               isLiked: !isCurrentlyLiked,
-              likeCount: Math.max(
-                0,
-                newStates[commentId].likeCount + (isCurrentlyLiked ? -1 : 1)
-              ),
+              likeCount: newLikeCount,
             };
           }
 
@@ -134,8 +138,8 @@ export function useToggleCommentLike() {
       }
     },
     onSuccess: (data, variables) => {
-      // Update the comment interaction state - since API doesn't return like count,
-      // we keep the optimistic update values
+      // Since the toggle API doesn't return updated like count,
+      // we keep the optimistic updates for like count but ensure the like state is correct
       queryClient.setQueriesData(
         { queryKey: ["comments", "interactions"] },
         (old: any) => {
@@ -143,10 +147,10 @@ export function useToggleCommentLike() {
 
           const newStates = { ...old };
           if (newStates[variables.commentId]) {
-            // Keep the optimistic like count since API doesn't return it
+            // Keep the optimistic like count and ensure the like state matches the API action
             newStates[variables.commentId] = {
               ...newStates[variables.commentId],
-              isLiked: !variables.isCurrentlyLiked, // Toggle the like state
+              isLiked: !variables.isCurrentlyLiked, // Ensure this matches the successful action
             };
           }
 
@@ -183,7 +187,7 @@ export const useInitializeCommentLikes = () => {
             response.data!.statuses.forEach((status) => {
               newStates[status.commentId] = {
                 isLiked: status.isLiked,
-                likeCount: 0, // API doesn't provide like count, using default
+                likeCount: status.likeCount, // Use actual like count from API
               };
             });
 

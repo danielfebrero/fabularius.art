@@ -1,18 +1,23 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { MessageCircle, Send, Loader2 } from "lucide-react";
-import { Comment, CreateCommentRequest } from "@/types";
+import { Comment } from "@/types";
 import { CommentItem } from "@/components/ui/Comment";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
-import { interactionApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useDevice } from "@/contexts/DeviceContext";
 import {
   useCommentInteractionsQuery,
   useToggleCommentLike,
 } from "@/hooks/queries/useCommentInteractionsQuery";
+import {
+  useTargetComments,
+  useCreateComment,
+  useUpdateComment,
+  useDeleteComment,
+} from "@/hooks/queries/useCommentsQuery";
 
 interface CommentsProps {
   targetType: "album" | "media";
@@ -29,15 +34,9 @@ export function Comments({
   currentUserId,
   className,
 }: CommentsProps) {
-  const [comments, setComments] = useState<Comment[]>(initialComments);
-  const [loading] = useState(false); // Not used in this implementation as loading is handled by parent
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [cursor, setCursor] = useState<string | undefined>();
   const [newComment, setNewComment] = useState("");
-  const [hasFetchedAdditional, setHasFetchedAdditional] = useState(false);
+  const [comments, setComments] = useState<Comment[]>(initialComments);
+  const [hasMore, setHasMore] = useState(initialComments.length >= 20); // Assume more if we got a full page
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean;
     commentId?: string;
@@ -46,8 +45,43 @@ export function Comments({
   });
   const { isMobileInterface: isMobile } = useDevice();
 
+  // Use TanStack Query for fetching additional comments (load more functionality)
+  // Disabled by default since we use SSG comments initially
+  const {
+    data: additionalCommentsData,
+    fetchNextPage: loadMoreComments,
+    isFetchingNextPage: loadingMore,
+    error: fetchError,
+  } = useTargetComments(targetType, targetId, { limit: 20, enabled: false });
+
+  // Update comments list when we get additional comments from load more
+  useEffect(() => {
+    if (additionalCommentsData?.pages) {
+      const newComments = additionalCommentsData.pages.flatMap(
+        (page) => page.data?.comments || []
+      );
+      if (newComments.length > 0) {
+        // Filter out comments we already have to avoid duplicates
+        const existingIds = new Set(comments.map((c) => c.id));
+        const uniqueNewComments = newComments.filter(
+          (c) => !existingIds.has(c.id)
+        );
+
+        if (uniqueNewComments.length > 0) {
+          setComments((prev) => [...prev, ...uniqueNewComments]);
+
+          // Check if there are more comments to load
+          const lastPage =
+            additionalCommentsData.pages[
+              additionalCommentsData.pages.length - 1
+            ];
+          setHasMore(!!lastPage.data?.pagination?.hasNext);
+        }
+      }
+    }
+  }, [additionalCommentsData, comments]);
+
   // Memoize comment IDs to prevent unnecessary re-renders and API calls
-  // Fetch like states for all comments when user is logged in
   const commentIds = useMemo(() => {
     if (!currentUserId) return [];
     return comments.map((comment) => comment.id);
@@ -60,104 +94,53 @@ export function Comments({
     error: likeStatesError,
   } = useCommentInteractionsQuery(commentIds);
 
+  // Comment mutation hooks
+  const createCommentMutation = useCreateComment();
+  const updateCommentMutation = useUpdateComment();
+  const deleteCommentMutation = useDeleteComment();
   const toggleCommentLikeMutation = useToggleCommentLike();
-
-  // Load additional comments (beyond initial ones)
-  const loadMoreComments = useCallback(async () => {
-    try {
-      setLoadingMore(true);
-      setError(null);
-
-      const response = await interactionApi.getComments(
-        targetType,
-        targetId,
-        20,
-        cursor
-      );
-
-      if (response.success && response.data) {
-        const newComments = response.data.comments;
-
-        // Filter out comments we already have to avoid duplicates
-        const existingIds = new Set(comments.map((c) => c.id));
-        const uniqueNewComments = newComments.filter(
-          (c) => !existingIds.has(c.id)
-        );
-
-        setComments((prev) => [...prev, ...uniqueNewComments]);
-        setHasMore(!!response.data.pagination.hasNext);
-        setCursor(response.data.pagination.cursor);
-        setHasFetchedAdditional(true);
-      } else {
-        throw new Error(response.error || "Failed to load comments");
-      }
-    } catch (err) {
-      console.error("Error loading comments:", err);
-      setError(err instanceof Error ? err.message : "Failed to load comments");
-    } finally {
-      setLoadingMore(false);
-    }
-  }, [targetType, targetId, cursor, comments]);
-
-  // Check if there are more comments to load on first render
-  useEffect(() => {
-    if (!hasFetchedAdditional && initialComments.length > 0) {
-      // If we have initial comments, assume there might be more
-      // We'll know for sure after the first API call
-      setHasMore(true);
-    }
-  }, [initialComments.length, hasFetchedAdditional]);
 
   // Submit new comment
   const handleSubmitComment = async () => {
-    if (!newComment.trim() || !currentUserId) return;
+    if (!newComment.trim() || !currentUserId || createCommentMutation.isPending)
+      return;
 
     try {
-      setSubmitting(true);
-      setError(null);
-
-      const request: CreateCommentRequest = {
+      const result = await createCommentMutation.mutateAsync({
         content: newComment.trim(),
         targetType,
         targetId,
-      };
+      });
 
-      const response = await interactionApi.createComment(request);
-
-      if (response.success && response.data) {
-        // Add new comment to the top of the list
-        setComments((prev) => [response.data!, ...prev]);
-        setNewComment("");
-      } else {
-        throw new Error(response.error || "Failed to create comment");
+      // Add new comment to local state
+      if (result.success && result.data) {
+        setComments((prev) => [result.data!, ...prev]);
       }
+
+      setNewComment("");
     } catch (err) {
       console.error("Error creating comment:", err);
-      setError(err instanceof Error ? err.message : "Failed to create comment");
-    } finally {
-      setSubmitting(false);
     }
   };
 
   // Edit comment
   const handleEditComment = async (commentId: string, content: string) => {
     try {
-      const response = await interactionApi.updateComment(commentId, {
+      const result = await updateCommentMutation.mutateAsync({
+        commentId,
         content,
       });
 
-      if (response.success && response.data) {
+      // Update comment in local state
+      if (result.success && result.data) {
         setComments((prev) =>
           prev.map((comment) =>
-            comment.id === commentId ? response.data! : comment
+            comment.id === commentId ? result.data! : comment
           )
         );
-      } else {
-        throw new Error(response.error || "Failed to update comment");
       }
     } catch (err) {
       console.error("Error updating comment:", err);
-      setError(err instanceof Error ? err.message : "Failed to update comment");
     }
   };
 
@@ -172,15 +155,21 @@ export function Comments({
   // Confirm delete comment
   const handleConfirmDelete = async () => {
     const commentId = deleteConfirm.commentId;
-    if (!commentId) return;
+    if (!commentId || deleteCommentMutation.isPending) return;
 
     try {
-      await interactionApi.deleteComment(commentId);
-      setComments((prev) => prev.filter((comment) => comment.id !== commentId));
+      const result = await deleteCommentMutation.mutateAsync(commentId);
+
+      // Remove comment from local state
+      if (result.success) {
+        setComments((prev) =>
+          prev.filter((comment) => comment.id !== commentId)
+        );
+      }
+
       setDeleteConfirm({ isOpen: false });
     } catch (err) {
       console.error("Error deleting comment:", err);
-      setError(err instanceof Error ? err.message : "Failed to delete comment");
       setDeleteConfirm({ isOpen: false });
     }
   };
@@ -189,57 +178,17 @@ export function Comments({
   const handleLikeComment = useCallback(
     (commentId: string) => {
       if (!currentUserId) {
-        setError("You must be logged in to like comments");
         return;
       }
 
       // Get current like state
       const currentIsLiked = commentLikeStates[commentId]?.isLiked || false;
 
-      // Optimistically update the like count in local state for immediate feedback
-      setComments((prev) =>
-        prev.map((c) => {
-          if (c.id === commentId) {
-            const currentCount = c.likeCount || 0;
-            const newCount = currentIsLiked
-              ? Math.max(0, currentCount - 1)
-              : currentCount + 1;
-            return { ...c, likeCount: newCount };
-          }
-          return c;
-        })
-      );
-
-      // Use the TanStack Query mutation which handles like state optimistic updates
-      toggleCommentLikeMutation.mutate(
-        {
-          commentId,
-          isCurrentlyLiked: currentIsLiked,
-        },
-        {
-          onError: (error) => {
-            console.error("Error liking comment:", error);
-
-            // Revert the like count on error
-            setComments((prev) =>
-              prev.map((c) => {
-                if (c.id === commentId) {
-                  const currentCount = c.likeCount || 0;
-                  const revertedCount = currentIsLiked
-                    ? currentCount + 1
-                    : Math.max(0, currentCount - 1);
-                  return { ...c, likeCount: revertedCount };
-                }
-                return c;
-              })
-            );
-
-            setError(
-              error instanceof Error ? error.message : "Failed to like comment"
-            );
-          },
-        }
-      );
+      // Use the TanStack Query mutation which handles optimistic updates
+      toggleCommentLikeMutation.mutate({
+        commentId,
+        isCurrentlyLiked: currentIsLiked,
+      });
     },
     [currentUserId, commentLikeStates, toggleCommentLikeMutation]
   );
@@ -253,6 +202,15 @@ export function Comments({
   };
 
   const canComment = !!currentUserId;
+
+  // Determine error state and loading states
+  const error =
+    fetchError ||
+    likeStatesError ||
+    createCommentMutation.error ||
+    updateCommentMutation.error ||
+    deleteCommentMutation.error;
+  const submitting = createCommentMutation.isPending;
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -292,18 +250,14 @@ export function Comments({
       )}
 
       {/* Error message */}
-      {(error || likeStatesError) && (
+      {error && (
         <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
-          {error ||
-            (likeStatesError instanceof Error
-              ? likeStatesError.message
-              : "Failed to load comment interaction states")}
+          {error instanceof Error ? error.message : String(error)}
         </div>
       )}
 
       {/* Comments list */}
-      {(loading || (likeStatesLoading && commentIds.length > 0)) &&
-      comments.length === 0 ? (
+      {likeStatesLoading && commentIds.length > 0 && comments.length === 0 ? (
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex items-start gap-3 animate-pulse">
@@ -319,12 +273,17 @@ export function Comments({
       ) : comments.length > 0 ? (
         <div className="space-y-4">
           {comments.map((comment, index) => {
-            const commentLikeCount = comment.likeCount || 0;
             // Check like state if user is logged in (regardless of like count)
             // This handles the case where a comment goes from 0 to 1+ likes
             const likeState = currentUserId
               ? commentLikeStates[comment.id]
               : null;
+
+            // Use like count from API if available, otherwise fall back to comment object
+            const commentLikeCount =
+              likeState?.likeCount !== undefined
+                ? likeState.likeCount
+                : comment.likeCount || 0;
 
             return (
               <CommentItem
@@ -349,7 +308,7 @@ export function Comments({
             <div className="flex justify-center pt-2">
               <Button
                 variant="ghost"
-                onClick={loadMoreComments}
+                onClick={() => loadMoreComments()}
                 disabled={loadingMore}
                 className="text-sm"
               >

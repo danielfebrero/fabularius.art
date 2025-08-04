@@ -49,7 +49,3 @@ Currently, the video preview is of the size of the video.
 Currently, we send one request per media, it's not efficient. We should support bulk requests to reduce the number of API calls.
 
 ## Comments
-
-### Revalidation seems to not be working when adding a comment
-
-When a comment is added, the comments list should be revalidated. This is not working as expected. Reloading the page does not show the new comment.

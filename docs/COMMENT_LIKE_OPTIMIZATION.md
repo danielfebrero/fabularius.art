@@ -60,14 +60,33 @@ const likeState = shouldCheckLikeState ? getCommentLikeState(comment.id) : null;
 
 ### Backend Support
 
-The backend already supports:
+The backend supports:
 
 - `POST /user/interactions/comment-like` - Toggle comment like
+- `POST /user/interactions/comment-like-status` - **NEW**: Bulk fetch like status AND like counts
 - Comment entities with `likeCount` field
 - User interaction tracking with `COMMENT_INTERACTION#like#{commentId}` pattern
 
+### API Response Updates
+
+The `comment-like-status` endpoint now returns both like state and current like count:
+
+```json
+{
+  "success": true,
+  "data": {
+    "statuses": [
+      {
+        "commentId": "comment-123",
+        "isLiked": true,
+        "likeCount": 5
+      }
+    ]
+  }
+}
+```
+
 ### Future Enhancements
 
-- **Batch API**: Get like status for multiple comments in single request
 - **Caching**: Client-side caching of like states across sessions
 - **Real-time**: WebSocket updates for live like count changes
