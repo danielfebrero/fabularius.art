@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Album } from "../types/index";
 import { albumsApi } from "@/lib/api";
+import { useUser } from "@/hooks/useUser";
 
 interface CreateUserAlbumData {
   title: string;
@@ -69,6 +70,9 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
     initialAlbums = [],
     initialPagination = null,
   } = options;
+
+  // Get current logged-in user for authorization checks
+  const { user: currentUser } = useUser();
 
   const [albums, setAlbums] = useState<Album[]>(initialAlbums);
   const [loading, setLoading] = useState(initialAlbums.length === 0);
@@ -165,13 +169,15 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
     }
   }, [initialAlbums.length, fetchAlbums]);
 
-  // CRUD operations - only available when not fetching specific user's albums
+  // CRUD operations - only available when user is logged in and authorized
   const createAlbum = useCallback(
     async (albumData: CreateUserAlbumData): Promise<Album> => {
-      if (user) {
-        throw new Error(
-          "Cannot create albums when viewing another user's albums"
-        );
+      if (!currentUser) {
+        throw new Error("You must be logged in to create albums");
+      }
+
+      if (user && user !== currentUser.username) {
+        throw new Error("You can only create albums on your own profile");
       }
 
       setLoading(true);
@@ -192,15 +198,17 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
         setLoading(false);
       }
     },
-    [user, fetchAlbums]
+    [currentUser, user, fetchAlbums]
   );
 
   const updateAlbum = useCallback(
     async (albumId: string, albumData: UpdateUserAlbumData): Promise<Album> => {
-      if (user) {
-        throw new Error(
-          "Cannot update albums when viewing another user's albums"
-        );
+      if (!currentUser) {
+        throw new Error("You must be logged in to update albums");
+      }
+
+      if (user && user !== currentUser.username) {
+        throw new Error("You can only update albums on your own profile");
       }
 
       setLoading(true);
@@ -226,15 +234,17 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
         setLoading(false);
       }
     },
-    [user]
+    [currentUser, user]
   );
 
   const deleteAlbum = useCallback(
     async (albumId: string): Promise<void> => {
-      if (user) {
-        throw new Error(
-          "Cannot delete albums when viewing another user's albums"
-        );
+      if (!currentUser) {
+        throw new Error("You must be logged in to delete albums");
+      }
+
+      if (user && user !== currentUser.username) {
+        throw new Error("You can only delete albums on your own profile");
       }
 
       setLoading(true);
@@ -255,7 +265,7 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
         setLoading(false);
       }
     },
-    [user]
+    [currentUser, user]
   );
 
   const result: UseAlbumsReturn = {
@@ -270,8 +280,9 @@ export function useAlbums(options: UseAlbumsOptions = {}): UseAlbumsReturn {
     loadMore,
   };
 
-  // Only add CRUD operations when not viewing a specific user's albums
-  if (!user) {
+  // Only add CRUD operations when current user is logged in and authorized
+  // Allow CRUD when: 1) No user parameter (own albums), or 2) User parameter matches current user
+  if (currentUser && (!user || user === currentUser.username)) {
     result.createAlbum = createAlbum;
     result.updateAlbum = updateAlbum;
     result.deleteAlbum = deleteAlbum;

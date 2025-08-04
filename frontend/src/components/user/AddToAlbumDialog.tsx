@@ -1,17 +1,18 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { X, Plus, Folder, FolderPlus, Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Switch } from "@/components/ui/Switch";
 import { TagManager } from "@/components/ui/TagManager";
-import { Media, Album } from "@/types";
+import { Media } from "@/types";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { cn } from "@/lib/utils";
-import { albumsApi } from "@/lib/api";
+import { useAlbums } from "@/hooks/useAlbums";
 import { useUser } from "@/hooks/useUser";
+import { albumsApi } from "@/lib/api";
 
 interface AddToAlbumDialogProps {
   isOpen: boolean;
@@ -29,13 +30,17 @@ export function AddToAlbumDialog({
   const { canCreatePrivateContent } = usePermissions();
   const { user } = useUser();
 
-  // Local albums state - only fetched when dialog opens
-  const [albums, setAlbums] = useState<Album[]>([]);
-  const [albumsLoading, setAlbumsLoading] = useState(false);
-  const [albumsError, setAlbumsError] = useState<string | null>(null);
-
-  // Track if we've already fetched albums for this dialog session
-  const hasFetchedRef = useRef(false);
+  // Use the useAlbums hook to get albums and CRUD operations
+  const {
+    albums,
+    loading: albumsLoading,
+    error: albumsError,
+    createAlbum: createAlbumHook,
+    refetch: refetchAlbums,
+  } = useAlbums({
+    user: user?.username,
+    limit: 50,
+  });
 
   // UI state
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -50,33 +55,6 @@ export function AddToAlbumDialog({
   const [newAlbumIsPublic, setNewAlbumIsPublic] = useState(true);
   const [useAsCover, setUseAsCover] = useState(true);
 
-  const fetchAlbums = useCallback(async () => {
-    setAlbumsLoading(true);
-    setAlbumsError(null);
-    try {
-      const response = await albumsApi.getAlbums({
-        limit: 50, // Get more albums for selection
-        user: user?.username, // Only fetch albums for the current user
-      });
-      setAlbums(response.albums);
-    } catch (error) {
-      console.error("Failed to fetch albums:", error);
-      setAlbumsError(
-        error instanceof Error ? error.message : "Failed to fetch albums"
-      );
-    } finally {
-      setAlbumsLoading(false);
-    }
-  }, [user?.username]);
-
-  // Fetch albums only when dialog opens
-  useEffect(() => {
-    if (isOpen && !hasFetchedRef.current && !albumsLoading) {
-      hasFetchedRef.current = true;
-      fetchAlbums();
-    }
-  }, [isOpen, albumsLoading, fetchAlbums]);
-
   const createAlbum = async (albumData: {
     title: string;
     tags?: string[];
@@ -84,10 +62,11 @@ export function AddToAlbumDialog({
     mediaIds?: string[];
     coverImageId?: string;
   }) => {
-    const newAlbum = await albumsApi.createAlbum(albumData);
-    // Add the new album to local state
-    setAlbums((prev) => [newAlbum, ...prev]);
-    return newAlbum;
+    if (!createAlbumHook) {
+      throw new Error("Create album function not available");
+    }
+
+    return await createAlbumHook(albumData);
   };
 
   // Add media to album function using API
@@ -98,18 +77,12 @@ export function AddToAlbumDialog({
   // Reset state when dialog opens/closes
   useEffect(() => {
     if (isOpen) {
+      // Reset form state
       setShowCreateForm(false);
-      setSelectedAlbumIds(new Set());
       setNewAlbumTitle("");
       setNewAlbumTags([]);
       setNewAlbumIsPublic(true);
       setUseAsCover(true);
-    } else {
-      // Clear albums when dialog closes to prevent stale data
-      setAlbums([]);
-      setAlbumsError(null);
-      // Reset the fetch flag so albums will be fetched next time dialog opens
-      hasFetchedRef.current = false;
     }
   }, [isOpen]);
 
@@ -270,7 +243,7 @@ export function AddToAlbumDialog({
               ) : albumsError ? (
                 <div className="text-center py-8">
                   <p className="text-sm text-red-500 mb-2">{albumsError}</p>
-                  <Button onClick={fetchAlbums} variant="outline" size="sm">
+                  <Button onClick={refetchAlbums} variant="outline" size="sm">
                     Try Again
                   </Button>
                 </div>

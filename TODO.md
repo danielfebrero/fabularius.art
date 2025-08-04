@@ -22,10 +22,6 @@ Currently, the backward and share buttons are on the edge sides instead of being
 
 ## User profile
 
-### On tablet, when uploading an avatar, there is a UI bug under the avatar
-
-When uploading an avatar on tablet devices, there is a UI bug where the upload button appears under the avatar image, making it ugly.
-
 ## Videos
 
 ### In lightbox, the video preview should be fullscreen like image
@@ -35,3 +31,5 @@ Currently, the video preview is of the size of the video.
 ## Admin
 
 ## Settings
+
+## User albums

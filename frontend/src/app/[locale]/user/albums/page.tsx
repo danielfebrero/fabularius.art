@@ -21,7 +21,7 @@ const UserAlbumsPage: React.FC = () => {
   // Get current user info
   const { user } = useUser();
 
-  // Use the proper user albums hook - pass user parameter to fetch only current user's albums
+  // Use the albums hook with user parameter to fetch current user's own albums (both public and private)
   const {
     albums,
     loading: isLoading,

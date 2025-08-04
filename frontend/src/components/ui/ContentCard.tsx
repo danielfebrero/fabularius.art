@@ -901,7 +901,7 @@ export function ContentCard({
       )}
 
       {/* Add to Album Dialog */}
-      {isMedia && media && (
+      {isMedia && media && addToAlbumDialogOpen && (
         <AddToAlbumDialog
           isOpen={addToAlbumDialogOpen}
           onClose={() => setAddToAlbumDialogOpen(false)}

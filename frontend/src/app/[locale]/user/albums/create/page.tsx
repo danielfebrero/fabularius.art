@@ -4,11 +4,13 @@ import { useState } from "react";
 import { useLocaleRouter } from "@/lib/navigation";
 import { UserAlbumForm } from "@/components/user/UserAlbumForm";
 import { useAlbums } from "@/hooks/useAlbums";
+import { useUser } from "@/hooks/useUser";
 import { FolderPlus } from "lucide-react";
 
 export default function CreateUserAlbumPage() {
   const router = useLocaleRouter();
-  const { createAlbum } = useAlbums();
+  const { user } = useUser();
+  const { createAlbum } = useAlbums({ user: user?.username });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
