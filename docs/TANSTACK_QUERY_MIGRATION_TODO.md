@@ -146,10 +146,12 @@ This comprehensive todo list covers the complete migration from custom hooks to 
 
 #### Main App Components
 
-- [x] **Migrate DiscoverClient.tsx** ✅ COMPLETE
+- [x] **Migrate DiscoverClient.tsx** ✅ COMPLETE + SSG/ISR OPTIMIZED
 
   - ✅ Replace `useAlbums` with `useAlbumsQuery`
   - ✅ Update infinite scroll implementation
+  - ✅ **NEW: Leverages SSG/ISR initial data for instant loading**
+  - ✅ **NEW: No redundant API calls on server-rendered pages**
   - ✅ Test public album discovery functionality
   - ✅ Verify filters and search work correctly
 

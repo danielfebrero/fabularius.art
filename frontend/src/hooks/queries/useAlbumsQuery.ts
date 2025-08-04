@@ -29,6 +29,14 @@ interface AlbumsQueryParams {
   isPublic?: boolean;
   limit?: number;
   tag?: string;
+  // SSG/ISR support
+  initialData?: {
+    albums: Album[];
+    pagination?: {
+      hasNext: boolean;
+      cursor: string | null;
+    };
+  };
 }
 
 interface AlbumsResponse {
@@ -39,10 +47,24 @@ interface AlbumsResponse {
 
 // Hook for fetching albums list with infinite scroll support
 export function useAlbums(params: AlbumsQueryParams = {}) {
-  const { limit = 12, ...restParams } = params;
+  const { limit = 12, initialData, ...restParams } = params;
+
+  // Transform initial data for TanStack Query if provided
+  const transformedInitialData = initialData
+    ? {
+        pages: [
+          {
+            albums: initialData.albums,
+            hasNext: initialData.pagination?.hasNext || false,
+            nextCursor: initialData.pagination?.cursor || undefined,
+          },
+        ],
+        pageParams: [undefined as string | undefined],
+      }
+    : undefined;
 
   return useInfiniteQuery({
-    queryKey: queryKeys.albums.list(params),
+    queryKey: queryKeys.albums.list(restParams), // Exclude initialData from query key
     queryFn: async ({ pageParam }) => {
       return await albumsApi.getAlbums({
         ...restParams,
@@ -51,6 +73,8 @@ export function useAlbums(params: AlbumsQueryParams = {}) {
       });
     },
     initialPageParam: undefined as string | undefined,
+    // Use initial data from SSG/ISR if provided
+    initialData: transformedInitialData,
     getNextPageParam: (lastPage: AlbumsResponse) => {
       return lastPage.hasNext ? lastPage.nextCursor : undefined;
     },
@@ -58,9 +82,9 @@ export function useAlbums(params: AlbumsQueryParams = {}) {
     // Fresh data for 30 seconds, then stale-while-revalidate
     staleTime: 30 * 1000,
     // Enable background refetching for public albums
-    refetchOnWindowFocus: params.isPublic === true,
+    refetchOnWindowFocus: restParams.isPublic === true,
     // More aggressive refetching for user's own albums
-    refetchInterval: !params.user ? 60 * 1000 : false, // 1 minute for own albums
+    refetchInterval: !restParams.user ? 60 * 1000 : false, // 1 minute for own albums
   });
 }
 

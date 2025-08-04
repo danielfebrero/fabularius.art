@@ -32,7 +32,15 @@ export function DiscoverClient({
   const tag = searchParams.get("tag") || initialTag || undefined;
   const prevTag = useRef<string | undefined>(tag);
 
-  // Use TanStack Query with infinite scroll
+  // For pages with tags, we need fresh data since SSG doesn't pre-render all tag combinations
+  // For the main discover page (no tag), we can use the SSG initial data
+  const shouldUseInitialData = !tag && !initialTag && initialAlbums?.length > 0;
+
+  // Use TanStack Query with infinite scroll and initial data from SSG/ISR
+  // This approach:
+  // 1. Uses server-rendered data for instant loading on main page (no tag filtering)
+  // 2. Falls back to client-side fetching for dynamic tag filtering
+  // 3. Provides seamless infinite scroll from the initial data
   const {
     data,
     isLoading,
@@ -45,6 +53,13 @@ export function DiscoverClient({
     isPublic: true,
     limit: 12,
     tag,
+    // Pass initial data only for non-tagged requests
+    ...(shouldUseInitialData && {
+      initialData: {
+        albums: initialAlbums,
+        pagination: initialPagination || undefined,
+      },
+    }),
   });
 
   // Flatten all pages into a single albums array
@@ -61,7 +76,7 @@ export function DiscoverClient({
     [hasNextPage]
   );
 
-  // Force refetch when tag changes
+  // Force refetch when tag changes (but not on initial load)
   useEffect(() => {
     if (prevTag.current !== tag) {
       // Only refetch if this isn't the initial render
@@ -79,9 +94,23 @@ export function DiscoverClient({
     }
   };
 
-  // Use initial error if no albums were loaded initially and we have an error
-  const displayError =
-    albums.length === 0 && initialError ? initialError : error?.message || null;
+  // Determine loading state - don't show loading on first render if we have initial data
+  const isActuallyLoading = isLoading && !shouldUseInitialData;
+
+  // Use initial error if no albums were loaded and we have an error
+  const displayError = useMemo(() => {
+    // Prioritize initial error for SSG/ISR pages
+    if (albums.length === 0 && initialError) {
+      return initialError;
+    }
+
+    // Use query error if available
+    if (error?.message) {
+      return error.message;
+    }
+
+    return null;
+  }, [albums.length, initialError, error]);
 
   return (
     <SectionErrorBoundary context="Discover Page">
@@ -127,7 +156,7 @@ export function DiscoverClient({
             albums={albums}
             context="discover"
             loadMore={loadMore}
-            loading={isLoading || isFetchingNextPage}
+            loading={isActuallyLoading || isFetchingNextPage}
             hasMore={pagination?.hasNext || false}
             error={displayError}
           />
