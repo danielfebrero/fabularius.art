@@ -18,9 +18,13 @@ const UserMediasPage: React.FC = () => {
 
   // Use TanStack Query hook for user media
   const { data: mediaData, isLoading } = useUserMedia();
-  
-  // Extract media from infinite query data  
-  const medias = mediaData?.pages.flatMap((page: any) => page.media) || [];
+
+  // Extract media from infinite query data
+  const allMedias =
+    mediaData?.pages.flatMap((page: any) => page.data?.media || []) || [];
+
+  // Filter out invalid media before counting
+  const medias = allMedias.filter((media: any) => media && media.id);
   const totalCount = medias.length;
 
   // Lightbox handlers

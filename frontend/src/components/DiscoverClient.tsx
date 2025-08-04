@@ -64,7 +64,7 @@ export function DiscoverClient({
 
   // Flatten all pages into a single albums array
   const albums = useMemo(() => {
-    return data?.pages.flatMap((page) => page.albums) || [];
+    return data?.pages.flatMap((page) => page.data?.albums || []) || [];
   }, [data]);
 
   // Create pagination object compatible with existing AlbumGrid component

@@ -6,7 +6,11 @@ import { Button } from "@/components/ui/Button";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { cn } from "@/lib/utils";
-import { useAlbums, useUpdateAlbum, useDeleteAlbum } from "@/hooks/queries/useAlbumsQuery";
+import {
+  useAlbums,
+  useUpdateAlbum,
+  useDeleteAlbum,
+} from "@/hooks/queries/useAlbumsQuery";
 import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { EditAlbumDialog } from "@/components/albums/EditAlbumDialog";
 import { DeleteAlbumDialog } from "@/components/albums/DeleteAlbumDialog";
@@ -23,14 +27,22 @@ const UserAlbumsPage: React.FC = () => {
   const user = userResponse?.data?.user;
 
   // Use TanStack Query hooks for album operations
-  const { data: albumsData, isLoading, error: queryError } = useAlbums({ 
-    user: user?.username 
+  const {
+    data: albumsData,
+    isLoading,
+    error: queryError,
+  } = useAlbums({
+    user: user?.username,
   });
   const updateAlbumMutation = useUpdateAlbum();
   const deleteAlbumMutation = useDeleteAlbum();
 
   // Extract albums and pagination from infinite query data
-  const albums = albumsData?.pages.flatMap((page: any) => page.albums) || [];
+  // Extract albums from infinite query data
+  const allAlbums = albumsData?.pages.flatMap((page: any) => page.data?.albums || []) || [];
+  
+  // Filter out invalid albums before counting
+  const albums = allAlbums.filter((album: any) => album && album.id);
   const totalCount = albums.length;
   const error = queryError?.message;
 

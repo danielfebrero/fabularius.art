@@ -10,10 +10,22 @@ import { Lightbox } from "@/components/ui/Lightbox";
 
 const UserLikesPage: React.FC = () => {
   // Use TanStack Query hook for likes
-  const { data: likesData, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useLikesQuery();
-  
+  const {
+    data: likesData,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useLikesQuery();
+
   // Extract likes from infinite query data
-  const likes = likesData?.pages.flatMap((page: any) => page.likes) || [];
+  const allLikes =
+    likesData?.pages.flatMap((page: any) => page.data?.interactions || []) ||
+    [];
+
+  // Filter out invalid likes before counting
+  const likes = allLikes.filter((like: any) => like && like.targetType);
   const totalCount = likes.length;
   const hasMore = hasNextPage;
   const isLoadingMore = isFetchingNextPage;

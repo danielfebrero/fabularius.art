@@ -82,7 +82,7 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({
   return (
     <div className={cn("space-y-6", className)}>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {albums.map((album) => (
+        {albums.filter(album => album && album.id).map((album) => (
           <ComponentErrorBoundary
             key={album.id}
             context={`Album Card (${album.id})`}

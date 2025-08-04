@@ -22,9 +22,15 @@ interface AlbumMediaQueryParams {
 }
 
 interface MediaResponse {
-  media: Media[];
-  nextCursor?: string;
-  hasNext: boolean;
+  success: boolean;
+  data?: {
+    media: Media[];
+    pagination: {
+      hasNext: boolean;
+      cursor?: string;
+    };
+  };
+  error?: string;
 }
 
 // Hook for fetching user's media with infinite scroll support
@@ -41,7 +47,9 @@ export function useUserMedia(params: MediaQueryParams = {}) {
     },
     initialPageParam: undefined,
     getNextPageParam: (lastPage: MediaResponse) => {
-      return lastPage.hasNext ? lastPage.nextCursor : undefined;
+      return lastPage.data?.pagination?.hasNext
+        ? lastPage.data.pagination.cursor
+        : undefined;
     },
     // Keep media fresh for 2 minutes
     staleTime: 2 * 60 * 1000,
@@ -64,7 +72,9 @@ export function useAlbumMedia(params: AlbumMediaQueryParams) {
     },
     initialPageParam: undefined,
     getNextPageParam: (lastPage: MediaResponse) => {
-      return lastPage.hasNext ? lastPage.nextCursor : undefined;
+      return lastPage.data?.pagination?.hasNext
+        ? lastPage.data.pagination.cursor
+        : undefined;
     },
     enabled: !!albumId,
     // Keep album media fresh for 2 minutes

@@ -1,11 +1,26 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { interactionApi } from "@/lib/api";
 import { queryKeys } from "@/lib/queryClient";
+import { UserInteraction } from "@/types/user";
 
 // Types
 interface LikesQueryParams {
   targetUser?: string;
   limit?: number;
+}
+
+interface LikesResponse {
+  success: boolean;
+  data?: {
+    interactions: UserInteraction[];
+    pagination: {
+      page: number;
+      limit: number;
+      hasNext: boolean;
+      total: number;
+    };
+  };
+  error?: string;
 }
 
 // Hook for fetching user's likes with infinite scroll
@@ -14,7 +29,7 @@ export function useLikesQuery(params: LikesQueryParams = {}) {
 
   return useInfiniteQuery({
     queryKey: queryKeys.user.interactions.likes(params),
-    queryFn: async ({ pageParam }) => {
+    queryFn: async ({ pageParam }): Promise<LikesResponse> => {
       const page = pageParam || 1;
       if (targetUser) {
         return await interactionApi.getLikesByUsername(targetUser, page, limit);
@@ -23,7 +38,7 @@ export function useLikesQuery(params: LikesQueryParams = {}) {
       }
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage: any) => {
+    getNextPageParam: (lastPage: LikesResponse) => {
       if (!lastPage.data?.pagination?.hasNext) return undefined;
       return (lastPage.data.pagination.page || 1) + 1;
     },

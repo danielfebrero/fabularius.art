@@ -40,9 +40,15 @@ interface AlbumsQueryParams {
 }
 
 interface AlbumsResponse {
-  albums: Album[];
-  nextCursor?: string;
-  hasNext: boolean;
+  success: boolean;
+  data?: {
+    albums: Album[];
+    pagination: {
+      hasNext: boolean;
+      cursor?: string;
+    };
+  };
+  error?: string;
 }
 
 // Hook for fetching albums list with infinite scroll support
@@ -54,9 +60,14 @@ export function useAlbums(params: AlbumsQueryParams = {}) {
     ? {
         pages: [
           {
-            albums: initialData.albums,
-            hasNext: initialData.pagination?.hasNext || false,
-            nextCursor: initialData.pagination?.cursor || undefined,
+            success: true,
+            data: {
+              albums: initialData.albums,
+              pagination: {
+                hasNext: initialData.pagination?.hasNext || false,
+                cursor: initialData.pagination?.cursor || undefined,
+              },
+            },
           },
         ],
         pageParams: [undefined as string | undefined],
@@ -65,7 +76,7 @@ export function useAlbums(params: AlbumsQueryParams = {}) {
 
   return useInfiniteQuery({
     queryKey: queryKeys.albums.list(restParams), // Exclude initialData from query key
-    queryFn: async ({ pageParam }) => {
+    queryFn: async ({ pageParam }): Promise<AlbumsResponse> => {
       return await albumsApi.getAlbums({
         ...restParams,
         limit,
@@ -76,7 +87,7 @@ export function useAlbums(params: AlbumsQueryParams = {}) {
     // Use initial data from SSG/ISR if provided
     initialData: transformedInitialData,
     getNextPageParam: (lastPage: AlbumsResponse) => {
-      return lastPage.hasNext ? lastPage.nextCursor : undefined;
+      return lastPage.data?.pagination?.hasNext ? lastPage.data.pagination.cursor : undefined;
     },
     getPreviousPageParam: () => undefined, // We don't support backward pagination
     // Fresh data for 30 seconds, then stale-while-revalidate

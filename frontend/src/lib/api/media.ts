@@ -13,9 +13,15 @@ export const mediaApi = {
     limit?: number;
     cursor?: string;
   }): Promise<{
-    media: Media[];
-    nextCursor?: string;
-    hasNext: boolean;
+    success: boolean;
+    data?: {
+      media: Media[];
+      pagination: {
+        hasNext: boolean;
+        cursor?: string;
+      };
+    };
+    error?: string;
   }> => {
     const searchParams = new URLSearchParams();
 
@@ -34,12 +40,7 @@ export const mediaApi = {
       throw new Error(`Failed to fetch user media: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    if (data.success) {
-      return data.data;
-    } else {
-      throw new Error(data.message || "Failed to fetch user media");
-    }
+    return response.json();
   },
 
   // Get album media
@@ -50,9 +51,15 @@ export const mediaApi = {
       cursor?: string;
     }
   ): Promise<{
-    media: Media[];
-    nextCursor?: string;
-    hasNext: boolean;
+    success: boolean;
+    data?: {
+      media: Media[];
+      pagination: {
+        hasNext: boolean;
+        cursor?: string;
+      };
+    };
+    error?: string;
   }> => {
     const searchParams = new URLSearchParams();
 
@@ -71,12 +78,7 @@ export const mediaApi = {
       throw new Error(`Failed to fetch album media: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    if (data.success) {
-      return data.data;
-    } else {
-      throw new Error(data.message || "Failed to fetch album media");
-    }
+    return response.json();
   },
 
   // Get media by ID

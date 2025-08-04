@@ -14,9 +14,15 @@ export const albumsApi = {
     cursor?: string;
     tag?: string;
   }): Promise<{
-    albums: any[];
-    nextCursor?: string;
-    hasNext: boolean;
+    success: boolean;
+    data?: {
+      albums: any[];
+      pagination: {
+        hasNext: boolean;
+        cursor?: string;
+      };
+    };
+    error?: string;
   }> => {
     const searchParams = new URLSearchParams();
 
@@ -42,12 +48,7 @@ export const albumsApi = {
       throw new Error(`Failed to fetch albums: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    if (data.success) {
-      return data.data;
-    } else {
-      throw new Error(data.message || "Failed to fetch albums");
-    }
+    return response.json();
   },
 
   // Get user's albums (convenience method)
@@ -56,9 +57,15 @@ export const albumsApi = {
     cursor?: string;
     tag?: string;
   }): Promise<{
-    albums: any[];
-    nextCursor?: string;
-    hasNext: boolean;
+    success: boolean;
+    data?: {
+      albums: any[];
+      pagination: {
+        hasNext: boolean;
+        cursor?: string;
+      };
+    };
+    error?: string;
   }> => {
     // Fetch current user's albums via session (no user parameter = session-based lookup)
     return albumsApi.getAlbums({

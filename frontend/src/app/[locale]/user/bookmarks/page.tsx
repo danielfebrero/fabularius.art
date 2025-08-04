@@ -10,10 +10,25 @@ import { Lightbox } from "@/components/ui/Lightbox";
 
 const UserBookmarksPage: React.FC = () => {
   // Use TanStack Query hook for bookmarks
-  const { data: bookmarksData, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useBookmarksQuery();
-  
+  const {
+    data: bookmarksData,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useBookmarksQuery();
+
   // Extract bookmarks from infinite query data
-  const bookmarks = bookmarksData?.pages.flatMap((page: any) => page.bookmarks) || [];
+  const allBookmarks =
+    bookmarksData?.pages.flatMap(
+      (page: any) => page.data?.interactions || []
+    ) || [];
+
+  // Filter out invalid bookmarks before counting
+  const bookmarks = allBookmarks.filter(
+    (bookmark: any) => bookmark && bookmark.targetType
+  );
   const totalCount = bookmarks.length;
   const hasMore = hasNextPage;
   const isLoadingMore = isFetchingNextPage;
@@ -26,7 +41,7 @@ const UserBookmarksPage: React.FC = () => {
 
   // Get media items for lightbox (only media type bookmarks)
   const mediaItems = bookmarks
-    .filter((bookmark: any) => bookmark.targetType === "media")
+    .filter((bookmark: any) => bookmark?.targetType === "media")
     .map((bookmark: any) => ({
       id: bookmark.targetId,
       albumId: bookmark.target?.albumId || bookmark.albumId || "",
@@ -60,6 +75,9 @@ const UserBookmarksPage: React.FC = () => {
 
   // Create media items for ContentCard from bookmarks
   const createMediaFromBookmark = (bookmark: any) => {
+    if (!bookmark || !bookmark.targetType) {
+      return null;
+    }
     if (bookmark.targetType === "media") {
       return {
         id: bookmark.targetId,
@@ -81,6 +99,9 @@ const UserBookmarksPage: React.FC = () => {
 
   // Create album items for ContentCard from bookmarks
   const createAlbumFromBookmark = (bookmark: any) => {
+    if (!bookmark || !bookmark.targetType) {
+      return null;
+    }
     if (bookmark.targetType === "album") {
       return {
         id: bookmark.targetId,
@@ -228,6 +249,11 @@ const UserBookmarksPage: React.FC = () => {
               {bookmarks.map((bookmark: any, index: number) => {
                 const media = createMediaFromBookmark(bookmark);
                 const album = createAlbumFromBookmark(bookmark);
+
+                // Skip if both media and album are null
+                if (!media && !album) {
+                  return null;
+                }
 
                 return (
                   <ContentCard
