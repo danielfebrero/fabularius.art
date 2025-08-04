@@ -38,6 +38,50 @@ const adminMediaApi = {
       throw new Error(data.message || "Failed to delete media");
     }
   },
+
+  // Upload media (admin - uses existing media API endpoint)
+  uploadMedia: async (
+    albumId: string,
+    mediaData: {
+      filename: string;
+      mimeType: string;
+      size: number;
+    }
+  ): Promise<{
+    mediaId: string;
+    uploadUrl: string;
+    key: string;
+    expiresIn: number;
+  }> => {
+    const response = await fetch(`${API_URL}/albums/${albumId}/media`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(mediaData),
+    });
+
+    if (!response.ok) {
+      let errorData = null;
+      try {
+        errorData = await response.json();
+      } catch {
+        // response body is not JSON
+      }
+      const errorMessage =
+        (errorData && (errorData.error || errorData.message)) ||
+        `Failed to upload media: ${response.statusText}`;
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    if (data.success) {
+      return data.data;
+    } else {
+      throw new Error(data.error || "Failed to upload media");
+    }
+  },
 };
 
 // Hook for fetching album media (admin view)
@@ -177,6 +221,39 @@ export function useAdminBatchDeleteMedia() {
         invalidateQueries.media(item.mediaId);
         invalidateQueries.album(item.albumId);
       });
+    },
+  });
+}
+
+// Mutation hook for admin media upload
+export function useAdminUploadMedia() {
+  return useMutation({
+    mutationFn: async ({
+      albumId,
+      mediaData,
+    }: {
+      albumId: string;
+      mediaData: {
+        filename: string;
+        mimeType: string;
+        size: number;
+      };
+    }) => {
+      return await adminMediaApi.uploadMedia(albumId, mediaData);
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate admin album media queries
+      queryClient.invalidateQueries({
+        queryKey: ["admin", "media", "album", variables.albumId],
+      });
+
+      // Invalidate regular media queries
+      queryClient.invalidateQueries({
+        queryKey: ["media", "album", variables.albumId],
+      });
+
+      // Invalidate the specific album
+      invalidateQueries.album(variables.albumId);
     },
   });
 }

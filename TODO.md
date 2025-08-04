@@ -2,6 +2,10 @@
 
 ## Error handling
 
+### Write tests
+
+I suggest to delete all the tests and write new ones. The current tests are not up to date and do not cover all the functionality. We should write tests for all the components, hooks, and utilities. Both frontend and backend should have tests.
+
 ### Never use any
 
 We should avoid using `any` type in TypeScript. Instead, we should define proper types for our data structures.

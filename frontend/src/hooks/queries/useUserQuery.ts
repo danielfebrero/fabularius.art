@@ -2,6 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { userApi } from "@/lib/api";
 import { queryKeys, queryClient, invalidateQueries } from "@/lib/queryClient";
 import { useUserContext } from "@/contexts/UserContext";
+import { UserLoginRequest, UserRegistrationRequest } from "@/types/user";
 
 // Hook for fetching current user profile
 export function useUserProfile() {
@@ -127,7 +128,7 @@ export function useLogout() {
 // Hook for user login (for cache invalidation after successful login)
 export function useLogin() {
   return useMutation({
-    mutationFn: async (credentials: { email: string; password: string }) => {
+    mutationFn: async (credentials: UserLoginRequest) => {
       return await userApi.login(credentials);
     },
     onSuccess: () => {
@@ -160,5 +161,33 @@ export function usePublicProfile(username: string) {
     retry: 2,
     // Only query if username is provided
     enabled: !!username,
+  });
+}
+
+// Hook for user registration
+export function useRegister() {
+  return useMutation({
+    mutationFn: async (userData: UserRegistrationRequest) => {
+      return await userApi.register(userData);
+    },
+    onSuccess: () => {
+      // Invalidate user profile to refetch after successful registration
+      invalidateQueries.user();
+    },
+  });
+}
+
+// Hook for checking auth (manual refresh)
+export function useCheckAuth() {
+  return useMutation({
+    mutationFn: async () => {
+      return await userApi.me();
+    },
+    onSuccess: (data) => {
+      // Update cache with fresh user data
+      if (data.success && data.data?.user) {
+        queryClient.setQueryData(queryKeys.user.profile(), data);
+      }
+    },
   });
 }

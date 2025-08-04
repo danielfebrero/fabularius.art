@@ -91,6 +91,7 @@ export const queryKeys = {
   // Admin-related queries
   admin: {
     all: () => ["admin"] as const,
+    profile: () => ["admin", "profile"] as const,
     albums: {
       all: () => ["admin", "albums"] as const,
       list: (params?: any) => ["admin", "albums", "list", params] as const,
@@ -148,6 +149,10 @@ export const invalidateQueries = {
   // Invalidate admin data
   admin: () =>
     queryClient.invalidateQueries({ queryKey: queryKeys.admin.all() }),
+
+  // Invalidate admin profile
+  adminProfile: () =>
+    queryClient.invalidateQueries({ queryKey: queryKeys.admin.profile() }),
 };
 
 // Cache update utilities for optimistic updates

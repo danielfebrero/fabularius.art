@@ -1,7 +1,12 @@
 "use client";
 
 import React, { createContext, useContext } from "react";
-import { useUser } from "../hooks/useUser";
+import {
+  useUserProfile,
+  useLogin,
+  useLogout,
+  useCheckAuth,
+} from "@/hooks/queries/useUserQuery";
 import { UserWithPlanInfo } from "../types/user";
 
 interface AdminContextType {
@@ -18,33 +23,42 @@ interface AdminContextType {
 const AdminContext = createContext<AdminContextType | undefined>(undefined);
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
-  const userContext = useUser();
+  const { data: userProfile, isLoading } = useUserProfile();
+  const loginMutation = useLogin();
+  const logoutMutation = useLogout();
+  const checkAuthMutation = useCheckAuth();
 
-  const user = userContext.user as UserWithPlanInfo | null;
+  const user = userProfile?.data?.user as UserWithPlanInfo | null;
   const isAdmin = user?.role === "admin";
   const isModerator = user?.role === "moderator";
   const hasAdminAccess = isAdmin || isModerator;
 
-  // No need to call checkAuth here since UserContext already does it on mount
-  // We can rely on userContext.loading to know when initialization is complete
-  // const initialized = !userContext.loading;
-
   // Admin-specific context that wraps the user context
   const adminContextValue: AdminContextType = {
     user: hasAdminAccess ? user : null,
-    loading: userContext.loading,
-    error: userContext.error,
-    login: userContext.login,
-    logout: userContext.logout,
-    checkAuth: userContext.checkAuth,
+    loading:
+      isLoading ||
+      loginMutation.isPending ||
+      logoutMutation.isPending ||
+      checkAuthMutation.isPending,
+    error:
+      loginMutation.error?.message ||
+      logoutMutation.error?.message ||
+      checkAuthMutation.error?.message ||
+      null,
+    login: async (credentials: { email: string; password: string }) => {
+      const result = await loginMutation.mutateAsync(credentials);
+      return result.success;
+    },
+    logout: async () => {
+      await logoutMutation.mutateAsync();
+    },
+    checkAuth: async () => {
+      await checkAuthMutation.mutateAsync();
+    },
     isAdmin,
     isModerator,
   };
-
-  // Don't render children until we've checked auth
-  // if (!initialized) {
-  //   return <div>Loading...</div>;
-  // }
 
   return (
     <AdminContext.Provider value={adminContextValue}>

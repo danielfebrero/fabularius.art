@@ -18,7 +18,7 @@ This comprehensive todo list covers the complete migration from custom hooks to 
 
 ## Phase 2: Legacy Hook Analysis & New Hook Creation ✅ COMPLETE
 
-**Summary**: Successfully created 12 new TanStack Query hooks to replace legacy data fetching hooks with modern caching, optimistic updates, and background refetching capabilities. **All compilation errors have been resolved.**
+**Summary**: Successfully created 13 new TanStack Query hooks to replace legacy data fetching hooks with modern caching, optimistic updates, and background refetching capabilities. **All compilation errors have been resolved.**
 
 **Completed Hooks:**
 
@@ -26,6 +26,7 @@ This comprehensive todo list covers the complete migration from custom hooks to 
 - ✅ `useAdminAlbumsQuery` - Admin album operations with bulk actions
 - ✅ `useAdminMediaQuery` - Admin media management with batch operations
 - ✅ `useAdminStatsQuery` - Real-time admin dashboard statistics
+- ✅ `useAdminQuery` - Admin authentication with optimistic session management
 - ✅ `useBookmarksQuery` - User bookmarks with infinite scroll
 - ✅ `useLikesQuery` - User likes with infinite scroll
 - ✅ `useCommentsQuery` - User comments with infinite scroll
@@ -71,10 +72,17 @@ This comprehensive todo list covers the complete migration from custom hooks to 
   - Include media analytics and insights
 
 - [x] **Create useAdminStatsQuery hook**
+
   - Replace `useAdminStats.ts` functionality
   - Implement real-time dashboard stats
   - Add caching for expensive analytics queries
   - Include trend analysis and reporting
+
+- [x] **Create useAdminQuery hook**
+  - Replace `useAdmin.ts` functionality
+  - Implement admin authentication with TanStack Query
+  - Add optimistic login/logout operations
+  - Include session management and auto-refresh
 
 #### User Profile & Content Hooks
 
@@ -344,10 +352,18 @@ This comprehensive todo list covers the complete migration from custom hooks to 
 #### Admin Media Management
 
 - [x] **Migrate /admin/media/page.tsx** ✅ COMPLETE
+
   - ✅ Replace `useAdminMedia` and `useAdminAlbums` with query hooks
   - ✅ Update admin media listing with `useAdminAlbumsData`
   - ✅ Test bulk media operations with `useAdminBatchDeleteMedia`
   - ✅ Verify admin media filtering and optimistic updates
+
+- [x] **Migrate admin/MediaManager.tsx component** ✅ COMPLETE
+  - ✅ Replace `useAdminMedia` with direct TanStack Query hooks
+  - ✅ Update media upload using `useAdminUploadMedia` mutation
+  - ✅ Update media deletion using `useAdminDeleteMedia` and `useAdminBatchDeleteMedia`
+  - ✅ Maintain file upload progress tracking with S3 presigned URLs
+  - ✅ Test media upload/delete operations with optimistic updates
 
 **Key Improvements Added:**
 
@@ -355,9 +371,11 @@ This comprehensive todo list covers the complete migration from custom hooks to 
 - Infinite scroll pagination for admin album listing with "Load More" button
 - Optimistic updates for all admin operations (create, update, delete, bulk operations)
 - Batch operations for efficient bulk media deletion
+- Direct TanStack Query hooks in MediaManager component for better performance
 - Smart caching with appropriate stale times for admin data
 - Enhanced error handling with proper user feedback
 - Background refetching for real-time data consistency
+- Type-safe query keys for consistent cache management
 - Type-safe query keys for consistent cache management
 
 ### 3.5 Interactive Components ✅ COMPLETE
@@ -504,97 +522,91 @@ This comprehensive todo list covers the complete migration from custom hooks to 
 
 ### 5.1 Delete Custom Data Fetching Hooks
 
-- [ ] **Delete useAlbums.ts**
+- [x] **Delete useAlbums.ts**
 
   - Verify all components migrated to `useAlbumsQuery`
   - Remove file and update imports
   - Test that no components break
 
-- [ ] **Delete useMedia.ts**
+- [x] **Delete useMedia.ts**
 
   - Verify all components migrated to `useMediaQuery`
   - Remove file and update imports
   - Test media functionality works
 
-- [ ] **Delete useBookmarks.ts**
+- [x] **Delete useBookmarks.ts**
 
   - Verify all components migrated to `useBookmarksQuery`
   - Remove file and update imports
   - Test bookmark functionality works
 
-- [ ] **Delete useLikes.ts**
+- [x] **Delete useLikes.ts**
 
   - Verify all components migrated to `useLikesQuery`
   - Remove file and update imports
   - Test like functionality works
 
-- [ ] **Delete useComments.ts**
+- [x] **Delete useComments.ts**
 
   - Verify all components migrated to `useCommentsQuery`
   - Remove file and update imports
   - Test comment functionality works
 
-- [ ] **Delete useInteractions.ts**
+- [x] **Delete useInteractions.ts**
 
   - Verify all components migrated to optimistic interaction hooks
   - Remove file and update imports
   - Test interaction functionality works
 
-- [ ] **Delete useAdminAlbums.ts**
+- [x] **Delete useAdminAlbums.ts**
 
   - Verify all admin components migrated to `useAdminAlbumsQuery`
   - Remove file and update imports
   - Test admin album functionality works
 
-- [ ] **Delete useAdminMedia.ts**
+- [x] **Delete useAdminMedia.ts**
 
   - Verify all admin components migrated to `useAdminMediaQuery`
   - Remove file and update imports
   - Test admin media functionality works
+  - Test admin media functionality works
 
-- [ ] **Delete useAdminStats.ts**
+- [x] **Delete useAdminStats.ts**
 
   - Verify admin dashboard migrated to `useAdminStatsQuery`
   - Remove file and update imports
   - Test admin stats functionality works
 
-- [ ] **Delete useInsights.ts**
+- [x] **Delete useInsights.ts**
 
   - Verify insights components migrated to `useInsightsQuery`
   - Remove file and update imports
   - Test insights functionality works
 
-- [ ] **Delete useProfileData.ts**
+- [x] **Delete useProfileData.ts**
 
   - Verify all profile components migrated to `useProfileDataQuery`
   - Remove file and update imports
   - Test profile functionality works
 
-- [ ] **Delete useUserPermissions.ts**
+- [x] **Delete useCommentInteractions.ts**
 
-  - Verify all permission components migrated to `useUserPermissionsQuery`
-  - Remove file and update imports
-  - Test permission system works
-
-- [ ] **Delete useCommentInteractions.ts**
   - Verify comment components migrated to `useCommentInteractionsQuery`
   - Remove file and update imports
   - Test comment interaction functionality works
 
+- [ ] **Delete useAdmin.ts**
+  - Verify all admin authentication migrated to `useAdminQuery`
+  - Remove file and update imports
+  - Test admin authentication functionality works
+
 ### 5.2 Delete Legacy State Management
 
-- [ ] **Delete useUserInteractionStatus.ts**
+- [x] **Delete useUserInteractionStatus.ts**
   - Verify all interaction status logic migrated to TanStack Query
   - Remove provider and context logic
   - Remove file and update imports
   - Test that interaction state works without legacy provider
-
-### 5.3 Remove Backward Compatibility Hooks
-
-- [ ] **Delete useAlbumsWithQuery.ts**
-  - Only after all components migrated to direct query hooks
-  - Remove backward compatibility wrapper
-  - Verify all components use direct TanStack Query hooks
 
 ---
 
@@ -740,7 +752,6 @@ The following hooks **do not require migration** as they handle local state, UI 
 - `useContainerDimensions.ts` - DOM measurement utility
 - `useLightboxPreloader.ts` - Media preloading utility
 - `useAuthRedirect.ts` - Navigation utility
-- `useAdmin.ts` - Authentication context (if exists)
 
 These hooks should remain as custom hooks since they don't involve server state management or caching.
 

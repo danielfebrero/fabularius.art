@@ -8,8 +8,12 @@ import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { interactionApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/useIsMobile";
-import { useCommentInteractions } from "@/hooks/useCommentInteractions";
+import { useDevice } from "@/contexts/DeviceContext";
+import {
+  useCommentInteractionsQuery,
+  useToggleCommentLike,
+  useInitializeCommentLikes,
+} from "@/hooks/queries/useCommentInteractionsQuery";
 
 interface CommentsProps {
   targetType: "album" | "media";
@@ -41,45 +45,29 @@ export function Comments({
   }>({
     isOpen: false,
   });
-  const isMobile = useIsMobile();
+  const { isMobileInterface: isMobile } = useDevice();
 
-  // Comment interaction hooks
+  // Get comment IDs for querying like states
+  const commentIds = comments.map((comment) => comment.id);
+
+  // Comment interaction hooks using TanStack Query
   const {
-    toggleCommentLike,
-    getCommentLikeState,
-    initializeCommentLikes,
-    isToggling,
-    error: likeError,
-    clearError: clearLikeError,
-  } = useCommentInteractions();
+    data: commentLikeStates = {},
+    isLoading: likeStatesLoading,
+    error: likeStatesError,
+  } = useCommentInteractionsQuery(commentIds);
 
-  const [initializedComments, setInitializedComments] = useState<Set<string>>(
-    new Set()
-  );
+  const toggleCommentLikeMutation = useToggleCommentLike();
+  const initializeCommentLikesMutation = useInitializeCommentLikes();
 
   // Initialize comment like states when comments change
   useEffect(() => {
     if (comments.length > 0 && currentUserId) {
-      // Only initialize comments we haven't initialized yet
-      const newComments = comments.filter(
-        (comment) => !initializedComments.has(comment.id)
-      );
-
-      if (newComments.length > 0) {
-        console.log(
-          `[Comments] Initializing ${newComments.length} new comments`
-        );
-        initializeCommentLikes(newComments);
-
-        // Track that we've initialized these comments
-        setInitializedComments((prev) => {
-          const newSet = new Set(prev);
-          newComments.forEach((comment) => newSet.add(comment.id));
-          return newSet;
-        });
-      }
+      const commentIds = comments.map((c) => c.id);
+      // Initialize likes for all comments - TanStack Query will handle deduplication
+      initializeCommentLikesMutation.mutate({ commentIds });
     }
-  }, [comments, currentUserId, initializeCommentLikes, initializedComments]);
+  }, [comments, currentUserId, initializeCommentLikesMutation]);
 
   // Load additional comments (beyond initial ones)
   const loadMoreComments = useCallback(async () => {
@@ -218,7 +206,7 @@ export function Comments({
         if (!comment) return;
 
         const currentLikeCount = comment.likeCount || 0;
-        const currentIsLiked = getCommentLikeState(commentId)?.isLiked || false;
+        const currentIsLiked = commentLikeStates[commentId]?.isLiked || false;
         const newIsLiked = !currentIsLiked;
         const newLikeCount = newIsLiked
           ? currentLikeCount + 1
@@ -231,8 +219,11 @@ export function Comments({
           )
         );
 
-        // The hook will handle its own optimistic update for the isLiked state
-        await toggleCommentLike(commentId);
+        // Use the TanStack Query mutation for like toggle
+        await toggleCommentLikeMutation.mutateAsync({
+          commentId,
+          isCurrentlyLiked: currentIsLiked,
+        });
       } catch (err) {
         console.error("Error liking comment:", err);
 
@@ -240,8 +231,7 @@ export function Comments({
         const comment = comments.find((c) => c.id === commentId);
         if (comment) {
           const currentLikeCount = comment.likeCount || 0;
-          const currentIsLiked =
-            getCommentLikeState(commentId)?.isLiked || false;
+          const currentIsLiked = commentLikeStates[commentId]?.isLiked || false;
           // Calculate what the original count should have been
           const originalLikeCount = currentIsLiked
             ? currentLikeCount - 1
@@ -256,13 +246,17 @@ export function Comments({
           );
         }
 
-        // Error handling is done in the hook, just display it
-        if (likeError) {
-          setError(likeError);
+        // Display mutation error
+        if (toggleCommentLikeMutation.error) {
+          setError(
+            toggleCommentLikeMutation.error instanceof Error
+              ? toggleCommentLikeMutation.error.message
+              : "Failed to like comment"
+          );
         }
       }
     },
-    [currentUserId, comments, toggleCommentLike, getCommentLikeState, likeError]
+    [currentUserId, comments, commentLikeStates, toggleCommentLikeMutation]
   );
 
   // Handle keyboard shortcuts
@@ -313,14 +307,18 @@ export function Comments({
       )}
 
       {/* Error message */}
-      {error && (
+      {(error || likeStatesError) && (
         <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-lg">
-          {error}
+          {error ||
+            (likeStatesError instanceof Error
+              ? likeStatesError.message
+              : "Failed to load comment interaction states")}
         </div>
       )}
 
       {/* Comments list */}
-      {loading && comments.length === 0 ? (
+      {(loading || (likeStatesLoading && commentIds.length > 0)) &&
+      comments.length === 0 ? (
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex items-start gap-3 animate-pulse">
@@ -340,7 +338,7 @@ export function Comments({
             // Check like state if user is logged in (regardless of like count)
             // This handles the case where a comment goes from 0 to 1+ likes
             const likeState = currentUserId
-              ? getCommentLikeState(comment.id)
+              ? commentLikeStates[comment.id]
               : null;
 
             return (

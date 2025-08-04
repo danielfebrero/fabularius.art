@@ -1,12 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import axios from "axios";
 import { Media } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { FileUpload } from "@/components/admin/FileUpload";
 import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { CoverImageSelector } from "@/components/admin/CoverImageSelector";
-import { useAdminMedia } from "@/hooks/useAdminMedia";
+import {
+  useAdminUploadMedia,
+  useAdminDeleteMedia,
+  useAdminBatchDeleteMedia,
+} from "@/hooks/queries/useAdminMediaQuery";
 import { formatDateShort, formatFileSize, isImage } from "@/lib/utils";
 import {
   composeMediaUrl,
@@ -38,14 +43,28 @@ export function MediaManager({
   onCoverSelect,
   coverUpdateLoading = false,
 }: MediaManagerProps) {
-  const {
-    uploadMultipleMedia,
-    deleteMedia,
-    bulkDeleteMedia,
-    uploadProgress,
-    loading,
-    error,
-  } = useAdminMedia();
+  // TanStack Query hooks
+  const uploadMutation = useAdminUploadMedia();
+  const deleteMutation = useAdminDeleteMedia();
+  const bulkDeleteMutation = useAdminBatchDeleteMedia();
+
+  // Upload progress tracking
+  const [uploadProgress, setUploadProgress] = useState<Record<string, number>>(
+    {}
+  );
+
+  // Loading state from mutations
+  const loading =
+    uploadMutation.isPending ||
+    deleteMutation.isPending ||
+    bulkDeleteMutation.isPending;
+
+  // Error from mutations
+  const error =
+    uploadMutation.error?.message ||
+    deleteMutation.error?.message ||
+    bulkDeleteMutation.error?.message ||
+    null;
 
   const [selectedMedia, setSelectedMedia] = useState<string[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -59,7 +78,50 @@ export function MediaManager({
 
   const handleFileUpload = async (files: File[]) => {
     try {
-      await uploadMultipleMedia(files, albumId);
+      // Upload files one by one with progress tracking
+      for (const file of files) {
+        const fileId = `${file.name}-${Date.now()}`;
+
+        try {
+          setUploadProgress((prev) => ({ ...prev, [fileId]: 0 }));
+
+          // Step 1: Get presigned URL
+          const uploadResult = await uploadMutation.mutateAsync({
+            albumId,
+            mediaData: {
+              filename: file.name,
+              mimeType: file.type,
+              size: file.size,
+            },
+          });
+
+          // Step 2: Upload to S3 with progress tracking
+          await axios.put(uploadResult.uploadUrl, file, {
+            headers: {
+              "Content-Type": file.type,
+            },
+            onUploadProgress: (progressEvent) => {
+              const percentCompleted = progressEvent.total
+                ? Math.round((progressEvent.loaded * 100) / progressEvent.total)
+                : 0;
+              setUploadProgress((prev) => ({
+                ...prev,
+                [fileId]: percentCompleted,
+              }));
+            },
+          });
+        } finally {
+          // Clean up progress after 2 seconds
+          setTimeout(() => {
+            setUploadProgress((prev) => {
+              const newProgress = { ...prev };
+              delete newProgress[fileId];
+              return newProgress;
+            });
+          }, 2000);
+        }
+      }
+
       // Wait a moment for the upload to complete, then refresh
       setTimeout(() => {
         onMediaChange();
@@ -98,10 +160,17 @@ export function MediaManager({
   const handleConfirmDelete = async () => {
     try {
       if (deleteConfirm.isBulk) {
-        await bulkDeleteMedia(albumId, selectedMedia);
+        const mediaItems = selectedMedia.map((mediaId) => ({
+          albumId,
+          mediaId,
+        }));
+        await bulkDeleteMutation.mutateAsync(mediaItems);
         setSelectedMedia([]);
       } else if (deleteConfirm.mediaId) {
-        await deleteMedia(albumId, deleteConfirm.mediaId);
+        await deleteMutation.mutateAsync({
+          albumId,
+          mediaId: deleteConfirm.mediaId,
+        });
       }
       setDeleteConfirm({ isOpen: false });
       onMediaChange();

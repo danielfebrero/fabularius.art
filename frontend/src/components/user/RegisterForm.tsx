@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { GoogleLoginButton } from "./GoogleLoginButton";
-import { useUser } from "@/hooks/useUser";
+import { useRegister } from "@/hooks/queries/useUserQuery";
 import { UserRegistrationFormData } from "@/types/user";
 import { userApi } from "@/lib/api";
 import LocaleLink from "@/components/ui/LocaleLink";
@@ -47,7 +47,9 @@ const registerSchema = z
 type UsernameStatus = "idle" | "checking" | "available" | "taken" | "error";
 
 export function RegisterForm() {
-  const { register: registerUser, loading, error, clearError } = useUser();
+  const registerMutation = useRegister();
+  const loading = registerMutation.isPending;
+  const error = registerMutation.error?.message || null;
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registrationSuccess, setRegistrationSuccess] = useState(false);
@@ -141,7 +143,7 @@ export function RegisterForm() {
 
   const onSubmit = async (data: UserRegistrationFormData) => {
     try {
-      clearError();
+      registerMutation.reset(); // Clear previous errors
 
       // Final username availability check before submission
       if (usernameStatus === "taken") {
@@ -160,13 +162,13 @@ export function RegisterForm() {
         return;
       }
 
-      const success = await registerUser({
+      const result = await registerMutation.mutateAsync({
         email: data.email,
         password: data.password,
         username: data.username,
       });
 
-      if (success) {
+      if (result.success) {
         setRegistrationSuccess(true);
       } else {
         setFormError("root", {

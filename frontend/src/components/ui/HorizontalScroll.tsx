@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect, ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useDevice } from "@/contexts/DeviceContext";
 
 interface HorizontalScrollProps {
   children: ReactNode;
@@ -25,7 +25,7 @@ export function HorizontalScroll({
   const scrollRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-  const isMobile = useIsMobile();
+  const { isMobileInterface: isMobile } = useDevice();
 
   const gapClasses = {
     small: "gap-2",

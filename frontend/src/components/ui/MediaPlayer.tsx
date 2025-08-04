@@ -5,7 +5,7 @@ import { Media } from "@/types";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { cn, isVideo } from "@/lib/utils";
 import { composeMediaUrl } from "@/lib/urlUtils";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useDevice } from "@/contexts/DeviceContext";
 
 interface MediaPlayerProps {
   media: Media;
@@ -28,7 +28,7 @@ export const MediaPlayer: FC<MediaPlayerProps> = ({
   imageClassName,
   canFullscreen,
 }) => {
-  const isMobile = useIsMobile();
+  const { isMobileInterface: isMobile } = useDevice();
   const isVideoMedia = isVideo(media);
   const videoRef = useRef<HTMLVideoElement>(null);
   // Track native controls visibility on mobile

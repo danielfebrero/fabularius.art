@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
-import { useUser } from "@/hooks/useUser";
+import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { useUserPermissions } from "@/hooks/useUserPermissions";
 import { userApi } from "@/lib/api";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
@@ -43,7 +43,8 @@ const languageOptions: LanguageOption[] = [
 ];
 
 export default function SettingsPage() {
-  const { user, loading } = useUser();
+  const { data: userProfile, isLoading: loading } = useUserProfile();
+  const user = userProfile?.data?.user || null;
   const userPermissions = useUserPermissions();
   const t = useTranslations();
   const tSettings = useTranslations("user.settings");

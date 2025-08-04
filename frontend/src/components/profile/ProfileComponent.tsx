@@ -15,7 +15,7 @@ import { useProfileDataQuery } from "@/hooks/queries/useProfileDataQuery";
 import { useAlbums } from "@/hooks/queries/useAlbumsQuery";
 import { useCommentsQuery } from "@/hooks/queries/useCommentsQuery";
 import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
-import { useUser } from "@/hooks/useUser";
+import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { useUsernameAvailability } from "@/hooks/useUsernameAvailability";
 import { formatDistanceToNow } from "@/lib/dateUtils";
 import { userApi } from "@/lib/api/user";
@@ -96,7 +96,8 @@ export default function ProfileComponent({
 
   const t = useTranslations("common");
   const { isMobile } = useDevice();
-  const { user: loggedInUser } = useUser();
+  const { data: userProfile } = useUserProfile();
+  const loggedInUser = userProfile?.data?.user || null;
 
   // Use the abstracted username availability hook
   const {

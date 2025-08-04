@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
-import { useUser } from "@/hooks/useUser";
+import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { useLocaleRouter } from "@/lib/navigation";
 
 /**
@@ -10,7 +10,8 @@ import { useLocaleRouter } from "@/lib/navigation";
  * Should be included in the root layout to work on all pages
  */
 export function LanguageRedirect() {
-  const { user, loading } = useUser();
+  const { data: userProfile, isLoading: loading } = useUserProfile();
+  const user = userProfile?.data?.user || null;
   const params = useParams();
   const router = useLocaleRouter();
   const currentLocale = params.locale as string;

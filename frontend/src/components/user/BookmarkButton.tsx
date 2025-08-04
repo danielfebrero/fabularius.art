@@ -8,7 +8,7 @@ import {
   useToggleBookmark,
   useInteractionStatus,
 } from "@/hooks/queries/useInteractionsQuery";
-import { useUser } from "@/hooks/useUser";
+import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { InteractionButtonSkeleton } from "@/components/ui/Skeleton";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,8 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
   className,
   useCache = false,
 }) => {
-  const { user } = useUser();
+  const { data: userProfile } = useUserProfile();
+  const user = userProfile?.data?.user || null;
   const [bookmarkCount] = useState<number | null>(null);
   const { redirectToLogin } = useAuthRedirect();
 

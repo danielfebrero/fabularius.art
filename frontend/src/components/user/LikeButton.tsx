@@ -8,7 +8,7 @@ import {
   useToggleLike,
   useInteractionStatus,
 } from "@/hooks/queries/useInteractionsQuery";
-import { useUser } from "@/hooks/useUser";
+import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { InteractionButtonSkeleton } from "@/components/ui/Skeleton";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,8 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
   className,
   useCache = false,
 }) => {
-  const { user } = useUser();
+  const { data: userProfile } = useUserProfile();
+  const user = userProfile?.data?.user || null;
   const [likeCount] = useState<number | null>(null);
   const { redirectToLogin } = useAuthRedirect();
 

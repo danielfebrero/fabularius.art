@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Heart, Bookmark, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
-import { useUser } from "@/hooks/useUser";
+import { useUserProfile } from "@/hooks/queries/useUserQuery";
 
 interface InteractionCountsProps {
   targetType: "album" | "media";
@@ -27,7 +27,8 @@ export const InteractionCounts: React.FC<InteractionCountsProps> = ({
   size = "md",
   className,
 }) => {
-  const { user } = useUser();
+  const { data: userProfile } = useUserProfile();
+  const user = userProfile?.data?.user || null;
   const [userLiked, setUserLiked] = useState<boolean>(false);
   const [userBookmarked, setUserBookmarked] = useState<boolean>(false);
 

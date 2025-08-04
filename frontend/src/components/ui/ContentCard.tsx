@@ -11,7 +11,7 @@ import { Tag } from "@/components/ui/Tag";
 import { cn, isVideo } from "@/lib/utils";
 import { composeMediaUrl } from "@/lib/urlUtils";
 import { useDevice } from "@/contexts/DeviceContext";
-import { useUser } from "@/hooks/useUser";
+import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import {
   Maximize2,
@@ -111,7 +111,8 @@ export function ContentCard({
 }: ContentCardProps) {
   const router = useLocaleRouter();
   const { startNavigation } = useNavigationLoading();
-  const { user } = useUser();
+  const { data: userProfile } = useUserProfile();
+  const user = userProfile?.data?.user || null;
   const { redirectToLogin } = useAuthRedirect();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);

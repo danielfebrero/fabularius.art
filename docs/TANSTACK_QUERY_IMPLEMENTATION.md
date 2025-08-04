@@ -26,6 +26,14 @@ This guide demonstrates how to migrate from the existing custom hooks to TanStac
 - `useCreateAdminAlbum`, `useUpdateAdminAlbum`, `useDeleteAdminAlbum` - Admin mutations
 - `useBulkDeleteAdminAlbums` - Bulk delete operations with optimistic updates
 
+### Admin Authentication
+
+- `useAdminProfile` - Admin profile data with smart caching and session management
+- `useAdminLogin` - Admin login mutation with cache pre-population
+- `useAdminLogout` - Admin logout mutation with comprehensive cache clearing
+- `useCheckAdminAuth` - Manual admin authentication validation
+- `useRefreshAdminProfile` - Manual admin profile cache invalidation
+
 ### User Interactions
 
 - `useInteractionStatus` - Efficient batch loading of like/bookmark status

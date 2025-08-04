@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { useUser } from "@/hooks/useUser";
+import { useUserProfile, useLogout } from "@/hooks/queries/useUserQuery";
 import { useAdminContext } from "@/contexts/AdminContext";
 import { useLocaleRouter } from "@/lib/navigation";
 import { User } from "@/types/user";
@@ -16,11 +16,13 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ user }: UserMenuProps) {
-  const { logout, loading } = useUser();
+  const logoutMutation = useLogout();
   const { user: adminUser } = useAdminContext();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useLocaleRouter();
+
+  const loading = logoutMutation.isPending;
 
   const t = useTranslations("common");
   const tNav = useTranslations("navigation");
@@ -42,7 +44,7 @@ export function UserMenu({ user }: UserMenuProps) {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await logoutMutation.mutateAsync();
       setIsOpen(false);
       router.push("/");
     } catch (err) {

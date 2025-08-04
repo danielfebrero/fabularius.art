@@ -4,14 +4,21 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useLocaleRouter } from "@/lib/navigation";
 import { Button } from "@/components/ui/Button";
-import { useUser } from "@/hooks/useUser";
+import {
+  useUserProfile,
+  useVerifyEmail,
+  useCheckAuth,
+} from "@/hooks/queries/useUserQuery";
 
 type VerificationState = "loading" | "success" | "error" | "invalid";
 
 export function VerifyEmailClient() {
   const [state, setState] = useState<VerificationState>("loading");
   const [message, setMessage] = useState("");
-  const { verifyEmail, user, checkAuth } = useUser();
+  const { data: userProfile } = useUserProfile();
+  const user = userProfile?.data?.user || null;
+  const verifyEmailMutation = useVerifyEmail();
+  const checkAuthMutation = useCheckAuth();
   const searchParams = useSearchParams();
   const router = useLocaleRouter();
 
@@ -26,17 +33,18 @@ export function VerifyEmailClient() {
 
     const performVerification = async () => {
       try {
-        const success = await verifyEmail(token);
+        const result = await verifyEmailMutation.mutateAsync(token);
 
-        if (success) {
+        if (result.success) {
           setState("success");
           setMessage("Your email has been successfully verified!");
           // Refresh user data to get updated verification status
-          await checkAuth();
+          await checkAuthMutation.mutateAsync();
         } else {
           setState("error");
           setMessage(
-            "Email verification failed. The link may be expired or invalid."
+            result.error ||
+              "Email verification failed. The link may be expired or invalid."
           );
         }
       } catch (err) {
@@ -51,7 +59,7 @@ export function VerifyEmailClient() {
 
     performVerification();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]); // Only depend on searchParams to prevent infinite loop with verifyEmail/checkAuth
+  }, [searchParams, verifyEmailMutation, checkAuthMutation]); // Updated dependencies
 
   const handleGoHome = () => {
     router.push("/");
