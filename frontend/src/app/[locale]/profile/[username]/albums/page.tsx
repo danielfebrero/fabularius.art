@@ -9,7 +9,7 @@ import { ContentCard } from "@/components/ui/ContentCard";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
 import { useAlbums } from "@/hooks/queries/useAlbumsQuery";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useDevice } from "@/contexts/DeviceContext";
 
 export default function UserAlbumsPage() {
   const params = useParams();
@@ -17,7 +17,7 @@ export default function UserAlbumsPage() {
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const isMobile = useIsMobile();
+  const { isMobile } = useDevice();
 
   // Use TanStack Query hook to fetch albums data
   const {

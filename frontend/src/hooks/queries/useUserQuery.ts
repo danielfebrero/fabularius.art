@@ -144,3 +144,21 @@ export function useRefreshUserProfile() {
     invalidateQueries.user();
   };
 }
+
+// Hook for fetching public user profile by username
+export function usePublicProfile(username: string) {
+  return useQuery({
+    queryKey: queryKeys.user.publicProfile(username),
+    queryFn: async () => {
+      return await userApi.getPublicProfile(username);
+    },
+    // Keep public profiles fresh for 10 minutes
+    staleTime: 10 * 60 * 1000,
+    // Enable background refetching
+    refetchOnWindowFocus: true,
+    // Retry on failures (public profiles are more stable)
+    retry: 2,
+    // Only query if username is provided
+    enabled: !!username,
+  });
+}

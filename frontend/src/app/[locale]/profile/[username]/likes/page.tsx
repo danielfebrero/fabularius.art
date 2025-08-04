@@ -8,10 +8,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { Lightbox } from "@/components/ui/Lightbox";
 import LocaleLink from "@/components/ui/LocaleLink";
-import { useLikes } from "@/hooks/useLikes";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { useLikesQuery } from "@/hooks/queries/useLikesQuery";
 import { cn } from "@/lib/utils";
 import { Media, Album } from "@/types";
+import { useDevice } from "@/contexts/DeviceContext";
 
 export default function UserLikesPage() {
   const params = useParams();
@@ -21,17 +21,27 @@ export default function UserLikesPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
-  const isMobile = useIsMobile();
+  const { isMobile } = useDevice();
 
-  // Use the custom hook to fetch likes data
+  // Use the TanStack Query hook to fetch likes data
   const {
-    likes,
+    data: likesData,
     isLoading: likesLoading,
     error: likesError,
-    hasMore: hasNext,
-    loadMore,
-    isLoadingMore: loadingMore,
-  } = useLikes({ user: username, limit: 20 });
+    fetchNextPage,
+    hasNextPage: hasNext,
+    isFetchingNextPage: loadingMore,
+  } = useLikesQuery({ targetUser: username, limit: 20 });
+
+  // Extract likes from paginated data
+  const likes =
+    likesData?.pages.flatMap((page) => page.data.interactions) || [];
+
+  const loadMore = () => {
+    if (hasNext) {
+      fetchNextPage();
+    }
+  };
 
   const displayName = username;
   const initials = displayName.slice(0, 2).toUpperCase();
@@ -121,7 +131,9 @@ export default function UserLikesPage() {
           <h2 className="text-xl font-semibold text-foreground">
             Error loading likes
           </h2>
-          <p className="text-muted-foreground mt-2">{likesError}</p>
+          <p className="text-muted-foreground mt-2">
+            {likesError?.message || "Failed to load likes"}
+          </p>
         </div>
       </div>
     );

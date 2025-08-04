@@ -39,6 +39,8 @@ export const queryKeys = {
   // User-related queries
   user: {
     profile: () => ["user", "profile"] as const,
+    publicProfile: (username: string) =>
+      ["user", "publicProfile", username] as const,
     sessions: () => ["user", "sessions"] as const,
     interactions: {
       all: () => ["user", "interactions"] as const,

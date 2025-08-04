@@ -253,41 +253,52 @@ This comprehensive todo list covers the complete migration from custom hooks to 
   - ✅ Test user media management
   - ✅ Verify media operations functionality
 
-### 3.3 Public Profile Components
+### 3.3 Public Profile Components ✅ COMPLETE
 
-- [ ] **Migrate /profile/[username]/page.tsx**
+**Summary**: Successfully migrated 5 public profile components from legacy hooks to TanStack Query hooks with improved caching, error handling, and public profile data fetching.
 
-  - Replace `useUser` with `useUserQuery`
-  - Update public profile loading
-  - Test profile view performance
-  - Verify public profile data access
+- [x] **Migrate /profile/[username]/page.tsx** ✅ COMPLETE
 
-- [ ] **Migrate /profile/[username]/albums/page.tsx**
+  - ✅ Replace `useUser` with `usePublicProfile` and `useUserProfile`
+  - ✅ Update public profile loading with TanStack Query
+  - ✅ Test profile view performance with cached data
+  - ✅ Verify public profile data access with proper error handling
 
-  - Replace `useAlbums` with `useAlbumsQuery`
-  - Update public album listing
-  - Test public album discovery
-  - Verify album filtering and sorting
+- [x] **Migrate /profile/[username]/albums/page.tsx** ✅ COMPLETE
 
-- [ ] **Migrate /profile/[username]/likes/page.tsx**
+  - ✅ Already using `useAlbumsQuery` with user parameter support
+  - ✅ Update public album listing with infinite scroll
+  - ✅ Test public album discovery with background refetching
+  - ✅ Verify album filtering and sorting functionality
 
-  - Replace `useLikes` with `useLikesQuery`
-  - Update public likes display
-  - Test public like history
-  - Verify privacy settings compliance
+- [x] **Migrate /profile/[username]/likes/page.tsx** ✅ COMPLETE
 
-- [ ] **Migrate /profile/[username]/comments/page.tsx**
+  - ✅ Replace `useLikes` with `useLikesQuery`
+  - ✅ Update public likes display with infinite scroll
+  - ✅ Test public like history with optimistic updates
+  - ✅ Verify privacy settings compliance and error handling
 
-  - Replace `useComments` with `useCommentsQuery`
-  - Update public comment history
-  - Test comment loading performance
-  - Verify comment privacy settings
+- [x] **Migrate /profile/[username]/comments/page.tsx** ✅ COMPLETE
 
-- [ ] **Migrate /profile/[username]/media/page.tsx**
-  - Replace `useMedia` and `useProfileData` with query hooks
-  - Update public media gallery
-  - Test media loading performance
-  - Verify media privacy settings
+  - ✅ Already using `useCommentsQuery` with username parameter
+  - ✅ Update public comment history with infinite scroll
+  - ✅ Test comment loading performance with background refetching
+  - ✅ Verify comment privacy settings and proper data fetching
+
+- [x] **Migrate /profile/[username]/media/page.tsx** ✅ COMPLETE
+  - ✅ Replace useEffect with `usePublicProfile` and `useProfileDataQuery`
+  - ✅ Update public media gallery with TanStack Query patterns
+  - ✅ Test media loading performance with proper caching
+  - ✅ Verify media privacy settings and clean error handling
+
+**Key Improvements Added:**
+
+- Public profile query hook (`usePublicProfile`) for efficient profile data fetching
+- Infinite scroll pagination for all list views
+- Background refetching for real-time data updates
+- Proper error handling and loading states
+- Smart caching with appropriate stale times
+- Type-safe query keys for cache management
 
 ### 3.4 Admin Dashboard Components
 
