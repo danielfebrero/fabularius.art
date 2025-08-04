@@ -4,7 +4,6 @@ import { User } from "@/types/user";
 import { composeMediaUrl } from "@/lib/urlUtils";
 import { cn } from "@/lib/utils";
 import { useContainerDimensions } from "@/hooks/useContainerDimensions";
-import { useRef } from "react";
 
 // Flexible user interface that works with both User and extended user types
 interface AvatarUser {
@@ -151,8 +150,7 @@ export function Avatar({
   customSizeClasses,
   customTextClasses,
 }: AvatarProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { dimensions } = useContainerDimensions();
+  const { containerRef, dimensions } = useContainerDimensions();
   const containerWidth = dimensions.width;
   const containerHeight = dimensions.height;
 
@@ -174,6 +172,9 @@ export function Avatar({
       if (optimalSize && user.avatarThumbnails[optimalSize]) {
         return user.avatarThumbnails[optimalSize];
       }
+    } else {
+      // Fallback to original avatar URL if no thumbnails available
+      return user.avatarUrl || null;
     }
   };
 
@@ -204,7 +205,10 @@ export function Avatar({
   };
 
   return (
-    <div ref={containerRef} className={cn("relative inline-block", className)}>
+    <div
+      ref={containerRef as React.RefObject<HTMLDivElement>}
+      className={cn("relative inline-block", className)}
+    >
       <div
         className={cn(
           "bg-primary text-primary-foreground rounded-full flex items-center justify-center font-medium overflow-hidden shadow-sm",

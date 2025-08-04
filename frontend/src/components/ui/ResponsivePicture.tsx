@@ -124,7 +124,6 @@ function generateIntelligentPictureSources(
   containerWidth: number,
   containerHeight: number
 ): Array<{ media: string; srcSet: string }> {
-  console.log({ thumbnailUrls, containerWidth, containerHeight });
   if (!thumbnailUrls || containerWidth === 0) return [];
 
   const sources: Array<{ media: string; srcSet: string }> = [];
