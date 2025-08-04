@@ -1286,6 +1286,8 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
 
   UserAvatarUploadFunction:
     Type: AWS::Serverless::Function
