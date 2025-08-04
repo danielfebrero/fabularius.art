@@ -1,11 +1,11 @@
 "use client";
 
 import { AlbumGrid } from "./AlbumGrid";
-import { useAlbums } from "@/hooks/useAlbums";
+import { useAlbums } from "@/hooks/queries/useAlbumsQuery";
 import { Album } from "@/types";
 import { useSearchParams } from "next/navigation";
 import { useLocaleRouter } from "@/lib/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useMemo } from "react";
 import {
   SectionErrorBoundary,
   ComponentErrorBoundary,
@@ -32,32 +32,56 @@ export function DiscoverClient({
   const tag = searchParams.get("tag") || initialTag || undefined;
   const prevTag = useRef<string | undefined>(tag);
 
-  // For now, let's simplify: if we have a tag, always fetch fresh data
-  // If no tag, use initial data
-  const shouldUseInitialData = !tag && !initialTag;
-
-  const { albums, loading, error, pagination, loadMore, refresh } = useAlbums({
+  // Use TanStack Query with infinite scroll
+  const {
+    data,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useAlbums({
     isPublic: true,
     limit: 12,
-    tag, // Pass tag filter from URL
-    initialAlbums: shouldUseInitialData ? initialAlbums : [], // Only use initial albums if no tag filtering
-    initialPagination: shouldUseInitialData ? initialPagination : null, // Only use initial pagination if no tag filtering
+    tag,
   });
 
-  // Force refresh when tag changes
+  // Flatten all pages into a single albums array
+  const albums = useMemo(() => {
+    return data?.pages.flatMap((page) => page.albums) || [];
+  }, [data]);
+
+  // Create pagination object compatible with existing AlbumGrid component
+  const pagination = useMemo(
+    () => ({
+      hasNext: hasNextPage || false,
+      cursor: null, // TanStack Query handles this internally
+    }),
+    [hasNextPage]
+  );
+
+  // Force refetch when tag changes
   useEffect(() => {
     if (prevTag.current !== tag) {
-      // Only refresh if this isn't the initial render and we actually have a previous value
-      if (prevTag.current !== undefined || !shouldUseInitialData) {
-        refresh();
+      // Only refetch if this isn't the initial render
+      if (prevTag.current !== undefined) {
+        refetch();
       }
       prevTag.current = tag;
     }
-  }, [tag, refresh, shouldUseInitialData]);
+  }, [tag, refetch]);
 
-  // Use initial error if no albums were loaded initially
+  // LoadMore function for AlbumGrid
+  const loadMore = () => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  };
+
+  // Use initial error if no albums were loaded initially and we have an error
   const displayError =
-    albums.length === 0 && initialError ? initialError : error;
+    albums.length === 0 && initialError ? initialError : error?.message || null;
 
   return (
     <SectionErrorBoundary context="Discover Page">
@@ -103,7 +127,7 @@ export function DiscoverClient({
             albums={albums}
             context="discover"
             loadMore={loadMore}
-            loading={loading}
+            loading={isLoading || isFetchingNextPage}
             hasMore={pagination?.hasNext || false}
             error={displayError}
           />

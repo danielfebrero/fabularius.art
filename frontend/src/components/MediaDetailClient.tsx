@@ -20,8 +20,7 @@ import {
   Hash,
 } from "lucide-react";
 import { Media } from "@/types";
-import { useUserInteractionStatus } from "@/hooks/useUserInteractionStatus";
-import { useUser } from "@/hooks/useUser";
+import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { useNavigationLoading } from "@/contexts/NavigationLoadingContext";
 import { ShareDropdown } from "@/components/ui/ShareDropdown";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -34,7 +33,7 @@ import { MediaPlayer } from "@/components/ui/MediaPlayer";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
 import { formatFileSize, isVideo } from "@/lib/utils";
-import { formatDateTime, formatDistanceToNow } from "@/lib/dateUtils";
+import { formatDistanceToNow } from "@/lib/dateUtils";
 
 // --- PROPS INTERFACES ---
 
@@ -169,13 +168,14 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
   const metadata = useMediaMetadata(media);
-  const { user } = useUser();
+  const { data: userResponse } = useUserProfile();
+
+  // Extract user from the API response structure
+  const user = userResponse?.data?.user;
 
   // Determine if media is video
   const isVideoMedia = isVideo(media);
   const shouldShowPlayer = isVideoMedia;
-
-  useUserInteractionStatus();
 
   // Desktop-only handler for MediaPlayer - mobile behavior is handled by ContentCard
   const handleDesktopMediaClick = () => {

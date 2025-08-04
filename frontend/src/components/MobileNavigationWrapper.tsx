@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useUser } from "@/hooks/useUser";
+import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { MobileNavigation } from "@/components/ui/MobileNavigation";
 import {
   Compass,
@@ -16,9 +16,12 @@ import {
 
 export function MobileNavigationWrapper() {
   const pathname = usePathname();
-  const { user } = useUser();
+  const { data: userResponse } = useUserProfile();
   const t = useTranslations("common");
   const tNav = useTranslations("navigation");
+
+  // Extract user from the API response structure
+  const user = userResponse?.data?.user;
 
   // Don't show on admin pages
   const isAdminPage = pathname.includes("/admin");

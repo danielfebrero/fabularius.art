@@ -7,7 +7,6 @@ import { Lightbox } from "./ui/Lightbox";
 import { Button } from "./ui/Button";
 import { cn } from "../lib/utils";
 import { getMediaForAlbum } from "../lib/data";
-import { useUserInteractionStatus } from "../hooks/useUserInteractionStatus";
 import {
   ComponentErrorBoundary,
   LightboxErrorBoundary,
@@ -36,23 +35,10 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
-  const { preloadStatuses } = useUserInteractionStatus();
-
   useEffect(() => {
     setMedia(initialMedia);
     setPagination(initialPagination);
   }, [initialMedia, initialPagination]);
-
-  // Preload interaction statuses for all media items to avoid individual API calls
-  useEffect(() => {
-    if (media.length > 0) {
-      const targets = media.map((mediaItem) => ({
-        targetType: "media" as const,
-        targetId: mediaItem.id,
-      }));
-      preloadStatuses(targets).catch(console.error);
-    }
-  }, [media, preloadStatuses]);
 
   const handleLoadMore = async () => {
     if (!pagination?.hasNext || loading) return;
@@ -126,20 +112,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
       <div className={cn("space-y-6", className)}>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {media.map((mediaItem, index) => {
-            // SSR-safe column calculation for ResponsivePicture optimization
-            // grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4
-            const getColumns = (): number => {
-              if (typeof window !== "undefined") {
-                const width = window.innerWidth;
-                if (width >= 1024) return 4; // lg:grid-cols-4
-                if (width >= 768) return 3; // md:grid-cols-3
-                if (width >= 640) return 2; // sm:grid-cols-2
-                return 1; // grid-cols-1
-              }
-              // SSR fallback - assume album page medium layout
-              return 3;
-            };
-
             return (
               <ComponentErrorBoundary
                 key={mediaItem.id}

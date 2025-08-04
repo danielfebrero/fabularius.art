@@ -3,19 +3,22 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useUser } from "@/hooks/useUser";
+import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { UserMenu } from "./user/UserMenu";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { isActivePath } from "@/lib/navigation";
 import { Menu, X } from "lucide-react";
 
 export function Header() {
-  const { user, loading } = useUser();
+  const { data: userResponse, isLoading: loading } = useUserProfile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
   const t = useTranslations("common");
   const tNav = useTranslations("navigation");
   const tSite = useTranslations("site");
+
+  // Extract user from the API response structure
+  const user = userResponse?.data?.user;
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
