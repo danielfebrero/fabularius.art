@@ -50,6 +50,6 @@ Currently, we send one request per media, it's not efficient. We should support 
 
 ## Comments
 
-### Liking a comment should update the isLiked state immediately
+### Revalidation seems to not be working when adding a comment
 
-Currently, it's not working at all. We should update the `isLiked` state immediately when the user likes a comment, without waiting for the API response. And even the API call is made before the like is actually updated, so it returns false.
+When a comment is added, the comments list should be revalidated. This is not working as expected. Reloading the page does not show the new comment.
