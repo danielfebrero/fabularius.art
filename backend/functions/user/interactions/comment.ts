@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserAuthUtil } from "@shared/utils/user-auth";
 import { ResponseUtil } from "@shared/utils/response";
 import { RevalidationService } from "@shared/utils/revalidation";
 import {
@@ -22,22 +22,24 @@ export const handler = async (
       return ResponseUtil.noContent(event);
     }
 
-    // Validate user session
-    const authResult = await UserAuthMiddleware.validateSession(event);
-    if (!authResult.isValid || !authResult.user) {
-      return ResponseUtil.unauthorized(event, "Unauthorized");
+    // Extract user authentication using centralized utility
+    const authResult = await UserAuthUtil.requireAuth(event);
+
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
+      return authResult;
     }
 
-    const user = authResult.user;
+    const userId = authResult.userId!;
 
     // Route to appropriate handler based on HTTP method
     switch (event.httpMethod) {
       case "POST":
-        return await createComment(event, user);
+        return await createComment(event, userId);
       case "PUT":
-        return await updateComment(event, user);
+        return await updateComment(event, userId);
       case "DELETE":
-        return await deleteComment(event, user);
+        return await deleteComment(event, userId);
       default:
         return ResponseUtil.error(event, "Method not allowed", 405);
     }
@@ -49,7 +51,7 @@ export const handler = async (
 
 async function createComment(
   event: APIGatewayProxyEvent,
-  user: any
+  userId: string
 ): Promise<APIGatewayProxyResult> {
   // Parse request body
   if (!event.body) {
@@ -78,11 +80,17 @@ async function createComment(
     return ResponseUtil.badRequest(event, "Comment content cannot be empty");
   }
 
-  if (content.length > 1000) {
+  if (content.trim().length > 500) {
     return ResponseUtil.badRequest(
       event,
-      "Comment content cannot exceed 1000 characters"
+      "Comment content must be 500 characters or less"
     );
+  }
+
+  // Get user data for username
+  const user = await DynamoDBService.getUserById(userId);
+  if (!user || !user.isActive) {
+    return ResponseUtil.unauthorized(event, "User not found or inactive");
   }
 
   // Verify target exists
@@ -157,7 +165,7 @@ async function createComment(
 
 async function updateComment(
   event: APIGatewayProxyEvent,
-  user: any
+  userId: string
 ): Promise<APIGatewayProxyResult> {
   // Get comment ID from path parameters
   const commentId = event.pathParameters?.["commentId"];
@@ -196,8 +204,14 @@ async function updateComment(
   }
 
   // Check if user owns the comment
-  if (existingComment.userId !== user.userId) {
+  if (existingComment.userId !== userId) {
     return ResponseUtil.forbidden(event, "You can only edit your own comments");
+  }
+
+  // Get user data for username
+  const user = await DynamoDBService.getUserById(userId);
+  if (!user || !user.isActive) {
+    return ResponseUtil.unauthorized(event, "User not found or inactive");
   }
 
   const now = new Date().toISOString();
@@ -234,7 +248,7 @@ async function updateComment(
 
 async function deleteComment(
   event: APIGatewayProxyEvent,
-  user: any
+  userId: string
 ): Promise<APIGatewayProxyResult> {
   // Get comment ID from path parameters
   const commentId = event.pathParameters?.["commentId"];
@@ -249,7 +263,7 @@ async function deleteComment(
   }
 
   // Check if user owns the comment
-  if (existingComment.userId !== user.userId) {
+  if (existingComment.userId !== userId) {
     return ResponseUtil.forbidden(
       event,
       "You can only delete your own comments"

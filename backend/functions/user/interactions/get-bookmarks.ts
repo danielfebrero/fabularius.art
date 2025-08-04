@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserAuthUtil } from "@shared/utils/user-auth";
 import { ResponseUtil } from "@shared/utils/response";
 import { UserInteraction } from "@shared/types/user";
 import {
@@ -21,13 +21,15 @@ export const handler = async (
       return ResponseUtil.noContent(event);
     }
 
-    // Validate user session
-    const authResult = await UserAuthMiddleware.validateSession(event);
-    if (!authResult.isValid || !authResult.user) {
-      return ResponseUtil.unauthorized(event, "Unauthorized");
+    // Extract user authentication using centralized utility
+    const authResult = await UserAuthUtil.requireAuth(event);
+
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
+      return authResult;
     }
 
-    const user = authResult.user;
+    const userId = authResult.userId!;
 
     // Parse pagination parameters using unified utility
     let paginationParams;
@@ -49,7 +51,7 @@ export const handler = async (
 
     // Get user bookmarks
     const result = await DynamoDBService.getUserInteractions(
-      user.userId,
+      userId,
       "bookmark",
       limit,
       lastEvaluatedKey

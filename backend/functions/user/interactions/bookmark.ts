@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserAuthUtil } from "@shared/utils/user-auth";
 import { ResponseUtil } from "@shared/utils/response";
 import { InteractionRequest, UserInteractionEntity } from "@shared/types/user";
 
@@ -16,13 +16,15 @@ export const handler = async (
       return ResponseUtil.noContent(event);
     }
 
-    // Validate user session
-    const authResult = await UserAuthMiddleware.validateSession(event);
-    if (!authResult.isValid || !authResult.user) {
-      return ResponseUtil.unauthorized(event, "Unauthorized");
+    // Extract user authentication using centralized utility
+    const authResult = await UserAuthUtil.requireAuth(event);
+
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
+      return authResult;
     }
 
-    const user = authResult.user;
+    const userId = authResult.userId!;
 
     // Parse request body
     if (!event.body) {
@@ -70,7 +72,7 @@ export const handler = async (
     if (action === "add") {
       // Check if already bookmarked
       const existingBookmark = await DynamoDBService.getUserInteraction(
-        user.userId,
+        userId,
         "bookmark",
         targetId
       );
@@ -81,12 +83,12 @@ export const handler = async (
 
       // Create bookmark interaction
       const interaction: UserInteractionEntity = {
-        PK: `USER#${user.userId}`,
+        PK: `USER#${userId}`,
         SK: `INTERACTION#bookmark#${targetId}`,
         GSI1PK: `INTERACTION#bookmark#${targetId}`,
-        GSI1SK: user.userId,
+        GSI1SK: userId,
         EntityType: "UserInteraction",
-        userId: user.userId,
+        userId: userId,
         interactionType: "bookmark",
         targetType,
         targetId,
@@ -141,7 +143,7 @@ export const handler = async (
       }
 
       return ResponseUtil.created(event, {
-        userId: user.userId,
+        userId: userId,
         interactionType: "bookmark",
         targetType,
         targetId,
@@ -150,7 +152,7 @@ export const handler = async (
     } else {
       // Remove bookmark
       await DynamoDBService.deleteUserInteraction(
-        user.userId,
+        userId,
         "bookmark",
         targetId
       );
@@ -203,7 +205,7 @@ export const handler = async (
       }
 
       return ResponseUtil.success(event, {
-        userId: user.userId,
+        userId: userId,
         interactionType: "bookmark",
         targetType,
         targetId,

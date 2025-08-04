@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
+import { UserAuthUtil } from "@shared/utils/user-auth";
 import { ResponseUtil } from "@shared/utils/response";
 
 export const handler = async (
@@ -15,13 +15,15 @@ export const handler = async (
       return ResponseUtil.noContent(event);
     }
 
-    // Validate user session
-    const authResult = await UserAuthMiddleware.validateSession(event);
-    if (!authResult.isValid || !authResult.user) {
-      return ResponseUtil.unauthorized(event, "Unauthorized");
+    // Extract user authentication using centralized utility
+    const authResult = await UserAuthUtil.requireAuth(event);
+
+    // Handle error response from authentication
+    if (UserAuthUtil.isErrorResponse(authResult)) {
+      return authResult;
     }
 
-    const user = authResult.user;
+    const userId = authResult.userId!;
 
     // Parse request body for bulk status check
     let targets: Array<{ targetType: "album" | "media"; targetId: string }> =
@@ -85,8 +87,8 @@ export const handler = async (
     try {
       // Get user likes
       const [likesResult, bookmarksResult] = await Promise.all([
-        DynamoDBService.getUserInteractions(user.userId, "like"),
-        DynamoDBService.getUserInteractions(user.userId, "bookmark"),
+        DynamoDBService.getUserInteractions(userId, "like"),
+        DynamoDBService.getUserInteractions(userId, "bookmark"),
       ]);
 
       // Process likes

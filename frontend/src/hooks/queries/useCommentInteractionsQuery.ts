@@ -18,7 +18,7 @@ interface CommentLikeStates {
 // Hook for fetching comment like states
 export function useCommentInteractionsQuery(commentIds: string[]) {
   return useQuery({
-    queryKey: ["comments", "interactions", commentIds],
+    queryKey: ["comments", "interactions", [...commentIds].sort()], // Sort to ensure stable query key
     queryFn: async (): Promise<CommentLikeStates> => {
       if (commentIds.length === 0) return {};
 
@@ -61,7 +61,9 @@ export function useCommentInteractionsQuery(commentIds: string[]) {
         return states;
       }
     },
-    enabled: commentIds.length > 0,
+    enabled:
+      commentIds.length > 0 &&
+      commentIds.every((id) => id && id.trim().length > 0),
     // Keep comment interactions fresh for 30 seconds
     staleTime: 30 * 1000,
     // Don't refetch on window focus for comment interactions
@@ -152,12 +154,8 @@ export function useToggleCommentLike() {
         }
       );
     },
-    onSettled: () => {
-      // Invalidate comment interaction queries to ensure fresh data
-      queryClient.invalidateQueries({
-        queryKey: ["comments", "interactions"],
-      });
-    },
+    // Removed onSettled invalidation to prevent query loops
+    // Optimistic updates should be sufficient
   });
 }
 

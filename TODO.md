@@ -41,3 +41,15 @@ Currently, the video preview is of the size of the video.
 ## Settings
 
 ## User albums
+
+## Optimization
+
+### http://localhost:3001/user/interactions/status should support bulk requests
+
+Currently, we send one request per media, it's not efficient. We should support bulk requests to reduce the number of API calls.
+
+## Comments
+
+### Liking a comment should update the isLiked state immediately
+
+Currently, it's not working at all. We should update the `isLiked` state immediately when the user likes a comment, without waiting for the API response. And even the API call is made before the like is actually updated, so it returns false.

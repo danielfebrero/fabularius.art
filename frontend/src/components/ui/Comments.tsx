@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { MessageCircle, Send, Loader2 } from "lucide-react";
 import { Comment, CreateCommentRequest } from "@/types";
 import { CommentItem } from "@/components/ui/Comment";
@@ -12,7 +12,6 @@ import { useDevice } from "@/contexts/DeviceContext";
 import {
   useCommentInteractionsQuery,
   useToggleCommentLike,
-  useInitializeCommentLikes,
 } from "@/hooks/queries/useCommentInteractionsQuery";
 
 interface CommentsProps {
@@ -47,8 +46,14 @@ export function Comments({
   });
   const { isMobileInterface: isMobile } = useDevice();
 
-  // Get comment IDs for querying like states
-  const commentIds = comments.map((comment) => comment.id);
+  // Memoize comment IDs to prevent unnecessary re-renders and API calls
+  // Only fetch like states for comments that have likes > 0 and when user is logged in
+  const commentIds = useMemo(() => {
+    if (!currentUserId) return [];
+    return comments
+      .filter((comment) => (comment.likeCount || 0) > 0)
+      .map((comment) => comment.id);
+  }, [comments, currentUserId]);
 
   // Comment interaction hooks using TanStack Query
   const {
@@ -58,16 +63,6 @@ export function Comments({
   } = useCommentInteractionsQuery(commentIds);
 
   const toggleCommentLikeMutation = useToggleCommentLike();
-  const initializeCommentLikesMutation = useInitializeCommentLikes();
-
-  // Initialize comment like states when comments change
-  useEffect(() => {
-    if (comments.length > 0 && currentUserId) {
-      const commentIds = comments.map((c) => c.id);
-      // Initialize likes for all comments - TanStack Query will handle deduplication
-      initializeCommentLikesMutation.mutate({ commentIds });
-    }
-  }, [comments, currentUserId, initializeCommentLikesMutation]);
 
   // Load additional comments (beyond initial ones)
   const loadMoreComments = useCallback(async () => {
