@@ -364,9 +364,7 @@ export function ContentCard({
         className={cn(
           "group relative cursor-pointer overflow-hidden shadow-lg transition-all duration-200 isolate",
           !useAllAvailableSpace && "rounded-lg sm:rounded-xl",
-          !disableHoverEffects &&
-            !useAllAvailableSpace &&
-            "hover:shadow-xl hover:scale-[1.02]",
+          !disableHoverEffects && !useAllAvailableSpace && "hover:shadow-xl",
           aspectRatio === "square" && !useAllAvailableSpace
             ? "aspect-square"
             : "",

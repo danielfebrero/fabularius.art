@@ -156,7 +156,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
                   canAddToAlbum={true}
                   canDownload={true}
                   canDelete={false}
-                  context="albums"
                   mediaList={media}
                   currentIndex={index}
                 />
