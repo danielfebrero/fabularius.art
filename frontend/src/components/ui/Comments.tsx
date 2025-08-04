@@ -47,12 +47,10 @@ export function Comments({
   const { isMobileInterface: isMobile } = useDevice();
 
   // Memoize comment IDs to prevent unnecessary re-renders and API calls
-  // Only fetch like states for comments that have likes > 0 and when user is logged in
+  // Fetch like states for all comments when user is logged in
   const commentIds = useMemo(() => {
     if (!currentUserId) return [];
-    return comments
-      .filter((comment) => (comment.likeCount || 0) > 0)
-      .map((comment) => comment.id);
+    return comments.map((comment) => comment.id);
   }, [comments, currentUserId]);
 
   // Comment interaction hooks using TanStack Query
@@ -189,69 +187,61 @@ export function Comments({
 
   // Like comment
   const handleLikeComment = useCallback(
-    async (commentId: string) => {
+    (commentId: string) => {
       if (!currentUserId) {
         setError("You must be logged in to like comments");
         return;
       }
 
-      try {
-        // Find the comment to get current state
-        const comment = comments.find((c) => c.id === commentId);
-        if (!comment) return;
+      // Get current like state
+      const currentIsLiked = commentLikeStates[commentId]?.isLiked || false;
 
-        const currentLikeCount = comment.likeCount || 0;
-        const currentIsLiked = commentLikeStates[commentId]?.isLiked || false;
-        const newIsLiked = !currentIsLiked;
-        const newLikeCount = newIsLiked
-          ? currentLikeCount + 1
-          : Math.max(0, currentLikeCount - 1);
+      // Optimistically update the like count in local state for immediate feedback
+      setComments((prev) =>
+        prev.map((c) => {
+          if (c.id === commentId) {
+            const currentCount = c.likeCount || 0;
+            const newCount = currentIsLiked
+              ? Math.max(0, currentCount - 1)
+              : currentCount + 1;
+            return { ...c, likeCount: newCount };
+          }
+          return c;
+        })
+      );
 
-        // Optimistically update the comment's like count in comments state
-        setComments((prev) =>
-          prev.map((c) =>
-            c.id === commentId ? { ...c, likeCount: newLikeCount } : c
-          )
-        );
-
-        // Use the TanStack Query mutation for like toggle
-        await toggleCommentLikeMutation.mutateAsync({
+      // Use the TanStack Query mutation which handles like state optimistic updates
+      toggleCommentLikeMutation.mutate(
+        {
           commentId,
           isCurrentlyLiked: currentIsLiked,
-        });
-      } catch (err) {
-        console.error("Error liking comment:", err);
+        },
+        {
+          onError: (error) => {
+            console.error("Error liking comment:", error);
 
-        // Revert optimistic update on error - restore original like count
-        const comment = comments.find((c) => c.id === commentId);
-        if (comment) {
-          const currentLikeCount = comment.likeCount || 0;
-          const currentIsLiked = commentLikeStates[commentId]?.isLiked || false;
-          // Calculate what the original count should have been
-          const originalLikeCount = currentIsLiked
-            ? currentLikeCount - 1
-            : currentLikeCount + 1;
+            // Revert the like count on error
+            setComments((prev) =>
+              prev.map((c) => {
+                if (c.id === commentId) {
+                  const currentCount = c.likeCount || 0;
+                  const revertedCount = currentIsLiked
+                    ? currentCount + 1
+                    : Math.max(0, currentCount - 1);
+                  return { ...c, likeCount: revertedCount };
+                }
+                return c;
+              })
+            );
 
-          setComments((prev) =>
-            prev.map((c) =>
-              c.id === commentId
-                ? { ...c, likeCount: Math.max(0, originalLikeCount) }
-                : c
-            )
-          );
+            setError(
+              error instanceof Error ? error.message : "Failed to like comment"
+            );
+          },
         }
-
-        // Display mutation error
-        if (toggleCommentLikeMutation.error) {
-          setError(
-            toggleCommentLikeMutation.error instanceof Error
-              ? toggleCommentLikeMutation.error.message
-              : "Failed to like comment"
-          );
-        }
-      }
+      );
     },
-    [currentUserId, comments, commentLikeStates, toggleCommentLikeMutation]
+    [currentUserId, commentLikeStates, toggleCommentLikeMutation]
   );
 
   // Handle keyboard shortcuts

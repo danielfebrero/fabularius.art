@@ -121,3 +121,20 @@ The frontend uses custom hooks to interact with the user interactions API. These
 - `useBookmarks`: Manages the state for bookmarked items
 
 These hooks are then used in components to display like/bookmark buttons and to show lists of liked or bookmarked items in the user's dashboard and profile pages.
+
+### Comment Interactions
+
+Comment likes use a hybrid approach for optimal user experience:
+
+1. **Instant Visual Feedback**: The heart icon changes color and fill state immediately when clicked using TanStack Query's optimistic updates for the `isLiked` state
+2. **Like Count Updates**: Local component state is updated immediately for the like count, with error rollback on API failure
+3. **Persistence**: The actual API call happens in the background via TanStack Query mutations
+
+**Implementation Details:**
+
+- `useCommentInteractionsQuery`: Fetches and caches comment like states
+- `useToggleCommentLike`: Handles like/unlike actions with optimistic updates for the liked state
+- Component-level optimistic updates for like counts ensure immediate visual feedback
+- Error handling reverts both like state and count on API failures
+
+This approach ensures users see instant feedback when liking comments while maintaining data consistency.
