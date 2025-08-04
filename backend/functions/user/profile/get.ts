@@ -106,29 +106,6 @@ export const handler = async (
 
     console.log("✅ Found user:", userEntity.userId, userEntity.email);
 
-    // Get user profile insights
-    let profileInsights: UserProfileInsights | undefined =
-      userEntity.profileInsights;
-    if (!userEntity.profileInsights) {
-      try {
-        console.log("🔍 Fetching profile insights...");
-        const insightsData = await DynamoDBService.getUserProfileInsights(
-          userEntity.userId
-        );
-
-        profileInsights = {
-          ...insightsData,
-          lastUpdated: new Date().toISOString(), // Update the timestamp
-        };
-
-        console.log("✅ Profile insights fetched and view count incremented");
-      } catch (error) {
-        console.error("❌ Failed to get profile insights:", error);
-        // Continue without insights rather than failing the whole request
-        profileInsights = undefined;
-      }
-    }
-
     // Prepare public profile response (excluding sensitive information)
     const publicProfile: PublicUserProfile = {
       userId: userEntity.userId,
@@ -145,7 +122,9 @@ export const handler = async (
       ...(userEntity.avatarThumbnails && {
         avatarThumbnails: userEntity.avatarThumbnails,
       }),
-      ...(profileInsights && { profileInsights }),
+      ...(userEntity.profileInsights && {
+        profileInsights: userEntity.profileInsights,
+      }),
     };
 
     console.log("✅ Returning public profile for user:", username);
