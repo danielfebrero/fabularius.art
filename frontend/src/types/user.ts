@@ -166,6 +166,7 @@ export interface UserContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
+  initializing: boolean;
   isEmailVerified: boolean;
   emailVerificationRequired: boolean;
   login: (credentials: UserLoginRequest) => Promise<boolean>;

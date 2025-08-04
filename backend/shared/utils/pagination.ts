@@ -122,8 +122,8 @@ export class PaginationUtil {
 
     // Parse and validate limit
     let limit = defaultLimit;
-    if (params.limit) {
-      const parsedLimit = parseInt(params.limit, 10);
+    if (params["limit"]) {
+      const parsedLimit = parseInt(params["limit"], 10);
       if (!isNaN(parsedLimit) && parsedLimit > 0) {
         limit = Math.min(parsedLimit, maxLimit);
       }
@@ -131,9 +131,9 @@ export class PaginationUtil {
 
     // Parse and validate cursor
     let cursor: Record<string, any> | undefined;
-    if (params.cursor) {
+    if (params["cursor"]) {
       try {
-        cursor = this.decodeCursor(params.cursor);
+        cursor = this.decodeCursor(params["cursor"]);
       } catch (error) {
         throw new Error("Invalid cursor parameter");
       }

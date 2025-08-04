@@ -1,20 +1,51 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { userApi } from "@/lib/api";
 import { queryKeys, queryClient, invalidateQueries } from "@/lib/queryClient";
+import { useUserContext } from "@/contexts/UserContext";
 
 // Hook for fetching current user profile
 export function useUserProfile() {
+  const userContext = useUserContext();
+
   return useQuery({
     queryKey: queryKeys.user.profile(),
     queryFn: async () => {
       return await userApi.me();
     },
     // Keep user profile fresh for 5 minutes
-    staleTime: 5 * 60 * 1000,
-    // Enable background refetching on window focus
-    refetchOnWindowFocus: true,
-    // Retry on failure
-    retry: 2,
+    staleTime: () => {
+      // If we have user data, keep fresh for 5 minutes
+      return 5 * 60 * 1000;
+    },
+    // Only refetch on window focus if we don't have authentication errors
+    refetchOnWindowFocus: () => {
+      return true;
+    },
+    // Don't retry authentication errors
+    retry: false,
+    // Prevent automatic queries when UserContext indicates no authentication
+    enabled: (() => {
+      // If UserContext is still initializing, wait for it
+      if (userContext?.initializing) {
+        return false;
+      }
+
+      // If UserContext has definitively determined there's no user and isn't loading,
+      // and we don't already have cached data, don't query
+      if (!userContext?.user && !userContext?.loading) {
+        return false;
+      }
+
+      // Otherwise, allow the query to proceed
+      return true;
+    })(),
+    // If UserContext already has user data, initialize the cache with it
+    initialData: userContext?.user
+      ? {
+          success: true,
+          data: { user: userContext.user },
+        }
+      : undefined,
   });
 }
 
@@ -91,4 +122,25 @@ export function useLogout() {
       queryClient.clear();
     },
   });
+}
+
+// Hook for user login (for cache invalidation after successful login)
+export function useLogin() {
+  return useMutation({
+    mutationFn: async (credentials: { email: string; password: string }) => {
+      return await userApi.login(credentials);
+    },
+    onSuccess: () => {
+      // Invalidate user profile to refetch after successful login
+      invalidateQueries.user();
+    },
+  });
+}
+
+// Hook to manually refresh user profile (useful when navigating to login)
+export function useRefreshUserProfile() {
+  return () => {
+    // Invalidate the user profile query to allow fresh authentication attempt
+    invalidateQueries.user();
+  };
 }

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useLocaleRouter } from "@/lib/navigation";
 import { Button } from "@/components/ui/Button";
 import { userApi } from "@/lib/api";
-import { useUser } from "@/hooks/useUser";
+import { invalidateQueries } from "@/lib/queryClient";
 import useGoogleAuth from "@/hooks/useGoogleAuth";
 
 type CallbackState = "loading" | "success" | "error";
@@ -14,7 +14,6 @@ function OAuthCallbackContent() {
   const [state, setState] = useState<CallbackState>("loading");
   const [message, setMessage] = useState("");
   const [isAnimated, setIsAnimated] = useState(false);
-  const { checkAuth } = useUser();
   const { validateOAuthState, clearOAuthState } = useGoogleAuth();
   const searchParams = useSearchParams();
   const router = useLocaleRouter();
@@ -120,8 +119,8 @@ function OAuthCallbackContent() {
           // Clear OAuth state after successful authentication
           clearOAuthState();
 
-          // Refresh user context
-          await checkAuth();
+          // Invalidate user cache to refresh authentication state
+          invalidateQueries.user();
 
           hasProcessedRef.current = true;
 
@@ -160,7 +159,7 @@ function OAuthCallbackContent() {
     };
 
     handleOAuthCallback();
-  }, [searchParams, validateOAuthState, clearOAuthState, checkAuth, router]);
+  }, [searchParams, validateOAuthState, clearOAuthState, router]);
 
   const renderContent = () => {
     switch (state) {

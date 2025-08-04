@@ -275,8 +275,6 @@ export default function ProfileComponent({
     return lastActiveDate > fiveMinutesAgo;
   }, [currentUser.lastActive]);
 
-  console.log({ isUserOnline, currentUser });
-
   // Loading state
   if (loading) {
     return (

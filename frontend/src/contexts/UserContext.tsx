@@ -205,6 +205,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     user,
     loading: loading || initializing,
     error,
+    initializing,
     isEmailVerified: user?.isEmailVerified || false,
     emailVerificationRequired,
     login,

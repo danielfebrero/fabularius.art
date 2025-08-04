@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { GoogleLoginButton } from "./GoogleLoginButton";
-import { useUser } from "@/hooks/useUser";
+import { useUserProfile, useLogin } from "@/hooks/queries/useUserQuery";
 import { UserLoginFormData } from "@/types/user";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { EmailVerificationForm } from "./EmailVerificationForm";
@@ -28,10 +28,28 @@ const createLoginSchema = (tAuth: any) =>
   });
 
 export function LoginForm() {
-  const { login, loading, error, clearError, emailVerificationRequired } =
-    useUser();
+  // TanStack Query hooks for authentication
+  const { data: user, error: userError } = useUserProfile();
+  const {
+    mutateAsync: login,
+    isPending: loginLoading,
+    error: loginError,
+    reset: clearLoginError,
+  } = useLogin();
+
   const [showPassword, setShowPassword] = useState(false);
+  const [emailVerificationRequired, setEmailVerificationRequired] =
+    useState(false);
   const router = useLocaleRouter();
+
+  // Determine loading state and error message
+  const loading = loginLoading;
+  const error = loginError?.message || null;
+
+  const clearError = () => {
+    clearLoginError();
+    setEmailVerificationRequired(false);
+  };
 
   const t = useTranslations("common");
   const tAuth = useTranslations("auth");
@@ -63,27 +81,41 @@ export function LoginForm() {
   const onSubmit = async (data: UserLoginFormData) => {
     try {
       clearError();
+      setEmailVerificationRequired(false);
 
-      const success = await login({
+      const response = await login({
         email: data.email,
         password: data.password,
       });
 
-      if (success) {
+      if (response.success) {
         // Redirect to returnTo URL if provided, otherwise to home page
         const redirectUrl = returnTo || "/";
         router.push(redirectUrl);
-      } else if (!emailVerificationRequired) {
+      } else if (response.error === "Email verification required") {
+        setEmailVerificationRequired(true);
+      } else {
         setFormError("root", {
           type: "manual",
-          message: error || tAuth("errors.loginFailed"),
+          message: response.error || tAuth("errors.loginFailed"),
         });
       }
     } catch (err) {
-      setFormError("root", {
-        type: "manual",
-        message: err instanceof Error ? err.message : t("error"),
-      });
+      console.error("Login error:", err);
+      const errorMessage = err instanceof Error ? err.message : t("error");
+
+      // Check if error indicates email verification is required
+      if (
+        errorMessage.includes("verification") ||
+        errorMessage.includes("verify")
+      ) {
+        setEmailVerificationRequired(true);
+      } else {
+        setFormError("root", {
+          type: "manual",
+          message: errorMessage,
+        });
+      }
     }
   };
 

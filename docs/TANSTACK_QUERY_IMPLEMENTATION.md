@@ -35,8 +35,11 @@ This guide demonstrates how to migrate from the existing custom hooks to TanStac
 
 ### User Profile
 
-- `useUserProfile` - User data with background refetching
+- `useUserProfile` - User data with optimized authentication caching
 - `useUpdateUserProfile` - Optimistic profile updates
+- `useLogin` - Login with automatic cache invalidation
+- `useLogout` - Logout with cache clearing
+- `useRefreshUserProfile` - Manual cache invalidation for auth attempts
 
 ## Migration Strategies
 
@@ -178,6 +181,14 @@ function AdminAlbumsPage() {
 - **Stale-while-revalidate**: Show cached data while fetching fresh data
 - **Error recovery**: Automatic retries with exponential backoff
 - **Smart refetching**: Refetch on window focus, reconnection
+- **Authentication caching**: Optimized caching for unauthenticated users to prevent excessive API calls
+
+### 🔐 **Authentication Optimization**
+
+- **Smart cache invalidation**: Authentication errors are cached longer (15 minutes) to prevent repeated failed requests
+- **Selective refetching**: Window focus refetching is disabled when user is unauthenticated
+- **Login-aware caching**: Cache is invalidated when users successfully log in
+- **Manual refresh capability**: Developers can trigger authentication retry when needed
 
 ### 🛠 **Developer Experience**
 
