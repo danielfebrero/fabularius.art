@@ -31,30 +31,21 @@ export function DeviceProvider({
 
   // Re-validate device info on client-side after hydration
   useEffect(() => {
-    const validateDeviceInfo = () => {
-      const clientSideInfo = detectDeviceClientSide();
-
-      // If server-side detection differs significantly from client-side,
-      // prefer client-side for better accuracy
-      if (
-        clientSideInfo.isMobile !== deviceInfo.isMobile ||
-        clientSideInfo.isTablet !== deviceInfo.isTablet ||
-        clientSideInfo.isDesktop !== deviceInfo.isDesktop
-      ) {
-        console.log("Device detection mismatch, updating:", {
-          server: deviceInfo,
-          client: clientSideInfo,
-          initialDeviceInfo,
-        });
+    // Only validate if we don't have server-side detection
+    // Server-side detection is generally more reliable than client-side
+    if (!initialDeviceInfo) {
+      const validateDeviceInfo = () => {
+        const clientSideInfo = detectDeviceClientSide();
         setDeviceInfo(clientSideInfo);
-      }
-    };
+      };
 
-    // Validate on mount and after a short delay to ensure proper hydration
-    validateDeviceInfo();
-    const timeoutId = setTimeout(validateDeviceInfo, 100);
+      // Validate on mount and after a short delay to ensure proper hydration
+      validateDeviceInfo();
+      const timeoutId = setTimeout(validateDeviceInfo, 100);
 
-    return () => clearTimeout(timeoutId);
+      return () => clearTimeout(timeoutId);
+    }
+    // If we have server-side detection, trust it and don't override
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialDeviceInfo]); // Only run once on mount
 
