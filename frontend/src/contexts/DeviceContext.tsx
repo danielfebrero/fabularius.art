@@ -19,13 +19,19 @@ export function DeviceProvider({
   children,
   initialDeviceInfo,
 }: DeviceProviderProps) {
+  console.log("DeviceProvider initialized with:", initialDeviceInfo);
+
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo>(() => {
     // Always prefer server-side detection when available
     if (initialDeviceInfo) {
+      console.log("Using server-side device detection:", initialDeviceInfo);
       return initialDeviceInfo;
     }
     // Only use client-side as absolute fallback
-    return detectDeviceClientSide();
+    console.log("Falling back to client-side device detection");
+    const clientSideInfo = detectDeviceClientSide();
+    console.log("Client-side detection result:", clientSideInfo);
+    return clientSideInfo;
   });
 
   useEffect(() => {
@@ -34,6 +40,7 @@ export function DeviceProvider({
     if (!initialDeviceInfo) {
       const updateDeviceInfo = () => {
         const newDeviceInfo = detectDeviceClientSide();
+        console.log("Device info updated (resize):", newDeviceInfo);
         setDeviceInfo(newDeviceInfo);
       };
 
@@ -48,6 +55,8 @@ export function DeviceProvider({
     ...deviceInfo,
     isMobileInterface: deviceInfo.isMobile || deviceInfo.isTablet,
   };
+
+  console.log("DeviceContext value:", contextValue);
 
   return (
     <DeviceContext.Provider value={contextValue}>

@@ -1,4 +1,4 @@
-import MobileDetect from 'mobile-detect';
+import MobileDetect from "mobile-detect";
 
 export interface DeviceInfo {
   isMobile: boolean;
@@ -22,14 +22,20 @@ export function detectDevice(userAgent: string | null): DeviceInfo {
   }
 
   const md = new MobileDetect(userAgent);
-  const isMobile = !!md.mobile();
-  const isTablet = !!md.tablet();
-  
-  return {
-    isMobile: isMobile && !isTablet, // Mobile excludes tablets
+  const rawMobile = !!md.mobile();
+  const rawTablet = !!md.tablet();
+
+  const isMobile = rawMobile && !rawTablet; // Mobile excludes tablets
+  const isTablet = rawTablet;
+  const isDesktop = !rawMobile && !rawTablet; // Desktop is anything that's not mobile and not tablet
+
+  const result = {
+    isMobile,
     isTablet,
-    isDesktop: !isMobile && !isTablet,
+    isDesktop,
   };
+
+  return result;
 }
 
 /**
@@ -49,7 +55,7 @@ export function isMobileInterface(userAgent: string | null): boolean {
  * @returns DeviceInfo object based on screen size and touch capability
  */
 export function detectDeviceClientSide(): DeviceInfo {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     // Server-side fallback
     return {
       isMobile: false,
@@ -58,18 +64,18 @@ export function detectDeviceClientSide(): DeviceInfo {
     };
   }
 
-  const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  const isTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
   const screenWidth = window.innerWidth;
-  
+
   // Use screen size breakpoints to determine device type
   // Mobile: <= 640px
   // Tablet: 641px - 1024px (with touch)
   // Desktop: > 1024px or no touch
-  
+
   const isMobile = isTouch && screenWidth <= 640;
   const isTablet = isTouch && screenWidth > 640 && screenWidth <= 1024;
   const isDesktop = !isTouch || screenWidth > 1024;
-  
+
   return {
     isMobile,
     isTablet,
