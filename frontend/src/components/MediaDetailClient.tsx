@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, FC, ReactNode } from "react";
 import { useLocaleRouter } from "@/lib/navigation";
+import { useBulkViewCounts } from "@/hooks/queries/useViewCountsQuery";
 import {
   Share2,
   ArrowLeft,
@@ -176,6 +177,22 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
 
   // Extract user from the API response structure
   const user = userResponse?.data?.user;
+
+  // Bulk prefetch view counts for the media
+  const viewCountTargets = useMemo(() => {
+    const targets: Array<{ targetType: "album" | "media"; targetId: string }> =
+      [{ targetType: "media", targetId: media.id }];
+
+    // Add album target if media has albumId
+    if (media.albumId) {
+      targets.push({ targetType: "album", targetId: media.albumId });
+    }
+
+    return targets;
+  }, [media.id, media.albumId]);
+
+  // Prefetch view counts in the background
+  useBulkViewCounts(viewCountTargets, { enabled: viewCountTargets.length > 0 });
 
   // Prefetch interaction status for media and related albums
   useEffect(() => {

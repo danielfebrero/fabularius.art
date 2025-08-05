@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 import { Share2, ArrowLeft, MessageCircle, User, Calendar } from "lucide-react";
 import { Album, Media } from "@/types";
 import { Tag } from "@/components/ui/Tag";
@@ -10,6 +11,7 @@ import { ViewTracker } from "@/components/ui/ViewTracker";
 import { MediaGallery } from "@/components/MediaGallery";
 import { Comments } from "@/components/ui/Comments";
 import { useUserProfile } from "@/hooks/queries/useUserQuery";
+import { useBulkViewCounts } from "@/hooks/queries/useViewCountsQuery";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { formatDistanceToNow } from "@/lib/dateUtils";
 import {
@@ -37,6 +39,22 @@ export function AlbumDetailClient({
 
   // Extract user from the API response structure
   const user = userResponse?.data?.user;
+
+  // Bulk prefetch view counts for the album and all media
+  const viewCountTargets = useMemo(() => {
+    const targets: Array<{ targetType: "album" | "media"; targetId: string }> =
+      [{ targetType: "album", targetId: album.id }];
+
+    // Add media targets
+    initialMedia.forEach((media) => {
+      targets.push({ targetType: "media", targetId: media.id });
+    });
+
+    return targets;
+  }, [album.id, initialMedia]);
+
+  // Prefetch view counts in the background
+  useBulkViewCounts(viewCountTargets, { enabled: viewCountTargets.length > 0 });
 
   return (
     <div className="min-h-screen bg-background text-foreground">

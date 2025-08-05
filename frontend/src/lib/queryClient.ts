@@ -91,6 +91,17 @@ export const queryKeys = {
       ["media", "recommendations", mediaId] as const,
   },
 
+  // Content-related queries (public, no auth required)
+  content: {
+    all: () => ["content"] as const,
+    viewCounts: (
+      targets: Array<{
+        targetType: "album" | "media";
+        targetId: string;
+      }>
+    ) => ["content", "viewCounts", targets] as const,
+  },
+
   // Admin-related queries
   admin: {
     all: () => ["admin"] as const,
@@ -141,6 +152,12 @@ export const invalidateQueries = {
   media: (mediaId: string) =>
     queryClient.invalidateQueries({
       queryKey: queryKeys.media.detail(mediaId),
+    }),
+
+  // Invalidate view counts for content
+  viewCounts: () =>
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.content.all(),
     }),
 
   // Invalidate comments for a target

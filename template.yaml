@@ -1726,6 +1726,36 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
 
+  # View Count Functions
+  ContentGetViewCountFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-content-get-view-count"
+      CodeUri: backend/dist/functions/content/
+      Handler: get-view-count.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        GetViewCount:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /content/view-count
+            Method: POST
+            Auth:
+              Authorizer: NONE # Public endpoint for SSG pages
+        OptionsViewCount:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /content/view-count
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+
   # Comment Functions
   UserCommentFunction:
     Type: AWS::Serverless::Function

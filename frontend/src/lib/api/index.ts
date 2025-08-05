@@ -4,6 +4,7 @@ export { interactionApi } from "./interactions";
 export { albumsApi } from "./albums";
 export { adminAlbumsApi } from "./admin-albums";
 export { mediaApi } from "./media";
+export { contentApi } from "./content";
 
 // Export API_URL for backward compatibility
 const API_URL = process.env.NEXT_PUBLIC_API_URL;

@@ -8,6 +8,7 @@ import { AddToAlbumDialog } from "@/components/user/AddToAlbumDialog";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { Tag } from "@/components/ui/Tag";
+import { ViewCount } from "@/components/ui/ViewCount";
 import { cn, isVideo } from "@/lib/utils";
 import { composeMediaUrl } from "@/lib/urlUtils";
 import { useDevice } from "@/contexts/DeviceContext";
@@ -599,7 +600,11 @@ export function ContentCard({
                           clipRule="evenodd"
                         />
                       </svg>
-                      <span>{media.viewCount ?? 0}</span>
+                      <ViewCount
+                        targetType="media"
+                        targetId={media.id}
+                        fallbackCount={media.viewCount ?? 0}
+                      />
                     </div>
                   </div>
                 )}
@@ -749,7 +754,11 @@ export function ContentCard({
                           clipRule="evenodd"
                         />
                       </svg>
-                      <span>{album.viewCount}</span>
+                      <ViewCount
+                        targetType="album"
+                        targetId={album.id}
+                        fallbackCount={album.viewCount || 0}
+                      />
                     </div>
                   </div>
                 )}

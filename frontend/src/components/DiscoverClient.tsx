@@ -2,6 +2,7 @@
 
 import { AlbumGrid } from "./AlbumGrid";
 import { useAlbums } from "@/hooks/queries/useAlbumsQuery";
+import { useBulkViewCounts } from "@/hooks/queries/useViewCountsQuery";
 import { Album } from "@/types";
 import { useSearchParams } from "next/navigation";
 import { useLocaleRouter } from "@/lib/navigation";
@@ -66,6 +67,17 @@ export function DiscoverClient({
   const albums = useMemo(() => {
     return data?.pages.flatMap((page) => page.data?.albums || []) || [];
   }, [data]);
+
+  // Bulk prefetch view counts for all albums (for SSG pages)
+  const viewCountTargets = useMemo(() => {
+    return albums.map((album) => ({
+      targetType: "album" as const,
+      targetId: album.id,
+    }));
+  }, [albums]);
+
+  // Prefetch view counts in the background
+  useBulkViewCounts(viewCountTargets, { enabled: viewCountTargets.length > 0 });
 
   // Create pagination object compatible with existing AlbumGrid component
   const pagination = useMemo(
@@ -154,7 +166,6 @@ export function DiscoverClient({
         <SectionErrorBoundary context="Album Grid">
           <AlbumGrid
             albums={albums}
-            context="discover"
             loadMore={loadMore}
             loading={isActuallyLoading || isFetchingNextPage}
             hasMore={pagination?.hasNext || false}
