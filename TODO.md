@@ -4,10 +4,6 @@
 
 ## Homepage Discover
 
-### Album view count do not get updated
-
-API response is correct, but the view count is not updated in the UI.
-
 ## Content Cards
 
 ### Liking a content should update optimistically the view count

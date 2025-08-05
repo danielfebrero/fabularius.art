@@ -226,6 +226,73 @@ useLayoutEffect(() => {
 - **Hybrid approach**: Components with initial data + infinite scroll (e.g., `MediaGallery`)
 - **Simple approach**: Components receiving all data as props (e.g., `AlbumGrid`)
 
+## SSG and Hydration Patterns
+
+### Hydration-Safe Components
+
+For SSG pages, components must handle the server-client state mismatch to prevent hydration errors. The application uses several patterns to handle this:
+
+#### Hydration State Pattern
+
+For components that need to update their display based on client-side data:
+
+```tsx
+const [isHydrated, setIsHydrated] = useState(false);
+
+useEffect(() => {
+  setIsHydrated(true);
+}, []);
+
+// Use server-safe initial state until hydrated
+const displayValue =
+  isHydrated && clientValue !== undefined ? clientValue : serverSafeValue;
+```
+
+**Examples:**
+
+- `ViewCount` component: Shows fallback count on server, updates to cached count after hydration
+- Device detection: Uses server-detected device info until client-side validation completes
+
+#### Client-Only Rendering Pattern
+
+For components that should only render on the client:
+
+```tsx
+const [isMounted, setIsMounted] = useState(false);
+
+useEffect(() => {
+  setIsMounted(true);
+}, []);
+
+if (!isMounted) {
+  return <div>Loading...</div>; // or null for no server rendering
+}
+
+return <ClientOnlyComponent />;
+```
+
+#### Initialization Guard Pattern
+
+For components that need to run effects only once on mount:
+
+```tsx
+const [hasInitialized, setHasInitialized] = useState(false);
+
+useEffect(() => {
+  if (!hasInitialized) {
+    setHasInitialized(true);
+    // Run initialization logic
+  }
+}, []); // Empty dependency array
+```
+
+**Key Guidelines:**
+
+- Always provide server-safe fallback values
+- Use `useEffect` with empty dependency arrays for one-time initialization
+- Avoid updating state in `useEffect` that depends on props/state during initial render
+- Consider using `isHydrated` flag for components that need different server/client rendering
+
 ### `useAlbums` Hook
 
 - **File**: [`frontend/src/hooks/useAlbums.ts`](../frontend/src/hooks/useAlbums.ts)
