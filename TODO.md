@@ -48,6 +48,10 @@ Currently, the video preview is of the size of the video.
 
 ## Optimization
 
+### Share types between frontend and backend
+
+We should ensure that the types used in the frontend and backend for shared data structures are consistent. This will help avoid type mismatches and improve code maintainability.
+
 ## Comments
 
 ## Infrastructure

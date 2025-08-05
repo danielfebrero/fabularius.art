@@ -9,6 +9,7 @@ import {
 } from "@/lib/queryClient";
 import { InteractionRequest } from "@/types/user";
 import { usePrefetchContext } from "@/contexts/PrefetchContext";
+import { useUserContext } from "@/contexts/UserContext";
 
 // Types
 interface InteractionTarget {
@@ -28,12 +29,16 @@ export function useInteractionStatus(
   options: { enabled?: boolean } = {}
 ) {
   const { enabled = true } = options;
+  const userContext = useUserContext();
   const targetsKey =
     targets.length === 1
       ? getTargetKey(targets[0])
       : targets.map(getTargetKey).sort().join(",");
   const { isPrefetching, waitForPrefetch } = usePrefetchContext();
   const isCurrentlyPrefetching = isPrefetching(targetsKey);
+
+  // Only fetch interactions if user is logged in
+  const isUserLoggedIn = !!userContext.user && !userContext.initializing;
 
   return useQuery<InteractionStatusResponse>({
     queryKey: queryKeys.user.interactions.status(targets),
@@ -58,7 +63,7 @@ export function useInteractionStatus(
 
       return await interactionApi.getInteractionStatus(targets);
     },
-    enabled: enabled && targets.length > 0,
+    enabled: enabled && targets.length > 0 && isUserLoggedIn,
     // Keep interaction status fresh for 30 seconds
     staleTime: 30 * 1000,
     // Don't refetch on window focus (not critical for UX)
@@ -176,18 +181,6 @@ export function useTargetComments(
     enabled: !!targetType && !!targetId,
     // Keep comments fresh for 1 minute
     staleTime: 60 * 1000,
-  });
-}
-
-// Hook for fetching user insights (total likes/bookmarks received)
-export function useUserInsights() {
-  return useQuery({
-    queryKey: queryKeys.user.interactions.insights(),
-    queryFn: async () => await interactionApi.getInsights(),
-    // Keep insights fresh for 5 minutes
-    staleTime: 5 * 60 * 1000,
-    // Enable background refetching
-    refetchOnWindowFocus: true,
   });
 }
 
@@ -385,10 +378,12 @@ function getTargetKey(target: InteractionTarget): string {
 // Utility hook for preloading interaction statuses
 export function usePrefetchInteractionStatus() {
   const { isPrefetching, startPrefetch, endPrefetch } = usePrefetchContext();
+  const userContext = useUserContext();
+  const isUserLoggedIn = !!userContext.user && !userContext.initializing;
 
   return {
     prefetch: async (targets: InteractionTarget[]) => {
-      if (targets.length === 0) return;
+      if (targets.length === 0 || !isUserLoggedIn) return;
 
       // Create individual keys for each target so individual queries can detect them
       const individualKeys = targets.map(getTargetKey);

@@ -203,20 +203,6 @@ export const interactionApi = {
     return response.json();
   },
 
-  // Get user's interaction stats (likes and bookmarks received on user's content)
-  getInsights: async (): Promise<UserInteractionStatsResponse> => {
-    const response = await fetch(`${API_URL}/user/insights`, {
-      method: "GET",
-      credentials: "include",
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to get insights: ${response.statusText}`);
-    }
-
-    return response.json();
-  },
-
   // Comment operations
   getComments: async (
     targetType: "album" | "media",
