@@ -1,5 +1,23 @@
 # TODO
 
+## Login
+
+### When being on a user page and logged in and hard refreshing, the user is redirected to the login page
+
+It seems the redirection happens before the session verification, this should be fixed to ensure that the user remains on the user page after a hard refresh.
+
+## Homepage Discover
+
+### Album view count do not get updated
+
+API response is correct, but the view count is not updated in the UI.
+
+## Content Cards
+
+### Liking a content should update optimistically the view count
+
+When a user likes a content, the UI should update immediately to reflect the new like count without waiting for the server response. This will improve user experience by making the application feel more responsive.
+
 ## Error handling
 
 ### Write tests
@@ -45,6 +63,10 @@ Currently, the video preview is of the size of the video.
 ## Settings
 
 ## User albums
+
+## User medias
+
+On the user media page, we should be able to delete media.
 
 ## Optimization
 
