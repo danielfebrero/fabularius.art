@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect, useMemo } from "react";
 import { Media } from "../types/index";
 import { ContentCard } from "./ui/ContentCard";
 import { Lightbox } from "./ui/Lightbox";
 import { Button } from "./ui/Button";
 import { cn } from "../lib/utils";
 import { getMediaForAlbum } from "../lib/data";
+import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 import {
   ComponentErrorBoundary,
   LightboxErrorBoundary,
@@ -35,10 +36,56 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
+  // Hook for manual prefetching (for infinite scroll items)
+  const { prefetch } = usePrefetchInteractionStatus();
+
+  // Memoize initial media targets for SSG prefetching
+  const initialTargets = useMemo(
+    () =>
+      initialMedia.map((mediaItem) => ({
+        targetType: "media" as const,
+        targetId: mediaItem.id,
+      })),
+    [initialMedia]
+  );
+
+  // Auto-prefetch initial media for first load
+  useLayoutEffect(() => {
+    if (initialTargets.length > 0) {
+      prefetch(initialTargets).catch((error) => {
+        console.error(
+          "Failed to prefetch initial media interaction status:",
+          error
+        );
+      });
+    }
+  }, [initialTargets, prefetch]);
+
   useEffect(() => {
     setMedia(initialMedia);
     setPagination(initialPagination);
   }, [initialMedia, initialPagination]);
+
+  // Prefetch interaction status for newly loaded media (infinite scroll)
+  // using useLayoutEffect to ensure prefetch happens BEFORE child components render
+  useLayoutEffect(() => {
+    const newlyLoadedMedia = media.slice(initialMedia.length);
+
+    if (newlyLoadedMedia.length > 0) {
+      const targets = newlyLoadedMedia.map((mediaItem) => ({
+        targetType: "media" as const,
+        targetId: mediaItem.id,
+      }));
+
+      // Prefetch new media interaction status
+      prefetch(targets).catch((error) => {
+        console.error(
+          "Failed to prefetch new media interaction status:",
+          error
+        );
+      });
+    }
+  }, [media, initialMedia.length, prefetch]);
 
   const handleLoadMore = async () => {
     if (!pagination?.hasNext || loading) return;

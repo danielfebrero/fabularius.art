@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, FC, ReactNode } from "react";
+import { useState, useMemo, useEffect, FC, ReactNode } from "react";
 import { useLocaleRouter } from "@/lib/navigation";
 import {
   Share2,
@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { Media } from "@/types";
 import { useUserProfile } from "@/hooks/queries/useUserQuery";
+import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 import { useNavigationLoading } from "@/contexts/NavigationLoadingContext";
 import { ShareDropdown } from "@/components/ui/ShareDropdown";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -170,8 +171,38 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
   const metadata = useMediaMetadata(media);
   const { data: userResponse } = useUserProfile();
 
+  // Hook for bulk prefetching interaction status
+  const { prefetch } = usePrefetchInteractionStatus();
+
   // Extract user from the API response structure
   const user = userResponse?.data?.user;
+
+  // Prefetch interaction status for media and related albums
+  useEffect(() => {
+    const targets: Array<{ targetType: "album" | "media"; targetId: string }> =
+      [
+        {
+          targetType: "media" as const,
+          targetId: media.id,
+        },
+      ];
+
+    // Add albums to prefetch targets if they exist
+    if (media.albums && media.albums.length > 0) {
+      const albumTargets = media.albums.map((album) => ({
+        targetType: "album" as const,
+        targetId: album.id,
+      }));
+      targets.push(...albumTargets);
+    }
+
+    prefetch(targets).catch((error) => {
+      console.error(
+        "Failed to prefetch media detail interaction status:",
+        error
+      );
+    });
+  }, [media, prefetch]);
 
   // Determine if media is video
   const isVideoMedia = isVideo(media);

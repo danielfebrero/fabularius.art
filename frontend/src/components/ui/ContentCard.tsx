@@ -539,30 +539,18 @@ export function ContentCard({
                 {/* Like, Bookmark, View count */}
                 {showCounts && (
                   <div className="flex items-center gap-3">
-                    {canLike && (
-                      <div
-                        onClick={(e) => e.stopPropagation()}
-                        className={cn(
-                          "transition-opacity duration-200",
-                          isHovered ? "opacity-100" : "opacity-0"
-                        )}
-                      >
-                        <LikeButton
-                          targetType="media"
-                          targetId={media.id}
-                          size="sm"
-                          className="text-white hover:text-red-400 transition-colors duration-200"
-                          useCache={true}
-                          showCount={true}
-                        />
-                      </div>
-                    )}
                     {canBookmark && (
                       <div
                         onClick={(e) => e.stopPropagation()}
                         className={cn(
                           "transition-opacity duration-200",
-                          isHovered ? "opacity-100" : "opacity-0"
+                          isMobileInterface
+                            ? showMobileActions
+                              ? "opacity-100"
+                              : "opacity-0"
+                            : isHovered
+                            ? "opacity-100"
+                            : "opacity-0"
                         )}
                       >
                         <BookmarkButton
@@ -571,8 +559,30 @@ export function ContentCard({
                           albumId={media.albumId}
                           size="sm"
                           className="text-white hover:text-blue-400 transition-colors duration-200"
-                          useCache={true}
                           showCount={false}
+                        />
+                      </div>
+                    )}
+                    {canLike && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className={cn(
+                          "transition-opacity duration-200",
+                          isMobileInterface
+                            ? showMobileActions
+                              ? "opacity-100"
+                              : "opacity-0"
+                            : isHovered
+                            ? "opacity-100"
+                            : "opacity-0"
+                        )}
+                      >
+                        <LikeButton
+                          targetType="media"
+                          targetId={media.id}
+                          size="sm"
+                          className="text-white hover:text-red-400 transition-colors duration-200"
+                          showCount={true}
                         />
                       </div>
                     )}
@@ -676,30 +686,6 @@ export function ContentCard({
                 </p>
                 {showCounts && (
                   <div className="flex items-center gap-3">
-                    {canLike && (
-                      <div
-                        onClick={(e) => e.stopPropagation()}
-                        className={cn(
-                          "transition-opacity duration-200",
-                          isMobileInterface
-                            ? showMobileActions
-                              ? "opacity-100"
-                              : "opacity-0"
-                            : isHovered
-                            ? "opacity-100"
-                            : "opacity-0"
-                        )}
-                      >
-                        <LikeButton
-                          targetType="album"
-                          targetId={album.id}
-                          size="sm"
-                          className="text-white hover:text-red-400 transition-colors duration-200"
-                          useCache={true}
-                          showCount={true}
-                        />
-                      </div>
-                    )}
                     {canBookmark && (
                       <div
                         onClick={(e) => e.stopPropagation()}
@@ -719,8 +705,30 @@ export function ContentCard({
                           targetId={album.id}
                           size="sm"
                           className="text-white hover:text-blue-400 transition-colors duration-200"
-                          useCache={true}
                           showCount={false}
+                        />
+                      </div>
+                    )}
+                    {canLike && (
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className={cn(
+                          "transition-opacity duration-200",
+                          isMobileInterface
+                            ? showMobileActions
+                              ? "opacity-100"
+                              : "opacity-0"
+                            : isHovered
+                            ? "opacity-100"
+                            : "opacity-0"
+                        )}
+                      >
+                        <LikeButton
+                          targetType="album"
+                          targetId={album.id}
+                          size="sm"
+                          className="text-white hover:text-red-400 transition-colors duration-200"
+                          showCount={true}
                         />
                       </div>
                     )}

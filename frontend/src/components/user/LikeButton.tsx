@@ -1,12 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import {
+  useInteractionStatusFromCache,
   useToggleLike,
-  useInteractionStatus,
 } from "@/hooks/queries/useInteractionsQuery";
 import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { InteractionButtonSkeleton } from "@/components/ui/Skeleton";
@@ -17,43 +16,39 @@ interface LikeButtonProps {
   targetType: "album" | "media";
   targetId: string;
   albumId?: string; // Required for media interactions
-  initialLiked?: boolean;
   showCount?: boolean;
   size?: "sm" | "md" | "lg";
   variant?: "default" | "ghost" | "outline";
   className?: string;
-  useCache?: boolean; // If true, only use cache (don't make individual API calls)
 }
 
 export const LikeButton: React.FC<LikeButtonProps> = ({
   targetType,
   targetId,
   albumId,
-  initialLiked = false,
   showCount = false,
   size = "md",
   variant = "ghost",
   className,
-  useCache = false,
 }) => {
   const { data: userProfile } = useUserProfile();
   const user = userProfile?.data?.user || null;
-  const [likeCount] = useState<number | null>(null);
   const { redirectToLogin } = useAuthRedirect();
 
   const t = useTranslations("common");
   const tUser = useTranslations("user.likes");
 
-  // Use TanStack Query hooks for interaction status and toggle
-  // Only fetch status if user is logged in to avoid unnecessary requests
-  const targets = user ? [{ targetType, targetId }] : [];
-  const { data: statusData, isLoading } = useInteractionStatus(targets);
+  // Use TanStack Query hooks for interaction status and toggle (cache-only)
+  const targets = [{ targetType, targetId }];
+  const { data: interactionData, isLoading } =
+    useInteractionStatusFromCache(targets);
   const { mutateAsync: toggleLikeMutation, isPending: isToggling } =
     useToggleLike();
 
-  // Get current like status from TanStack Query data
-  const interactionStatus = statusData?.data?.statuses?.[0];
-  const isLiked = user ? interactionStatus?.userLiked ?? false : initialLiked;
+  // Extract status from query data
+  const currentStatus = interactionData?.data?.statuses?.[0];
+  const isLiked = currentStatus?.userLiked ?? false;
+  const likeCount = currentStatus?.likeCount ?? 0;
 
   // Size configurations
   const sizeConfig = {
@@ -84,7 +79,7 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
     }
 
     try {
-      // Use TanStack Query mutation with optimistic updates
+      // Use TanStack Query mutation with optimistic updates built-in
       await toggleLikeMutation({
         targetType,
         targetId,
@@ -95,9 +90,6 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
       console.error("Failed to toggle like:", err);
     }
   };
-
-  // Load initial counts and status - handled by TanStack Query
-  // The useInteractionStatus hook automatically fetches status when needed
 
   return (
     <div className="flex items-center gap-1">
@@ -134,7 +126,7 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
         </Button>
       )}
 
-      {showCount && likeCount !== null && (
+      {showCount && likeCount > 0 && (
         <span className={cn("font-medium text-gray-600", config.text)}>
           {likeCount.toLocaleString()}
         </span>

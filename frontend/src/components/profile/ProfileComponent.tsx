@@ -137,7 +137,12 @@ export default function ProfileComponent({
       // Preload the current logged-in user's statuses for these items
       // This will show the actual like/bookmark status of the current viewer,
       // not the profile owner's status
-      prefetch(targets);
+      prefetch(targets).catch((error) => {
+        console.error(
+          "Failed to prefetch profile recent likes interaction status:",
+          error
+        );
+      });
     }
   }, [recentLikes, loggedInUser, prefetch]);
 

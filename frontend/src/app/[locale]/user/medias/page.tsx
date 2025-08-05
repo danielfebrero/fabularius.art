@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { ImageIcon, Grid, List, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ContentCard } from "@/components/ui/ContentCard";
@@ -8,6 +8,7 @@ import { Lightbox } from "@/components/ui/Lightbox";
 import { cn } from "@/lib/utils";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { useUserMedia } from "@/hooks/queries/useMediaQuery";
+import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 import { Media } from "@/types";
 
 const UserMediasPage: React.FC = () => {
@@ -19,13 +20,38 @@ const UserMediasPage: React.FC = () => {
   // Use TanStack Query hook for user media
   const { data: mediaData, isLoading } = useUserMedia();
 
+  // Hook for bulk prefetching interaction status
+  const { prefetch } = usePrefetchInteractionStatus();
+
   // Extract media from infinite query data
-  const allMedias =
-    mediaData?.pages.flatMap((page: any) => page.data?.media || []) || [];
+  const allMedias = useMemo(() => {
+    return (
+      mediaData?.pages.flatMap((page: any) => page.data?.media || []) || []
+    );
+  }, [mediaData]);
 
   // Filter out invalid media before counting
-  const medias = allMedias.filter((media: any) => media && media.id);
+  const medias = useMemo(() => {
+    return allMedias.filter((media: any) => media && media.id);
+  }, [allMedias]);
+
   const totalCount = medias.length;
+
+  // Prefetch interaction status for all user media
+  useEffect(() => {
+    if (medias.length > 0) {
+      const targets = medias.map((media) => ({
+        targetType: "media" as const,
+        targetId: media.id,
+      }));
+      prefetch(targets).catch((error) => {
+        console.error(
+          "Failed to prefetch user media interaction status:",
+          error
+        );
+      });
+    }
+  }, [medias, prefetch]);
 
   // Lightbox handlers
   const handleLightboxClose = () => {

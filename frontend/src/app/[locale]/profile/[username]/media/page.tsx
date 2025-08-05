@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { ImageIcon, Grid, List, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -11,6 +11,7 @@ import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
 import { usePublicProfile } from "@/hooks/queries/useUserQuery";
 import { useProfileDataQuery } from "@/hooks/queries/useProfileDataQuery";
+import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 import { Media } from "@/types";
 import { useDevice } from "@/contexts/DeviceContext";
 
@@ -37,11 +38,25 @@ export default function UserMediaPage() {
     limit: 50,
   });
 
+  // Hook for bulk prefetching interaction status
+  const { prefetch } = usePrefetchInteractionStatus();
+
   const user = profileData?.data?.user;
 
   // For now, we'll use an empty array since there's no specific media endpoint for public profiles
   // In a real implementation, this would be replaced with a proper media API call
-  const media: Media[] = [];
+  const media: Media[] = useMemo(() => [], []);
+
+  // Prefetch interaction status for all profile media (when media is available)
+  useEffect(() => {
+    if (media.length > 0) {
+      const targets = media.map((mediaItem) => ({
+        targetType: "media" as const,
+        targetId: mediaItem.id,
+      }));
+      prefetch(targets);
+    }
+  }, [media, prefetch]);
 
   const loading = profileLoading || mediaLoading;
   const error = profileError || mediaError;

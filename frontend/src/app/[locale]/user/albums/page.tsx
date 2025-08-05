@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { FolderOpen, Grid, List, Plus, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import LocaleLink from "@/components/ui/LocaleLink";
@@ -12,6 +12,7 @@ import {
   useDeleteAlbum,
 } from "@/hooks/queries/useAlbumsQuery";
 import { useUserProfile } from "@/hooks/queries/useUserQuery";
+import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 import { EditAlbumDialog } from "@/components/albums/EditAlbumDialog";
 import { DeleteAlbumDialog } from "@/components/albums/DeleteAlbumDialog";
 import { Album } from "@/types";
@@ -37,15 +38,37 @@ const UserAlbumsPage: React.FC = () => {
   const updateAlbumMutation = useUpdateAlbum();
   const deleteAlbumMutation = useDeleteAlbum();
 
+  // Hook for bulk prefetching interaction status
+  const { prefetch } = usePrefetchInteractionStatus();
+
   // Extract albums and pagination from infinite query data
   // Extract albums from infinite query data
-  const allAlbums =
-    albumsData?.pages.flatMap((page: any) => page.data?.albums || []) || [];
+  const allAlbums = useMemo(() => {
+    return (
+      albumsData?.pages.flatMap((page: any) => page.data?.albums || []) || []
+    );
+  }, [albumsData]);
 
   // Filter out invalid albums before counting
-  const albums = allAlbums.filter((album: any) => album && album.id);
+  const albums = useMemo(() => {
+    return allAlbums.filter((album: any) => album && album.id);
+  }, [allAlbums]);
+
   const totalCount = albums.length;
   const error = queryError?.message;
+
+  // Prefetch interaction status for all user albums
+  useEffect(() => {
+    if (albums.length > 0) {
+      const targets = albums.map((album) => ({
+        targetType: "album" as const,
+        targetId: album.id,
+      }));
+      prefetch(targets).catch((error) => {
+        console.error("Failed to prefetch album interaction status:", error);
+      });
+    }
+  }, [albums, prefetch]);
 
   // Handle album edit
   const handleEditAlbum = (album: Album) => {

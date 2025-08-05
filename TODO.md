@@ -30,6 +30,10 @@ Currently, the backward and share buttons are on the edge sides instead of being
 
 ## User profile
 
+### On media page, the cardcontent view counter is not working
+
+The view counter always shows 0 while it works on other pages.
+
 ## Videos
 
 ### In lightbox, the video preview should be fullscreen like image
@@ -44,8 +48,8 @@ Currently, the video preview is of the size of the video.
 
 ## Optimization
 
-### http://localhost:3001/user/interactions/status should support bulk requests
+### Comments like should use useInteractionsQuery like albums and medias
 
-Currently, we send one request per media, it's not efficient. We should support bulk requests to reduce the number of API calls.
+Currently, it's a standalone implementation.
 
 ## Comments

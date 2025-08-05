@@ -75,21 +75,51 @@ export const handler = async (
     // Get user interactions for all targets
     const statusMap = new Map<
       string,
-      { userLiked: boolean; userBookmarked: boolean }
+      {
+        userLiked: boolean;
+        userBookmarked: boolean;
+        likeCount: number;
+        bookmarkCount: number;
+      }
     >();
 
     // Initialize all targets as not interacted
     for (const target of targets) {
       const key = `${target.targetType}:${target.targetId}`;
-      statusMap.set(key, { userLiked: false, userBookmarked: false });
+      statusMap.set(key, {
+        userLiked: false,
+        userBookmarked: false,
+        likeCount: 0,
+        bookmarkCount: 0,
+      });
     }
 
     try {
-      // Get user likes
-      const [likesResult, bookmarksResult] = await Promise.all([
-        DynamoDBService.getUserInteractions(userId, "like"),
-        DynamoDBService.getUserInteractions(userId, "bookmark"),
-      ]);
+      // Get user likes and bookmarks, plus interaction counts for all targets
+      const [likesResult, bookmarksResult, ...countResults] = await Promise.all(
+        [
+          DynamoDBService.getUserInteractions(userId, "like"),
+          DynamoDBService.getUserInteractions(userId, "bookmark"),
+          ...targets.map((target) =>
+            DynamoDBService.getInteractionCounts(
+              target.targetType,
+              target.targetId
+            )
+          ),
+        ]
+      );
+
+      // Update counts for all targets
+      targets.forEach((target, index) => {
+        const key = `${target.targetType}:${target.targetId}`;
+        const status = statusMap.get(key)!;
+        const counts = countResults[index];
+        if (counts) {
+          status.likeCount = counts.likeCount;
+          status.bookmarkCount = counts.bookmarkCount;
+          statusMap.set(key, status);
+        }
+      });
 
       // Process likes
       if (likesResult.interactions) {

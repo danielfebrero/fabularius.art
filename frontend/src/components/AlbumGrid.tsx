@@ -3,9 +3,10 @@ import { ContentCard } from "./ui/ContentCard";
 import { cn } from "../lib/utils";
 import { ThumbnailContext } from "../types/index";
 import { useInView } from "react-intersection-observer";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { useTranslations } from "next-intl";
 import { ComponentErrorBoundary } from "./ErrorBoundaries";
+import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 
 interface AlbumGridProps {
   albums: Album[];
@@ -32,11 +33,31 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({
     rootMargin: "200px 0px",
   });
 
+  // Hook for bulk prefetching interaction status
+  const { prefetch } = usePrefetchInteractionStatus();
+
   useEffect(() => {
     if (inView && hasMore && !loading && loadMore) {
       loadMore();
     }
   }, [inView, hasMore, loading, loadMore]);
+
+  // Prefetch interaction status for all albums using useLayoutEffect
+  // to ensure prefetch happens BEFORE child components render and make individual requests
+  // Note: AlbumGrid receives all albums as props, so we prefetch all of them
+  useLayoutEffect(() => {
+    if (albums.length > 0) {
+      const targets = albums.map((album) => ({
+        targetType: "album" as const,
+        targetId: album.id,
+      }));
+
+      // Prefetch all album interaction status
+      prefetch(targets).catch((error) => {
+        console.error("Failed to prefetch album interaction status:", error);
+      });
+    }
+  }, [albums, prefetch]);
   if (albums.length === 0) {
     return (
       <div className={cn("text-center py-12", className)}>
@@ -63,21 +84,6 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({
       </div>
     );
   }
-
-  // Determine column count based on grid classes for responsive picture optimization
-  const getColumnCount = (): number => {
-    // Default grid: grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4
-    // This helps ResponsivePicture make optimal size decisions
-    if (typeof window !== "undefined") {
-      const width = window.innerWidth;
-      if (width >= 1280) return 4; // xl:grid-cols-4
-      if (width >= 1024) return 3; // lg:grid-cols-3
-      if (width >= 640) return 2; // sm:grid-cols-2
-      return 1; // grid-cols-1
-    }
-    // SSR fallback - assume medium layout
-    return 3;
-  };
 
   return (
     <div className={cn("space-y-6", className)}>

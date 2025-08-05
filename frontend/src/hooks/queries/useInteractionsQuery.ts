@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useInfiniteQuery } from "@tanstack/react-query";
+import { useLayoutEffect } from "react";
 import { interactionApi } from "@/lib/api";
 import {
   queryKeys,
@@ -7,6 +8,7 @@ import {
   invalidateQueries,
 } from "@/lib/queryClient";
 import { InteractionRequest } from "@/types/user";
+import { usePrefetchContext } from "@/contexts/PrefetchContext";
 
 // Types
 interface InteractionTarget {
@@ -14,22 +16,61 @@ interface InteractionTarget {
   targetId: string;
 }
 
+interface InteractionStatusResponse {
+  data: {
+    statuses: any[];
+  };
+}
+
 // Hook for fetching user interaction status (like/bookmark status for items)
-export function useInteractionStatus(targets: InteractionTarget[]) {
-  return useQuery({
+export function useInteractionStatus(
+  targets: InteractionTarget[],
+  options: { enabled?: boolean } = {}
+) {
+  const { enabled = true } = options;
+  const targetsKey =
+    targets.length === 1
+      ? getTargetKey(targets[0])
+      : targets.map(getTargetKey).sort().join(",");
+  const { isPrefetching, waitForPrefetch } = usePrefetchContext();
+  const isCurrentlyPrefetching = isPrefetching(targetsKey);
+
+  return useQuery<InteractionStatusResponse>({
     queryKey: queryKeys.user.interactions.status(targets),
     queryFn: async () => {
       if (targets.length === 0) {
         return { data: { statuses: [] } };
       }
+
+      // If prefetching is in progress, wait for it to complete
+      if (isCurrentlyPrefetching) {
+        await waitForPrefetch(targetsKey);
+
+        // Check if data is now available in cache
+        const cachedData = queryClient.getQueryData(
+          queryKeys.user.interactions.status(targets)
+        ) as any;
+
+        if (cachedData) {
+          return cachedData;
+        }
+      }
+
       return await interactionApi.getInteractionStatus(targets);
     },
-    enabled: targets.length > 0,
+    enabled: enabled && targets.length > 0,
     // Keep interaction status fresh for 30 seconds
     staleTime: 30 * 1000,
     // Don't refetch on window focus (not critical for UX)
     refetchOnWindowFocus: false,
+    // If prefetching, prefer cached data
+    refetchOnMount: !isCurrentlyPrefetching,
   });
+}
+
+// Hook for reading interaction status from cache only (for buttons)
+export function useInteractionStatusFromCache(targets: InteractionTarget[]) {
+  return useInteractionStatus(targets, { enabled: false });
 }
 
 // Hook for fetching user's bookmarks with infinite scroll - UPDATED for unified pagination
@@ -336,17 +377,141 @@ export function useToggleBookmark() {
   });
 }
 
+// Helper to create a unique key for a single target
+function getTargetKey(target: InteractionTarget): string {
+  return `${target.targetType}:${target.targetId}`;
+}
+
 // Utility hook for preloading interaction statuses
 export function usePrefetchInteractionStatus() {
+  const { isPrefetching, startPrefetch, endPrefetch } = usePrefetchContext();
+
   return {
-    prefetch: (targets: InteractionTarget[]) => {
+    prefetch: async (targets: InteractionTarget[]) => {
       if (targets.length === 0) return;
 
-      queryClient.prefetchQuery({
-        queryKey: queryKeys.user.interactions.status(targets),
-        queryFn: () => interactionApi.getInteractionStatus(targets),
+      // Create individual keys for each target so individual queries can detect them
+      const individualKeys = targets.map(getTargetKey);
+
+      // Filter out targets that are already being prefetched
+      const targetsNotPrefetching = targets.filter((target, index) => {
+        const individualKey = individualKeys[index];
+        return !isPrefetching(individualKey);
+      });
+
+      // If all targets are already being prefetched, skip
+      if (targetsNotPrefetching.length === 0) {
+        return;
+      }
+
+      // Only prefetch the targets that aren't already being prefetched
+      const keysToPrefetch = targetsNotPrefetching.map(getTargetKey);
+
+      // Create the prefetch promise
+      const prefetchPromise = queryClient.prefetchQuery({
+        queryKey: queryKeys.user.interactions.status(targetsNotPrefetching),
+        queryFn: async () => {
+          // Check if any individual targets already have cached data
+          const cachedStatuses: any[] = [];
+          const targetsNeedingFetch: InteractionTarget[] = [];
+
+          targetsNotPrefetching.forEach((target) => {
+            const singleTarget = [target];
+            const cachedData = queryClient.getQueryData(
+              queryKeys.user.interactions.status(singleTarget)
+            ) as any;
+
+            if (cachedData?.data?.statuses?.[0]) {
+              // Use cached data for this target
+              cachedStatuses.push(cachedData.data.statuses[0]);
+            } else {
+              // Need to fetch this target
+              targetsNeedingFetch.push(target);
+            }
+          });
+
+          let fetchedStatuses: any[] = [];
+
+          // Only make API call if there are targets that need fetching
+          if (targetsNeedingFetch.length > 0) {
+            const result = await interactionApi.getInteractionStatus(
+              targetsNeedingFetch
+            );
+
+            if (result.data?.statuses) {
+              fetchedStatuses = result.data.statuses;
+
+              // Populate individual query caches from bulk response
+              fetchedStatuses.forEach((status: any) => {
+                const singleTarget = [
+                  {
+                    targetType: status.targetType,
+                    targetId: status.targetId,
+                  },
+                ];
+
+                queryClient.setQueryData(
+                  queryKeys.user.interactions.status(singleTarget),
+                  {
+                    data: {
+                      statuses: [status],
+                    },
+                  }
+                );
+              });
+            }
+          }
+
+          // Combine cached and fetched statuses
+          const allStatuses = [...cachedStatuses, ...fetchedStatuses];
+
+          return {
+            data: {
+              statuses: allStatuses,
+            },
+          };
+        },
         staleTime: 30 * 1000, // 30 seconds
       });
+
+      // Mark individual keys as prefetching with the shared promise
+      startPrefetch(keysToPrefetch, prefetchPromise);
+
+      try {
+        await prefetchPromise;
+      } finally {
+        // Remove from prefetching set when done
+        endPrefetch(keysToPrefetch);
+      }
+    },
+
+    // Helper to check if targets are currently being prefetched
+    isPrefetching: (targets: InteractionTarget[]) => {
+      const targetKey =
+        targets.length === 1
+          ? getTargetKey(targets[0])
+          : targets.map(getTargetKey).sort().join(",");
+      return isPrefetching(targetKey);
     },
   };
+}
+
+// Convenience hook for automatically prefetching targets with proper async handling
+// Uses useLayoutEffect for earliest possible execution, especially important for SSG pages
+export function useAutoPrefetchInteractionStatus(targets: InteractionTarget[]) {
+  const { prefetch } = usePrefetchInteractionStatus();
+
+  useLayoutEffect(() => {
+    if (targets.length > 0) {
+      const prefetchData = async () => {
+        try {
+          await prefetch(targets);
+        } catch (error) {
+          console.error("Failed to prefetch interaction status:", error);
+        }
+      };
+
+      prefetchData();
+    }
+  }, [targets, prefetch]);
 }

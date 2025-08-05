@@ -4,6 +4,74 @@ This document provides a detailed overview of the performance optimization strat
 
 ## API Call Optimization
 
+### Interaction Status Prefetching with Hybrid Approach
+
+- **Issue**: Components like `MediaGallery` and `AlbumGrid` render multiple child components (`ContentCard`, `LikeButton`, `BookmarkButton`) that each make individual API calls to fetch interaction status (like/bookmark status). For SSG pages, timing of prefetch is critical to avoid duplicate API calls.
+
+- **Solution**: Use a **hybrid approach** combining two prefetching strategies:
+
+  1. **`useAutoPrefetchInteractionStatus`** for initial SSG data (earliest execution)
+  2. **`useLayoutEffect`** with manual prefetch for dynamically loaded content (infinite scroll)
+
+- **Implementation**:
+
+  ```tsx
+  // ✅ HYBRID APPROACH - For components with initial + dynamic content
+  import {
+    usePrefetchInteractionStatus,
+    useAutoPrefetchInteractionStatus,
+  } from "@/hooks/queries/useInteractionsQuery";
+
+  // Auto-prefetch initial media for SSG (runs earliest in component lifecycle)
+  const initialTargets = useMemo(
+    () =>
+      initialMedia.map((mediaItem) => ({
+        targetType: "media" as const,
+        targetId: mediaItem.id,
+      })),
+    [initialMedia]
+  );
+  useAutoPrefetchInteractionStatus(initialTargets);
+
+  // Manual prefetch for newly loaded content (infinite scroll)
+  const { prefetch } = usePrefetchInteractionStatus();
+  useLayoutEffect(() => {
+    const newlyLoadedMedia = media.slice(initialMedia.length);
+
+    if (newlyLoadedMedia.length > 0) {
+      const targets = newlyLoadedMedia.map((mediaItem) => ({
+        targetType: "media" as const,
+        targetId: mediaItem.id,
+      }));
+
+      const prefetchData = async () => {
+        try {
+          await prefetch(targets);
+        } catch (error) {
+          console.error(
+            "Failed to prefetch interaction status for new media:",
+            error
+          );
+        }
+      };
+
+      prefetchData();
+    }
+  }, [media, initialMedia.length, prefetch]);
+  ```
+
+- **Benefits**:
+
+  - **SSG compatibility**: Initial content prefetched before any child renders
+  - **No duplicate prefetching**: Only newly loaded items are prefetched
+  - **Optimal timing**: Uses appropriate hook for each scenario
+  - **Performance**: Eliminates duplicate API calls for interaction status
+
+- **When to use each approach**:
+  - **`useAutoPrefetchInteractionStatus`**: For initial/static content, especially on SSG pages
+  - **`useLayoutEffect` + manual prefetch**: For dynamically loaded content (infinite scroll, pagination)
+  - **`useLayoutEffect` only**: For components where all content comes as props (like `AlbumGrid`)
+
 ### Lazy Loading of Albums in Add to Album Dialog
 
 - **Issue**: Previously, the `AddToAlbumDialog` component was using the `useAlbums()` hook, which would fetch albums data immediately when the component was mounted. Since multiple ContentCard components render on album detail pages (one per media item), this caused the `/albums` API to be called multiple times simultaneously (50+ times), creating unnecessary server load.

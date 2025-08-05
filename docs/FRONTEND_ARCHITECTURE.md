@@ -135,6 +135,97 @@ export default function RootLayout({
 
 The application uses custom React hooks to fetch data from the API. This approach encapsulates the data fetching logic and makes it reusable across multiple components.
 
+### Interaction Status Prefetching Pattern
+
+For components that render multiple child components with interaction features (`LikeButton`, `BookmarkButton`), use a **hybrid approach** to prevent duplicate API calls while ensuring optimal timing for both SSG and dynamic content:
+
+#### Hybrid Approach (Recommended for components with initial + dynamic content)
+
+```tsx
+import { useMemo, useLayoutEffect } from "react";
+import {
+  usePrefetchInteractionStatus,
+  useAutoPrefetchInteractionStatus,
+} from "@/hooks/queries/useInteractionsQuery";
+
+// Auto-prefetch initial SSG content (earliest execution)
+const initialTargets = useMemo(
+  () =>
+    initialItems.map((item) => ({
+      targetType: "media" as const, // or "album"
+      targetId: item.id,
+    })),
+  [initialItems]
+);
+useAutoPrefetchInteractionStatus(initialTargets);
+
+// Manual prefetch for dynamically loaded content (infinite scroll)
+const { prefetch } = usePrefetchInteractionStatus();
+useLayoutEffect(() => {
+  const newlyLoadedItems = allItems.slice(initialItems.length);
+
+  if (newlyLoadedItems.length > 0) {
+    const targets = newlyLoadedItems.map((item) => ({
+      targetType: "media" as const,
+      targetId: item.id,
+    }));
+
+    const prefetchData = async () => {
+      try {
+        await prefetch(targets);
+      } catch (error) {
+        console.error(
+          "Failed to prefetch interaction status for new items:",
+          error
+        );
+      }
+    };
+
+    prefetchData();
+  }
+}, [allItems, initialItems.length, prefetch]);
+```
+
+#### Simple Approach (For components where all content comes as props)
+
+```tsx
+import { useLayoutEffect } from "react";
+import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
+
+const { prefetch } = usePrefetchInteractionStatus();
+
+useLayoutEffect(() => {
+  if (items.length > 0) {
+    const targets = items.map((item) => ({
+      targetType: "album" as const,
+      targetId: item.id,
+    }));
+
+    const prefetchData = async () => {
+      try {
+        await prefetch(targets);
+      } catch (error) {
+        console.error("Failed to prefetch interaction status:", error);
+      }
+    };
+
+    prefetchData();
+  }
+}, [items, prefetch]);
+```
+
+**Key Benefits:**
+
+- **SSG compatibility**: Initial content prefetched before any child renders
+- **No duplicate prefetching**: Only newly loaded items are prefetched
+- **Optimal timing**: Uses appropriate hook for each scenario
+- **Performance**: Eliminates duplicate API requests
+
+**When to use:**
+
+- **Hybrid approach**: Components with initial data + infinite scroll (e.g., `MediaGallery`)
+- **Simple approach**: Components receiving all data as props (e.g., `AlbumGrid`)
+
 ### `useAlbums` Hook
 
 - **File**: [`frontend/src/hooks/useAlbums.ts`](../frontend/src/hooks/useAlbums.ts)

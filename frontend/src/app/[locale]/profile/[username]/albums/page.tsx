@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { FolderOpen, Grid, List, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -9,6 +9,9 @@ import { ContentCard } from "@/components/ui/ContentCard";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { cn } from "@/lib/utils";
 import { useAlbums } from "@/hooks/queries/useAlbumsQuery";
+import { usePublicProfile } from "@/hooks/queries/useUserQuery";
+import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
+import { Album } from "@/types";
 import { useDevice } from "@/contexts/DeviceContext";
 
 export default function UserAlbumsPage() {
@@ -29,10 +32,31 @@ export default function UserAlbumsPage() {
     isFetchingNextPage: loadingMore,
   } = useAlbums({ user: username, limit: 12 });
 
+  // Hook for bulk prefetching interaction status
+  const { prefetch } = usePrefetchInteractionStatus();
+
   // Extract all albums from paginated data
-  const albums = albumsData?.pages.flatMap((page) => page.data.albums) || [];
+  const albums = useMemo(() => {
+    return albumsData?.pages.flatMap((page) => page.data.albums) || [];
+  }, [albumsData]);
 
   const hasNext = hasNextPage || false;
+
+  // Prefetch interaction status for all profile albums
+  useEffect(() => {
+    if (albums.length > 0) {
+      const targets = albums.map((album) => ({
+        targetType: "album" as const,
+        targetId: album.id,
+      }));
+      prefetch(targets).catch((error) => {
+        console.error(
+          "Failed to prefetch profile album interaction status:",
+          error
+        );
+      });
+    }
+  }, [albums, prefetch]);
 
   const loadMore = () => {
     if (hasNextPage) {

@@ -179,6 +179,8 @@ export const interactionApi = {
         targetId: string;
         userLiked: boolean;
         userBookmarked: boolean;
+        likeCount: number;
+        bookmarkCount: number;
       }>;
     };
   }> => {

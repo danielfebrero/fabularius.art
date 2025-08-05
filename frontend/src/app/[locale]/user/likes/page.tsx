@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Heart, Grid, List } from "lucide-react";
 import { useLikesQuery } from "@/hooks/queries/useLikesQuery";
+import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { ContentCard } from "@/components/ui/ContentCard";
@@ -19,13 +20,38 @@ const UserLikesPage: React.FC = () => {
     isFetchingNextPage,
   } = useLikesQuery();
 
+  // Hook for bulk prefetching interaction status
+  const { prefetch } = usePrefetchInteractionStatus();
+
   // Extract likes from infinite query data
-  const allLikes =
-    likesData?.pages.flatMap((page: any) => page.data?.interactions || []) ||
-    [];
+  const allLikes = useMemo(() => {
+    return (
+      likesData?.pages.flatMap((page: any) => page.data?.interactions || []) ||
+      []
+    );
+  }, [likesData]);
 
   // Filter out invalid likes before counting
-  const likes = allLikes.filter((like: any) => like && like.targetType);
+  const likes = useMemo(() => {
+    return allLikes.filter((like: any) => like && like.targetType);
+  }, [allLikes]);
+
+  // Prefetch interaction status for all liked items
+  useEffect(() => {
+    if (likes.length > 0) {
+      const targets = likes.map((like: any) => ({
+        targetType: like.targetType as "album" | "media",
+        targetId: like.targetId,
+      }));
+      prefetch(targets).catch((error) => {
+        console.error(
+          "Failed to prefetch user likes interaction status:",
+          error
+        );
+      });
+    }
+  }, [likes, prefetch]);
+
   const totalCount = likes.length;
   const hasMore = hasNextPage;
   const isLoadingMore = isFetchingNextPage;
