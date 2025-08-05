@@ -347,7 +347,7 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
                 onTogglePlay={handleDesktopMediaClick}
                 onMobileClick={handleMobileMediaClick}
                 onFullscreen={() => setLightboxOpen(true)}
-                className="w-fit h-fit max-w-full max-h-[80vh]"
+                className="w-fit h-fit max-w-full"
                 imageClassName="w-auto h-auto object-contain"
                 canFullscreen={true}
               />
