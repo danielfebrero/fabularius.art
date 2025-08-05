@@ -12,6 +12,10 @@ We should avoid using `any` type in TypeScript. Instead, we should define proper
 
 ## UI/UX
 
+### MediaCard view count should be fetched async
+
+Currently, it SSG on some pages which is not ideal. We should fetch the view count asynchronously to ensure that the data is always up to date without blocking the initial page load.
+
 ### Make admin page responsive
 
 Currently, it's unusable on mobile devices. We need to ensure that the admin page is fully responsive and functional on smaller screens.
