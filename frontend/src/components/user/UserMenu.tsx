@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { useUserProfile, useLogout } from "@/hooks/queries/useUserQuery";
+import { useLogout } from "@/hooks/queries/useUserQuery";
 import { useAdminContext } from "@/contexts/AdminContext";
 import { useLocaleRouter } from "@/lib/navigation";
 import { User } from "@/types/user";
@@ -25,7 +25,6 @@ export function UserMenu({ user }: UserMenuProps) {
   const loading = logoutMutation.isPending;
 
   const t = useTranslations("common");
-  const tNav = useTranslations("navigation");
   const tProfile = useTranslations("user.profile");
 
   // Close menu when clicking outside
