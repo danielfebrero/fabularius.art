@@ -1726,35 +1726,6 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
 
-  UserGetCommentLikeStatusFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "${Environment}-pornspot-user-get-comment-like-status"
-      CodeUri: backend/dist/functions/user/interactions/
-      Handler: get-comment-like-status.handler
-      Layers:
-        - !Ref SharedLayer
-      Events:
-        GetCommentLikeStatus:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /user/interactions/comment-like-status
-            Method: POST
-            Auth:
-              Authorizer: UserAuthorizer
-        OptionsCommentLikeStatus:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /user/interactions/comment-like-status
-            Method: OPTIONS
-            Auth:
-              Authorizer: NONE
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref MediaTable
-
   # Comment Functions
   UserCommentFunction:
     Type: AWS::Serverless::Function
@@ -1880,42 +1851,6 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref MediaTable
-
-  UserCommentLikeFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "${Environment}-pornspot-user-comment-like"
-      CodeUri: backend/dist/functions/user/interactions/
-      Handler: comment-like.handler
-      Layers:
-        - !Ref SharedLayer
-      Events:
-        CommentLike:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /user/interactions/comment-like
-            Method: POST
-            Auth:
-              Authorizer: UserAuthorizer
-        OptionsCommentLike:
-          Type: Api
-          Properties:
-            RestApiId: !Ref ApiGateway
-            Path: /user/interactions/comment-like
-            Method: OPTIONS
-            Auth:
-              Authorizer: NONE
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref MediaTable
-        - DynamoDBWritePolicy:
-            TableName: !Ref MediaTable
-        - Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:DeleteItem
-              Resource: !GetAtt MediaTable.Arn
 
   # AI Generation Functions
   GenerationCreateFunction:

@@ -26,8 +26,10 @@ export const handler = async (
     const userId = authResult.userId!;
 
     // Parse request body for bulk status check
-    let targets: Array<{ targetType: "album" | "media"; targetId: string }> =
-      [];
+    let targets: Array<{
+      targetType: "album" | "media" | "comment";
+      targetId: string;
+    }> = [];
 
     if (event.body) {
       try {
@@ -57,11 +59,11 @@ export const handler = async (
     for (const target of targets) {
       if (
         !target.targetType ||
-        !["album", "media"].includes(target.targetType)
+        !["album", "media", "comment"].includes(target.targetType)
       ) {
         return ResponseUtil.badRequest(
           event,
-          "Each target must have a valid targetType ('album' or 'media')"
+          "Each target must have a valid targetType ('album', 'media', or 'comment')"
         );
       }
       if (!target.targetId || typeof target.targetId !== "string") {
@@ -95,25 +97,51 @@ export const handler = async (
     }
 
     try {
-      // Get user likes and bookmarks, plus interaction counts for all targets
-      const [likesResult, bookmarksResult, ...countResults] = await Promise.all(
-        [
-          DynamoDBService.getUserInteractions(userId, "like"),
-          DynamoDBService.getUserInteractions(userId, "bookmark"),
-          ...targets.map((target) =>
-            DynamoDBService.getInteractionCounts(
-              target.targetType,
-              target.targetId
-            )
-          ),
-        ]
+      // Separate comment targets from album/media targets
+      const albumMediaTargets = targets.filter(
+        (t) => t.targetType === "album" || t.targetType === "media"
       );
+      const commentTargets = targets.filter((t) => t.targetType === "comment");
 
-      // Update counts for all targets
-      targets.forEach((target, index) => {
+      // Get user likes and bookmarks for album/media targets
+      const promises: Promise<any>[] = [
+        DynamoDBService.getUserInteractions(userId, "like"),
+        DynamoDBService.getUserInteractions(userId, "bookmark"),
+      ];
+
+      // Add interaction counts for album/media targets
+      albumMediaTargets.forEach((target) => {
+        promises.push(
+          DynamoDBService.getInteractionCounts(
+            target.targetType as "album" | "media",
+            target.targetId
+          )
+        );
+      });
+
+      // Add comment interaction checks for comment targets
+      commentTargets.forEach((target) => {
+        promises.push(
+          DynamoDBService.getUserInteractionForComment(
+            userId,
+            "like",
+            target.targetId
+          )
+        );
+        promises.push(DynamoDBService.getComment(target.targetId));
+      });
+
+      const results = await Promise.all(promises);
+
+      let resultIndex = 0;
+      const likesResult = results[resultIndex++];
+      const bookmarksResult = results[resultIndex++];
+
+      // Process album/media interaction counts
+      albumMediaTargets.forEach((target) => {
         const key = `${target.targetType}:${target.targetId}`;
         const status = statusMap.get(key)!;
-        const counts = countResults[index];
+        const counts = results[resultIndex++];
         if (counts) {
           status.likeCount = counts.likeCount;
           status.bookmarkCount = counts.bookmarkCount;
@@ -121,7 +149,21 @@ export const handler = async (
         }
       });
 
-      // Process likes
+      // Process comment interactions
+      commentTargets.forEach((target) => {
+        const key = `${target.targetType}:${target.targetId}`;
+        const status = statusMap.get(key)!;
+
+        const userInteraction = results[resultIndex++];
+        const comment = results[resultIndex++];
+
+        status.userLiked = userInteraction !== null;
+        status.likeCount = comment?.likeCount || 0;
+        // Comments don't have bookmarks, so bookmark count stays 0
+        statusMap.set(key, status);
+      });
+
+      // Process likes for album/media targets
       if (likesResult.interactions) {
         for (const interaction of likesResult.interactions) {
           const key = `${interaction.targetType}:${interaction.targetId}`;
@@ -133,7 +175,7 @@ export const handler = async (
         }
       }
 
-      // Process bookmarks
+      // Process bookmarks for album/media targets
       if (bookmarksResult.interactions) {
         for (const interaction of bookmarksResult.interactions) {
           const key = `${interaction.targetType}:${interaction.targetId}`;

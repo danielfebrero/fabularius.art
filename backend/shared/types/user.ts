@@ -75,15 +75,8 @@ export interface UserInteraction {
   createdAt: string;
 }
 
-// Comment interaction types - separate from likes/bookmarks for clarity
-export interface CommentInteractionRequest {
-  targetType: "comment";
-  targetId: string; // commentId
-  action: "add" | "remove";
-}
-
 export interface InteractionRequest {
-  targetType: "album" | "media";
+  targetType: "album" | "media" | "comment";
   targetId: string;
   action: "add" | "remove";
 }

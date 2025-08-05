@@ -58,7 +58,10 @@ export const queryKeys = {
         lastKey?: string;
       }) => ["user", "interactions", "comments", params] as const,
       status: (
-        targets: Array<{ targetType: "album" | "media"; targetId: string }>
+        targets: Array<{
+          targetType: "album" | "media" | "comment";
+          targetId: string;
+        }>
       ) => ["user", "interactions", "status", targets] as const,
       insights: () => ["user", "interactions", "insights"] as const,
     },
@@ -159,7 +162,7 @@ export const invalidateQueries = {
 export const updateCache = {
   // Update user interaction status optimistically
   userInteractionStatus: (
-    targetType: "album" | "media",
+    targetType: "album" | "media" | "comment",
     targetId: string,
     updates: { userLiked?: boolean; userBookmarked?: boolean }
   ) => {
@@ -225,11 +228,47 @@ export const updateCache = {
 
   // Update interaction counts optimistically
   interactionCounts: (
-    targetType: "album" | "media",
+    targetType: "album" | "media" | "comment",
     targetId: string,
     type: "like" | "bookmark",
     increment: number
   ) => {
+    // For comments, we handle differently since they don't have detail pages
+    if (targetType === "comment") {
+      // Update the interaction status cache for the comment
+      const targets = [{ targetType, targetId }];
+      const queryKey = queryKeys.user.interactions.status(targets);
+
+      queryClient.setQueryData(queryKey, (oldData: any) => {
+        if (!oldData?.data?.statuses) return oldData;
+
+        return {
+          ...oldData,
+          data: {
+            ...oldData.data,
+            statuses: oldData.data.statuses.map((status: any) => {
+              if (
+                status.targetType === targetType &&
+                status.targetId === targetId
+              ) {
+                const countField =
+                  type === "like" ? "likeCount" : "bookmarkCount";
+                return {
+                  ...status,
+                  [countField]: Math.max(
+                    0,
+                    (status[countField] || 0) + increment
+                  ),
+                };
+              }
+              return status;
+            }),
+          },
+        };
+      });
+      return;
+    }
+
     // Update in album/media detail pages
     const detailQueryKey =
       targetType === "album"

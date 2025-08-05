@@ -198,18 +198,6 @@ export interface CommentListResponse {
   error?: string;
 }
 
-export interface CommentLikeStatusResponse {
-  success: boolean;
-  data?: {
-    statuses: Array<{
-      commentId: string;
-      isLiked: boolean;
-      likeCount: number;
-    }>;
-  };
-  error?: string;
-}
-
 // User authentication types
 export * from "./user";
 

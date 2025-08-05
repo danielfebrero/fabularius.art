@@ -12,7 +12,7 @@ import { usePrefetchContext } from "@/contexts/PrefetchContext";
 
 // Types
 interface InteractionTarget {
-  targetType: "album" | "media";
+  targetType: "album" | "media" | "comment";
   targetId: string;
 }
 
@@ -200,7 +200,7 @@ export function useToggleLike() {
       albumId,
       isCurrentlyLiked,
     }: {
-      targetType: "album" | "media";
+      targetType: "album" | "media" | "comment";
       targetId: string;
       albumId?: string;
       isCurrentlyLiked: boolean;

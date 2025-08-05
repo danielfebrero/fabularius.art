@@ -42,10 +42,10 @@ export const handler = async (
       );
     }
 
-    if (!["album", "media"].includes(targetType)) {
+    if (!["album", "media", "comment"].includes(targetType)) {
       return ResponseUtil.badRequest(
         event,
-        "targetType must be 'album' or 'media'"
+        "targetType must be 'album', 'media', or 'comment'"
       );
     }
 
@@ -59,33 +59,54 @@ export const handler = async (
       if (!album) {
         return ResponseUtil.notFound(event, "Album not found");
       }
-    } else {
+    } else if (targetType === "media") {
       // For media, verify it exists - no albumId needed in new schema
       const media = await DynamoDBService.getMedia(targetId);
       if (!media) {
         return ResponseUtil.notFound(event, "Media not found");
+      }
+    } else if (targetType === "comment") {
+      // For comments, verify it exists
+      const comment = await DynamoDBService.getComment(targetId);
+      if (!comment) {
+        return ResponseUtil.notFound(event, "Comment not found");
       }
     }
 
     const now = new Date().toISOString();
 
     if (action === "add") {
-      // Check if already liked
-      const existingLike = await DynamoDBService.getUserInteraction(
-        userId,
-        "like",
-        targetId
-      );
+      // Check if already liked - use different method for comments
+      let existingLike;
+      if (targetType === "comment") {
+        existingLike = await DynamoDBService.getUserInteractionForComment(
+          userId,
+          "like",
+          targetId
+        );
+      } else {
+        existingLike = await DynamoDBService.getUserInteraction(
+          userId,
+          "like",
+          targetId
+        );
+      }
 
       if (existingLike) {
         return ResponseUtil.error(event, "Already liked", 409);
       }
 
-      // Create like interaction
+      // Create like interaction - use different SK pattern for comments
       const interaction: UserInteractionEntity = {
         PK: `USER#${userId}`,
-        SK: `INTERACTION#like#${targetId}`,
-        GSI1PK: `INTERACTION#like#${targetId}`,
+        SK:
+          targetType === "comment"
+            ? `COMMENT_INTERACTION#like#${targetId}`
+            : `INTERACTION#like#${targetId}`,
+        GSI1PK:
+          targetType === "comment"
+            ? `COMMENT_INTERACTION#like#${targetId}`
+            : `INTERACTION#like#${targetId}`,
         GSI1SK: userId,
         EntityType: "UserInteraction",
         userId: userId,
@@ -119,7 +140,7 @@ export const handler = async (
             );
           }
         }
-      } else {
+      } else if (targetType === "media") {
         await DynamoDBService.incrementMediaLikeCount(targetId, 1);
 
         // Get media creator and increment their totalLikesReceived metric
@@ -140,12 +161,41 @@ export const handler = async (
             );
           }
         }
+      } else if (targetType === "comment") {
+        await DynamoDBService.incrementCommentLikeCount(targetId, 1);
+
+        // Get comment creator and increment their totalLikesReceived metric
+        const comment = await DynamoDBService.getComment(targetId);
+        if (comment?.userId) {
+          try {
+            await DynamoDBService.incrementUserProfileMetric(
+              comment.userId,
+              "totalLikesReceived"
+            );
+            console.log(
+              `📈 Incremented totalLikesReceived for comment creator: ${comment.userId}`
+            );
+          } catch (error) {
+            console.warn(
+              `⚠️ Failed to increment totalLikesReceived for user ${comment.userId}:`,
+              error
+            );
+          }
+        }
       }
 
       console.log(`✅ Like added for ${targetType} ${targetId}`);
     } else {
-      // Remove like
-      await DynamoDBService.deleteUserInteraction(userId, "like", targetId);
+      // Remove like - use different method for comments
+      if (targetType === "comment") {
+        await DynamoDBService.deleteUserInteractionForComment(
+          userId,
+          "like",
+          targetId
+        );
+      } else {
+        await DynamoDBService.deleteUserInteraction(userId, "like", targetId);
+      }
 
       // Decrement like count for the target
       if (targetType === "album") {
@@ -170,7 +220,7 @@ export const handler = async (
             );
           }
         }
-      } else {
+      } else if (targetType === "media") {
         await DynamoDBService.incrementMediaLikeCount(targetId, -1);
 
         // Get media creator and decrement their totalLikesReceived metric
@@ -188,6 +238,28 @@ export const handler = async (
           } catch (error) {
             console.warn(
               `⚠️ Failed to decrement totalLikesReceived for user ${media.createdBy}:`,
+              error
+            );
+          }
+        }
+      } else if (targetType === "comment") {
+        await DynamoDBService.incrementCommentLikeCount(targetId, -1);
+
+        // Get comment creator and decrement their totalLikesReceived metric
+        const comment = await DynamoDBService.getComment(targetId);
+        if (comment?.userId) {
+          try {
+            await DynamoDBService.incrementUserProfileMetric(
+              comment.userId,
+              "totalLikesReceived",
+              -1
+            );
+            console.log(
+              `📉 Decremented totalLikesReceived for comment creator: ${comment.userId}`
+            );
+          } catch (error) {
+            console.warn(
+              `⚠️ Failed to decrement totalLikesReceived for user ${comment.userId}:`,
               error
             );
           }

@@ -48,8 +48,18 @@ Currently, the video preview is of the size of the video.
 
 ## Optimization
 
-### Comments like should use useInteractionsQuery like albums and medias
-
-Currently, it's a standalone implementation.
-
 ## Comments
+
+## Infrastructure
+
+### Migrate to Terraform
+
+We should migrate our infrastructure to Terraform for better management and scalability.
+
+### Migrate to Next.js 15
+
+We should upgrade our Next.js version to 15 to take advantage of the latest features and improvements.
+
+### Migrate to React.js 19
+
+We should upgrade our React.js version to 19 to take advantage of the latest features and improvements.

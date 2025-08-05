@@ -9,9 +9,9 @@ import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
 import { cn } from "@/lib/utils";
 import { useDevice } from "@/contexts/DeviceContext";
 import {
-  useCommentInteractionsQuery,
-  useToggleCommentLike,
-} from "@/hooks/queries/useCommentInteractionsQuery";
+  useInteractionStatus,
+  useToggleLike,
+} from "@/hooks/queries/useInteractionsQuery";
 import {
   useTargetComments,
   useCreateComment,
@@ -82,23 +82,46 @@ export function Comments({
   }, [additionalCommentsData, comments]);
 
   // Memoize comment IDs to prevent unnecessary re-renders and API calls
-  const commentIds = useMemo(() => {
+  // Create interaction targets for comments
+  const commentTargets = useMemo(() => {
     if (!currentUserId) return [];
-    return comments.map((comment) => comment.id);
+    return comments.map((comment) => ({
+      targetType: "comment" as const,
+      targetId: comment.id,
+    }));
   }, [comments, currentUserId]);
 
-  // Comment interaction hooks using TanStack Query
+  // Use unified interaction status hook for comments
   const {
-    data: commentLikeStates = {},
+    data: interactionStatusData,
     isLoading: likeStatesLoading,
     error: likeStatesError,
-  } = useCommentInteractionsQuery(commentIds);
+  } = useInteractionStatus(commentTargets);
+
+  // Create a map for easier lookup
+  const commentLikeStates = useMemo(() => {
+    const statusMap: Record<string, { isLiked: boolean; likeCount: number }> =
+      {};
+
+    if (interactionStatusData?.data?.statuses) {
+      interactionStatusData.data.statuses.forEach((status) => {
+        if (status.targetType === "comment") {
+          statusMap[status.targetId] = {
+            isLiked: status.userLiked,
+            likeCount: status.likeCount,
+          };
+        }
+      });
+    }
+
+    return statusMap;
+  }, [interactionStatusData]);
 
   // Comment mutation hooks
   const createCommentMutation = useCreateComment();
   const updateCommentMutation = useUpdateComment();
   const deleteCommentMutation = useDeleteComment();
-  const toggleCommentLikeMutation = useToggleCommentLike();
+  const toggleLikeMutation = useToggleLike();
 
   // Submit new comment
   const handleSubmitComment = async () => {
@@ -184,13 +207,14 @@ export function Comments({
       // Get current like state
       const currentIsLiked = commentLikeStates[commentId]?.isLiked || false;
 
-      // Use the TanStack Query mutation which handles optimistic updates
-      toggleCommentLikeMutation.mutate({
-        commentId,
+      // Use the unified like mutation
+      toggleLikeMutation.mutate({
+        targetType: "comment",
+        targetId: commentId,
         isCurrentlyLiked: currentIsLiked,
       });
     },
-    [currentUserId, commentLikeStates, toggleCommentLikeMutation]
+    [currentUserId, commentLikeStates, toggleLikeMutation]
   );
 
   // Handle keyboard shortcuts
@@ -257,7 +281,9 @@ export function Comments({
       )}
 
       {/* Comments list */}
-      {likeStatesLoading && commentIds.length > 0 && comments.length === 0 ? (
+      {likeStatesLoading &&
+      commentTargets.length > 0 &&
+      comments.length === 0 ? (
         <div className="space-y-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex items-start gap-3 animate-pulse">
