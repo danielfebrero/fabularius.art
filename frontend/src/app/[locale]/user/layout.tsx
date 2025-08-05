@@ -15,6 +15,7 @@ import {
   SectionErrorBoundary,
 } from "@/components/ErrorBoundaries";
 import { DesktopNavigation } from "@/components/ui/DesktopNavigation";
+import { useUserContext } from "@/contexts/UserContext";
 
 interface UserLayoutProps {
   children: React.ReactNode;
@@ -26,18 +27,33 @@ const UserLayout: React.FC<UserLayoutProps> = ({
   params: { locale },
 }) => {
   const { data: userResponse, isLoading: loading } = useUserProfile();
+  const userContext = useUserContext();
   const user = userResponse?.data?.user;
   const router = useLocaleRouter();
   const t = useTranslations("navigation");
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!loading && !user) {
+    // Wait for both UserContext initialization and useUserProfile query to complete
+    const isUserContextReady =
+      !userContext?.initializing && !userContext?.loading;
+    const isUserProfileReady = !loading;
+
+    // Only redirect if both are ready and no user is found
+    if (isUserContextReady && isUserProfileReady && !user) {
       router.push(`/${locale}/auth/login`);
     }
-  }, [user, loading, router, locale]);
+  }, [
+    user,
+    loading,
+    router,
+    locale,
+    userContext?.initializing,
+    userContext?.loading,
+  ]);
 
-  if (loading) {
+  // Show loading state while either UserContext is initializing or useUserProfile is loading
+  if (loading || userContext?.initializing) {
     return (
       <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

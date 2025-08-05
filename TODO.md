@@ -2,10 +2,6 @@
 
 ## Login
 
-### When being on a user page and logged in and hard refreshing, the user is redirected to the login page
-
-It seems the redirection happens before the session verification, this should be fixed to ensure that the user remains on the user page after a hard refresh.
-
 ## Homepage Discover
 
 ### Album view count do not get updated
@@ -13,10 +9,6 @@ It seems the redirection happens before the session verification, this should be
 API response is correct, but the view count is not updated in the UI.
 
 ## Content Cards
-
-### Mobile detection does not work correctly, let's trust the frontend viewport
-
-Currently, the mobile detection is not reliable. Instead, we should use the frontend viewport to determine if the user is on a mobile device.
 
 ### Liking a content should update optimistically the view count
 
@@ -63,6 +55,10 @@ Currently, the backward and share buttons are on the edge sides instead of being
 Currently, the video preview is of the size of the video.
 
 ## Admin
+
+### Uploading images now is 2 by 2 instead of bulk upload
+
+Last images I uploaded were 2 by 2 instead of bulk upload. This should be fixed to allow bulk uploads for images.
 
 ## Settings
 

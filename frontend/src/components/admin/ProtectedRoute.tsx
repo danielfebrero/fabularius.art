@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useLocaleRouter } from "@/lib/navigation";
 import { useAdminContext } from "../../contexts/AdminContext";
+import { useUserContext } from "@/contexts/UserContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,16 +11,22 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAdminContext();
+  const userContext = useUserContext();
   const router = useLocaleRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (
+      !loading &&
+      !user &&
+      !userContext?.initializing &&
+      !userContext?.loading
+    ) {
       router.push("/auth/login?returnTo=/admin");
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, userContext?.initializing, userContext?.loading]);
 
   // Show loading spinner while checking authentication
-  if (loading) {
+  if (loading || userContext?.initializing || userContext?.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center space-y-4">
