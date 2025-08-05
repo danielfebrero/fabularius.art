@@ -53,17 +53,17 @@ export const BookmarkButton: React.FC<BookmarkButtonProps> = ({
   // Size configurations
   const sizeConfig = {
     sm: {
-      button: "h-8 w-8 p-0",
+      button: "h-8 w-fit p-0",
       icon: "h-4 w-4",
       text: "text-xs",
     },
     md: {
-      button: "h-10 w-10 p-0",
+      button: "h-10 w-fit p-0",
       icon: "h-5 w-5",
       text: "text-sm",
     },
     lg: {
-      button: "h-12 w-12 p-0",
+      button: "h-12 w-fit p-0",
       icon: "h-6 w-6",
       text: "text-base",
     },

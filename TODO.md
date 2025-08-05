@@ -30,10 +30,6 @@ Currently, the backward and share buttons are on the edge sides instead of being
 
 ## User profile
 
-### On media page, the cardcontent view counter is not working
-
-The view counter always shows 0 while it works on other pages.
-
 ## Videos
 
 ### In lightbox, the video preview should be fullscreen like image
