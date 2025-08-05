@@ -105,3 +105,83 @@ export function detectDeviceClientSide(): DeviceInfo {
     isDesktop,
   };
 }
+
+/**
+ * Viewport breakpoints for device detection
+ */
+export const VIEWPORT_BREAKPOINTS = {
+  MOBILE: 640,
+  TABLET: 1024,
+} as const;
+
+/**
+ * Check if current viewport width indicates mobile device
+ * @returns true if viewport width is <= 640px
+ */
+export function isViewportMobile(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.innerWidth <= VIEWPORT_BREAKPOINTS.MOBILE;
+}
+
+/**
+ * Check if current viewport width indicates tablet device
+ * @returns true if viewport width is > 640px and <= 1024px
+ */
+export function isViewportTablet(): boolean {
+  if (typeof window === "undefined") return false;
+  return (
+    window.innerWidth > VIEWPORT_BREAKPOINTS.MOBILE &&
+    window.innerWidth <= VIEWPORT_BREAKPOINTS.TABLET
+  );
+}
+
+/**
+ * Check if current viewport width indicates desktop device
+ * @returns true if viewport width is > 1024px
+ */
+export function isViewportDesktop(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.innerWidth > VIEWPORT_BREAKPOINTS.TABLET;
+}
+
+/**
+ * Get current viewport width safely
+ * @returns current viewport width or 0 if not available
+ */
+export function getViewportWidth(): number {
+  if (typeof window === "undefined") return 0;
+  return window.innerWidth;
+}
+
+/**
+ * Enhanced client-side device detection that includes viewport considerations
+ * Combines user agent detection with viewport-based detection for better accuracy
+ * @returns DeviceInfo object with comprehensive device detection
+ */
+export function detectDeviceClientSideWithViewport(): DeviceInfo {
+  if (typeof window === "undefined") {
+    return {
+      isMobile: false,
+      isTablet: false,
+      isDesktop: true,
+    };
+  }
+
+  const clientSideInfo = detectDeviceClientSide();
+
+  // Apply priority rules for device detection
+  // Mobile if: client-side detects mobile OR small viewport
+  const isMobile = clientSideInfo.isMobile || isViewportMobile();
+
+  // Tablet if: client-side detects tablet (but not if mobile is true)
+  const isTablet = (clientSideInfo.isTablet || isViewportTablet()) && !isMobile;
+
+  // Desktop is fallback when neither mobile nor tablet
+  const isDesktop = !isMobile && !isTablet;
+
+  return {
+    isMobile,
+    isTablet,
+    isDesktop,
+  };
+}

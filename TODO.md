@@ -14,6 +14,10 @@ API response is correct, but the view count is not updated in the UI.
 
 ## Content Cards
 
+### Mobile detection does not work correctly, let's trust the frontend viewport
+
+Currently, the mobile detection is not reliable. Instead, we should use the frontend viewport to determine if the user is on a mobile device.
+
 ### Liking a content should update optimistically the view count
 
 When a user likes a content, the UI should update immediately to reflect the new like count without waiting for the server response. This will improve user experience by making the application feel more responsive.

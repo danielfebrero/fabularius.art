@@ -1,5 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { getViewportWidth } from "./deviceUtils";
 import {
   ThumbnailSize,
   ThumbnailContext,
@@ -137,7 +138,7 @@ export const BREAKPOINTS = {
 export function getScreenSize(): "sm" | "md" | "lg" | "xl" | "2xl" {
   if (typeof window === "undefined") return "lg"; // SSR fallback
 
-  const width = window.innerWidth;
+  const width = getViewportWidth();
 
   if (width < BREAKPOINTS.sm) return "sm";
   if (width < BREAKPOINTS.md) return "md";

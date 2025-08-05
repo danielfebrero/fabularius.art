@@ -1,7 +1,10 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { DeviceInfo, detectDeviceClientSide } from "@/lib/deviceUtils";
+import {
+  DeviceInfo,
+  detectDeviceClientSideWithViewport,
+} from "@/lib/deviceUtils";
 
 interface DeviceContextType extends DeviceInfo {
   isMobileInterface: boolean; // true for both mobile and tablet
@@ -11,7 +14,6 @@ const DeviceContext = createContext<DeviceContextType | null>(null);
 
 interface DeviceProviderProps {
   children: React.ReactNode;
-  // Initial device info from server-side detection
   initialDeviceInfo?: DeviceInfo;
 }
 
@@ -20,56 +22,48 @@ export function DeviceProvider({
   initialDeviceInfo,
 }: DeviceProviderProps) {
   const [deviceInfo, setDeviceInfo] = useState<DeviceInfo>(() => {
-    // Always prefer server-side detection when available
-    if (initialDeviceInfo) {
-      return initialDeviceInfo;
+    if (typeof window === "undefined") {
+      return (
+        initialDeviceInfo || {
+          isMobile: false,
+          isTablet: false,
+          isDesktop: true,
+        }
+      );
     }
-    // Only use client-side as absolute fallback
-    const clientSideInfo = detectDeviceClientSide();
-    return clientSideInfo;
+
+    const clientSideInfo = detectDeviceClientSideWithViewport();
+    const isMobile =
+      initialDeviceInfo?.isMobile || false || clientSideInfo.isMobile;
+    const isTablet =
+      initialDeviceInfo?.isTablet || false || clientSideInfo.isTablet;
+    const isDesktop = !isMobile && !isTablet;
+
+    return { isMobile, isTablet, isDesktop };
   });
 
-  // Re-validate device info on client-side after hydration
   useEffect(() => {
-    // Only validate if we don't have server-side detection
-    // Server-side detection is generally more reliable than client-side
-    if (!initialDeviceInfo) {
-      const validateDeviceInfo = () => {
-        const clientSideInfo = detectDeviceClientSide();
-        setDeviceInfo(clientSideInfo);
-      };
-
-      // Validate on mount and after a short delay to ensure proper hydration
-      validateDeviceInfo();
-      const timeoutId = setTimeout(validateDeviceInfo, 100);
-
-      return () => clearTimeout(timeoutId);
-    }
-    // If we have server-side detection, trust it and don't override
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialDeviceInfo]); // Only run once on mount
-
-  useEffect(() => {
-    // Always add resize and orientation change handlers to handle edge cases
-    // like screen rotation or window resizing that might affect mobile interface
     const updateDeviceInfo = () => {
-      const newDeviceInfo = detectDeviceClientSide();
+      const clientSideInfo = detectDeviceClientSideWithViewport();
+      const isMobile =
+        initialDeviceInfo?.isMobile || false || clientSideInfo.isMobile;
+      const isTablet =
+        initialDeviceInfo?.isTablet || false || clientSideInfo.isTablet;
+      const isDesktop = !isMobile && !isTablet;
 
-      // Only update if there's an actual change to prevent unnecessary re-renders
+      const newDeviceInfo = { isMobile, isTablet, isDesktop };
+
       if (
         newDeviceInfo.isMobile !== deviceInfo.isMobile ||
         newDeviceInfo.isTablet !== deviceInfo.isTablet ||
         newDeviceInfo.isDesktop !== deviceInfo.isDesktop
       ) {
-        console.log("Device info updated due to resize/orientation:", {
-          old: deviceInfo,
-          new: newDeviceInfo,
-        });
         setDeviceInfo(newDeviceInfo);
       }
     };
 
-    // Add both resize and orientation change listeners
+    updateDeviceInfo();
+
     window.addEventListener("resize", updateDeviceInfo);
     window.addEventListener("orientationchange", updateDeviceInfo);
 
@@ -77,7 +71,12 @@ export function DeviceProvider({
       window.removeEventListener("resize", updateDeviceInfo);
       window.removeEventListener("orientationchange", updateDeviceInfo);
     };
-  }, [deviceInfo]);
+  }, [
+    deviceInfo.isMobile,
+    deviceInfo.isTablet,
+    deviceInfo.isDesktop,
+    initialDeviceInfo,
+  ]);
 
   const contextValue: DeviceContextType = {
     ...deviceInfo,
@@ -99,34 +98,21 @@ export function useDevice(): DeviceContextType {
   return context;
 }
 
-/**
- * Hook that returns true for mobile phones and tablets
- * This replaces the old useIsMobile hook with better device detection
- */
 export function useIsMobile(): boolean {
   const { isMobileInterface } = useDevice();
   return isMobileInterface;
 }
 
-/**
- * Hook that returns true only for mobile phones (excludes tablets)
- */
 export function useIsMobilePhone(): boolean {
   const { isMobile } = useDevice();
   return isMobile;
 }
 
-/**
- * Hook that returns true only for tablets
- */
 export function useIsTablet(): boolean {
   const { isTablet } = useDevice();
   return isTablet;
 }
 
-/**
- * Hook that returns true for desktop devices
- */
 export function useIsDesktop(): boolean {
   const { isDesktop } = useDevice();
   return isDesktop;
