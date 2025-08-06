@@ -2,9 +2,23 @@
 
 ## Login
 
+## User Insights
+
+### Deleting a media should decrease total media count
+
+When a media item is deleted, the total media count should be decremented accordingly. This ensures that the user insights reflect the current state of the media library accurately.
+
 ## Homepage Discover
 
 ## Content Cards
+
+### In media user page, cannot delete a media
+
+Error 500 returned by the server.
+
+### ViewCount should have e TanStack Query state to avoid re-fetching and optimistic updates
+
+The view count for content cards should be managed using TanStack Query to ensure that the state is consistent and to avoid unnecessary re-fetching. This will also allow for optimistic updates, where the view count can be updated immediately in the UI while the request is being processed in the background.
 
 ## Error handling
 
@@ -55,10 +69,6 @@ Last images I uploaded were 2 by 2 instead of bulk upload. This should be fixed 
 ## Settings
 
 ## User albums
-
-## User medias
-
-On the user media page, we should be able to delete media.
 
 ## Optimization
 
