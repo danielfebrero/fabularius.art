@@ -18,6 +18,10 @@ We should avoid using `any` type in TypeScript. Instead, we should define proper
 
 ## UI/UX
 
+### View count on mobile on discover page is not working well
+
+It stay at 0 for new albums and do not get live hydrated.
+
 ### Make admin page responsive
 
 Currently, it's unusable on mobile devices. We need to ensure that the admin page is fully responsive and functional on smaller screens.
@@ -77,3 +81,13 @@ We should upgrade our Next.js version to 15 to take advantage of the latest feat
 ### Migrate to React.js 19
 
 We should upgrade our React.js version to 19 to take advantage of the latest features and improvements.
+
+## Login / Logout
+
+### Return to the page where the user was before login
+
+When a user logs in, they should be redirected back to the page they were on before logging in. This will improve user experience by not disrupting their workflow.
+
+### Logout should refresh state
+
+When a user logs out, the application state should be refreshed to ensure that any sensitive information is cleared and the user is presented with the login screen. This can be achieved by resetting the application state and redirecting the user to the homepage.

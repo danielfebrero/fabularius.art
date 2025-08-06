@@ -135,7 +135,6 @@ export const handler = async (
           }
 
           return ResponseUtil.success(event, {
-            success: true,
             message:
               results.failed.length === 0
                 ? `All ${results.successful.length} media items added to album successfully`

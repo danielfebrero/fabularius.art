@@ -228,7 +228,7 @@ export const albumsApi = {
       throw new Error(data.message || "Failed to bulk add media to album");
     }
 
-    return data.results;
+    return data.data.results;
   },
 
   // Remove media from album
@@ -304,7 +304,7 @@ export const albumsApi = {
       throw new Error(data.message || "Failed to bulk remove media from album");
     }
 
-    return data.results;
+    return data.data.results;
   },
 
   // Get a single album
