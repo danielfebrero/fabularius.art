@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bookmark, Grid, List } from "lucide-react";
 import { useBookmarksQuery } from "@/hooks/queries/useBookmarksQuery";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { Lightbox } from "@/components/ui/Lightbox";
+import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 
 const UserBookmarksPage: React.FC = () => {
   // Use TanStack Query hook for bookmarks
@@ -19,6 +20,9 @@ const UserBookmarksPage: React.FC = () => {
     isFetchingNextPage,
   } = useBookmarksQuery();
 
+  // Hook for bulk prefetching interaction status
+  const { prefetch } = usePrefetchInteractionStatus();
+
   // Extract bookmarks from infinite query data
   const allBookmarks =
     bookmarksData?.pages.flatMap(
@@ -29,6 +33,23 @@ const UserBookmarksPage: React.FC = () => {
   const bookmarks = allBookmarks.filter(
     (bookmark: any) => bookmark && bookmark.targetType
   );
+
+  // Prefetch interaction status for all liked items
+  useEffect(() => {
+    if (bookmarks.length > 0) {
+      const targets = bookmarks.map((bookmark: any) => ({
+        targetType: bookmark.targetType as "album" | "media",
+        targetId: bookmark.targetId,
+      }));
+      prefetch(targets).catch((error) => {
+        console.error(
+          "Failed to prefetch user likes interaction status:",
+          error
+        );
+      });
+    }
+  }, [bookmarks, prefetch]);
+
   const totalCount = bookmarks.length;
   const hasMore = hasNextPage;
   const isLoadingMore = isFetchingNextPage;

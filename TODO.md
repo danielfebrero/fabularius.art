@@ -10,11 +10,13 @@ When a media item is deleted, the total media count should be decremented accord
 
 ## Homepage Discover
 
+## User Bookmarks page
+
+### Bookmark status is not showing in content cards
+
+The bookmark status should be displayed in the content cards on the user bookmarks page.
+
 ## Content Cards
-
-### In media user page, cannot delete a media
-
-Error 500 returned by the server.
 
 ### ViewCount should have e TanStack Query state to avoid re-fetching and optimistic updates
 
