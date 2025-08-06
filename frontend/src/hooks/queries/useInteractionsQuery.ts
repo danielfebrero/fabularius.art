@@ -75,7 +75,29 @@ export function useInteractionStatus(
 
 // Hook for reading interaction status from cache only (for buttons)
 export function useInteractionStatusFromCache(targets: InteractionTarget[]) {
-  return useInteractionStatus(targets, { enabled: false });
+  const userContext = useUserContext();
+  const isUserLoggedIn = !!userContext.user && !userContext.initializing;
+  
+  return useQuery<InteractionStatusResponse>({
+    queryKey: queryKeys.user.interactions.status(targets),
+    queryFn: async () => {
+      // This should never be called since enabled is false, but just in case
+      return { data: { statuses: [] } };
+    },
+    enabled: false, // Never fetch - only read from cache
+    // Return cached data immediately if available
+    initialData: () => {
+      if (!isUserLoggedIn || targets.length === 0) return undefined;
+      
+      const cached = queryClient.getQueryData(
+        queryKeys.user.interactions.status(targets)
+      ) as InteractionStatusResponse | undefined;
+      
+      return cached;
+    },
+    staleTime: Infinity, // Cache data never goes stale since we don't refetch
+    gcTime: 30 * 60 * 1000, // Keep in cache for 30 minutes
+  });
 }
 
 // Hook for fetching user's bookmarks with infinite scroll - UPDATED for unified pagination
@@ -218,40 +240,94 @@ export function useToggleLike() {
         queryKey: queryKeys.user.interactions.status(targets),
       });
 
-      // Optimistically update interaction status
-      updateCache.userInteractionStatus(targetType, targetId, {
-        userLiked: !isCurrentlyLiked,
+      // Store the previous data for rollback on error
+      const previousData = queryClient.getQueryData(queryKeys.user.interactions.status(targets));
+
+      // Optimistically update interaction status - this will handle both status and count updates
+      const newLikedState = !isCurrentlyLiked;
+      const countIncrement = isCurrentlyLiked ? -1 : 1;
+
+      // Update the interaction status cache with both status and count
+      queryClient.setQueryData(queryKeys.user.interactions.status(targets), (oldData: any) => {
+        // If there's no existing data, create the structure with the optimistic update
+        if (!oldData?.data?.statuses) {
+          return {
+            success: true,
+            data: {
+              statuses: [
+                {
+                  targetType,
+                  targetId,
+                  userLiked: newLikedState,
+                  userBookmarked: false,
+                  likeCount: newLikedState ? 1 : 0,
+                  bookmarkCount: 0,
+                },
+              ],
+            },
+          };
+        }
+
+        return {
+          ...oldData,
+          data: {
+            ...oldData.data,
+            statuses: oldData.data.statuses.map((status: any) => {
+              if (
+                status.targetType === targetType &&
+                status.targetId === targetId
+              ) {
+                return {
+                  ...status,
+                  userLiked: newLikedState,
+                  likeCount: Math.max(0, (status.likeCount || 0) + countIncrement),
+                };
+              }
+              return status;
+            }),
+          },
+        };
       });
 
-      // Optimistically update counts
+      // Also update counts in other caches (album/media detail pages, album lists)
       updateCache.interactionCounts(
         targetType,
         targetId,
         "like",
-        isCurrentlyLiked ? -1 : 1
+        countIncrement
       );
 
-      return { targetType, targetId, isCurrentlyLiked };
+      return { targetType, targetId, isCurrentlyLiked, previousData };
     },
     onError: (error, variables, context) => {
       console.error("Failed to toggle like:", error);
 
       if (context) {
-        // Revert optimistic updates
-        updateCache.userInteractionStatus(
-          context.targetType,
-          context.targetId,
-          {
-            userLiked: context.isCurrentlyLiked,
-          }
-        );
+        const targets = [{ targetType: context.targetType, targetId: context.targetId }];
+        
+        // Restore the previous data if we have it
+        if (context.previousData !== undefined) {
+          queryClient.setQueryData(
+            queryKeys.user.interactions.status(targets),
+            context.previousData
+          );
+        } else {
+          // Fallback: revert optimistic updates manually
+          updateCache.userInteractionStatus(
+            context.targetType,
+            context.targetId,
+            {
+              userLiked: context.isCurrentlyLiked,
+            }
+          );
 
-        updateCache.interactionCounts(
-          context.targetType,
-          context.targetId,
-          "like",
-          context.isCurrentlyLiked ? 1 : -1
-        );
+          updateCache.interactionCounts(
+            context.targetType,
+            context.targetId,
+            "like",
+            context.isCurrentlyLiked ? 1 : -1
+          );
+        }
       }
 
       // Invalidate to refetch correct data
@@ -311,40 +387,94 @@ export function useToggleBookmark() {
         queryKey: queryKeys.user.interactions.status(targets),
       });
 
-      // Optimistically update interaction status
-      updateCache.userInteractionStatus(targetType, targetId, {
-        userBookmarked: !isCurrentlyBookmarked,
+      // Store the previous data for rollback on error
+      const previousData = queryClient.getQueryData(queryKeys.user.interactions.status(targets));
+
+      // Optimistically update interaction status - this will handle both status and count updates
+      const newBookmarkedState = !isCurrentlyBookmarked;
+      const countIncrement = isCurrentlyBookmarked ? -1 : 1;
+
+      // Update the interaction status cache with both status and count
+      queryClient.setQueryData(queryKeys.user.interactions.status(targets), (oldData: any) => {
+        // If there's no existing data, create the structure with the optimistic update
+        if (!oldData?.data?.statuses) {
+          return {
+            success: true,
+            data: {
+              statuses: [
+                {
+                  targetType,
+                  targetId,
+                  userLiked: false,
+                  userBookmarked: newBookmarkedState,
+                  likeCount: 0,
+                  bookmarkCount: newBookmarkedState ? 1 : 0,
+                },
+              ],
+            },
+          };
+        }
+
+        return {
+          ...oldData,
+          data: {
+            ...oldData.data,
+            statuses: oldData.data.statuses.map((status: any) => {
+              if (
+                status.targetType === targetType &&
+                status.targetId === targetId
+              ) {
+                return {
+                  ...status,
+                  userBookmarked: newBookmarkedState,
+                  bookmarkCount: Math.max(0, (status.bookmarkCount || 0) + countIncrement),
+                };
+              }
+              return status;
+            }),
+          },
+        };
       });
 
-      // Optimistically update counts
+      // Also update counts in other caches (album/media detail pages, album lists)
       updateCache.interactionCounts(
         targetType,
         targetId,
         "bookmark",
-        isCurrentlyBookmarked ? -1 : 1
+        countIncrement
       );
 
-      return { targetType, targetId, isCurrentlyBookmarked };
+      return { targetType, targetId, isCurrentlyBookmarked, previousData };
     },
     onError: (error, variables, context) => {
       console.error("Failed to toggle bookmark:", error);
 
       if (context) {
-        // Revert optimistic updates
-        updateCache.userInteractionStatus(
-          context.targetType,
-          context.targetId,
-          {
-            userBookmarked: context.isCurrentlyBookmarked,
-          }
-        );
+        const targets = [{ targetType: context.targetType, targetId: context.targetId }];
+        
+        // Restore the previous data if we have it
+        if (context.previousData !== undefined) {
+          queryClient.setQueryData(
+            queryKeys.user.interactions.status(targets),
+            context.previousData
+          );
+        } else {
+          // Fallback: revert optimistic updates manually
+          updateCache.userInteractionStatus(
+            context.targetType,
+            context.targetId,
+            {
+              userBookmarked: context.isCurrentlyBookmarked,
+            }
+          );
 
-        updateCache.interactionCounts(
-          context.targetType,
-          context.targetId,
-          "bookmark",
-          context.isCurrentlyBookmarked ? 1 : -1
-        );
+          updateCache.interactionCounts(
+            context.targetType,
+            context.targetId,
+            "bookmark",
+            context.isCurrentlyBookmarked ? 1 : -1
+          );
+        }
       }
 
       // Invalidate to refetch correct data

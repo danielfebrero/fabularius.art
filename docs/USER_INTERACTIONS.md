@@ -4,12 +4,29 @@ This document provides a detailed overview of the user interaction system for th
 
 ## Interaction System
 
-The interaction system allows users to engage with content by liking or bookmarking albums and media items.
+The interaction system allows users to engage with content by liking or bookmarking albums and media items with instant UI feedback through optimistic updates.
 
 ### Interaction Types
 
 - **Like**: A user can like an album or a media item.
 - **Bookmark**: A user can bookmark an album or a media item for later viewing.
+
+### Optimistic Updates
+
+The LikeButton and BookmarkButton components provide instant UI feedback through optimistic updates:
+
+1. **Cache-First Strategy**: Components read interaction status from cache (populated by parent components in bulk)
+2. **Immediate UI Response**: When users click like/bookmark, the UI updates instantly before API calls
+3. **Automatic Rollback**: Failed API calls automatically revert UI changes
+4. **Count Updates**: Like and bookmark counts update immediately and optimistically
+
+```typescript
+// Example optimistic update flow:
+1. User clicks like button → UI immediately shows liked state + incremented count
+2. API call is made in background
+3. If API succeeds → state persists
+4. If API fails → UI reverts to previous state with error handling
+```
 
 ### API Endpoints
 

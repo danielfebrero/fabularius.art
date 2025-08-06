@@ -187,7 +187,24 @@ export const updateCache = {
     const queryKey = queryKeys.user.interactions.status(targets);
 
     queryClient.setQueryData(queryKey, (oldData: any) => {
-      if (!oldData?.data?.statuses) return oldData;
+      // If there's no existing data, create the structure with the optimistic update
+      if (!oldData?.data?.statuses) {
+        return {
+          success: true,
+          data: {
+            statuses: [
+              {
+                targetType,
+                targetId,
+                userLiked: updates.userLiked ?? false,
+                userBookmarked: updates.userBookmarked ?? false,
+                likeCount: updates.userLiked ? 1 : 0,
+                bookmarkCount: updates.userBookmarked ? 1 : 0,
+              },
+            ],
+          },
+        };
+      }
 
       return {
         ...oldData,
@@ -243,21 +260,39 @@ export const updateCache = {
     );
   },
 
-  // Update interaction counts optimistically
+  // Update interaction counts optimistically (for detail pages and album lists)
   interactionCounts: (
     targetType: "album" | "media" | "comment",
     targetId: string,
     type: "like" | "bookmark",
     increment: number
   ) => {
-    // For comments, we handle differently since they don't have detail pages
+    // For comments, only update the interaction status cache
     if (targetType === "comment") {
-      // Update the interaction status cache for the comment
       const targets = [{ targetType, targetId }];
-      const queryKey = queryKeys.user.interactions.status(targets);
+      const statusQueryKey = queryKeys.user.interactions.status(targets);
 
-      queryClient.setQueryData(queryKey, (oldData: any) => {
-        if (!oldData?.data?.statuses) return oldData;
+      queryClient.setQueryData(statusQueryKey, (oldData: any) => {
+        const countField = type === "like" ? "likeCount" : "bookmarkCount";
+        
+        // If there's no existing data, create it with the count update
+        if (!oldData?.data?.statuses) {
+          return {
+            success: true,
+            data: {
+              statuses: [
+                {
+                  targetType,
+                  targetId,
+                  userLiked: false,
+                  userBookmarked: false,
+                  likeCount: type === "like" ? Math.max(0, increment) : 0,
+                  bookmarkCount: type === "bookmark" ? Math.max(0, increment) : 0,
+                },
+              ],
+            },
+          };
+        }
 
         return {
           ...oldData,
@@ -268,8 +303,6 @@ export const updateCache = {
                 status.targetType === targetType &&
                 status.targetId === targetId
               ) {
-                const countField =
-                  type === "like" ? "likeCount" : "bookmarkCount";
                 return {
                   ...status,
                   [countField]: Math.max(

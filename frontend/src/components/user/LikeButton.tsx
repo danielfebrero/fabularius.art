@@ -38,8 +38,9 @@ export const LikeButton: React.FC<LikeButtonProps> = ({
   const t = useTranslations("common");
   const tUser = useTranslations("user.likes");
 
-  // Use TanStack Query hooks for interaction status and toggle (cache-only)
+  // Use TanStack Query hooks for interaction status and toggle
   const targets = [{ targetType, targetId }];
+  // Use cache-only to avoid refetching (parent fetches in bulk)
   const { data: interactionData, isLoading } =
     useInteractionStatusFromCache(targets);
   const { mutateAsync: toggleLikeMutation, isPending: isToggling } =
