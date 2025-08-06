@@ -15,6 +15,7 @@ import { useDevice } from "@/contexts/DeviceContext";
 import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useRemoveMediaFromAlbum } from "@/hooks/queries/useMediaQuery";
+import { useDeleteMedia } from "@/hooks/queries/useMediaQuery";
 import {
   Maximize2,
   Plus,
@@ -127,6 +128,7 @@ export function ContentCard({
   const user = userProfile?.data?.user || null;
   const { redirectToLogin } = useAuthRedirect();
   const removeFromAlbumMutation = useRemoveMediaFromAlbum();
+  const deleteMediaMutation = useDeleteMedia();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [showMobileActions, setShowMobileActions] = useState(false);
@@ -375,7 +377,13 @@ export function ContentCard({
       setDeleteConfirmOpen(false);
     } else {
       try {
-        // todo: implement
+        if (isMedia && media) {
+          // Default behavior: delete the media
+          await deleteMediaMutation.mutateAsync(media.id);
+        } else if (album) {
+          // For albums, log for now (could implement album deletion later)
+          console.log("Album deletion not yet implemented:", album.id);
+        }
       } catch (error) {
         console.error("Failed to delete:", error);
       } finally {

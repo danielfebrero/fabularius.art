@@ -586,6 +586,46 @@ Resources:
                 - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/pornspot-ai/${Environment}/revalidate-secret"
                 - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/pornspot-ai/${Environment}/frontend-url"
 
+  DeleteMediaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-pornspot-delete-media"
+      CodeUri: backend/dist/functions/media/
+      Handler: delete.handler
+      Layers:
+        - !Ref SharedLayer
+      Events:
+        DeleteMedia:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /media/{mediaId}
+            Method: DELETE
+            Auth:
+              Authorizer: UserAuthorizer
+        OptionsDeleteMedia:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /media/{mediaId}
+            Method: OPTIONS
+            Auth:
+              Authorizer: NONE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref MediaTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref MediaTable
+        - S3CrudPolicy:
+            BucketName: !Ref MediaBucket
+        - Statement:
+            - Effect: Allow
+              Action:
+                - ssm:GetParameter
+              Resource:
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/pornspot-ai/${Environment}/revalidate-secret"
+                - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/pornspot-ai/${Environment}/frontend-url"
+
   BulkRemoveMediaFunction:
     Type: AWS::Serverless::Function
     Properties:

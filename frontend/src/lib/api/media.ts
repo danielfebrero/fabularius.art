@@ -123,4 +123,30 @@ export const mediaApi = {
       throw new Error(data.error || "Failed to upload media");
     }
   },
+
+  // Delete media
+  deleteMedia: async (mediaId: string): Promise<void> => {
+    const response = await fetch(`${API_URL}/media/${mediaId}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      let errorData = null;
+      try {
+        errorData = await response.json();
+      } catch {
+        // response body is not JSON
+      }
+      const errorMessage =
+        (errorData && (errorData.error || errorData.message)) ||
+        `Failed to delete media: ${response.statusText}`;
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || "Failed to delete media");
+    }
+  },
 };
