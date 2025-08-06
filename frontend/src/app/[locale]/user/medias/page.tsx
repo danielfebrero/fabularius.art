@@ -203,7 +203,7 @@ const UserMediasPage: React.FC = () => {
                 canFullscreen={true}
                 canAddToAlbum={true}
                 canDownload={true}
-                canDelete={false}
+                canDelete={true}
                 showCounts={true}
                 showTags={false}
                 aspectRatio={viewMode === "grid" ? "square" : "auto"}

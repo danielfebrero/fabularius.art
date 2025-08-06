@@ -274,7 +274,7 @@ export const updateCache = {
 
       queryClient.setQueryData(statusQueryKey, (oldData: any) => {
         const countField = type === "like" ? "likeCount" : "bookmarkCount";
-        
+
         // If there's no existing data, create it with the count update
         if (!oldData?.data?.statuses) {
           return {
@@ -287,7 +287,8 @@ export const updateCache = {
                   userLiked: false,
                   userBookmarked: false,
                   likeCount: type === "like" ? Math.max(0, increment) : 0,
-                  bookmarkCount: type === "bookmark" ? Math.max(0, increment) : 0,
+                  bookmarkCount:
+                    type === "bookmark" ? Math.max(0, increment) : 0,
                 },
               ],
             },

@@ -303,6 +303,80 @@ export function useRemoveMediaFromAlbum() {
   });
 }
 
+// Mutation for deleting media from album (and system)
+export function useDeleteMediaFromAlbum() {
+  return useMutation({
+    mutationFn: async ({
+      albumId,
+      mediaId,
+    }: {
+      albumId: string;
+      mediaId: string;
+    }) => {
+      return await albumsApi.deleteMedia(albumId, mediaId);
+    },
+    onMutate: async ({ albumId, mediaId }) => {
+      // Cancel any outgoing refetches for album media
+      await queryClient.cancelQueries({
+        queryKey: ["media", "album", albumId],
+      });
+
+      // Snapshot the previous value
+      const previousAlbumMedia = queryClient.getQueriesData({
+        queryKey: ["media", "album", albumId],
+      });
+
+      // Optimistically remove the media from album media lists
+      queryClient.setQueriesData(
+        { queryKey: ["media", "album", albumId] },
+        (old: any) => {
+          if (!old?.pages) return old;
+
+          const newPages = old.pages.map((page: any) => ({
+            ...page,
+            media: page.media.filter((m: any) => m.id !== mediaId),
+          }));
+
+          return {
+            ...old,
+            pages: newPages,
+          };
+        }
+      );
+
+      // Return context for rollback
+      return { previousAlbumMedia, albumId, mediaId };
+    },
+    onError: (err, variables, context) => {
+      // If the mutation fails, use the context to undo the optimistic update
+      if (context?.previousAlbumMedia) {
+        context.previousAlbumMedia.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSuccess: (data, variables) => {
+      // Remove from cache completely
+      queryClient.removeQueries({
+        queryKey: queryKeys.media.detail(variables.mediaId),
+      });
+
+      // Invalidate related queries
+      invalidateQueries.media(variables.mediaId);
+      invalidateQueries.album(variables.albumId);
+    },
+    onSettled: (data, error, variables) => {
+      // Invalidate queries to ensure we have fresh data
+      queryClient.invalidateQueries({
+        queryKey: ["media", "album", variables.albumId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["media", "user"],
+      });
+    },
+  });
+}
+
 // Utility hook for prefetching albums
 export function usePrefetchAlbum() {
   return {

@@ -222,6 +222,35 @@ export const albumsApi = {
     }
   },
 
+  // Delete media from album (and potentially from system)
+  deleteMedia: async (albumId: string, mediaId: string): Promise<void> => {
+    const response = await fetch(
+      `${API_URL}/albums/${albumId}/media/${mediaId}`,
+      {
+        method: "DELETE",
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      let errorData = null;
+      try {
+        errorData = await response.json();
+      } catch {
+        // response body is not JSON
+      }
+      const errorMessage =
+        (errorData && (errorData.error || errorData.message)) ||
+        `Failed to delete media: ${response.statusText}`;
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || "Failed to delete media");
+    }
+  },
+
   // Get a single album
   getAlbum: async (albumId: string): Promise<any> => {
     const response = await fetch(`${API_URL}/albums/${albumId}`, {

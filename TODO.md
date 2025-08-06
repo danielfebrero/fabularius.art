@@ -6,10 +6,6 @@
 
 ## Content Cards
 
-### Liking a content should update optimistically the view count
-
-When a user likes a content, the UI should update immediately to reflect the new like count without waiting for the server response. This will improve user experience by making the application feel more responsive.
-
 ## Error handling
 
 ### Write tests
@@ -21,10 +17,6 @@ I suggest to delete all the tests and write new ones. The current tests are not 
 We should avoid using `any` type in TypeScript. Instead, we should define proper types for our data structures.
 
 ## UI/UX
-
-### MediaCard view count should be fetched async
-
-Currently, it SSG on some pages which is not ideal. We should fetch the view count asynchronously to ensure that the data is always up to date without blocking the initial page load.
 
 ### Make admin page responsive
 

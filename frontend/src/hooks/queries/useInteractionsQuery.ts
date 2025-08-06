@@ -77,7 +77,7 @@ export function useInteractionStatus(
 export function useInteractionStatusFromCache(targets: InteractionTarget[]) {
   const userContext = useUserContext();
   const isUserLoggedIn = !!userContext.user && !userContext.initializing;
-  
+
   return useQuery<InteractionStatusResponse>({
     queryKey: queryKeys.user.interactions.status(targets),
     queryFn: async () => {
@@ -88,11 +88,11 @@ export function useInteractionStatusFromCache(targets: InteractionTarget[]) {
     // Return cached data immediately if available
     initialData: () => {
       if (!isUserLoggedIn || targets.length === 0) return undefined;
-      
+
       const cached = queryClient.getQueryData(
         queryKeys.user.interactions.status(targets)
       ) as InteractionStatusResponse | undefined;
-      
+
       return cached;
     },
     staleTime: Infinity, // Cache data never goes stale since we don't refetch
@@ -241,53 +241,61 @@ export function useToggleLike() {
       });
 
       // Store the previous data for rollback on error
-      const previousData = queryClient.getQueryData(queryKeys.user.interactions.status(targets));
+      const previousData = queryClient.getQueryData(
+        queryKeys.user.interactions.status(targets)
+      );
 
       // Optimistically update interaction status - this will handle both status and count updates
       const newLikedState = !isCurrentlyLiked;
       const countIncrement = isCurrentlyLiked ? -1 : 1;
 
       // Update the interaction status cache with both status and count
-      queryClient.setQueryData(queryKeys.user.interactions.status(targets), (oldData: any) => {
-        // If there's no existing data, create the structure with the optimistic update
-        if (!oldData?.data?.statuses) {
+      queryClient.setQueryData(
+        queryKeys.user.interactions.status(targets),
+        (oldData: any) => {
+          // If there's no existing data, create the structure with the optimistic update
+          if (!oldData?.data?.statuses) {
+            return {
+              success: true,
+              data: {
+                statuses: [
+                  {
+                    targetType,
+                    targetId,
+                    userLiked: newLikedState,
+                    userBookmarked: false,
+                    likeCount: newLikedState ? 1 : 0,
+                    bookmarkCount: 0,
+                  },
+                ],
+              },
+            };
+          }
+
           return {
-            success: true,
+            ...oldData,
             data: {
-              statuses: [
-                {
-                  targetType,
-                  targetId,
-                  userLiked: newLikedState,
-                  userBookmarked: false,
-                  likeCount: newLikedState ? 1 : 0,
-                  bookmarkCount: 0,
-                },
-              ],
+              ...oldData.data,
+              statuses: oldData.data.statuses.map((status: any) => {
+                if (
+                  status.targetType === targetType &&
+                  status.targetId === targetId
+                ) {
+                  return {
+                    ...status,
+                    userLiked: newLikedState,
+                    likeCount: Math.max(
+                      0,
+                      (status.likeCount || 0) + countIncrement
+                    ),
+                  };
+                }
+                return status;
+              }),
             },
           };
         }
-
-        return {
-          ...oldData,
-          data: {
-            ...oldData.data,
-            statuses: oldData.data.statuses.map((status: any) => {
-              if (
-                status.targetType === targetType &&
-                status.targetId === targetId
-              ) {
-                return {
-                  ...status,
-                  userLiked: newLikedState,
-                  likeCount: Math.max(0, (status.likeCount || 0) + countIncrement),
-                };
-              }
-              return status;
-            }),
-          },
-        };
-      });
+      );
 
       // Also update counts in other caches (album/media detail pages, album lists)
       updateCache.interactionCounts(
@@ -303,8 +311,10 @@ export function useToggleLike() {
       console.error("Failed to toggle like:", error);
 
       if (context) {
-        const targets = [{ targetType: context.targetType, targetId: context.targetId }];
-        
+        const targets = [
+          { targetType: context.targetType, targetId: context.targetId },
+        ];
+
         // Restore the previous data if we have it
         if (context.previousData !== undefined) {
           queryClient.setQueryData(
@@ -388,53 +398,61 @@ export function useToggleBookmark() {
       });
 
       // Store the previous data for rollback on error
-      const previousData = queryClient.getQueryData(queryKeys.user.interactions.status(targets));
+      const previousData = queryClient.getQueryData(
+        queryKeys.user.interactions.status(targets)
+      );
 
       // Optimistically update interaction status - this will handle both status and count updates
       const newBookmarkedState = !isCurrentlyBookmarked;
       const countIncrement = isCurrentlyBookmarked ? -1 : 1;
 
       // Update the interaction status cache with both status and count
-      queryClient.setQueryData(queryKeys.user.interactions.status(targets), (oldData: any) => {
-        // If there's no existing data, create the structure with the optimistic update
-        if (!oldData?.data?.statuses) {
+      queryClient.setQueryData(
+        queryKeys.user.interactions.status(targets),
+        (oldData: any) => {
+          // If there's no existing data, create the structure with the optimistic update
+          if (!oldData?.data?.statuses) {
+            return {
+              success: true,
+              data: {
+                statuses: [
+                  {
+                    targetType,
+                    targetId,
+                    userLiked: false,
+                    userBookmarked: newBookmarkedState,
+                    likeCount: 0,
+                    bookmarkCount: newBookmarkedState ? 1 : 0,
+                  },
+                ],
+              },
+            };
+          }
+
           return {
-            success: true,
+            ...oldData,
             data: {
-              statuses: [
-                {
-                  targetType,
-                  targetId,
-                  userLiked: false,
-                  userBookmarked: newBookmarkedState,
-                  likeCount: 0,
-                  bookmarkCount: newBookmarkedState ? 1 : 0,
-                },
-              ],
+              ...oldData.data,
+              statuses: oldData.data.statuses.map((status: any) => {
+                if (
+                  status.targetType === targetType &&
+                  status.targetId === targetId
+                ) {
+                  return {
+                    ...status,
+                    userBookmarked: newBookmarkedState,
+                    bookmarkCount: Math.max(
+                      0,
+                      (status.bookmarkCount || 0) + countIncrement
+                    ),
+                  };
+                }
+                return status;
+              }),
             },
           };
         }
-
-        return {
-          ...oldData,
-          data: {
-            ...oldData.data,
-            statuses: oldData.data.statuses.map((status: any) => {
-              if (
-                status.targetType === targetType &&
-                status.targetId === targetId
-              ) {
-                return {
-                  ...status,
-                  userBookmarked: newBookmarkedState,
-                  bookmarkCount: Math.max(0, (status.bookmarkCount || 0) + countIncrement),
-                };
-              }
-              return status;
-            }),
-          },
-        };
-      });
+      );
 
       // Also update counts in other caches (album/media detail pages, album lists)
       updateCache.interactionCounts(
@@ -450,8 +468,10 @@ export function useToggleBookmark() {
       console.error("Failed to toggle bookmark:", error);
 
       if (context) {
-        const targets = [{ targetType: context.targetType, targetId: context.targetId }];
-        
+        const targets = [
+          { targetType: context.targetType, targetId: context.targetId },
+        ];
+
         // Restore the previous data if we have it
         if (context.previousData !== undefined) {
           queryClient.setQueryData(

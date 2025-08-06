@@ -12,6 +12,7 @@ import {
   ComponentErrorBoundary,
   LightboxErrorBoundary,
 } from "./ErrorBoundaries";
+import { useRemoveMediaFromAlbum } from "@/hooks/queries/useAlbumsQuery";
 
 interface MediaGalleryProps {
   albumId: string;
@@ -21,6 +22,7 @@ interface MediaGalleryProps {
     cursor: string | null;
   } | null;
   className?: string;
+  canRemoveFromAlbum?: boolean; // New prop to control removal from album
 }
 
 export const MediaGallery: React.FC<MediaGalleryProps> = ({
@@ -28,6 +30,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   initialMedia,
   initialPagination,
   className,
+  canRemoveFromAlbum,
 }) => {
   const [media, setMedia] = useState<Media[]>(initialMedia);
   const [pagination, setPagination] = useState(initialPagination);
@@ -35,6 +38,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+  const removeFromAlbumMutation = useRemoveMediaFromAlbum();
 
   // Hook for manual prefetching (for infinite scroll items)
   const { prefetch } = usePrefetchInteractionStatus();
@@ -124,6 +128,18 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
     }
   };
 
+  const onRemoveMedia = async (mediaId: string) => {
+    try {
+      await removeFromAlbumMutation.mutateAsync({
+        albumId: albumId,
+        mediaId: mediaId,
+      });
+      setMedia((prevMedia) => prevMedia.filter((m) => m.id !== mediaId));
+    } catch (error) {
+      console.error("Failed to remove media from album:", error);
+    }
+  };
+
   if (media.length === 0 && !loading) {
     return (
       <div className={cn("text-center py-12", className)}>
@@ -177,6 +193,9 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
                   canDelete={false}
                   mediaList={media}
                   currentIndex={index}
+                  canRemoveFromAlbum={canRemoveFromAlbum}
+                  currentAlbumId={albumId}
+                  onRemoveFromAlbum={() => onRemoveMedia(mediaItem.id)}
                 />
               </ComponentErrorBoundary>
             );

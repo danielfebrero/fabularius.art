@@ -184,6 +184,7 @@ export function AlbumDetailClient({
               albumId={album.id}
               initialMedia={initialMedia}
               initialPagination={initialPagination}
+              canRemoveFromAlbum={album.createdBy === user?.userId}
             />
           </MediaGalleryErrorBoundary>
 

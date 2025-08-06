@@ -15,16 +15,23 @@ import { useDevice } from "@/contexts/DeviceContext";
 import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import {
+  useRemoveMediaFromAlbum,
+  useDeleteMediaFromAlbum,
+} from "@/hooks/queries/useAlbumsQuery";
+import {
   Maximize2,
   Plus,
+  Minus,
   Download,
   Trash2,
   PlayCircle,
   MoreVertical,
   Folder,
 } from "lucide-react";
-import ResponsivePicture from "./ResponsivePicture";
+import ResponsivePicture from "@/components/ui/ResponsivePicture";
 import { composeThumbnailUrls } from "@/lib/urlUtils";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { set } from "zod";
 
 interface ContentCardProps {
   item: Media | Album;
@@ -39,6 +46,7 @@ interface ContentCardProps {
   canBookmark?: boolean;
   canFullscreen?: boolean;
   canAddToAlbum?: boolean;
+  canRemoveFromAlbum?: boolean;
   canDownload?: boolean;
   canDelete?: boolean;
 
@@ -68,6 +76,7 @@ interface ContentCardProps {
   onClick?: () => void;
   onFullscreen?: () => void;
   onAddToAlbum?: () => void;
+  onRemoveFromAlbum?: () => Promise<void>;
   onDownload?: () => void;
   onDelete?: () => void;
 
@@ -81,6 +90,9 @@ interface ContentCardProps {
   // Lightbox support - pass array of media for navigation
   mediaList?: Media[];
   currentIndex?: number;
+
+  // Current album context for remove functionality
+  currentAlbumId?: string;
 }
 
 export function ContentCard({
@@ -94,6 +106,7 @@ export function ContentCard({
   canBookmark = true,
   canFullscreen = true,
   canAddToAlbum = true,
+  canRemoveFromAlbum = false,
   canDownload = false,
   canDelete = false,
   showCounts = true,
@@ -104,23 +117,28 @@ export function ContentCard({
   onClick,
   onFullscreen,
   onAddToAlbum,
+  onRemoveFromAlbum,
   onDownload,
   onDelete,
   preferredThumbnailSize,
   mediaList,
   currentIndex = 0,
+  currentAlbumId,
 }: ContentCardProps) {
   const router = useLocaleRouter();
   const { startNavigation } = useNavigationLoading();
   const { data: userProfile } = useUserProfile();
   const user = userProfile?.data?.user || null;
   const { redirectToLogin } = useAuthRedirect();
+  const removeFromAlbumMutation = useRemoveMediaFromAlbum();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [showMobileActions, setShowMobileActions] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [addToAlbumDialogOpen, setAddToAlbumDialogOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
   const { isMobileInterface } = useDevice();
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -276,6 +294,28 @@ export function ContentCard({
     }
   };
 
+  const handleConfirmRemove = async () => {
+    if (onRemoveFromAlbum) {
+      await onRemoveFromAlbum();
+      setRemoveConfirmOpen(false);
+    } else if (isMedia && media && currentAlbumId) {
+      try {
+        await removeFromAlbumMutation.mutateAsync({
+          albumId: currentAlbumId,
+          mediaId: media.id,
+        });
+      } catch (error) {
+        console.error("Failed to remove media from album:", error);
+      } finally {
+        setRemoveConfirmOpen(false);
+      }
+    } else {
+      // For albums or other items, just log for now
+      console.log("Remove from album:", item.id);
+      setRemoveConfirmOpen(false);
+    }
+  };
+
   const handleDownload = async () => {
     if (onDownload) {
       onDownload();
@@ -333,17 +373,17 @@ export function ContentCard({
     }
   };
 
-  const handleDelete = () => {
+  const handleConfirmDelete = async () => {
     if (onDelete) {
       onDelete();
+      setDeleteConfirmOpen(false);
     } else {
-      // Default behavior: show confirmation and delete
-      const confirmed = window.confirm(
-        `Are you sure you want to delete this ${type}?`
-      );
-      if (confirmed) {
-        console.log("Delete:", item.id);
-        // TODO: Implement default delete functionality
+      try {
+        // todo: implement
+      } catch (error) {
+        console.error("Failed to delete:", error);
+      } finally {
+        setDeleteConfirmOpen(false);
       }
     }
   };
@@ -459,7 +499,11 @@ export function ContentCard({
             )}
 
             {/* Right column - Action buttons over image */}
-            {(canFullscreen || canAddToAlbum || canDownload || canDelete) && (
+            {(canFullscreen ||
+              canAddToAlbum ||
+              canRemoveFromAlbum ||
+              canDownload ||
+              canDelete) && (
               <div
                 className={cn(
                   "absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
@@ -500,6 +544,20 @@ export function ContentCard({
                     </button>
                   </Tooltip>
                 )}
+                {canRemoveFromAlbum && (
+                  <Tooltip content="Remove from album" side="left">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setRemoveConfirmOpen(true);
+                      }}
+                      className="p-2.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-red-600 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
+                      aria-label="Remove from album"
+                    >
+                      <Minus className="h-4 w-4 sm:h-4 sm:w-4" />
+                    </button>
+                  </Tooltip>
+                )}
                 {canDownload && (
                   <Tooltip content="Download" side="left">
                     <button
@@ -519,7 +577,7 @@ export function ContentCard({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete();
+                        setDeleteConfirmOpen(true);
                       }}
                       className="p-2.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-red-600 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
                       aria-label="Delete"
@@ -822,7 +880,7 @@ export function ContentCard({
                   )}
                 </div>
               </div>
-            ) : canFullscreen || canAddToAlbum || canDownload || canDelete ? (
+            ) : canDelete ? (
               <div
                 className={cn(
                   "absolute top-2 right-2 sm:top-3 sm:right-3 z-10 flex flex-col gap-1 sm:gap-2 transition-opacity duration-200",
@@ -835,54 +893,12 @@ export function ContentCard({
                     : "opacity-0"
                 )}
               >
-                {canFullscreen && (
-                  <Tooltip content="View fullscreen" side="left">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleFullscreen();
-                      }}
-                      className="p-2.5 sm:p-2 rounded-lg bg-black/50 hover:bg-black/70 text-white transition-colors shadow-lg hover:shadow-xl hover:scale-110"
-                      aria-label="View fullscreen"
-                    >
-                      <Maximize2 className="h-4 w-4 sm:h-4 sm:w-4" />
-                    </button>
-                  </Tooltip>
-                )}
-                {canAddToAlbum && (
-                  <Tooltip content="Add to album" side="left">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddToAlbum();
-                      }}
-                      className="p-2.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
-                      aria-label="Add to album"
-                    >
-                      <Plus className="h-4 w-4 sm:h-4 sm:w-4" />
-                    </button>
-                  </Tooltip>
-                )}
-                {canDownload && (
-                  <Tooltip content="Download" side="left">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDownload();
-                      }}
-                      className="p-2.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-gray-800 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
-                      aria-label="Download"
-                    >
-                      <Download className="h-4 w-4 sm:h-4 sm:w-4" />
-                    </button>
-                  </Tooltip>
-                )}
                 {canDelete && (
                   <Tooltip content="Delete" side="left">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDelete();
+                        setDeleteConfirmOpen(true);
                       }}
                       className="p-2.5 sm:p-2 rounded-lg bg-white/90 hover:bg-white text-red-600 transition-colors shadow-lg hover:shadow-xl hover:scale-110"
                       aria-label="Delete"
@@ -926,6 +942,28 @@ export function ContentCard({
           media={media}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Content"
+        message={`Are you sure you want to delete this ${type}? This action cannot be undone.`}
+        confirmText="Delete"
+        confirmVariant="danger"
+      />
+
+      {/* Remove Media Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={removeConfirmOpen}
+        onClose={() => setRemoveConfirmOpen(false)}
+        onConfirm={handleConfirmRemove}
+        title="Remove Media"
+        message={`Are you sure you want to remove this media from the album? This action cannot be undone.`}
+        confirmText="Remove"
+        confirmVariant="danger"
+      />
     </>
   );
 }

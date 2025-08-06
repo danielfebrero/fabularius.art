@@ -1,11 +1,18 @@
 "use client";
 
+/*
+ * Admin Media Page
+ * Displays all media across albums with options to select and delete.
+ *
+ * TODO: get all media, currently albums are not fetching medias.
+ */
+
 import { useState } from "react";
 import { useAdminAlbumsData } from "@/hooks/queries/useAdminAlbumsQuery";
 import { useAdminBatchDeleteMedia } from "@/hooks/queries/useAdminMediaQuery";
-import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Media } from "@/types";
-import { getThumbnailUrl } from "@/lib/utils";
+import ResponsivePicture from "@/components/ui/ResponsivePicture";
 
 export default function AdminMediaPage() {
   const { albums, isLoading: albumsLoading } = useAdminAlbumsData({
@@ -270,10 +277,10 @@ export default function AdminMediaPage() {
                 onClick={() => handleSelectMedia(media.id)}
               >
                 <div className="aspect-square relative">
-                  <img
-                    src={getThumbnailUrl(media, "admin")}
+                  <ResponsivePicture
+                    thumbnailUrls={media.thumbnailUrls}
+                    fallbackUrl={media.thumbnailUrl || ""}
                     alt={media.filename}
-                    className="w-full h-full object-cover"
                   />
 
                   {/* Selection overlay */}

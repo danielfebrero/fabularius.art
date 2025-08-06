@@ -5,7 +5,7 @@ import axios from "axios";
 import { Media } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { FileUpload } from "@/components/admin/FileUpload";
-import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CoverImageSelector } from "@/components/admin/CoverImageSelector";
 import {
   useAdminUploadMedia,

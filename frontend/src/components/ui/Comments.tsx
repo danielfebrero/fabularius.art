@@ -5,7 +5,7 @@ import { MessageCircle, Send, Loader2 } from "lucide-react";
 import { Comment } from "@/types";
 import { CommentItem } from "@/components/ui/Comment";
 import { Button } from "@/components/ui/Button";
-import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { cn } from "@/lib/utils";
 import { useDevice } from "@/contexts/DeviceContext";
 import {

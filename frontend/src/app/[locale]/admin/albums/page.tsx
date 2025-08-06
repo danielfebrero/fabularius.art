@@ -5,7 +5,7 @@ import { useLocaleRouter } from "@/lib/navigation";
 import { Album } from "@/types";
 import { Button } from "@/components/ui/Button";
 import { AlbumTable } from "@/components/admin/AlbumTable";
-import { ConfirmDialog } from "@/components/admin/ConfirmDialog";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
   useAdminAlbumsData,
   useDeleteAdminAlbum,

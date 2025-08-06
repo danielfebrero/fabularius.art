@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 import { usePermissions } from "@/contexts/PermissionsContext";
 import { Crown } from "lucide-react";
 import ResponsivePicture from "@/components/ui/ResponsivePicture";
-import { CoverImageSelector } from "./CoverImageSelector";
+import { CoverImageSelector } from "@/components/user/CoverImageSelector";
 import {
   composeThumbnailUrls,
   getBestThumbnailUrl,
