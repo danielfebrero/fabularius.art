@@ -6,110 +6,107 @@ import { ContentCard } from "./ui/ContentCard";
 import { Lightbox } from "./ui/Lightbox";
 import { Button } from "./ui/Button";
 import { cn } from "../lib/utils";
-import { getMediaForAlbum } from "../lib/data";
+import { useAlbumMedia } from "@/hooks/queries/useMediaQuery";
 import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 import {
   ComponentErrorBoundary,
   LightboxErrorBoundary,
 } from "./ErrorBoundaries";
-import { useRemoveMediaFromAlbum } from "@/hooks/queries/useAlbumsQuery";
+import { useRemoveMediaFromAlbum } from "@/hooks/queries/useMediaQuery";
+import { useBulkViewCounts } from "@/hooks/queries/useViewCountsQuery";
 
 interface MediaGalleryProps {
   albumId: string;
-  initialMedia: Media[];
-  initialPagination: {
-    hasNext: boolean;
-    cursor: string | null;
-  } | null;
   className?: string;
   canRemoveFromAlbum?: boolean; // New prop to control removal from album
 }
 
 export const MediaGallery: React.FC<MediaGalleryProps> = ({
   albumId,
-  initialMedia,
-  initialPagination,
   className,
   canRemoveFromAlbum,
 }) => {
-  const [media, setMedia] = useState<Media[]>(initialMedia);
-  const [pagination, setPagination] = useState(initialPagination);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Use TanStack Query to fetch album media with caching and optimistic updates
+  const {
+    data: mediaData,
+    isLoading,
+    error: queryError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useAlbumMedia({ albumId, limit: 20 });
+
+  // Extract all media from paginated data
+  const allMedia = useMemo(() => {
+    return mediaData?.pages.flatMap((page) => page.data.media || []) || [];
+  }, [mediaData]);
+
+  // Local state for UI interactions
+  const [error, setError] = useState<string | null>(
+    queryError?.message || null
+  );
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const removeFromAlbumMutation = useRemoveMediaFromAlbum();
 
-  // Hook for manual prefetching (for infinite scroll items)
+  // Hook for manual prefetching (for interaction status)
   const { prefetch } = usePrefetchInteractionStatus();
 
-  // Memoize initial media targets for SSG prefetching
-  const initialTargets = useMemo(
+  // Memoize all media targets for prefetching
+  const allMediaTargets = useMemo(
     () =>
-      initialMedia.map((mediaItem) => ({
+      allMedia.map((mediaItem) => ({
         targetType: "media" as const,
         targetId: mediaItem.id,
       })),
-    [initialMedia]
+    [allMedia]
   );
 
-  // Auto-prefetch initial media for first load
+  // Bulk prefetch view counts for the album and all media
+  const viewCountTargets = useMemo(() => {
+    const targets: Array<{ targetType: "album" | "media"; targetId: string }> =
+      [{ targetType: "album", targetId: albumId }];
+
+    // Add media targets
+    allMedia.forEach((media) => {
+      targets.push({ targetType: "media", targetId: media.id });
+    });
+
+    return targets;
+  }, [albumId, allMedia]);
+
+  // Prefetch view counts in the background
+  useBulkViewCounts(viewCountTargets, { enabled: viewCountTargets.length > 0 });
+
+  // Auto-prefetch interaction status for all loaded media
   useLayoutEffect(() => {
-    if (initialTargets.length > 0) {
-      prefetch(initialTargets).catch((error) => {
-        console.error(
-          "Failed to prefetch initial media interaction status:",
-          error
-        );
+    if (allMediaTargets.length > 0) {
+      prefetch(allMediaTargets).catch((error) => {
+        console.error("Failed to prefetch media interaction status:", error);
       });
     }
-  }, [initialTargets, prefetch]);
+  }, [allMediaTargets, prefetch]);
 
+  // Update local error state when query error changes
   useEffect(() => {
-    setMedia(initialMedia);
-    setPagination(initialPagination);
-  }, [initialMedia, initialPagination]);
-
-  // Prefetch interaction status for newly loaded media (infinite scroll)
-  // using useLayoutEffect to ensure prefetch happens BEFORE child components render
-  useLayoutEffect(() => {
-    const newlyLoadedMedia = media.slice(initialMedia.length);
-
-    if (newlyLoadedMedia.length > 0) {
-      const targets = newlyLoadedMedia.map((mediaItem) => ({
-        targetType: "media" as const,
-        targetId: mediaItem.id,
-      }));
-
-      // Prefetch new media interaction status
-      prefetch(targets).catch((error) => {
-        console.error(
-          "Failed to prefetch new media interaction status:",
-          error
-        );
-      });
+    if (queryError?.message) {
+      setError(queryError.message);
+    } else {
+      setError(null);
     }
-  }, [media, initialMedia.length, prefetch]);
+  }, [queryError]);
 
   const handleLoadMore = async () => {
-    if (!pagination?.hasNext || loading) return;
+    if (!hasNextPage || isFetchingNextPage) return;
 
-    setLoading(true);
     setError(null);
-    const result = await getMediaForAlbum(
-      albumId,
-      pagination.cursor ? { cursor: pagination.cursor } : {}
-    );
-
-    const { data, error: apiError } = result;
-    if (data && data.media) {
-      setMedia((prevMedia) => [...prevMedia, ...data.media]);
-      setPagination(data.pagination);
-    } else {
-      setError(apiError || "Failed to load more media.");
+    try {
+      await fetchNextPage();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to load more media"
+      );
     }
-
-    setLoading(false);
   };
 
   const handleLightboxClose = () => {
@@ -117,7 +114,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   };
 
   const handleLightboxNext = () => {
-    if (currentMediaIndex < media.length - 1) {
+    if (currentMediaIndex < allMedia.length - 1) {
       setCurrentMediaIndex(currentMediaIndex + 1);
     }
   };
@@ -128,19 +125,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
     }
   };
 
-  const onRemoveMedia = async (mediaId: string) => {
-    try {
-      await removeFromAlbumMutation.mutateAsync({
-        albumId: albumId,
-        mediaId: mediaId,
-      });
-      setMedia((prevMedia) => prevMedia.filter((m) => m.id !== mediaId));
-    } catch (error) {
-      console.error("Failed to remove media from album:", error);
-    }
-  };
-
-  if (media.length === 0 && !loading) {
+  if (allMedia.length === 0 && !isLoading) {
     return (
       <div className={cn("text-center py-12", className)}>
         <div className="max-w-md mx-auto">
@@ -174,7 +159,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
     <>
       <div className={cn("space-y-6", className)}>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {media.map((mediaItem, index) => {
+          {allMedia.map((mediaItem, index) => {
             return (
               <ComponentErrorBoundary
                 key={mediaItem.id}
@@ -191,18 +176,18 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
                   canAddToAlbum={true}
                   canDownload={true}
                   canDelete={false}
-                  mediaList={media}
+                  mediaList={allMedia}
                   currentIndex={index}
                   canRemoveFromAlbum={canRemoveFromAlbum}
                   currentAlbumId={albumId}
-                  onRemoveFromAlbum={() => onRemoveMedia(mediaItem.id)}
+                  // onRemoveFromAlbum={() => onRemoveMedia(mediaItem.id)}
                 />
               </ComponentErrorBoundary>
             );
           })}
         </div>
 
-        {loading && (
+        {isLoading && (
           <div className="flex justify-center py-4">
             <div className="flex items-center space-x-2 text-muted-foreground">
               <svg
@@ -232,15 +217,15 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
 
         {error && <div className="text-center py-4 text-red-500">{error}</div>}
 
-        {pagination?.hasNext && !loading && (
+        {hasNextPage && !isFetchingNextPage && (
           <div className="flex justify-center">
             <Button
               variant="outline"
               onClick={handleLoadMore}
               className="px-8"
-              disabled={loading}
+              disabled={isFetchingNextPage}
             >
-              {loading ? "Loading..." : "Load More Media"}
+              {isFetchingNextPage ? "Loading..." : "Load More Media"}
             </Button>
           </div>
         )}
@@ -248,7 +233,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
 
       <LightboxErrorBoundary>
         <Lightbox
-          media={media}
+          media={allMedia}
           currentIndex={currentMediaIndex}
           isOpen={lightboxOpen}
           onClose={handleLightboxClose}

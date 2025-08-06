@@ -1,9 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
 import { Share2, ArrowLeft, MessageCircle, User, Calendar } from "lucide-react";
-import { Album, Media } from "@/types";
+import { Album } from "@/types";
 import { Tag } from "@/components/ui/Tag";
 import { ShareDropdown } from "@/components/ui/ShareDropdown";
 import { Tooltip } from "@/components/ui/Tooltip";
@@ -11,7 +10,6 @@ import { ViewTracker } from "@/components/ui/ViewTracker";
 import { MediaGallery } from "@/components/MediaGallery";
 import { Comments } from "@/components/ui/Comments";
 import { useUserProfile } from "@/hooks/queries/useUserQuery";
-import { useBulkViewCounts } from "@/hooks/queries/useViewCountsQuery";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { formatDistanceToNow } from "@/lib/dateUtils";
 import {
@@ -22,39 +20,14 @@ import {
 
 interface AlbumDetailClientProps {
   album: Album;
-  initialMedia: Media[];
-  initialPagination: {
-    hasNext: boolean;
-    cursor: string | null;
-  } | null;
 }
 
-export function AlbumDetailClient({
-  album,
-  initialMedia,
-  initialPagination,
-}: AlbumDetailClientProps) {
+export function AlbumDetailClient({ album }: AlbumDetailClientProps) {
   const router = useRouter();
   const { data: userResponse } = useUserProfile();
 
   // Extract user from the API response structure
   const user = userResponse?.data?.user;
-
-  // Bulk prefetch view counts for the album and all media
-  const viewCountTargets = useMemo(() => {
-    const targets: Array<{ targetType: "album" | "media"; targetId: string }> =
-      [{ targetType: "album", targetId: album.id }];
-
-    // Add media targets
-    initialMedia.forEach((media) => {
-      targets.push({ targetType: "media", targetId: media.id });
-    });
-
-    return targets;
-  }, [album.id, initialMedia]);
-
-  // Prefetch view counts in the background
-  useBulkViewCounts(viewCountTargets, { enabled: viewCountTargets.length > 0 });
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -182,8 +155,6 @@ export function AlbumDetailClient({
           <MediaGalleryErrorBoundary>
             <MediaGallery
               albumId={album.id}
-              initialMedia={initialMedia}
-              initialPagination={initialPagination}
               canRemoveFromAlbum={album.createdBy === user?.userId}
             />
           </MediaGalleryErrorBoundary>

@@ -1,9 +1,5 @@
 import { notFound } from "next/navigation";
-import {
-  getAlbumById,
-  getMediaForAlbum,
-  fetchAllPublicAlbums,
-} from "@/lib/data";
+import { getAlbumById, fetchAllPublicAlbums } from "@/lib/data";
 import { composeAlbumCoverUrl } from "@/lib/urlUtils";
 import { AlbumDetailClient } from "@/components/AlbumDetailClient";
 import { locales } from "@/i18n";
@@ -69,20 +65,12 @@ export default async function AlbumDetailPage({
 }: AlbumDetailPageProps) {
   const { albumId } = params;
   const albumResult = await getAlbumById(albumId);
-  const mediaResult = await getMediaForAlbum(albumId);
 
   if (albumResult.error || !albumResult.data) {
     notFound();
   }
 
   const album = albumResult.data;
-  const media = mediaResult.data?.media || [];
 
-  return (
-    <AlbumDetailClient
-      album={album}
-      initialMedia={media}
-      initialPagination={mediaResult.data?.pagination || null}
-    />
-  );
+  return <AlbumDetailClient album={album} />;
 }

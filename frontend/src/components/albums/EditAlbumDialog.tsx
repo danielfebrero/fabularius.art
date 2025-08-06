@@ -15,7 +15,11 @@ import {
   getBestThumbnailUrl,
   composeMediaUrl,
 } from "@/lib/urlUtils";
-import { mediaApi, albumsApi } from "@/lib/api";
+import { mediaApi } from "@/lib/api";
+import {
+  useAddMediaToAlbum,
+  useRemoveMediaFromAlbum,
+} from "@/hooks/queries/useMediaQuery";
 
 interface MediaWithSelection extends Media {
   selected: boolean;
@@ -46,6 +50,10 @@ export function EditAlbumDialog({
 }: EditAlbumDialogProps) {
   const { canCreatePrivateContent } = usePermissions();
   const canMakePrivate = canCreatePrivateContent();
+
+  // Media mutation hooks
+  const addMediaMutation = useAddMediaToAlbum();
+  const removeMediaMutation = useRemoveMediaFromAlbum();
 
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -156,14 +164,24 @@ export function EditAlbumDialog({
 
     const promises = [];
 
-    // Add new media
+    // Add new media using mutation hooks
     for (const mediaId of mediaToAdd) {
-      promises.push(albumsApi.addMediaToAlbum(album.id, mediaId));
+      promises.push(
+        addMediaMutation.mutateAsync({
+          albumId: album.id,
+          mediaId,
+        })
+      );
     }
 
-    // Remove media
+    // Remove media using mutation hooks
     for (const mediaId of mediaToRemove) {
-      promises.push(albumsApi.removeMediaFromAlbum(album.id, mediaId));
+      promises.push(
+        removeMediaMutation.mutateAsync({
+          albumId: album.id,
+          mediaId,
+        })
+      );
     }
 
     if (promises.length > 0) {

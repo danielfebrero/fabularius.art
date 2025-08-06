@@ -279,6 +279,23 @@ await toggleLike.mutateAsync({
 });
 ```
 
+### Media Album Operations (Add/Remove)
+
+The `useAddMediaToAlbum` and `useRemoveMediaFromAlbum` mutations use optimistic updates to provide immediate feedback:
+
+```typescript
+const addToAlbum = useAddMediaToAlbum();
+const removeFromAlbum = useRemoveMediaFromAlbum();
+
+// Add media to album - UI updates immediately
+await addToAlbum.mutateAsync({ albumId: "123", mediaId: "456" });
+
+// Remove media from album - UI updates immediately
+await removeFromAlbum.mutateAsync({ albumId: "123", mediaId: "456" });
+```
+
+**Key Optimization**: These mutations avoid unnecessary refetches by relying on optimistic updates in `onMutate`. The `onSuccess` callback only invalidates related data (user media, album counts) but not the album media list itself, preventing redundant API calls while maintaining data consistency.
+
 ## Migration Timeline
 
 ### Phase 1: Foundation (✅ Complete)

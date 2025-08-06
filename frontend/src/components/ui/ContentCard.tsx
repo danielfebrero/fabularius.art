@@ -14,10 +14,7 @@ import { composeMediaUrl } from "@/lib/urlUtils";
 import { useDevice } from "@/contexts/DeviceContext";
 import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
-import {
-  useRemoveMediaFromAlbum,
-  useDeleteMediaFromAlbum,
-} from "@/hooks/queries/useAlbumsQuery";
+import { useRemoveMediaFromAlbum } from "@/hooks/queries/useMediaQuery";
 import {
   Maximize2,
   Plus,
@@ -31,7 +28,6 @@ import {
 import ResponsivePicture from "@/components/ui/ResponsivePicture";
 import { composeThumbnailUrls } from "@/lib/urlUtils";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { set } from "zod";
 
 interface ContentCardProps {
   item: Media | Album;
