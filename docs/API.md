@@ -705,6 +705,72 @@ Cookie: sessionId=session-token-here
 - `404`: Album or media not found
 - `500`: Server error
 
+### Bulk Remove Media from Album
+
+Remove multiple existing media items from an album in one request.
+
+```http
+DELETE /albums/{albumId}/media/bulk-remove
+Content-Type: application/json
+Cookie: sessionId=session-token-here
+
+{
+  "mediaIds": ["media-456", "media-789", "media-012"]
+}
+```
+
+**Path Parameters:**
+
+| Parameter | Type   | Required | Description      |
+| --------- | ------ | -------- | ---------------- |
+| `albumId` | string | Yes      | Album identifier |
+
+**Request Body:**
+
+| Field      | Type     | Required | Description                  |
+| ---------- | -------- | -------- | ---------------------------- |
+| `mediaIds` | string[] | Yes      | Array of media IDs to remove |
+
+**Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "3 media items removed successfully",
+    "results": {
+      "successfullyRemoved": ["media-456", "media-789"],
+      "failedRemovals": [
+        {
+          "mediaId": "media-012",
+          "error": "Media not found in album"
+        }
+      ],
+      "totalProcessed": 3,
+      "successCount": 2,
+      "failureCount": 1
+    },
+    "albumId": "album-123"
+  }
+}
+```
+
+**Validation:**
+
+- **Bulk Only**: Maximum 50 media items per request to prevent timeouts
+- **Media Relationship**: Only removes media-album relationships, preserves media files
+- **Graceful Errors**: Continues processing even if some removals fail
+
+**Authentication:** Required - User must own the album or have admin privileges
+
+**Error Responses:**
+
+- `400`: Invalid request (empty array, too many items, etc.)
+- `401`: User not authenticated
+- `403`: User doesn't own the album (non-admin)
+- `404`: Album not found
+- `500`: Server error
+
 ## Thumbnail System API
 
 ### Thumbnail Size Reference

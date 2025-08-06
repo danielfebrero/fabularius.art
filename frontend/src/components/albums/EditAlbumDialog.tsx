@@ -20,6 +20,7 @@ import {
   useAddMediaToAlbum,
   useRemoveMediaFromAlbum,
   useBulkAddMediaToAlbum,
+  useBulkRemoveMediaFromAlbum,
 } from "@/hooks/queries/useMediaQuery";
 
 interface MediaWithSelection extends Media {
@@ -56,6 +57,7 @@ export function EditAlbumDialog({
   const addMediaMutation = useAddMediaToAlbum();
   const bulkAddMediaMutation = useBulkAddMediaToAlbum();
   const removeMediaMutation = useRemoveMediaFromAlbum();
+  const bulkRemoveMediaMutation = useBulkRemoveMediaFromAlbum();
 
   const [title, setTitle] = useState("");
   const [tags, setTags] = useState<string[]>([]);
@@ -183,12 +185,19 @@ export function EditAlbumDialog({
       );
     }
 
-    // Remove media using single mutation hooks (no bulk remove implemented yet)
-    for (const mediaId of mediaToRemove) {
+    // Remove media using bulk mutation if multiple, single mutation if one
+    if (mediaToRemove.length > 1) {
+      promises.push(
+        bulkRemoveMediaMutation.mutateAsync({
+          albumId: album.id,
+          mediaIds: mediaToRemove,
+        })
+      );
+    } else if (mediaToRemove.length === 1) {
       promises.push(
         removeMediaMutation.mutateAsync({
           albumId: album.id,
-          mediaId,
+          mediaId: mediaToRemove[0],
         })
       );
     }

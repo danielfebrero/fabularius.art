@@ -748,6 +748,58 @@ export class DynamoDBService {
     await this.decrementAlbumMediaCount(albumId);
   }
 
+  static async bulkRemoveMediaFromAlbum(
+    albumId: string,
+    mediaIds: string[]
+  ): Promise<{
+    successful: string[];
+    failed: { mediaId: string; error: string }[];
+    totalProcessed: number;
+  }> {
+    const results = {
+      successful: [] as string[],
+      failed: [] as { mediaId: string; error: string }[],
+      totalProcessed: 0,
+    };
+
+    // Verify album exists first
+    const album = await this.getAlbum(albumId);
+    if (!album) {
+      throw new Error(`Album ${albumId} not found`);
+    }
+
+    console.log(
+      `🗑️ Starting bulk remove of ${mediaIds.length} media items from album ${albumId}`
+    );
+
+    // Process each media removal individually to handle errors gracefully
+    for (const mediaId of mediaIds) {
+      try {
+        results.totalProcessed++;
+        await this.removeMediaFromAlbum(albumId, mediaId);
+        results.successful.push(mediaId);
+        console.log(
+          `✅ Successfully removed media ${mediaId} from album ${albumId}`
+        );
+      } catch (error: any) {
+        const errorMessage = error.message || "Unknown error";
+        results.failed.push({
+          mediaId,
+          error: errorMessage,
+        });
+        console.log(
+          `❌ Failed to remove media ${mediaId} from album ${albumId}: ${errorMessage}`
+        );
+      }
+    }
+
+    console.log(
+      `📊 Bulk remove complete. Success: ${results.successful.length}, Failed: ${results.failed.length}`
+    );
+
+    return results;
+  }
+
   static async removeMediaFromAllAlbums(mediaId: string): Promise<void> {
     // Find all albums this media belongs to
     const result = await docClient.send(

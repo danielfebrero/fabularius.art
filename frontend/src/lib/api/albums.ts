@@ -263,6 +263,50 @@ export const albumsApi = {
     }
   },
 
+  // Remove multiple media from album (bulk)
+  bulkRemoveMediaFromAlbum: async (
+    albumId: string,
+    mediaIds: string[]
+  ): Promise<{
+    successfullyRemoved: string[];
+    failedRemovals: { mediaId: string; error: string }[];
+    totalProcessed: number;
+    successCount: number;
+    failureCount: number;
+  }> => {
+    const response = await fetch(
+      `${API_URL}/albums/${albumId}/media/bulk-remove`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ mediaIds }),
+      }
+    );
+
+    if (!response.ok) {
+      let errorData = null;
+      try {
+        errorData = await response.json();
+      } catch {
+        // response body is not JSON
+      }
+      const errorMessage =
+        (errorData && (errorData.error || errorData.message)) ||
+        `Failed to bulk remove media from album: ${response.statusText}`;
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || "Failed to bulk remove media from album");
+    }
+
+    return data.results;
+  },
+
   // Get a single album
   getAlbum: async (albumId: string): Promise<any> => {
     const response = await fetch(`${API_URL}/albums/${albumId}`, {

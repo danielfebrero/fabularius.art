@@ -88,6 +88,11 @@ export interface AddMediaToAlbumRequest {
   mediaIds?: string[]; // For bulk media addition
 }
 
+export interface RemoveMediaFromAlbumRequest {
+  mediaId?: string; // For single media removal
+  mediaIds?: string[]; // For bulk media removal
+}
+
 export interface UploadMediaRequest {
   filename: string;
   mimeType: string;

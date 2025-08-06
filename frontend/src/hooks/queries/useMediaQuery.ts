@@ -386,3 +386,88 @@ export function useRemoveMediaFromAlbum() {
     },
   });
 }
+
+// Mutation hook for bulk removing media from an album
+export function useBulkRemoveMediaFromAlbum() {
+  return useMutation({
+    mutationFn: async ({
+      albumId,
+      mediaIds,
+    }: {
+      albumId: string;
+      mediaIds: string[];
+    }) => {
+      // Import albums API dynamically to avoid circular dependencies
+      const { albumsApi } = await import("@/lib/api");
+      const results = await albumsApi.bulkRemoveMediaFromAlbum(
+        albumId,
+        mediaIds
+      );
+      return { albumId, mediaIds, results };
+    },
+    onMutate: async ({ albumId, mediaIds }) => {
+      // Cancel any outgoing refetches for album media
+      await queryClient.cancelQueries({
+        queryKey: ["media", "album", albumId],
+      });
+
+      // Snapshot the previous values
+      const previousAlbumMedia = queryClient.getQueriesData({
+        queryKey: ["media", "album", albumId],
+      });
+
+      // Optimistically remove the media from album media infinite query
+      queryClient.setQueriesData(
+        { queryKey: ["media", "album", albumId] },
+        (old: any) => {
+          if (!old?.pages) return old;
+
+          const newPages = old.pages.map((page: any) => ({
+            ...page,
+            data: {
+              ...page.data,
+              media: page.data.media.filter(
+                (m: any) => !mediaIds.includes(m.id)
+              ),
+            },
+          }));
+
+          return {
+            ...old,
+            pages: newPages,
+          };
+        }
+      );
+
+      // Return context for rollback
+      return { previousAlbumMedia, albumId, mediaIds };
+    },
+    onError: (err, variables, context) => {
+      // If the mutation fails, restore the previous data
+      if (context?.previousAlbumMedia) {
+        context.previousAlbumMedia.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      console.error("Failed to bulk remove media from album:", err);
+    },
+    onSuccess: (data, variables) => {
+      // No need to invalidate album media queries - optimistic update handles this
+
+      // Invalidate user media queries in case media appears there
+      queryClient.invalidateQueries({
+        queryKey: ["media", "user"],
+      });
+
+      // Invalidate the specific album to update counts (but not media list)
+      invalidateQueries.album(variables.albumId);
+
+      // Invalidate each successfully removed media item
+      if (data.results.successfullyRemoved.length > 0) {
+        data.results.successfullyRemoved.forEach((mediaId) => {
+          invalidateQueries.media(mediaId);
+        });
+      }
+    },
+  });
+}
