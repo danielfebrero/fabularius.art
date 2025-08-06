@@ -26,6 +26,10 @@ export function ViewCount({
   const { data } = useViewCountsFromCache(targets);
   const cachedCount = data?.data?.viewCounts?.[0]?.viewCount;
 
+  useEffect(() => {
+    console.log({ data });
+  }, [data]);
+
   if (!isHydrated) {
     // 👇 Prevent React from rendering anything until hydration
     return null;

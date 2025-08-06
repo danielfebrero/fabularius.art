@@ -4,21 +4,13 @@
 
 ## User Insights
 
-### Deleting a media should decrease total media count
-
-When a media item is deleted, the total media count should be decremented accordingly. This ensures that the user insights reflect the current state of the media library accurately.
-
 ## Homepage Discover
 
 ## User Bookmarks page
 
-### Bookmark status is not showing in content cards
-
-The bookmark status should be displayed in the content cards on the user bookmarks page.
-
 ## Content Cards
 
-### ViewCount should have e TanStack Query state to avoid re-fetching and optimistic updates
+### ViewCount should have e TanStack Query state to avoid re-fetching and optimistic updates with the Track View component
 
 The view count for content cards should be managed using TanStack Query to ensure that the state is consistent and to avoid unnecessary re-fetching. This will also allow for optimistic updates, where the view count can be updated immediately in the UI while the request is being processed in the background.
 
@@ -33,6 +25,10 @@ I suggest to delete all the tests and write new ones. The current tests are not 
 We should avoid using `any` type in TypeScript. Instead, we should define proper types for our data structures.
 
 ## UI/UX
+
+### Infinite scroll should be implemented on all pages
+
+Infinite scroll should be implemented on all pages where it makes sense, such as the homepage, user pages, admin pages and album pages.
 
 ### View count on mobile on discover page is not working well
 

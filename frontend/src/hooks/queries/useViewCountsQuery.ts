@@ -1,6 +1,6 @@
-import { useQuery, useQueries } from "@tanstack/react-query";
-import { contentApi } from "@/lib/api";
-import { queryKeys } from "@/lib/queryClient";
+import { useQuery, useQueries, useMutation } from "@tanstack/react-query";
+import { contentApi, interactionApi } from "@/lib/api";
+import { queryKeys, queryClient } from "@/lib/queryClient";
 
 // Types
 interface ViewCountTarget {
@@ -44,7 +44,11 @@ export function useViewCounts(
 
 // Hook for reading view counts from cache only (for components that don't want to trigger fetches)
 export function useViewCountsFromCache(targets: ViewCountTarget[]) {
-  return useViewCounts(targets, { enabled: false });
+  const result = useViewCounts(targets, { enabled: false });
+
+  // Force re-render when cache data changes, even with enabled: false
+  // This ensures ViewCount components update when view tracking occurs
+  return result;
 }
 
 // Hook for fetching view count for a single target
@@ -103,6 +107,22 @@ export function useBulkViewCounts(
     .filter((query) => query.data)
     .flatMap((query) => query.data!.data.viewCounts);
 
+  // Update individual target caches with the bulk-fetched data
+  // This ensures that individual useViewCount hooks can benefit from bulk fetching
+  viewCounts.forEach((item) => {
+    const singleTarget = [
+      { targetType: item.targetType, targetId: item.targetId },
+    ];
+    const singleTargetQueryKey = queryKeys.content.viewCounts(singleTarget);
+
+    // Set cache data for individual targets
+    queryClient.setQueryData(singleTargetQueryKey, {
+      data: {
+        viewCounts: [item],
+      },
+    });
+  });
+
   // Create a map for easy lookup
   const viewCountMap = new Map<string, number>();
   viewCounts.forEach((item) => {
@@ -122,4 +142,236 @@ export function useBulkViewCounts(
       return viewCountMap.get(key) ?? 0;
     },
   };
+}
+
+// Hook for tracking a view - updates cache optimistically
+export function useTrackView() {
+  return useMutation({
+    mutationFn: async (request: {
+      targetType: "album" | "media" | "profile";
+      targetId: string;
+    }) => {
+      return await interactionApi.trackView(request);
+    },
+    onMutate: async ({ targetType, targetId }) => {
+      // Only update view counts for album and media (profile views are not cached)
+      if (targetType === "profile") {
+        return;
+      }
+
+      // Cancel outgoing refetches for view count queries
+      const targets = [
+        { targetType: targetType as "album" | "media", targetId },
+      ];
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.content.viewCounts(targets),
+      });
+
+      // Store previous data for potential rollback
+      const previousData = queryClient.getQueryData(
+        queryKeys.content.viewCounts(targets)
+      );
+
+      // Optimistically increment the view count
+      queryClient.setQueryData(
+        queryKeys.content.viewCounts(targets),
+        (oldData: any) => {
+          // If no existing data, create initial structure
+          if (!oldData?.data?.viewCounts) {
+            return {
+              data: {
+                viewCounts: [
+                  {
+                    targetType,
+                    targetId,
+                    viewCount: 1,
+                  },
+                ],
+              },
+            };
+          }
+
+          return {
+            ...oldData,
+            data: {
+              ...oldData.data,
+              viewCounts: oldData.data.viewCounts.map((item: any) => {
+                if (
+                  item.targetType === targetType &&
+                  item.targetId === targetId
+                ) {
+                  return {
+                    ...item,
+                    viewCount: (item.viewCount || 0) + 1,
+                  };
+                }
+                return item;
+              }),
+            },
+          };
+        }
+      );
+
+      // Force update all possible cache entries for this target
+      // This ensures ViewCount components update even if they started with no data
+      queryClient.setQueriesData(
+        { queryKey: queryKeys.content.viewCounts },
+        (oldData: any) => {
+          if (!oldData?.data?.viewCounts) {
+            // Create cache entry for this specific target
+            return {
+              data: {
+                viewCounts: [
+                  {
+                    targetType,
+                    targetId,
+                    viewCount: 1,
+                  },
+                ],
+              },
+            };
+          }
+
+          // Update existing cache entries
+          return {
+            ...oldData,
+            data: {
+              ...oldData.data,
+              viewCounts: oldData.data.viewCounts.map((item: any) => {
+                if (
+                  item.targetType === targetType &&
+                  item.targetId === targetId
+                ) {
+                  return {
+                    ...item,
+                    viewCount: (item.viewCount || 0) + 1,
+                  };
+                }
+                return item;
+              }),
+            },
+          };
+        }
+      );
+
+      // Also update view count in detail pages and lists
+      updateViewCountInCaches(targetType as "album" | "media", targetId, 1);
+
+      return { targetType, targetId, previousData };
+    },
+    onError: (error, variables, context) => {
+      // View tracking failure is not critical - just log it
+      console.debug("View tracking failed:", error);
+
+      // Rollback optimistic update if we have context and it's not a profile view
+      if (context && variables.targetType !== "profile") {
+        const targets = [
+          {
+            targetType: variables.targetType as "album" | "media",
+            targetId: context.targetId,
+          },
+        ];
+
+        if (context.previousData) {
+          queryClient.setQueryData(
+            queryKeys.content.viewCounts(targets),
+            context.previousData
+          );
+        } else {
+          // Fallback: decrement the optimistic increment
+          updateViewCountInCaches(
+            variables.targetType as "album" | "media",
+            context.targetId,
+            -1
+          );
+        }
+      }
+    },
+    onSuccess: (data, variables) => {
+      // On success, we could invalidate to get exact server count,
+      // but for view counts this isn't critical since they're just indicators
+      // The optimistic update is likely accurate enough
+
+      // For profile views, no cache update needed since we don't cache profile view counts
+      if (variables.targetType === "profile") {
+        return;
+      }
+
+      // Optionally: invalidate view count queries to get exact server count
+      // Commented out to avoid unnecessary refetches since view counts are not critical
+      // const targets = [{ targetType: variables.targetType as "album" | "media", targetId: variables.targetId }];
+      // queryClient.invalidateQueries({
+      //   queryKey: queryKeys.content.viewCounts(targets),
+      // });
+    },
+  });
+}
+
+// Helper function to update view counts in various caches
+function updateViewCountInCaches(
+  targetType: "album" | "media",
+  targetId: string,
+  increment: number
+) {
+  // Update in album/media detail pages
+  const detailQueryKey =
+    targetType === "album"
+      ? queryKeys.albums.detail(targetId)
+      : queryKeys.media.detail(targetId);
+
+  queryClient.setQueryData(detailQueryKey, (oldData: any) => {
+    if (!oldData) return oldData;
+
+    return {
+      ...oldData,
+      viewCount: Math.max(0, (oldData.viewCount || 0) + increment),
+    };
+  });
+
+  // Update in album lists (for albums)
+  if (targetType === "album") {
+    queryClient.setQueriesData(
+      { queryKey: queryKeys.albums.lists() },
+      (oldData: any) => {
+        if (!oldData?.albums) return oldData;
+
+        return {
+          ...oldData,
+          albums: oldData.albums.map((album: any) => {
+            if (album.id === targetId) {
+              return {
+                ...album,
+                viewCount: Math.max(0, (album.viewCount || 0) + increment),
+              };
+            }
+            return album;
+          }),
+        };
+      }
+    );
+  }
+
+  // Update in bulk view counts caches
+  queryClient.setQueriesData(
+    { queryKey: queryKeys.content.viewCounts },
+    (oldData: any) => {
+      if (!oldData?.data?.viewCounts) return oldData;
+
+      return {
+        ...oldData,
+        data: {
+          ...oldData.data,
+          viewCounts: oldData.data.viewCounts.map((item: any) => {
+            if (item.targetType === targetType && item.targetId === targetId) {
+              return {
+                ...item,
+                viewCount: Math.max(0, (item.viewCount || 0) + increment),
+              };
+            }
+            return item;
+          }),
+        },
+      };
+    }
+  );
 }

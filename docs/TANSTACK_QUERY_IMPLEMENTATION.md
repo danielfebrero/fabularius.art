@@ -41,6 +41,13 @@ This guide demonstrates how to migrate from the existing custom hooks to TanStac
 - `useToggleLike`, `useToggleBookmark` - Optimistic mutations
 - `useUserInsights` - User statistics with smart caching
 
+### View Counts & Tracking
+
+- `useViewCounts`, `useViewCount` - Bulk and single view count fetching
+- `useBulkViewCounts` - Chunked view count fetching for large lists
+- `useViewCountsFromCache` - Cache-only view count reading
+- `useTrackView` - View tracking with optimistic cache updates
+
 ### User Profile
 
 - `useUserProfile` - User data with optimized authentication caching
@@ -295,6 +302,27 @@ await removeFromAlbum.mutateAsync({ albumId: "123", mediaId: "456" });
 ```
 
 **Key Optimization**: These mutations avoid unnecessary refetches by relying on optimistic updates in `onMutate`. The `onSuccess` callback only invalidates related data (user media, album counts) but not the album media list itself, preventing redundant API calls while maintaining data consistency.
+
+### View Tracking
+
+The `useTrackView` mutation provides optimistic view count updates:
+
+```typescript
+const trackView = useTrackView();
+
+// Track a view - view count updates immediately
+trackView.mutate({
+  targetType: "album",
+  targetId: "123",
+});
+```
+
+**Key Features**:
+
+- **Optimistic updates**: View counts increment immediately in cache
+- **Non-critical failure**: View tracking failures are silently logged, don't affect UX
+- **Multi-cache updates**: Updates view counts in detail pages, lists, and bulk caches
+- **Profile support**: Handles profile view tracking without cache updates
 
 ## Migration Timeline
 

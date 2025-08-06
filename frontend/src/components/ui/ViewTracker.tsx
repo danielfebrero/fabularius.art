@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { interactionApi } from "../../lib/api";
+import { useTrackView } from "@/hooks/queries/useViewCountsQuery";
 
 interface ViewTrackerProps {
   targetType: "album" | "media" | "profile";
@@ -15,26 +15,18 @@ export const ViewTracker: React.FC<ViewTrackerProps> = ({
   targetId,
 }) => {
   const hasTracked = useRef(false);
+  const trackViewMutation = useTrackView();
 
   useEffect(() => {
     if (hasTracked.current) return;
     hasTracked.current = true;
 
-    const trackView = async () => {
-      try {
-        await interactionApi.trackView({
-          targetType,
-          targetId,
-        });
-      } catch (error) {
-        // Silently fail view tracking - not critical
-        console.debug("View tracking failed:", error);
-      }
-    };
-
     // Track view when component mounts (page load)
-    trackView();
-  }, [targetType, targetId]);
+    trackViewMutation.mutate({
+      targetType,
+      targetId,
+    });
+  }, [targetType, targetId, trackViewMutation]);
 
   return null; // This component doesn't render anything
 };
