@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { S3Service } from "@shared/utils/s3";
 import { ResponseUtil } from "@shared/utils/response";
-import { UploadMediaRequest } from "@shared/types";
+import { UploadMediaRequest, AddMediaToAlbumRequest } from "@shared/types";
 import { UserAuthUtil } from "@shared/utils/user-auth";
 import { RevalidationService } from "@shared/utils/revalidation";
 
@@ -69,52 +69,136 @@ export const handler = async (
       return ResponseUtil.badRequest(event, "Request body is required");
     }
 
-    const request = JSON.parse(event.body);
+    const request: AddMediaToAlbumRequest | UploadMediaRequest = JSON.parse(
+      event.body
+    );
 
-    // Check if this is a media-to-album association request
-    if (request.mediaId) {
+    // Check if this is a media-to-album association request (single or bulk)
+    if ("mediaId" in request || "mediaIds" in request) {
       // Association operation: Add existing media to album
-      const { mediaId } = request;
-
-      if (!mediaId) {
+      if (request.mediaId && request.mediaIds) {
         return ResponseUtil.badRequest(
           event,
-          "Media ID is required for association"
+          "Cannot specify both mediaId and mediaIds. Use one or the other."
         );
       }
 
-      // Album was already verified above, so we can proceed
-      // Verify media exists
-      const media = await DynamoDBService.getMedia(mediaId);
-      if (!media) {
-        return ResponseUtil.notFound(event, "Media not found");
+      if (!request.mediaId && !request.mediaIds) {
+        return ResponseUtil.badRequest(
+          event,
+          "Either mediaId or mediaIds must be specified for association"
+        );
       }
 
       console.log("✅ User authorized to add media to their album");
 
-      // Add media to album
-      try {
-        await DynamoDBService.addMediaToAlbum(albumId, mediaId, userId);
-      } catch (error: any) {
-        if (error.message?.includes("already in album")) {
-          return ResponseUtil.badRequest(event, error.message);
+      // Handle bulk addition
+      if (request.mediaIds) {
+        // Validate mediaIds array
+        if (!Array.isArray(request.mediaIds) || request.mediaIds.length === 0) {
+          return ResponseUtil.badRequest(
+            event,
+            "mediaIds must be a non-empty array of media IDs"
+          );
         }
-        throw error;
+
+        if (
+          !request.mediaIds.every(
+            (id) => typeof id === "string" && id.trim().length > 0
+          )
+        ) {
+          return ResponseUtil.badRequest(
+            event,
+            "All media IDs must be non-empty strings"
+          );
+        }
+
+        // Limit the number of media items that can be added in one request to avoid timeouts
+        const MAX_BULK_ADD_SIZE = 50;
+        if (request.mediaIds.length > MAX_BULK_ADD_SIZE) {
+          return ResponseUtil.badRequest(
+            event,
+            `Cannot add more than ${MAX_BULK_ADD_SIZE} media items at once. Please split into smaller batches.`
+          );
+        }
+
+        try {
+          const results = await DynamoDBService.bulkAddMediaToAlbum(
+            albumId,
+            request.mediaIds,
+            userId
+          );
+
+          // Revalidate only if some media was successfully added
+          if (results.successful.length > 0) {
+            await RevalidationService.revalidateAlbum(albumId);
+          }
+
+          return ResponseUtil.success(event, {
+            success: true,
+            message:
+              results.failed.length === 0
+                ? `All ${results.successful.length} media items added to album successfully`
+                : `${results.successful.length} media items added successfully, ${results.failed.length} failed`,
+            results: {
+              successfullyAdded: results.successful,
+              failedAdditions: results.failed,
+              totalProcessed: results.totalProcessed,
+              successCount: results.successful.length,
+              failureCount: results.failed.length,
+            },
+            albumId,
+          });
+        } catch (error: any) {
+          console.error("Error in bulk add media to album:", error);
+          if (error.message?.includes("not found")) {
+            return ResponseUtil.notFound(event, error.message);
+          }
+          throw error;
+        }
       }
 
-      await RevalidationService.revalidateMedia(mediaId);
-      await RevalidationService.revalidateAlbum(albumId);
+      // Handle single addition
+      if (request.mediaId) {
+        const { mediaId } = request;
 
-      return ResponseUtil.success(event, {
-        success: true,
-        message: "Media added to album successfully",
-        albumId,
-        mediaId,
-      });
+        if (!mediaId) {
+          return ResponseUtil.badRequest(
+            event,
+            "Media ID is required for association"
+          );
+        }
+
+        // Verify media exists
+        const media = await DynamoDBService.getMedia(mediaId);
+        if (!media) {
+          return ResponseUtil.notFound(event, "Media not found");
+        }
+
+        // Add media to album
+        try {
+          await DynamoDBService.addMediaToAlbum(albumId, mediaId, userId);
+        } catch (error: any) {
+          if (error.message?.includes("already in album")) {
+            return ResponseUtil.badRequest(event, error.message);
+          }
+          throw error;
+        }
+
+        await RevalidationService.revalidateMedia(mediaId);
+        await RevalidationService.revalidateAlbum(albumId);
+
+        return ResponseUtil.success(event, {
+          success: true,
+          message: "Media added to album successfully",
+          albumId,
+          mediaId,
+        });
+      }
     }
 
     // Upload operation: Create new media and add to album
-    const uploadRequest: UploadMediaRequest = request;
+    const uploadRequest = request as UploadMediaRequest;
 
     if (!uploadRequest.filename || !uploadRequest.mimeType) {
       return ResponseUtil.badRequest(

@@ -160,7 +160,7 @@ export const albumsApi = {
     }
   },
 
-  // Add existing media to album
+  // Add existing media to album (single)
   addMediaToAlbum: async (albumId: string, mediaId: string): Promise<void> => {
     const response = await fetch(`${API_URL}/albums/${albumId}/media`, {
       method: "POST",
@@ -188,6 +188,47 @@ export const albumsApi = {
     if (!data.success) {
       throw new Error(data.message || "Failed to add media to album");
     }
+  },
+
+  // Add multiple existing media to album (bulk)
+  bulkAddMediaToAlbum: async (
+    albumId: string,
+    mediaIds: string[]
+  ): Promise<{
+    successfullyAdded: string[];
+    failedAdditions: { mediaId: string; error: string }[];
+    totalProcessed: number;
+    successCount: number;
+    failureCount: number;
+  }> => {
+    const response = await fetch(`${API_URL}/albums/${albumId}/media`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({ mediaIds }),
+    });
+
+    if (!response.ok) {
+      let errorData = null;
+      try {
+        errorData = await response.json();
+      } catch {
+        // response body is not JSON
+      }
+      const errorMessage =
+        (errorData && (errorData.error || errorData.message)) ||
+        `Failed to bulk add media to album: ${response.statusText}`;
+      throw new Error(errorMessage);
+    }
+
+    const data = await response.json();
+    if (!data.success) {
+      throw new Error(data.message || "Failed to bulk add media to album");
+    }
+
+    return data.results;
   },
 
   // Remove media from album

@@ -603,6 +603,108 @@ Cookie: adminSessionId=...
 3. **Automatic processing** - S3 triggers Lambda to generate 5 thumbnail sizes
 4. **Database update** - Media record updated with complete `thumbnailUrls` object
 
+### Add Existing Media to Album
+
+Add existing media items to an album. Supports both single and bulk operations.
+
+**Single Media Addition:**
+
+```http
+POST /albums/{albumId}/media
+Content-Type: application/json
+Cookie: sessionId=session-token-here
+
+{
+  "mediaId": "media-456"
+}
+```
+
+**Bulk Media Addition:**
+
+```http
+POST /albums/{albumId}/media
+Content-Type: application/json
+Cookie: sessionId=session-token-here
+
+{
+  "mediaIds": ["media-456", "media-789", "media-012"]
+}
+```
+
+**Path Parameters:**
+
+| Parameter | Type   | Required | Description      |
+| --------- | ------ | -------- | ---------------- |
+| `albumId` | string | Yes      | Album identifier |
+
+**Request Body (Single):**
+
+| Field     | Type   | Required | Description                 |
+| --------- | ------ | -------- | --------------------------- |
+| `mediaId` | string | Yes      | ID of media to add to album |
+
+**Request Body (Bulk):**
+
+| Field      | Type     | Required | Description                        |
+| ---------- | -------- | -------- | ---------------------------------- |
+| `mediaIds` | string[] | Yes      | Array of media IDs to add to album |
+
+**Single Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "success": true,
+    "message": "Media added to album successfully",
+    "albumId": "album-123",
+    "mediaId": "media-456"
+  }
+}
+```
+
+**Bulk Response:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "success": true,
+    "message": "2 media items added successfully, 1 failed",
+    "results": {
+      "successfullyAdded": ["media-456", "media-789"],
+      "failedAdditions": [
+        {
+          "mediaId": "media-012",
+          "error": "Media media-012 is already in album album-123"
+        }
+      ],
+      "totalProcessed": 3,
+      "successCount": 2,
+      "failureCount": 1
+    },
+    "albumId": "album-123"
+  }
+}
+```
+
+**Validation:**
+
+- **Single**: Either `mediaId` OR `mediaIds` must be provided, not both
+- **Bulk**: Maximum 50 media items per request to prevent timeouts
+- **Media Existence**: All media items must exist in the database
+- **Duplicates**: Gracefully handles media already in the album (skips with error)
+
+**Authentication:** Required - User must own the album or have admin privileges
+
+**Error Responses:**
+
+- `400`: Invalid request (missing IDs, both fields provided, etc.)
+- `401`: User not authenticated
+- `403`: User doesn't own the album (non-admin)
+- `404`: Album or media not found
+- `500`: Server error
+
 ## Thumbnail System API
 
 ### Thumbnail Size Reference

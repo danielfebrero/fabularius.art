@@ -19,6 +19,7 @@ import { mediaApi } from "@/lib/api";
 import {
   useAddMediaToAlbum,
   useRemoveMediaFromAlbum,
+  useBulkAddMediaToAlbum,
 } from "@/hooks/queries/useMediaQuery";
 
 interface MediaWithSelection extends Media {
@@ -53,6 +54,7 @@ export function EditAlbumDialog({
 
   // Media mutation hooks
   const addMediaMutation = useAddMediaToAlbum();
+  const bulkAddMediaMutation = useBulkAddMediaToAlbum();
   const removeMediaMutation = useRemoveMediaFromAlbum();
 
   const [title, setTitle] = useState("");
@@ -164,17 +166,24 @@ export function EditAlbumDialog({
 
     const promises = [];
 
-    // Add new media using mutation hooks
-    for (const mediaId of mediaToAdd) {
+    // Add new media using bulk mutation if multiple, single mutation if one
+    if (mediaToAdd.length > 1) {
+      promises.push(
+        bulkAddMediaMutation.mutateAsync({
+          albumId: album.id,
+          mediaIds: mediaToAdd,
+        })
+      );
+    } else if (mediaToAdd.length === 1) {
       promises.push(
         addMediaMutation.mutateAsync({
           albumId: album.id,
-          mediaId,
+          mediaId: mediaToAdd[0],
         })
       );
     }
 
-    // Remove media using mutation hooks
+    // Remove media using single mutation hooks (no bulk remove implemented yet)
     for (const mediaId of mediaToRemove) {
       promises.push(
         removeMediaMutation.mutateAsync({

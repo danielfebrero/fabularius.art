@@ -677,6 +677,59 @@ export class DynamoDBService {
     }
   }
 
+  static async bulkAddMediaToAlbum(
+    albumId: string,
+    mediaIds: string[],
+    addedBy?: string
+  ): Promise<{
+    successful: string[];
+    failed: { mediaId: string; error: string }[];
+    totalProcessed: number;
+  }> {
+    const results = {
+      successful: [] as string[],
+      failed: [] as { mediaId: string; error: string }[],
+      totalProcessed: 0,
+    };
+
+    // Verify album exists first
+    const album = await this.getAlbum(albumId);
+    if (!album) {
+      throw new Error(`Album ${albumId} not found`);
+    }
+
+    console.log(
+      `📝 Starting bulk add of ${mediaIds.length} media items to album ${albumId}`
+    );
+
+    // Process each media addition individually to handle duplicate errors gracefully
+    for (const mediaId of mediaIds) {
+      try {
+        results.totalProcessed++;
+        await this.addMediaToAlbum(albumId, mediaId, addedBy);
+        results.successful.push(mediaId);
+        console.log(
+          `✅ Successfully added media ${mediaId} to album ${albumId}`
+        );
+      } catch (error: any) {
+        const errorMessage = error.message || "Unknown error";
+        results.failed.push({
+          mediaId,
+          error: errorMessage,
+        });
+        console.log(
+          `❌ Failed to add media ${mediaId} to album ${albumId}: ${errorMessage}`
+        );
+      }
+    }
+
+    console.log(
+      `📊 Bulk add complete. Success: ${results.successful.length}, Failed: ${results.failed.length}`
+    );
+
+    return results;
+  }
+
   static async removeMediaFromAlbum(
     albumId: string,
     mediaId: string

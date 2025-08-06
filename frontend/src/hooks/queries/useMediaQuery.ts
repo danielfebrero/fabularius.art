@@ -215,6 +215,102 @@ export function useAddMediaToAlbum() {
   });
 }
 
+// Mutation hook for bulk adding existing media to an album
+export function useBulkAddMediaToAlbum() {
+  return useMutation({
+    mutationFn: async ({
+      albumId,
+      mediaIds,
+    }: {
+      albumId: string;
+      mediaIds: string[];
+    }) => {
+      // Import albums API dynamically to avoid circular dependencies
+      const { albumsApi } = await import("@/lib/api");
+      const results = await albumsApi.bulkAddMediaToAlbum(albumId, mediaIds);
+      return { albumId, mediaIds, results };
+    },
+    onMutate: async ({ albumId, mediaIds }) => {
+      // Cancel any outgoing refetches for album media
+      await queryClient.cancelQueries({
+        queryKey: ["media", "album", albumId],
+      });
+
+      // Snapshot the previous values
+      const previousAlbumMedia = queryClient.getQueriesData({
+        queryKey: ["media", "album", albumId],
+      });
+
+      // Get all media items to add (if they exist in cache)
+      const mediaItems = mediaIds
+        .map((mediaId) =>
+          queryClient.getQueryData(queryKeys.media.detail(mediaId))
+        )
+        .filter(Boolean);
+
+      // Optimistically add the media to album media infinite query
+      if (mediaItems.length > 0) {
+        queryClient.setQueriesData(
+          { queryKey: ["media", "album", albumId] },
+          (old: any) => {
+            if (!old?.pages) return old;
+
+            // Add to first page to show immediately
+            const newPages = [...old.pages];
+            if (newPages[0]?.data?.media) {
+              newPages[0] = {
+                ...newPages[0],
+                data: {
+                  ...newPages[0].data,
+                  media: [...mediaItems, ...newPages[0].data.media],
+                },
+              };
+            }
+
+            return {
+              ...old,
+              pages: newPages,
+            };
+          }
+        );
+      }
+
+      // Return context for rollback
+      return { previousAlbumMedia, albumId, mediaIds };
+    },
+    onError: (err, variables, context) => {
+      // If the mutation fails, restore the previous data
+      if (context?.previousAlbumMedia) {
+        context.previousAlbumMedia.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      console.error("Failed to bulk add media to album:", err);
+    },
+    onSuccess: (data, variables) => {
+      // Invalidate album media queries to ensure fresh data
+      queryClient.invalidateQueries({
+        queryKey: ["media", "album", variables.albumId],
+      });
+
+      // Invalidate user media queries in case media appears there
+      queryClient.invalidateQueries({
+        queryKey: ["media", "user"],
+      });
+
+      // Invalidate the specific album to update counts
+      invalidateQueries.album(variables.albumId);
+
+      // Invalidate each successfully added media item
+      if (data.results.successfullyAdded.length > 0) {
+        data.results.successfullyAdded.forEach((mediaId) => {
+          invalidateQueries.media(mediaId);
+        });
+      }
+    },
+  });
+}
+
 // Mutation hook for removing media from an album
 export function useRemoveMediaFromAlbum() {
   return useMutation({
