@@ -290,6 +290,9 @@ export function VirtualizedGrid<T extends GridItem>({
                       : undefined
                   }
                   currentIndex={row.startIndex + itemIndex}
+                  hasNextPage={hasNextPage}
+                  isFetchingNextPage={isFetchingNextPage}
+                  onLoadMore={onLoadMore}
                 />
               </ComponentErrorBoundary>
             );
@@ -312,6 +315,9 @@ export function VirtualizedGrid<T extends GridItem>({
       mediaList,
       items,
       loadMore,
+      hasNextPage,
+      isFetchingNextPage,
+      onLoadMore,
     ]
   );
 

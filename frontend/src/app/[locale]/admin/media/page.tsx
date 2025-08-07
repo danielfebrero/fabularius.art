@@ -18,10 +18,7 @@ import { VirtualizedGrid } from "@/components/ui/VirtualizedGrid";
 import { Media } from "@/types";
 
 export default function AdminMediaPage() {
-  const { 
-    albums, 
-    isLoading: albumsLoading
-  } = useAdminAlbumsData({
+  const { albums, isLoading: albumsLoading } = useAdminAlbumsData({
     limit: 50, // Increase limit to get more media at once
   });
   const batchDeleteMutation = useAdminBatchDeleteMedia();
@@ -30,15 +27,16 @@ export default function AdminMediaPage() {
   const [mediaToDelete, setMediaToDelete] = useState<string[]>([]);
 
   // Combine media from all albums with memoization
-  const allMedia: (Media & { albumTitle: string; albumId: string })[] = useMemo(() => {
-    return albums.flatMap((album) =>
-      (album.media || []).map((media: Media) => ({
-        ...media,
-        albumTitle: album.title,
-        albumId: album.id,
-      }))
-    );
-  }, [albums]);
+  const allMedia: (Media & { albumTitle: string; albumId: string })[] =
+    useMemo(() => {
+      return albums.flatMap((album) =>
+        (album.media || []).map((media: Media) => ({
+          ...media,
+          albumTitle: album.title,
+          albumId: album.id,
+        }))
+      );
+    }, [albums]);
 
   const handleSelectMedia = (mediaId: string) => {
     const newSelected = new Set(selectedMedia);

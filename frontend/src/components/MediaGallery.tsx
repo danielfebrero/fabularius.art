@@ -2,10 +2,8 @@
 
 import React, { useState, useEffect, useLayoutEffect, useMemo } from "react";
 import { VirtualizedGrid } from "./ui/VirtualizedGrid";
-import { Lightbox } from "./ui/Lightbox";
 import { useAlbumMedia } from "@/hooks/queries/useMediaQuery";
 import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
-import { LightboxErrorBoundary } from "./ErrorBoundaries";
 import { useBulkViewCounts } from "@/hooks/queries/useViewCountsQuery";
 
 interface MediaGalleryProps {
@@ -38,8 +36,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
   const [error, setError] = useState<string | null>(
     queryError?.message || null
   );
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
   // Hook for manual prefetching (for interaction status)
   const { prefetch } = usePrefetchInteractionStatus();
@@ -101,22 +97,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
     }
   };
 
-  const handleLightboxClose = () => {
-    setLightboxOpen(false);
-  };
-
-  const handleLightboxNext = () => {
-    if (currentMediaIndex < allMedia.length - 1) {
-      setCurrentMediaIndex(currentMediaIndex + 1);
-    }
-  };
-
-  const handleLightboxPrevious = () => {
-    if (currentMediaIndex > 0) {
-      setCurrentMediaIndex(currentMediaIndex - 1);
-    }
-  };
-
   return (
     <>
       <VirtualizedGrid
@@ -173,17 +153,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
         error={error}
         onRetry={handleLoadMore}
       />
-
-      <LightboxErrorBoundary>
-        <Lightbox
-          media={allMedia}
-          currentIndex={currentMediaIndex}
-          isOpen={lightboxOpen}
-          onClose={handleLightboxClose}
-          onNext={handleLightboxNext}
-          onPrevious={handleLightboxPrevious}
-        />
-      </LightboxErrorBoundary>
     </>
   );
 };

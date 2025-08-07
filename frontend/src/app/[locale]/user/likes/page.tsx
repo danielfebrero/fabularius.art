@@ -6,7 +6,6 @@ import { useLikesQuery } from "@/hooks/queries/useLikesQuery";
 import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 import { Button } from "@/components/ui/Button";
 import { VirtualizedGrid } from "@/components/ui/VirtualizedGrid";
-import { Lightbox } from "@/components/ui/Lightbox";
 
 /**
  * UserLikesPage - Displays user's liked content with virtualization and infinite scroll
@@ -17,7 +16,7 @@ import { Lightbox } from "@/components/ui/Lightbox";
  * - ✅ Mixed content types (media + albums) with dynamic type resolution
  * - ✅ Performance optimizations with useMemo and useCallback
  * - ✅ Interaction status prefetching for better UX
- * - ✅ Lightbox support for media items
+ * - ✅ Lightbox support for media items with infinite navigation
  * - ✅ Grid and list view modes
  * - ✅ Responsive design and loading states
  *
@@ -26,6 +25,7 @@ import { Lightbox } from "@/components/ui/Lightbox";
  * - VirtualizedGrid handles large lists efficiently
  * - Dynamic type resolution via _contentType property
  * - Optimistic interaction updates
+ * - Lightbox infinite navigation with automatic content loading
  */
 const UserLikesPage: React.FC = () => {
   // Use TanStack Query hook for likes
@@ -87,8 +87,6 @@ const UserLikesPage: React.FC = () => {
   }, []);
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
   // Get media items for lightbox (only media type likes) - memoized for performance
   const mediaItems = useMemo(() => {
@@ -109,22 +107,6 @@ const UserLikesPage: React.FC = () => {
         updatedAt: like.createdAt,
       }));
   }, [likes]);
-
-  const handleLightboxClose = useCallback(() => {
-    setLightboxOpen(false);
-  }, []);
-
-  const handleLightboxNext = useCallback(() => {
-    if (currentMediaIndex < mediaItems.length - 1) {
-      setCurrentMediaIndex(currentMediaIndex + 1);
-    }
-  }, [currentMediaIndex, mediaItems.length]);
-
-  const handleLightboxPrevious = useCallback(() => {
-    if (currentMediaIndex > 0) {
-      setCurrentMediaIndex(currentMediaIndex - 1);
-    }
-  }, [currentMediaIndex]);
 
   // Create media items for ContentCard from likes
   const createMediaFromLike = useCallback((like: any) => {
@@ -306,16 +288,6 @@ const UserLikesPage: React.FC = () => {
           onRetry={refresh}
         />
       </div>
-
-      {/* Lightbox for media items */}
-      <Lightbox
-        media={mediaItems}
-        currentIndex={currentMediaIndex}
-        isOpen={lightboxOpen}
-        onClose={handleLightboxClose}
-        onNext={handleLightboxNext}
-        onPrevious={handleLightboxPrevious}
-      />
     </>
   );
 };

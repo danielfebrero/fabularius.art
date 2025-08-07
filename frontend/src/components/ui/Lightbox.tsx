@@ -16,6 +16,11 @@ interface LightboxProps {
 
   canDelete?: boolean;
 
+  // Infinite scroll support
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  onLoadMore?: () => void;
+
   onClose: () => void;
   onNext: () => void;
   onPrevious: () => void;
@@ -26,6 +31,9 @@ export const Lightbox: React.FC<LightboxProps> = ({
   currentIndex,
   isOpen,
   canDelete = false,
+  hasNextPage = false,
+  isFetchingNextPage = false,
+  onLoadMore,
   onClose,
   onNext,
   onPrevious,
@@ -48,7 +56,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
     useSwipeGesture({
       // Swiping left should navigate to the NEXT item (content moves left)
       onSwipeLeft: () => {
-        if (currentIndex < media.length - 1) {
+        if (currentIndex < media.length - 1 || hasNextPage) {
           setIsPlayingVideo(false); // Stop video when navigating
           onNext();
         }
@@ -69,6 +77,26 @@ export const Lightbox: React.FC<LightboxProps> = ({
       preloadAroundIndex(currentIndex);
     }
   }, [isOpen, currentIndex, media.length, preloadAroundIndex]);
+
+  // Trigger loading more content when approaching the end
+  useEffect(() => {
+    if (
+      isOpen &&
+      hasNextPage &&
+      !isFetchingNextPage &&
+      onLoadMore &&
+      currentIndex >= media.length - 3 // Load more when 3 items from the end
+    ) {
+      onLoadMore();
+    }
+  }, [
+    isOpen,
+    hasNextPage,
+    isFetchingNextPage,
+    onLoadMore,
+    currentIndex,
+    media.length,
+  ]);
 
   // Reset video playing state when current media changes
   useEffect(() => {
@@ -120,14 +148,22 @@ export const Lightbox: React.FC<LightboxProps> = ({
           }
           break;
         case "ArrowRight":
-          if (currentIndex < media.length - 1) {
+          if (currentIndex < media.length - 1 || hasNextPage) {
             setIsPlayingVideo(false); // Stop video when navigating
             onNext();
           }
           break;
       }
     },
-    [isOpen, handleClose, onNext, onPrevious, currentIndex, media.length]
+    [
+      isOpen,
+      handleClose,
+      onNext,
+      onPrevious,
+      currentIndex,
+      media.length,
+      hasNextPage,
+    ]
   );
 
   useEffect(() => {
@@ -154,7 +190,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
-  }, [isOpen]);
+  }, [isOpen, handleClose]);
 
   // Prevent body scroll when lightbox is open
   useEffect(() => {
@@ -376,7 +412,29 @@ export const Lightbox: React.FC<LightboxProps> = ({
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            {currentIndex + 1} of {media.length}
+            <div className="flex items-center gap-2">
+              <span>
+                {currentIndex + 1} of{" "}
+                {hasNextPage ? `${media.length}+` : media.length}
+              </span>
+              {isFetchingNextPage && (
+                <div className="animate-spin">
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
 
@@ -454,28 +512,37 @@ export const Lightbox: React.FC<LightboxProps> = ({
             <motion.button
               onClick={(e) => {
                 e.stopPropagation();
-                if (currentIndex < media.length - 1) {
+                if (currentIndex < media.length - 1 || hasNextPage) {
                   setIsPlayingVideo(false); // Stop video when navigating
                   onNext();
                 }
               }}
               className={cn(
                 "absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors z-20",
-                currentIndex === media.length - 1
+                currentIndex === media.length - 1 && !hasNextPage
                   ? "opacity-30 cursor-not-allowed"
                   : "cursor-pointer hover:scale-110"
               )}
               aria-label="Next media"
               data-testid="lightbox-next"
-              disabled={currentIndex === media.length - 1}
+              disabled={currentIndex === media.length - 1 && !hasNextPage}
               initial={{ opacity: 0, x: 20 }}
               animate={{
-                opacity: currentIndex === media.length - 1 ? 0.3 : 1,
+                opacity:
+                  currentIndex === media.length - 1 && !hasNextPage ? 0.3 : 1,
                 x: 0,
               }}
               transition={{ delay: 0.3 }}
-              whileHover={currentIndex < media.length - 1 ? { scale: 1.1 } : {}}
-              whileTap={currentIndex < media.length - 1 ? { scale: 0.9 } : {}}
+              whileHover={
+                currentIndex < media.length - 1 || hasNextPage
+                  ? { scale: 1.1 }
+                  : {}
+              }
+              whileTap={
+                currentIndex < media.length - 1 || hasNextPage
+                  ? { scale: 0.9 }
+                  : {}
+              }
             >
               <svg
                 className="w-6 h-6"

@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { ImageIcon, Grid, List, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Lightbox } from "@/components/ui/Lightbox";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { VirtualizedGrid } from "@/components/ui/VirtualizedGrid";
 import { useUserMedia } from "@/hooks/queries/useMediaQuery";
@@ -11,8 +10,6 @@ import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQue
 
 const UserMediasPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
   // Use TanStack Query hook for user media with infinite scroll
   const {
@@ -62,23 +59,6 @@ const UserMediasPage: React.FC = () => {
       });
     }
   }, [medias, prefetch]);
-
-  // Lightbox handlers
-  const handleLightboxClose = () => {
-    setLightboxOpen(false);
-  };
-
-  const handleLightboxNext = () => {
-    if (currentMediaIndex < medias.length - 1) {
-      setCurrentMediaIndex(currentMediaIndex + 1);
-    }
-  };
-
-  const handleLightboxPrevious = () => {
-    if (currentMediaIndex > 0) {
-      setCurrentMediaIndex(currentMediaIndex - 1);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -255,16 +235,6 @@ const UserMediasPage: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Lightbox for fullscreen viewing */}
-      <Lightbox
-        media={medias}
-        currentIndex={currentMediaIndex}
-        isOpen={lightboxOpen}
-        onClose={handleLightboxClose}
-        onNext={handleLightboxNext}
-        onPrevious={handleLightboxPrevious}
-      />
     </div>
   );
 };

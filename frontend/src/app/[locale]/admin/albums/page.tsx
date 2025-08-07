@@ -67,13 +67,19 @@ export default function AdminAlbumsPage() {
     }
   };
 
-  const handleManageMedia = useCallback((albumId: string) => {
-    router.push(`/admin/albums/${albumId}/media`);
-  }, [router]);
+  const handleManageMedia = useCallback(
+    (albumId: string) => {
+      router.push(`/admin/albums/${albumId}/media`);
+    },
+    [router]
+  );
 
-  const handleEdit = useCallback((albumId: string) => {
-    router.push(`/admin/albums/${albumId}`);
-  }, [router]);
+  const handleEdit = useCallback(
+    (albumId: string) => {
+      router.push(`/admin/albums/${albumId}`);
+    },
+    [router]
+  );
 
   // Memoize load more function
   const loadMore = useCallback(() => {
@@ -291,7 +297,8 @@ export default function AdminAlbumsPage() {
             </div>
           ),
           title: "No albums found",
-          description: "Create your first album to get started with organizing content.",
+          description:
+            "Create your first album to get started with organizing content.",
         }}
         loadingState={{
           loadingText: "Loading albums...",

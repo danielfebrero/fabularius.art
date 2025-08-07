@@ -88,6 +88,11 @@ interface ContentCardProps {
   mediaList?: Media[];
   currentIndex?: number;
 
+  // Infinite scroll support for lightbox
+  hasNextPage?: boolean;
+  isFetchingNextPage?: boolean;
+  onLoadMore?: () => void;
+
   // Current album context for remove functionality
   currentAlbumId?: string;
 }
@@ -120,6 +125,9 @@ export function ContentCard({
   preferredThumbnailSize,
   mediaList,
   currentIndex = 0,
+  hasNextPage = false,
+  isFetchingNextPage = false,
+  onLoadMore,
   currentAlbumId,
 }: ContentCardProps) {
   const router = useLocaleRouter();
@@ -923,10 +931,13 @@ export function ContentCard({
           media={getLightboxMedia()}
           currentIndex={lightboxIndex}
           isOpen={lightboxOpen}
+          hasNextPage={hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          onLoadMore={onLoadMore}
           onClose={() => setLightboxOpen(false)}
           onNext={() => {
             const lightboxMedia = getLightboxMedia();
-            if (lightboxIndex < lightboxMedia.length - 1) {
+            if (lightboxIndex < lightboxMedia.length - 1 || hasNextPage) {
               setLightboxIndex(lightboxIndex + 1);
             }
           }}

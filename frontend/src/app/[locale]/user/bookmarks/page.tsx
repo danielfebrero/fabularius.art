@@ -5,7 +5,6 @@ import { Bookmark, Grid, List } from "lucide-react";
 import { useBookmarksQuery } from "@/hooks/queries/useBookmarksQuery";
 import { Button } from "@/components/ui/Button";
 import { VirtualizedGrid } from "@/components/ui/VirtualizedGrid";
-import { Lightbox } from "@/components/ui/Lightbox";
 import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 
 const UserBookmarksPage: React.FC = () => {
@@ -112,8 +111,6 @@ const UserBookmarksPage: React.FC = () => {
   const refresh = () => {}; // TanStack Query handles background refetching
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
   // Get media items for lightbox (only media type bookmarks)
   const mediaItems = bookmarks
@@ -132,22 +129,6 @@ const UserBookmarksPage: React.FC = () => {
       createdAt: bookmark.createdAt,
       updatedAt: bookmark.createdAt,
     }));
-
-  const handleLightboxClose = () => {
-    setLightboxOpen(false);
-  };
-
-  const handleLightboxNext = () => {
-    if (currentMediaIndex < mediaItems.length - 1) {
-      setCurrentMediaIndex(currentMediaIndex + 1);
-    }
-  };
-
-  const handleLightboxPrevious = () => {
-    if (currentMediaIndex > 0) {
-      setCurrentMediaIndex(currentMediaIndex - 1);
-    }
-  };
 
   if (error) {
     return (
@@ -265,16 +246,6 @@ const UserBookmarksPage: React.FC = () => {
           onRetry={refresh}
         />
       </div>
-
-      {/* Lightbox for media items */}
-      <Lightbox
-        media={mediaItems}
-        currentIndex={currentMediaIndex}
-        isOpen={lightboxOpen}
-        onClose={handleLightboxClose}
-        onNext={handleLightboxNext}
-        onPrevious={handleLightboxPrevious}
-      />
     </>
   );
 };
