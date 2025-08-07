@@ -1,15 +1,15 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { ImageIcon, Grid, List, Plus } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ContentCard } from "@/components/ui/ContentCard";
 import { Lightbox } from "@/components/ui/Lightbox";
-import { cn } from "@/lib/utils";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { useUserMedia } from "@/hooks/queries/useMediaQuery";
 import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 import { Media } from "@/types";
+import { Virtuoso } from "react-virtuoso";
 
 const UserMediasPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -17,8 +17,18 @@ const UserMediasPage: React.FC = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
-  // Use TanStack Query hook for user media
-  const { data: mediaData, isLoading } = useUserMedia();
+  // Container ref for measuring width
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  // Use TanStack Query hook for user media with infinite scroll
+  const {
+    data: mediaData,
+    isLoading,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useUserMedia();
 
   // Hook for bulk prefetching interaction status
   const { prefetch } = usePrefetchInteractionStatus();
@@ -36,6 +46,58 @@ const UserMediasPage: React.FC = () => {
   }, [allMedias]);
 
   const totalCount = medias.length;
+
+  // Measure container width on mount and resize
+  useEffect(() => {
+    const measureWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth);
+      }
+    };
+
+    measureWidth();
+    window.addEventListener("resize", measureWidth);
+    return () => window.removeEventListener("resize", measureWidth);
+  }, []);
+
+  // Calculate grid columns based on container width and view mode
+  const gridColumns = useMemo(() => {
+    if (viewMode === "list") return 1;
+    if (!containerWidth) return 4; // Default fallback
+
+    // Base calculation on container width
+    if (containerWidth < 640) return 1; // mobile
+    if (containerWidth < 768) return 2; // sm
+    if (containerWidth < 1024) return 3; // lg
+    if (containerWidth < 1280) return 4; // xl
+    return 4; // xl and above
+  }, [containerWidth, viewMode]);
+
+  // Convert flat media array to grid rows for virtualization
+  const gridRows = useMemo(() => {
+    if (viewMode === "list") {
+      return medias.map((media, index) => ({
+        items: [media],
+        startIndex: index,
+      }));
+    }
+
+    const rows = [];
+    for (let i = 0; i < medias.length; i += gridColumns) {
+      rows.push({
+        items: medias.slice(i, i + gridColumns),
+        startIndex: i,
+      });
+    }
+    return rows;
+  }, [medias, gridColumns, viewMode]);
+
+  // Load more data when approaching the end
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Prefetch interaction status for all user media
   useEffect(() => {
@@ -69,6 +131,76 @@ const UserMediasPage: React.FC = () => {
       setCurrentMediaIndex(currentMediaIndex - 1);
     }
   };
+
+  // Row renderer for virtuoso
+  const renderRow = useCallback(
+    (index: number) => {
+      const row = gridRows[index];
+      if (!row) return null;
+
+      // Check if we need to load more data
+      if (index >= gridRows.length - 3) {
+        loadMore();
+      }
+
+      if (viewMode === "list") {
+        const media = row.items[0];
+        return (
+          <div key={media.id} className="mb-4">
+            <ContentCard
+              item={media}
+              type="media"
+              canLike={true}
+              canBookmark={true}
+              canFullscreen={true}
+              canAddToAlbum={true}
+              canDownload={true}
+              canDelete={true}
+              showCounts={true}
+              showTags={false}
+              aspectRatio="auto"
+              preferredThumbnailSize="originalSize"
+              mediaList={medias}
+              currentIndex={row.startIndex}
+            />
+          </div>
+        );
+      }
+
+      return (
+        <div
+          key={`row-${index}`}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6"
+          style={{ gridTemplateColumns: `repeat(${gridColumns}, 1fr)` }}
+        >
+          {row.items.map((media: Media, itemIndex: number) => (
+            <ContentCard
+              key={media.id}
+              item={media}
+              type="media"
+              canLike={true}
+              canBookmark={true}
+              canFullscreen={true}
+              canAddToAlbum={true}
+              canDownload={true}
+              canDelete={true}
+              showCounts={true}
+              showTags={false}
+              aspectRatio="square"
+              mediaList={medias}
+              currentIndex={row.startIndex + itemIndex}
+            />
+          ))}
+          {/* Fill empty slots in the last row */}
+          {row.items.length < gridColumns &&
+            Array.from({ length: gridColumns - row.items.length }).map(
+              (_, emptyIndex) => <div key={`empty-${emptyIndex}`} />
+            )}
+        </div>
+      );
+    },
+    [gridRows, gridColumns, viewMode, medias, loadMore]
+  );
 
   if (isLoading) {
     return (
@@ -185,36 +317,39 @@ const UserMediasPage: React.FC = () => {
 
       {/* Content */}
       {medias.length > 0 ? (
-        <div className="space-y-6">
-          <div
-            className={cn(
-              viewMode === "grid"
-                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                : "space-y-4"
-            )}
-          >
-            {medias.map((media: Media, index: number) => (
-              <ContentCard
-                key={media.id}
-                item={media}
-                type="media"
-                canLike={true}
-                canBookmark={true}
-                canFullscreen={true}
-                canAddToAlbum={true}
-                canDownload={true}
-                canDelete={true}
-                showCounts={true}
-                showTags={false}
-                aspectRatio={viewMode === "grid" ? "square" : "auto"}
-                preferredThumbnailSize={
-                  viewMode === "grid" ? undefined : "originalSize"
+        <div ref={containerRef}>
+          <Virtuoso
+            useWindowScroll
+            data={gridRows}
+            totalCount={gridRows.length}
+            itemContent={renderRow}
+            endReached={loadMore}
+            overscan={5}
+            components={{
+              Footer: () => {
+                if (isFetchingNextPage) {
+                  return (
+                    <div className="py-8 text-center">
+                      <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-admin-accent"></div>
+                      <p className="text-muted-foreground mt-2">
+                        Loading more media...
+                      </p>
+                    </div>
+                  );
                 }
-                mediaList={medias}
-                currentIndex={index}
-              />
-            ))}
-          </div>
+                if (!hasNextPage && medias.length > 0) {
+                  return (
+                    <div className="py-8 text-center">
+                      <p className="text-muted-foreground">
+                        No more media to load
+                      </p>
+                    </div>
+                  );
+                }
+                return null;
+              },
+            }}
+          />
         </div>
       ) : (
         <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-12 text-center">
