@@ -3,6 +3,7 @@ import { ResponseUtil } from "@shared/utils/response";
 import { UserUtil } from "@shared/utils/user";
 import { EmailService } from "@shared/utils/email";
 import { DynamoDBService } from "@shared/utils/dynamodb";
+import { SessionUtil } from "@shared/utils/session";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -12,9 +13,17 @@ export const handler = async (
   }
 
   try {
-    // Parse request body
-    const body = event.body ? JSON.parse(event.body) : {};
-    const token = body.token;
+    let token: string;
+
+    // Handle both GET and POST requests
+    if (event.httpMethod === "GET") {
+      // GET request - token comes from query parameters
+      token = event.queryStringParameters?.["token"] || "";
+    } else {
+      // POST request - token comes from request body
+      const body = event.body ? JSON.parse(event.body) : {};
+      token = body.token || "";
+    }
 
     if (!token) {
       return ResponseUtil.badRequest(event, "Verification token is required");
@@ -80,12 +89,16 @@ export const handler = async (
       // Don't fail the verification if welcome email fails
     }
 
-    const responseData = {
-      message: "Email verified successfully! Welcome to PornSpot.ai",
-      user: UserUtil.sanitizeUserForResponse(updatedUser),
-    };
-
-    return ResponseUtil.success(event, responseData);
+    // Create a new session to automatically log the user in
+    return SessionUtil.createUserSessionResponse(
+      event,
+      {
+        userId: updatedUser.userId,
+        userEmail: updatedUser.email,
+        updateLastLogin: true, // Update login timestamp since user is now logged in
+      },
+      "Email verified successfully! Welcome to PornSpot.ai"
+    );
   } catch (error) {
     console.error("Email verification error:", error);
     return ResponseUtil.internalError(event, "Email verification failed");

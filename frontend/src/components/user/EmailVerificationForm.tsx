@@ -39,7 +39,9 @@ export function EmailVerificationForm({ email }: EmailVerificationFormProps) {
     try {
       const response = await userApi.verifyEmail(data.code);
       if (response.success && response.data?.user) {
-        setSuccess("Email verified successfully! Redirecting to profile...");
+        setSuccess(
+          "Email verified successfully! You're now signed in. Redirecting to profile..."
+        );
         router.push("/user/profile");
       }
     } catch (err: any) {

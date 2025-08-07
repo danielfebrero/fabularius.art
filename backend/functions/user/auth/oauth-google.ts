@@ -1,19 +1,11 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { OAuth2Client } from "google-auth-library";
 import { google } from "googleapis";
-import { v4 as uuidv4 } from "uuid";
 import { ResponseUtil } from "@shared/utils/response";
 import { OAuthUserUtil } from "@shared/utils/oauth-user";
-import { DynamoDBService } from "@shared/utils/dynamodb";
 import { ParameterStoreService } from "@shared/utils/parameters";
-import { UserAuthMiddleware } from "@shared/auth/user-middleware";
-import {
-  GoogleTokenResponse,
-  GoogleOAuthUserInfo,
-  UserSessionEntity,
-} from "@shared/types";
-
-const SESSION_DURATION_DAYS = 30;
+import { SessionUtil } from "@shared/utils/session";
+import { GoogleTokenResponse, GoogleOAuthUserInfo } from "@shared/types";
 
 // Google OAuth configuration from environment variables
 const GOOGLE_CLIENT_ID = process.env["GOOGLE_CLIENT_ID"];
@@ -180,51 +172,14 @@ export const handler = async (
 
     console.log("User account processed:", { userId, isNewUser });
 
-    // Update last login timestamp
-    await OAuthUserUtil.updateLastLogin(userId);
-
-    // Create user session
-    const sessionId = uuidv4();
-    const now = new Date();
-    const expiresAt = new Date(
-      now.getTime() + SESSION_DURATION_DAYS * 24 * 60 * 60 * 1000
-    );
-
-    const sessionEntity: UserSessionEntity = {
-      PK: `SESSION#${sessionId}`,
-      SK: "METADATA",
-      GSI1PK: "USER_SESSION_EXPIRY",
-      GSI1SK: `${expiresAt.toISOString()}#${sessionId}`,
-      EntityType: "UserSession",
-      sessionId,
+    // Create user session with auto sign-in (OAuth user's last login is updated in updateLastLogin)
+    const sessionResult = await SessionUtil.createUserSession({
       userId,
       userEmail: googleUserInfo.email,
-      createdAt: now.toISOString(),
-      expiresAt: expiresAt.toISOString(),
-      lastAccessedAt: now.toISOString(),
-      ttl: Math.floor(expiresAt.getTime() / 1000), // Unix timestamp for TTL
-    };
+      updateLastLogin: true,
+    });
 
-    await DynamoDBService.createUserSession(sessionEntity);
-
-    console.log("Session created successfully:", sessionId);
-
-    // Create session cookie
-    const sessionCookie = UserAuthMiddleware.createSessionCookie(
-      sessionId,
-      expiresAt.toISOString()
-    );
-    // LOG actual cookie for local dev (HTTP vs. HTTPS debugging)
-    console.log(
-      "[OAUTH] New session; login flow set-cookie:",
-      JSON.stringify({
-        sessionId,
-        IS_OFFLINE: process.env["IS_OFFLINE"],
-        SetCookie: sessionCookie,
-        origin: event.headers?.["origin"] || event.headers?.["Origin"],
-        referer: event.headers?.["referer"] || event.headers?.["Referer"],
-      })
-    );
+    console.log("OAuth session created successfully:", sessionResult.sessionId);
 
     // Return success response with user data and redirect URL
     const response = ResponseUtil.success(event, {
@@ -238,7 +193,7 @@ export const handler = async (
 
     response.headers = {
       ...response.headers,
-      "Set-Cookie": sessionCookie,
+      "Set-Cookie": sessionResult.sessionCookie,
     };
 
     console.log("OAuth flow completed successfully");

@@ -38,10 +38,6 @@ Currently, it's unusable on mobile devices. We need to ensure that the admin pag
 
 The "what you can do now" section is not coherent and should be reworked.
 
-### Auto connect the user when he verifies his email
-
-When the user clicks the verification link, he should be automatically logged in.
-
 ## User profile
 
 ## Videos

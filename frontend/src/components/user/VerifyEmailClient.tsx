@@ -37,8 +37,10 @@ export function VerifyEmailClient() {
 
         if (result.success) {
           setState("success");
-          setMessage("Your email has been successfully verified!");
-          // Refresh user data to get updated verification status
+          setMessage(
+            "Your email has been successfully verified and you're now signed in!"
+          );
+          // Refresh user data to get updated verification status and authentication
           await checkAuthMutation.mutateAsync();
         } else {
           setState("error");
@@ -113,8 +115,8 @@ export function VerifyEmailClient() {
 
             <div className="space-y-3">
               <p className="text-muted-foreground">
-                Your account is now fully activated. You can now access all
-                features.
+                Your account is now fully activated and you&apos;re
+                automatically signed in. You can now access all features.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center">

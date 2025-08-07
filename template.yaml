@@ -1529,6 +1529,14 @@ Resources:
             Method: POST
             Auth:
               Authorizer: NONE
+        GetVerifyEmail:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGateway
+            Path: /user/verify-email
+            Method: GET
+            Auth:
+              Authorizer: NONE
         OptionsVerifyEmail:
           Type: Api
           Properties:

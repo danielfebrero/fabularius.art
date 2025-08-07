@@ -873,7 +873,9 @@ Cookie: sessionId=session-token-here
 
 ### Email Verification
 
-Verify a user's email address using a verification token.
+Verify a user's email address using a verification token. Supports both GET (link-based) and POST (form-based) verification. **Automatically signs the user in upon successful verification.**
+
+#### GET Request (Link-based verification)
 
 ```http
 GET /user/verify-email?token={verification-token}
@@ -882,6 +884,17 @@ GET /user/verify-email?token={verification-token}
 **Query Parameters:**
 
 - `token` (string, required): The verification token received via email
+
+#### POST Request (Form-based verification)
+
+```http
+POST /user/verify-email
+Content-Type: application/json
+
+{
+  "token": "verification-token-here"
+}
+```
 
 **Response:**
 
@@ -894,9 +907,16 @@ GET /user/verify-email?token={verification-token}
     "email": "user@example.com",
     "username": "johndoe",
     "isEmailVerified": true
-  }
+  },
+  "sessionId": "session-uuid-here"
 }
 ```
+
+**Cookies Set:**
+
+- `user_session`: HTTP-only, Secure session cookie (30-day expiration)
+
+**Auto Sign-In:** The user is automatically signed in with a new session upon successful email verification.
 
 ### Resend Verification Email
 

@@ -154,14 +154,17 @@ graph TD
 
 ### 3. **Email Verification**
 
-- **Endpoint**: `GET /user/auth/verify-email`
+- **Endpoint**: `GET /user/auth/verify-email` and `POST /user/auth/verify-email`
 - **Handler**: [`backend/functions/user/auth/verify-email.ts`](../backend/functions/user/auth/verify-email.ts)
 - **Process**:
-  1.  The user clicks the verification link in the email, which contains a verification token.
+  1.  The user clicks the verification link in the email (GET with token parameter) or enters the verification code in a form (POST with token in body).
   2.  The system validates the token.
   3.  If the token is valid, the user's `isEmailVerified` status is set to `true`.
   4.  The verification token is deleted from the database.
-  5.  A welcome email is sent to the user.
+  5.  A new user session is created using the shared `SessionUtil`, automatically signing the user in.
+  6.  The user's last login timestamp is updated.
+  7.  A welcome email is sent to the user.
+  8.  A session cookie is set in the response, completing the auto sign-in process.
 
 ### 4. **Login**
 
@@ -235,9 +238,21 @@ The Google OAuth integration requires the following environment variables:
 
 ## Session Management
 
+### Shared Session Utility
+
+- **Utility**: [`backend/shared/utils/session.ts`](../backend/shared/utils/session.ts)
+- **Purpose**: Centralizes session creation logic to avoid code duplication across authentication handlers
+- **Usage**: Used by login, email verification, and OAuth authentication flows
+- **Features**:
+  - Creates session entity with proper expiration (30 days)
+  - Updates user's last login timestamp
+  - Generates secure session cookie
+  - Returns consistent response format
+  - Provides both standalone session creation and complete API response generation
+
 ### Session Creation
 
-- A new session is created upon successful login or OAuth authentication.
+- A new session is created upon successful login, email verification, or OAuth authentication using the shared `SessionUtil`.
 - A session is stored as a `UserSessionEntity` in the DynamoDB table.
 - A secure, HTTP-only session cookie is set in the user's browser. The session duration is 30 days.
 
