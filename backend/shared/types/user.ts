@@ -196,7 +196,7 @@ export interface UserSessionEntity {
   ttl: number; // For DynamoDB TTL
 }
 
-export interface UserInteractionEntity {
+export interface UserInteractionEntity extends UserInteraction {
   PK: string; // USER#{userId}
   SK: string; // INTERACTION#{interactionType}#{targetId}
   GSI1PK: string; // INTERACTION#{interactionType}#{targetId}

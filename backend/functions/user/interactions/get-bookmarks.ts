@@ -2,7 +2,6 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { UserAuthUtil } from "@shared/utils/user-auth";
 import { ResponseUtil } from "@shared/utils/response";
-import { UserInteraction } from "@shared/types/user";
 import {
   PaginationUtil,
   DEFAULT_PAGINATION_LIMITS,
@@ -57,18 +56,9 @@ export const handler = async (
       lastEvaluatedKey
     );
 
-    // Transform to response format
-    const interactions: UserInteraction[] = result.interactions.map((item) => ({
-      userId: item.userId,
-      interactionType: item.interactionType,
-      targetType: item.targetType,
-      targetId: item.targetId,
-      createdAt: item.createdAt,
-    }));
-
     // Get target details for each interaction
     const enrichedInteractions = await Promise.all(
-      interactions.map(async (interaction) => {
+      result.interactions.map(async (interaction) => {
         let targetDetails = null;
 
         if (interaction.targetType === "album") {

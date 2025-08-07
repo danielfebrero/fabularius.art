@@ -23,6 +23,7 @@ import {
   UserSessionEntity,
   EmailVerificationTokenEntity,
   UserInteractionEntity,
+  UserInteraction,
 } from "../types/user";
 
 const isLocal = process.env["AWS_SAM_LOCAL"] === "true";
@@ -1572,11 +1573,23 @@ export class DynamoDBService {
     );
   }
 
+  static convertUserInteractionEntityToUserInteraction(
+    entity: UserInteractionEntity
+  ): UserInteraction {
+    return {
+      userId: entity.userId,
+      interactionType: entity.interactionType,
+      targetType: entity.targetType,
+      targetId: entity.targetId,
+      createdAt: entity.createdAt,
+    };
+  }
+
   static async getUserInteraction(
     userId: string,
     interactionType: "like" | "bookmark",
     targetId: string
-  ): Promise<UserInteractionEntity | null> {
+  ): Promise<UserInteraction | null> {
     const result = await docClient.send(
       new GetCommand({
         TableName: TABLE_NAME,
@@ -1587,7 +1600,11 @@ export class DynamoDBService {
       })
     );
 
-    return (result.Item as UserInteractionEntity) || null;
+    return result.Item
+      ? this.convertUserInteractionEntityToUserInteraction(
+          result.Item as UserInteractionEntity
+        )
+      : null;
   }
 
   static async getUserInteractions(
@@ -1596,7 +1613,7 @@ export class DynamoDBService {
     limit: number = 20,
     lastEvaluatedKey?: Record<string, any>
   ): Promise<{
-    interactions: UserInteractionEntity[];
+    interactions: UserInteraction[];
     lastEvaluatedKey?: Record<string, any>;
   }> {
     const result = await docClient.send(
@@ -1614,10 +1631,15 @@ export class DynamoDBService {
     );
 
     const response: {
-      interactions: UserInteractionEntity[];
+      interactions: UserInteraction[];
       lastEvaluatedKey?: Record<string, any>;
     } = {
-      interactions: (result.Items as UserInteractionEntity[]) || [],
+      interactions:
+        result.Items?.map((item) =>
+          this.convertUserInteractionEntityToUserInteraction(
+            item as UserInteractionEntity
+          )
+        ) || [],
     };
 
     if (result.LastEvaluatedKey) {

@@ -170,7 +170,7 @@ const UserLikesPage: React.FC = () => {
 
         {/* Content */}
         <VirtualizedGrid
-          items={likes}
+          items={likes.map((like) => like.target)}
           viewMode={viewMode}
           isLoading={isLoading}
           hasNextPage={hasMore}
