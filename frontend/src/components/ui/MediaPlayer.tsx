@@ -104,7 +104,6 @@ export const MediaPlayer: FC<MediaPlayerProps> = ({
     return (
       <ContentCard
         item={media}
-        type="media"
         aspectRatio="auto"
         className={className}
         imageClassName={imageClassName}
@@ -182,7 +181,6 @@ export const MediaPlayer: FC<MediaPlayerProps> = ({
 
         <ContentCard
           item={media}
-          type="media"
           aspectRatio="auto"
           className={className}
           imageClassName={imageClassName}

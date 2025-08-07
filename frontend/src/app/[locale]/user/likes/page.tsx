@@ -88,86 +88,6 @@ const UserLikesPage: React.FC = () => {
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Get media items for lightbox (only media type likes) - memoized for performance
-  const mediaItems = useMemo(() => {
-    return likes
-      .filter((like: any) => like.targetType === "media")
-      .map((like: any) => ({
-        id: like.targetId,
-        albumId: like.target?.albumId || like.albumId || "",
-        filename: like.target?.title || "",
-        originalFilename: like.target?.title || "",
-        mimeType: like.target?.mimeType || "image/jpeg",
-        size: like.target?.size || 0,
-        url: like.target?.url || "",
-        thumbnailUrl: like.target?.thumbnailUrls?.medium || "",
-        thumbnailUrls: like.target?.thumbnailUrls,
-        viewCount: like.target?.viewCount || 0,
-        createdAt: like.createdAt,
-        updatedAt: like.createdAt,
-      }));
-  }, [likes]);
-
-  // Create media items for ContentCard from likes
-  const createMediaFromLike = useCallback((like: any) => {
-    if (like.targetType === "media") {
-      return {
-        id: like.targetId,
-        albumId: like.target?.albumId || like.albumId || "",
-        filename: like.target?.title || "",
-        originalFilename: like.target?.title || "",
-        mimeType: like.target?.mimeType || "image/jpeg",
-        size: like.target?.size || 0,
-        url: like.target?.url || "",
-        thumbnailUrl: like.target?.thumbnailUrls?.medium || "",
-        thumbnailUrls: like.target?.thumbnailUrls,
-        viewCount: like.target?.viewCount || 0,
-        createdAt: like.createdAt,
-        updatedAt: like.createdAt,
-      };
-    }
-    return null;
-  }, []);
-
-  // Create album items for ContentCard from likes
-  const createAlbumFromLike = useCallback((like: any) => {
-    if (like.targetType === "album") {
-      return {
-        id: like.targetId,
-        title: like.target?.title || `Album ${like.targetId}`,
-        description: "",
-        coverImageUrl: like.target?.coverImageUrl || "",
-        thumbnailUrls: like.target?.thumbnailUrls,
-        mediaCount: like.target?.mediaCount || 0,
-        tags: [],
-        isPublic: like.target?.isPublic || false,
-        viewCount: like.target?.viewCount || 0,
-        createdAt: like.createdAt,
-        updatedAt: like.createdAt,
-      };
-    }
-    return null;
-  }, []);
-
-  // Extract likes and create consistent items for VirtualizedGrid with type information
-  const allLikeItems = useMemo(() => {
-    return likes
-      .map((like: any) => {
-        const media = createMediaFromLike(like);
-        const album = createAlbumFromLike(like);
-        const item = media || album;
-
-        if (item) {
-          // Add type information to help VirtualizedGrid determine the correct type
-          return {
-            ...item,
-            _contentType: like.targetType === "media" ? "media" : "album", // Store type for dynamic rendering
-          };
-        }
-        return null;
-      })
-      .filter((item: any): item is any => item !== null);
-  }, [likes, createMediaFromLike, createAlbumFromLike]);
   if (error) {
     return (
       <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-8 text-center">
@@ -250,8 +170,7 @@ const UserLikesPage: React.FC = () => {
 
         {/* Content */}
         <VirtualizedGrid
-          items={allLikeItems}
-          itemType="media" // Mixed content - ContentCard will determine type from _itemType
+          items={likes}
           viewMode={viewMode}
           isLoading={isLoading}
           hasNextPage={hasMore}
@@ -268,7 +187,7 @@ const UserLikesPage: React.FC = () => {
             showCounts: true,
             preferredThumbnailSize: viewMode === "grid" ? "medium" : "large",
           }}
-          mediaList={mediaItems}
+          mediaList={likes.filter((like) => like.targetType === "media")}
           emptyState={{
             icon: (
               <div className="w-20 h-20 bg-gradient-to-br from-red-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">

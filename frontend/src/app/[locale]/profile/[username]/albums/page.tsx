@@ -228,7 +228,6 @@ export default function UserAlbumsPage() {
                     <ContentCard
                       key={album.id}
                       item={album}
-                      type="album"
                       canFullscreen={false}
                       canAddToAlbum={false}
                       showTags={false}

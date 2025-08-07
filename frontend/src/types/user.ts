@@ -1,3 +1,5 @@
+import { Album, Media } from ".";
+
 // Frontend User Types based on backend types
 export interface User {
   userId: string;
@@ -199,30 +201,7 @@ export interface UserInteraction {
   targetId: string;
   albumId?: string; // Available for media interactions
   createdAt: string;
-  target?: {
-    id: string;
-    title?: string;
-    coverImageUrl?: string;
-    thumbnailUrls?: {
-      cover?: string;
-      small?: string;
-      medium?: string;
-      large?: string;
-      xlarge?: string;
-    };
-    mediaCount?: number;
-    isPublic?: boolean;
-    viewCount?: number;
-    createdAt?: string;
-    updatedAt?: string;
-    type?: string;
-    // Media-specific fields
-    mimeType?: string;
-    size?: number;
-    url?: string;
-    albumId?: string;
-    albumTitle?: string;
-  };
+  target?: Media | Album;
 }
 
 export interface InteractionRequest {

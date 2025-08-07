@@ -53,60 +53,10 @@ export const handler = async (
       lastEvaluatedKey
     );
 
-    const mediaResponse: Media[] = media.map((item) => {
-      const response: Media = {
-        id: item.id,
-        filename: item.filename,
-        originalFilename: item.originalFilename,
-        mimeType: item.mimeType,
-        size: item.size,
-        url: item.url,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-      };
-
-      if (item.width !== undefined) {
-        response.width = item.width;
-      }
-
-      if (item.height !== undefined) {
-        response.height = item.height;
-      }
-
-      if (item.thumbnailUrl !== undefined) {
-        response.thumbnailUrl = item.thumbnailUrl;
-      }
-
-      if (item.thumbnailUrls !== undefined) {
-        response.thumbnailUrls = item.thumbnailUrls;
-      }
-
-      if (item.metadata !== undefined) {
-        response.metadata = item.metadata;
-      }
-
-      if (item.likeCount !== undefined) {
-        response.likeCount = item.likeCount;
-      }
-
-      if (item.bookmarkCount !== undefined) {
-        response.bookmarkCount = item.bookmarkCount;
-      }
-
-      if (item.viewCount !== undefined) {
-        response.viewCount = item.viewCount;
-      }
-
-      if (item.createdBy !== undefined) {
-        response.createdBy = item.createdBy;
-      }
-
-      if (item.createdByType !== undefined) {
-        response.createdByType = item.createdByType;
-      }
-
-      return response;
-    });
+    // Convert MediaEntity to Media using shared helper
+    const mediaResponse: Media[] = media.map((item) =>
+      DynamoDBService.convertMediaEntityToMedia(item)
+    );
 
     // Create pagination metadata using unified utility
     const paginationMeta = PaginationUtil.createPaginationMeta(nextKey, limit);

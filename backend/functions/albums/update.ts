@@ -50,7 +50,7 @@ export const handler = async (
     }
 
     // Check if album exists
-    const existingAlbum = await DynamoDBService.getAlbum(albumId);
+    const existingAlbum = await DynamoDBService.getAlbumEntity(albumId);
     if (!existingAlbum) {
       return ResponseUtil.notFound(event, "Album not found");
     }
@@ -114,22 +114,10 @@ export const handler = async (
       );
     }
 
-    const response = {
-      id: updatedAlbum.id,
-      title: updatedAlbum.title,
-      tags: updatedAlbum.tags,
-      coverImageUrl: updatedAlbum.coverImageUrl,
-      thumbnailUrls: updatedAlbum.thumbnailUrls,
-      createdAt: updatedAlbum.createdAt,
-      updatedAt: updatedAlbum.updatedAt,
-      mediaCount: updatedAlbum.mediaCount,
-      isPublic: updatedAlbum.isPublic === "true",
-    };
-
     // Trigger revalidation
     await RevalidationService.revalidateAlbum(albumId);
 
-    return ResponseUtil.success(event, response);
+    return ResponseUtil.success(event, updatedAlbum);
   } catch (error) {
     console.error("Error updating album:", error);
     return ResponseUtil.internalError(event, "Failed to update album");

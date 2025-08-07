@@ -289,7 +289,6 @@ const UserAlbumsPage: React.FC = () => {
       {/* Content */}
       <VirtualizedGrid
         items={albums}
-        itemType="album"
         viewMode={viewMode}
         isLoading={isLoading}
         hasNextPage={false} // User albums are typically loaded all at once

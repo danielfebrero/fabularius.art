@@ -241,7 +241,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
                 <div className="w-fit h-fit max-w-full max-h-full">
                   <ContentCard
                     item={media[currentIndex + 2] || media[currentIndex - 2]}
-                    type="media"
                     aspectRatio="auto"
                     className="bg-transparent shadow-none border-none w-fit h-fit"
                     imageClassName="max-w-[calc(100vw)] max-h-[calc(100vh)] w-auto h-auto object-contain"
@@ -279,7 +278,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
                 <div className="w-fit h-fit max-w-full max-h-full">
                   <ContentCard
                     item={prevMedia}
-                    type="media"
                     aspectRatio="auto"
                     className="bg-transparent shadow-none border-none w-fit h-fit"
                     imageClassName="max-w-[calc(100vw)] max-h-[calc(100vh)] w-auto h-auto object-contain"
@@ -317,7 +315,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
                 <div className="w-fit h-fit max-w-full max-h-full">
                   <ContentCard
                     item={nextMedia}
-                    type="media"
                     aspectRatio="auto"
                     className="bg-transparent shadow-none border-none w-fit h-fit"
                     imageClassName="max-w-[calc(100vw)] max-h-[calc(100vh)] w-auto h-auto object-contain"
@@ -382,7 +379,6 @@ export const Lightbox: React.FC<LightboxProps> = ({
                 ) : (
                   <ContentCard
                     item={currentMedia}
-                    type="media"
                     aspectRatio="auto"
                     className="bg-transparent shadow-none border-none w-fit h-fit"
                     imageClassName="max-w-[calc(100vw)] max-h-[calc(100vh)] w-auto h-auto object-contain"

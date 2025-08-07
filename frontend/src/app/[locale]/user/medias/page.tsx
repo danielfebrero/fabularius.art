@@ -177,7 +177,6 @@ const UserMediasPage: React.FC = () => {
       {medias.length > 0 ? (
         <VirtualizedGrid
           items={medias}
-          itemType="media"
           viewMode={viewMode}
           isLoading={isLoading}
           hasNextPage={hasNextPage}

@@ -259,7 +259,6 @@ export default function UserCommentsPage() {
                           <div className="w-full max-w-sm">
                             <ContentCard
                               item={comment.target as Media | Album}
-                              type={comment.targetType}
                               aspectRatio="square"
                               className="w-full"
                               canAddToAlbum={comment.targetType !== "album"}

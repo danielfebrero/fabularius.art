@@ -32,7 +32,6 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 
 interface ContentCardProps {
   item: Media | Album;
-  type: "media" | "album";
   title?: string;
   className?: string;
   imageClassName?: string;
@@ -99,7 +98,6 @@ interface ContentCardProps {
 
 export function ContentCard({
   item,
-  type,
   title,
   className = "",
   imageClassName = "",
@@ -148,7 +146,8 @@ export function ContentCard({
   const { isMobileInterface } = useDevice();
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const isMedia = type === "media";
+  console.log("Rendering ContentCard for item:", item);
+  const isMedia = item.type === "media";
   const media = isMedia ? (item as Media) : null;
   const album = !isMedia ? (item as Album) : null;
 
@@ -964,7 +963,7 @@ export function ContentCard({
         onClose={() => setDeleteConfirmOpen(false)}
         onConfirm={handleConfirmDelete}
         title="Delete Content"
-        message={`Are you sure you want to delete this ${type}? This action cannot be undone.`}
+        message={`Are you sure you want to delete this ${item.type}? This action cannot be undone.`}
         confirmText="Delete"
         confirmVariant="danger"
       />

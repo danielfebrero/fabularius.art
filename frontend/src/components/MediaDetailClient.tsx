@@ -486,7 +486,6 @@ export function MediaDetailClient({ media }: MediaDetailClientProps) {
                     <ContentCard
                       key={album.id}
                       item={album}
-                      type="album"
                       aspectRatio="square"
                       canLike={false}
                       canBookmark={false}

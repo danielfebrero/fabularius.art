@@ -263,6 +263,7 @@ export function GenerateClient() {
   const createMediaFromUrl = (url: string, index: number) => ({
     id: `generated-${Date.now()}-${index}`,
     filename: `generated-image-${index + 1}.jpg`,
+    type: "media",
     originalName: `Generated Image ${index + 1}`,
     url: url,
     mimeType: "image/jpeg",
@@ -455,7 +456,6 @@ export function GenerateClient() {
                   <div className="w-full max-w-md mx-auto">
                     <ContentCard
                       item={createMediaFromUrl(generatedImages[0], 0)}
-                      type="media"
                       aspectRatio="square"
                       canLike={false}
                       canBookmark={false}
@@ -483,7 +483,6 @@ export function GenerateClient() {
                       <ContentCard
                         key={index}
                         item={createMediaFromUrl(image, index)}
-                        type="media"
                         aspectRatio="square"
                         canLike={false}
                         canBookmark={false}

@@ -231,7 +231,6 @@ export default function UserMediaPage() {
                 <ContentCard
                   key={item.id}
                   item={item}
-                  type="media"
                   onClick={() => {
                     setCurrentMediaIndex(index);
                     setLightboxOpen(true);

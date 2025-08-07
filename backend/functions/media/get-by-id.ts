@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { ResponseUtil } from "@shared/utils/response";
-import { Media, Comment } from "@shared/types";
+import { Comment } from "@shared/types";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -25,64 +25,9 @@ export const handler = async (
     }
 
     // Convert to response format
-    const mediaResponse: Media = {
-      id: mediaEntity.id,
-      filename: mediaEntity.filename,
-      originalFilename: mediaEntity.originalFilename,
-      mimeType: mediaEntity.mimeType,
-      size: mediaEntity.size,
-      url: mediaEntity.url,
-      createdAt: mediaEntity.createdAt,
-      updatedAt: mediaEntity.updatedAt,
-    };
-
-    // Add optional fields if they exist
-    if (mediaEntity.width !== undefined) {
-      mediaResponse.width = mediaEntity.width;
-    }
-
-    if (mediaEntity.height !== undefined) {
-      mediaResponse.height = mediaEntity.height;
-    }
-
-    if (mediaEntity.thumbnailUrl !== undefined) {
-      mediaResponse.thumbnailUrl = mediaEntity.thumbnailUrl;
-    }
-
-    if (mediaEntity.thumbnailUrls !== undefined) {
-      mediaResponse.thumbnailUrls = mediaEntity.thumbnailUrls;
-    }
-
-    if (mediaEntity.metadata !== undefined) {
-      mediaResponse.metadata = mediaEntity.metadata;
-    }
-
-    // Add interaction counts
-    if (mediaEntity.likeCount !== undefined) {
-      mediaResponse.likeCount = mediaEntity.likeCount;
-    }
-
-    if (mediaEntity.bookmarkCount !== undefined) {
-      mediaResponse.bookmarkCount = mediaEntity.bookmarkCount;
-    }
-
-    if (mediaEntity.viewCount !== undefined) {
-      mediaResponse.viewCount = mediaEntity.viewCount;
-    }
-
-    // Add comment count
-    if (mediaEntity.commentCount !== undefined) {
-      mediaResponse.commentCount = mediaEntity.commentCount;
-    }
-
-    // Add creator information if available
-    if (mediaEntity.createdBy !== undefined) {
-      mediaResponse.createdBy = mediaEntity.createdBy;
-    }
-
-    if (mediaEntity.createdByType !== undefined) {
-      mediaResponse.createdByType = mediaEntity.createdByType;
-    }
+    // Convert MediaEntity to Media using shared helper
+    const mediaResponse =
+      DynamoDBService.convertMediaEntityToMedia(mediaEntity);
 
     // Fetch creator username if createdBy exists
     if (mediaEntity.createdBy) {

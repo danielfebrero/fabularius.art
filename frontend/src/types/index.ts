@@ -2,6 +2,7 @@ export interface Album {
   id: string;
   title: string;
   tags?: string[];
+  type: string;
   coverImageUrl?: string;
   thumbnailUrls?: {
     cover?: string;
@@ -31,6 +32,7 @@ export interface Media {
   id: string;
   albumId?: string; // Album this media belongs to (required for bookmark functionality)
   filename: string;
+  type: string;
   originalName?: string;
   originalFilename?: string;
   mimeType: string;

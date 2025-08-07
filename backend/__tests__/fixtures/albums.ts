@@ -34,6 +34,7 @@ export const mockAlbumEntity: AlbumEntity = {
 
 export const mockAlbum: Album = {
   id: mockAlbumId,
+  type: "album",
   title: "Test Album",
   tags: ["test", "unit-testing", "photography"],
   coverImageUrl: "https://test.cloudfront.net/albums/test-album-123/cover.jpg",
@@ -65,6 +66,7 @@ export const mockAlbumMinimal: Album = {
   id: mockAlbumId,
   title: "Minimal Album",
   createdAt: mockTimestamp,
+  type: "album",
   updatedAt: mockTimestamp,
   mediaCount: 0,
   isPublic: false,
@@ -76,6 +78,7 @@ export const mockAlbumsListForAPI: Album[] = [
     id: "album-2",
     title: "Second Album",
     tags: ["test", "second"],
+    type: "album",
     coverImageUrl:
       "https://test.cloudfront.net/albums/test-album-123/cover.jpg",
     createdAt: "2023-01-02T00:00:00.000Z",
@@ -89,6 +92,7 @@ export const mockAlbumsListForAPI: Album[] = [
     createdAt: "2023-01-03T00:00:00.000Z",
     updatedAt: "2023-01-03T00:00:00.000Z",
     mediaCount: 0,
+    type: "album",
     isPublic: false,
   },
 ];

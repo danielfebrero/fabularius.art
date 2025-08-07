@@ -240,7 +240,6 @@ export default function AdminAlbumsPage() {
       {/* Albums Grid with Infinite Scroll */}
       <VirtualizedGrid
         items={albums}
-        itemType="album"
         viewMode="grid"
         isLoading={loading && albums.length === 0}
         hasNextPage={hasNextPage}

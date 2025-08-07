@@ -441,6 +441,7 @@ export default function ProfileComponent({
     recentGeneratedMedias: [
       {
         id: "media4",
+        type: "media",
         filename: "my-latest-shot.jpg",
         originalName: "My Latest Shot",
         mimeType: "image/jpeg",
@@ -469,6 +470,7 @@ export default function ProfileComponent({
       {
         id: "media6",
         filename: "street-photography.jpg",
+        type: "media",
         originalName: "Street Photography",
         mimeType: "image/jpeg",
         size: 2256000,
@@ -501,6 +503,7 @@ export default function ProfileComponent({
         size: 1856000,
         width: 1600,
         height: 900,
+        type: "media",
         url: "/media/media7/ai-generated-art.jpg",
         thumbnailUrls: {
           cover:
@@ -529,6 +532,7 @@ export default function ProfileComponent({
         width: 2400,
         height: 1350,
         url: "/media/media8/nature-landscape.jpg",
+        type: "media",
         thumbnailUrls: {
           cover:
             "/albums/57cbfb3a-178d-47be-996f-286ee0917ca3/cover/thumbnails/cover_thumb_cover.webp",
@@ -555,6 +559,7 @@ export default function ProfileComponent({
         size: 2456000,
         width: 1920,
         height: 1280,
+        type: "media",
         url: "/media/media9/portrait-studio.jpg",
         thumbnailUrls: {
           cover:
@@ -582,6 +587,7 @@ export default function ProfileComponent({
         size: 1956000,
         width: 1600,
         height: 1200,
+        type: "media",
         url: "/media/media10/macro-flowers.jpg",
         thumbnailUrls: {
           cover:
@@ -1079,7 +1085,6 @@ export default function ProfileComponent({
                       <ContentCard
                         key={item.id}
                         item={item}
-                        type={"filename" in item ? "media" : "album"}
                         showTags={false}
                         context="albums"
                         className="w-full"
@@ -1135,7 +1140,6 @@ export default function ProfileComponent({
                     <ContentCard
                       key={item.id}
                       item={item}
-                      type={"filename" in item ? "media" : "album"}
                       showTags={false}
                       context="albums"
                       className="w-full"
@@ -1200,7 +1204,6 @@ export default function ProfileComponent({
                       <ContentCard
                         key={album.id}
                         item={album}
-                        type="album"
                         canFullscreen={false}
                         canAddToAlbum={false}
                         showTags={false}

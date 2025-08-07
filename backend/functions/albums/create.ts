@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { ResponseUtil } from "@shared/utils/response";
 import { RevalidationService } from "@shared/utils/revalidation";
-import { CreateAlbumRequest, AlbumEntity, Album } from "@shared/types";
+import { CreateAlbumRequest, AlbumEntity } from "@shared/types";
 import { UserAuthUtil } from "@shared/utils/user-auth";
 import { PlanUtil } from "@shared/utils/plan";
 import { CoverThumbnailUtil } from "@shared/utils/cover-thumbnail";
@@ -177,32 +177,7 @@ export const handler = async (
       }
     }
 
-    // Prepare the album response using the data we already have
-    const album: Album = {
-      id: albumEntity.id,
-      title: albumEntity.title,
-      createdAt: albumEntity.createdAt,
-      updatedAt: albumEntity.updatedAt,
-      mediaCount: albumEntity.mediaCount,
-      isPublic: isPublicValue,
-      likeCount: albumEntity.likeCount || 0,
-      bookmarkCount: albumEntity.bookmarkCount || 0,
-      viewCount: albumEntity.viewCount || 0,
-      createdBy: albumEntity.createdBy,
-      createdByType: albumEntity.createdByType,
-    };
-
-    if (albumEntity.tags !== undefined) {
-      album.tags = albumEntity.tags;
-    }
-
-    if (albumEntity.coverImageUrl !== undefined) {
-      album.coverImageUrl = albumEntity.coverImageUrl;
-    }
-
-    if (albumEntity.thumbnailUrls !== undefined) {
-      album.thumbnailUrls = albumEntity.thumbnailUrls;
-    }
+    const album = DynamoDBService.convertAlbumEntityToAlbum(albumEntity);
 
     // Trigger revalidation
     await RevalidationService.revalidateAlbums();

@@ -72,44 +72,10 @@ export const handler = async (
         let targetDetails = null;
 
         if (interaction.targetType === "album") {
-          const album = await DynamoDBService.getAlbum(interaction.targetId);
-          if (album) {
-            targetDetails = {
-              id: album.id,
-              title: album.title,
-              coverImageUrl: album.coverImageUrl,
-              thumbnailUrls: album.thumbnailUrls,
-              mediaCount: album.mediaCount,
-              isPublic: album.isPublic,
-              viewCount: album.viewCount,
-              createdAt: album.createdAt,
-              updatedAt: album.updatedAt,
-            };
-          }
+          targetDetails = await DynamoDBService.getAlbum(interaction.targetId);
         } else if (interaction.targetType === "media") {
           // For media, get the media details directly
-          const media = await DynamoDBService.getMedia(interaction.targetId);
-          if (media) {
-            targetDetails = {
-              id: media.id,
-              title: media.originalFilename,
-              type: "media",
-              mimeType: media.mimeType,
-              size: media.size,
-              thumbnailUrls: media.thumbnailUrls,
-              url: media.url,
-              viewCount: media.viewCount,
-              createdAt: media.createdAt,
-              updatedAt: media.updatedAt,
-            };
-          } else {
-            // If we can't find the media, use basic fallback
-            targetDetails = {
-              id: interaction.targetId,
-              type: "media",
-              title: "Unknown Media",
-            };
-          }
+          targetDetails = await DynamoDBService.getMedia(interaction.targetId);
         }
 
         return {

@@ -39,64 +39,8 @@ export function useProfileDataQuery(options: UseProfileDataOptions) {
         throw new Error(response.error || "Failed to fetch profile data");
       }
 
-      // Transform interactions to include target details (matching legacy hook format)
-      const likesWithTargets = (response.data?.interactions || [])
-        .map((interaction) => {
-          if (interaction.target) {
-            // Convert backend format to frontend format
-            if (interaction.targetType === "media") {
-              return {
-                id: interaction.target.id,
-                albumId: interaction.target.albumId || "", // Include albumId for bookmark functionality
-                filename: interaction.target.id + ".jpg", // Backend doesn't return filename, generate one
-                originalName: interaction.target.title || "Untitled Media",
-                mimeType: interaction.target.mimeType || "image/jpeg",
-                size: interaction.target.size || 0,
-                width: 1920, // Default values since backend doesn't return dimensions
-                height: 1080,
-                url: interaction.target.url || "",
-                thumbnailUrls: interaction.target.thumbnailUrls || {
-                  cover: "",
-                  small: "",
-                  medium: "",
-                  large: "",
-                  xlarge: "",
-                },
-                createdAt: interaction.target.createdAt,
-                updatedAt: interaction.target.updatedAt,
-                likeCount: 0, // Would need separate call to get like counts
-                viewCount: interaction.target.viewCount || 0,
-                title: interaction.target.title || "Untitled Media",
-                type: "media", // Add type for easier handling in UI
-              };
-            } else if (interaction.targetType === "album") {
-              return {
-                id: interaction.target.id,
-                title: interaction.target.title || "Untitled Album",
-                isPublic: interaction.target.isPublic,
-                mediaCount: interaction.target.mediaCount || 0,
-                coverImageUrl: interaction.target.coverImageUrl || "",
-                thumbnailUrls: interaction.target.thumbnailUrls || {
-                  cover: "",
-                  small: "",
-                  medium: "",
-                  large: "",
-                  xlarge: "",
-                },
-                createdAt: interaction.target.createdAt,
-                updatedAt: interaction.target.updatedAt,
-                likeCount: 0, // Would need separate call to get like counts
-                viewCount: interaction.target.viewCount || 0,
-                type: "album", // Add type for easier handling in UI
-              };
-            }
-          }
-          return null;
-        })
-        .filter(Boolean);
-
       return {
-        recentLikes: likesWithTargets,
+        recentLikes: response.data?.interactions,
       };
     },
     enabled: enabled && (!!username || isOwner),

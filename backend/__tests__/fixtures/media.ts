@@ -43,6 +43,7 @@ export const mockMediaEntity: MediaEntity = {
 export const mockMedia: Media = {
   id: mockMediaId,
   filename: mockS3Key,
+  type: "media",
   originalFilename: "test-image.jpg",
   mimeType: "image/jpeg",
   size: 1024000,
@@ -80,6 +81,7 @@ export const mockMediaEntityMinimal: MediaEntity = {
 
 export const mockMediaMinimal: Media = {
   id: mockMediaId,
+  type: "media",
   filename: mockS3Key,
   originalFilename: "simple.jpg",
   mimeType: "image/jpeg",

@@ -48,7 +48,6 @@ export const AlbumGrid: React.FC<AlbumGridProps> = ({
   return (
     <VirtualizedGrid
       items={albums.filter((album) => album && album.id)}
-      itemType="album"
       className={className}
       viewMode="grid"
       isLoading={loading}

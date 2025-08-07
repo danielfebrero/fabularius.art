@@ -272,7 +272,6 @@ export default function AdminMediaPage() {
 
           <VirtualizedGrid
             items={allMedia}
-            itemType="media"
             hasNextPage={false}
             isFetchingNextPage={false}
             emptyState={{

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Bookmark, Grid, List } from "lucide-react";
 import { useBookmarksQuery } from "@/hooks/queries/useBookmarksQuery";
 import { Button } from "@/components/ui/Button";
@@ -9,7 +9,7 @@ import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQue
 
 const UserBookmarksPage: React.FC = () => {
   // Create media items for ContentCard from bookmarks
-  const createMediaFromBookmark = (bookmark: any) => {
+  const createMediaFromBookmark = useCallback((bookmark: any) => {
     if (!bookmark || !bookmark.targetType) {
       return null;
     }
@@ -17,6 +17,7 @@ const UserBookmarksPage: React.FC = () => {
       return {
         id: bookmark.targetId,
         albumId: bookmark.target?.albumId || bookmark.albumId || "",
+        type: "media",
         filename: bookmark.target?.title || "",
         originalFilename: bookmark.target?.title || "",
         mimeType: bookmark.target?.mimeType || "image/jpeg",
@@ -30,10 +31,10 @@ const UserBookmarksPage: React.FC = () => {
       };
     }
     return null;
-  };
+  }, []);
 
   // Create album items for ContentCard from bookmarks
-  const createAlbumFromBookmark = (bookmark: any) => {
+  const createAlbumFromBookmark = useCallback((bookmark: any) => {
     if (!bookmark || !bookmark.targetType) {
       return null;
     }
@@ -41,6 +42,7 @@ const UserBookmarksPage: React.FC = () => {
       return {
         id: bookmark.targetId,
         title: bookmark.target?.title || `Album ${bookmark.targetId}`,
+        type: "album",
         description: "",
         coverImageUrl: bookmark.target?.coverImageUrl || "",
         thumbnailUrls: bookmark.target?.thumbnailUrls,
@@ -53,7 +55,7 @@ const UserBookmarksPage: React.FC = () => {
       };
     }
     return null;
-  };
+  }, []);
 
   // Use TanStack Query hook for bookmarks
   const {
@@ -79,14 +81,25 @@ const UserBookmarksPage: React.FC = () => {
     (bookmark: any) => bookmark && bookmark.targetType
   );
 
-  // Extract bookmarks and create consistent items for VirtualizedGrid
-  const allBookmarkItems = bookmarks
-    .map((bookmark: any) => {
-      const media = createMediaFromBookmark(bookmark);
-      const album = createAlbumFromBookmark(bookmark);
-      return media || album;
-    })
-    .filter((item: any): item is any => item !== null);
+  // Extract bookmarks and create consistent items for VirtualizedGrid with type information
+  const allBookmarkItems = useMemo(() => {
+    return bookmarks
+      .map((bookmark: any) => {
+        const media = createMediaFromBookmark(bookmark);
+        const album = createAlbumFromBookmark(bookmark);
+        const item = media || album;
+
+        if (item) {
+          // Add type information to help VirtualizedGrid determine the correct type
+          return {
+            ...item,
+            _contentType: bookmark.targetType === "media" ? "media" : "album", // Store type for dynamic rendering
+          };
+        }
+        return null;
+      })
+      .filter((item: any): item is any => item !== null);
+  }, [bookmarks, createMediaFromBookmark, createAlbumFromBookmark]);
 
   // Prefetch interaction status for all bookmarked items
   useEffect(() => {
@@ -111,24 +124,6 @@ const UserBookmarksPage: React.FC = () => {
   const refresh = () => {}; // TanStack Query handles background refetching
 
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-
-  // Get media items for lightbox (only media type bookmarks)
-  const mediaItems = bookmarks
-    .filter((bookmark: any) => bookmark?.targetType === "media")
-    .map((bookmark: any) => ({
-      id: bookmark.targetId,
-      albumId: bookmark.target?.albumId || bookmark.albumId || "",
-      filename: bookmark.target?.title || "",
-      originalFilename: bookmark.target?.title || "",
-      mimeType: bookmark.target?.mimeType || "image/jpeg",
-      size: bookmark.target?.size || 0,
-      url: bookmark.target?.url || "",
-      thumbnailUrl: bookmark.target?.thumbnailUrls?.medium || "",
-      thumbnailUrls: bookmark.target?.thumbnailUrls,
-      viewCount: bookmark.target?.viewCount || 0,
-      createdAt: bookmark.createdAt,
-      updatedAt: bookmark.createdAt,
-    }));
 
   if (error) {
     return (
@@ -215,7 +210,6 @@ const UserBookmarksPage: React.FC = () => {
         {/* Content */}
         <VirtualizedGrid
           items={allBookmarkItems}
-          itemType="media" // We'll handle mixed types in the component
           viewMode={viewMode}
           isLoading={isLoading}
           hasNextPage={hasMore}
@@ -229,7 +223,7 @@ const UserBookmarksPage: React.FC = () => {
             canDownload: true,
             canDelete: false,
           }}
-          mediaList={mediaItems}
+          mediaList={bookmarks}
           emptyState={{
             icon: (
               <Bookmark className="h-16 w-16 text-muted-foreground mx-auto mb-4" />

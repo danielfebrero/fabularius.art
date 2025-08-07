@@ -11,7 +11,7 @@ import LocaleLink from "@/components/ui/LocaleLink";
 import { useLikesQuery } from "@/hooks/queries/useLikesQuery";
 import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 import { cn } from "@/lib/utils";
-import { Media, Album } from "@/types";
+import { Media } from "@/types";
 import { useDevice } from "@/contexts/DeviceContext";
 
 export default function UserLikesPage() {
@@ -88,22 +88,6 @@ export default function UserLikesPage() {
     if (currentMediaIndex > 0) {
       setCurrentMediaIndex(currentMediaIndex - 1);
     }
-  };
-
-  // Create media items for ContentCard from likes
-  const createMediaFromLike = (like: (typeof likes)[0]) => {
-    if (like.targetType === "media" && like.target) {
-      return like.target as Media;
-    }
-    return null;
-  };
-
-  // Create album items for ContentCard from likes
-  const createAlbumFromLike = (like: (typeof likes)[0]) => {
-    if (like.targetType === "album" && like.target) {
-      return like.target as Album;
-    }
-    return null;
   };
 
   // Loading state
@@ -268,21 +252,18 @@ export default function UserLikesPage() {
                   )}
                 >
                   {likes.map((like) => {
-                    const media = createMediaFromLike(like);
-                    const album = createAlbumFromLike(like);
-                    const item = media || album;
-
-                    if (!item) return null;
-
                     const mediaIndex = mediaItems.findIndex(
                       (m) => m.id === like.targetId
                     );
 
+                    if (!like.target) {
+                      return null;
+                    }
+
                     return (
                       <ContentCard
                         key={`${like.userId}_${like.targetId}_${like.createdAt}`}
-                        item={item}
-                        type={like.targetType}
+                        item={like.target}
                         canFullscreen={like.targetType === "media"}
                         canAddToAlbum={like.targetType === "media"}
                         canLike={true}

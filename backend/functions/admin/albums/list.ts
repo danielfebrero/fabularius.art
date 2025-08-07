@@ -6,7 +6,6 @@ import {
   DEFAULT_PAGINATION_LIMITS,
   MAX_PAGINATION_LIMITS,
 } from "@shared/utils/pagination";
-import { Album } from "@shared/types";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -38,36 +37,11 @@ export const handler = async (
     const { albums, lastEvaluatedKey: nextKey } =
       await DynamoDBService.listAlbums(limit, lastEvaluatedKey);
 
-    const albumsResponse: Album[] = albums.map((album) => {
-      const response: Album = {
-        id: album.id,
-        title: album.title,
-        createdAt: album.createdAt,
-        updatedAt: album.updatedAt,
-        mediaCount: album.mediaCount,
-        isPublic: album.isPublic,
-      };
-
-      if (album.tags !== undefined) {
-        response.tags = album.tags;
-      }
-
-      if (album.coverImageUrl !== undefined) {
-        response.coverImageUrl = album.coverImageUrl;
-      }
-
-      if (album.thumbnailUrls !== undefined) {
-        response.thumbnailUrls = album.thumbnailUrls;
-      }
-
-      return response;
-    });
-
     // Create pagination metadata using unified utility
     const paginationMeta = PaginationUtil.createPaginationMeta(nextKey, limit);
 
     return ResponseUtil.success(event, {
-      albums: albumsResponse,
+      albums: albums,
       pagination: paginationMeta,
     });
   } catch (error) {

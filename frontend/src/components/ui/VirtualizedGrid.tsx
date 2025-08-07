@@ -16,7 +16,6 @@ type ViewMode = "grid" | "list";
 // Generic props interface
 interface VirtualizedGridProps<T extends GridItem> {
   items: T[];
-  itemType: "media" | "album";
   className?: string;
   viewMode?: ViewMode;
   isLoading?: boolean;
@@ -133,7 +132,6 @@ const DEFAULT_GRID_COLUMNS = {
  */
 export function VirtualizedGrid<T extends GridItem>({
   items,
-  itemType,
   className,
   viewMode = "grid",
   isLoading = false,
@@ -229,8 +227,7 @@ export function VirtualizedGrid<T extends GridItem>({
             ? customActions(item)
             : customActions;
 
-        // Check if item has dynamic type information
-        const dynamicType = (item as any)?._contentType || itemType;
+        const dynamicType = (item as Album | Media)?.type;
 
         return (
           <div key={`${dynamicType}-${item.id}`} className="mb-4">
@@ -239,7 +236,6 @@ export function VirtualizedGrid<T extends GridItem>({
             >
               <ContentCard
                 item={item}
-                type={dynamicType}
                 aspectRatio="auto"
                 preferredThumbnailSize="originalSize"
                 {...restProps}
@@ -272,7 +268,7 @@ export function VirtualizedGrid<T extends GridItem>({
                 : customActions;
 
             // Check if item has dynamic type information
-            const dynamicType = (item as any)?._contentType || itemType;
+            const dynamicType = (item as Album | Media)?.type;
 
             return (
               <ComponentErrorBoundary
@@ -281,7 +277,6 @@ export function VirtualizedGrid<T extends GridItem>({
               >
                 <ContentCard
                   item={item}
-                  type={dynamicType}
                   aspectRatio={aspectRatio}
                   {...restProps}
                   customActions={resolvedCustomActions}
@@ -310,7 +305,6 @@ export function VirtualizedGrid<T extends GridItem>({
       gridRows,
       calculatedColumns,
       viewMode,
-      itemType,
       aspectRatio,
       contentCardProps,
       mediaList,
@@ -383,22 +377,13 @@ export function VirtualizedGrid<T extends GridItem>({
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeWidth={1.5}
-                d={
-                  itemType === "media"
-                    ? "M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    : "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                }
               />
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-foreground mb-2">
-            No {itemType} found
+            No content found
           </h3>
-          <p className="text-muted-foreground">
-            {itemType === "media"
-              ? "No media files to display."
-              : "No albums to display."}
-          </p>
+          <p className="text-muted-foreground">No content to display.</p>
         </div>
       </div>
     );
@@ -419,9 +404,7 @@ export function VirtualizedGrid<T extends GridItem>({
               return (
                 <div className="py-8 text-center">
                   <div className="space-y-4">
-                    <p className="text-red-500">
-                      Error loading {itemType}: {error}
-                    </p>
+                    <p className="text-red-500">Error loading: {error}</p>
                     {onRetry && (
                       <button
                         onClick={onRetry}
@@ -441,7 +424,7 @@ export function VirtualizedGrid<T extends GridItem>({
                 <div className="py-8 text-center">
                   <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-admin-accent"></div>
                   <p className="text-muted-foreground mt-2">
-                    {loadingState?.loadingText || `Loading more ${itemType}...`}
+                    {loadingState?.loadingText || `Loading more content...`}
                   </p>
                 </div>
               );
@@ -451,7 +434,7 @@ export function VirtualizedGrid<T extends GridItem>({
               return (
                 <div className="py-8 text-center">
                   <p className="text-muted-foreground">
-                    {loadingState?.noMoreText || `No more ${itemType} to load`}
+                    {loadingState?.noMoreText || `No more content to load`}
                   </p>
                 </div>
               );

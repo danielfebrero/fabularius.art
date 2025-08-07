@@ -6,7 +6,6 @@ import {
   DEFAULT_PAGINATION_LIMITS,
   MAX_PAGINATION_LIMITS,
 } from "@shared/utils/pagination";
-import { Media } from "@shared/types";
 
 export const handler = async (
   event: APIGatewayProxyEvent
@@ -45,67 +44,11 @@ export const handler = async (
     const { media, lastEvaluatedKey: nextKey } =
       await DynamoDBService.listAlbumMedia(albumId, limit, lastEvaluatedKey);
 
-    const mediaResponse: Media[] = media.map((item) => {
-      const response: Media = {
-        id: item.id,
-        filename: item.filename,
-        originalFilename: item.originalFilename,
-        mimeType: item.mimeType,
-        size: item.size,
-        url: item.url,
-        createdAt: item.createdAt,
-        updatedAt: item.updatedAt,
-      };
-
-      if (item.width !== undefined) {
-        response.width = item.width;
-      }
-
-      if (item.height !== undefined) {
-        response.height = item.height;
-      }
-
-      if (item.thumbnailUrl !== undefined) {
-        response.thumbnailUrl = item.thumbnailUrl;
-      }
-
-      if (item.thumbnailUrls !== undefined) {
-        response.thumbnailUrls = item.thumbnailUrls;
-      }
-
-      if (item.metadata !== undefined) {
-        response.metadata = item.metadata;
-      }
-
-      if (item.likeCount !== undefined) {
-        response.likeCount = item.likeCount;
-      }
-
-      if (item.bookmarkCount !== undefined) {
-        response.bookmarkCount = item.bookmarkCount;
-      }
-
-      if (item.viewCount !== undefined) {
-        response.viewCount = item.viewCount;
-      }
-
-      // Add creator information if available
-      if (item.createdBy !== undefined) {
-        response.createdBy = item.createdBy;
-      }
-
-      if (item.createdByType !== undefined) {
-        response.createdByType = item.createdByType;
-      }
-
-      return response;
-    });
-
     // Create pagination metadata using unified utility
     const paginationMeta = PaginationUtil.createPaginationMeta(nextKey, limit);
 
     return ResponseUtil.success(event, {
-      media: mediaResponse,
+      media: media,
       pagination: paginationMeta,
     });
   } catch (error) {

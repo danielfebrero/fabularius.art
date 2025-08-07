@@ -1,6 +1,7 @@
 export interface Album {
   id: string;
   title: string;
+  type: "album";
   tags?: string[] | undefined;
   coverImageUrl?: string | undefined;
   thumbnailUrls?:
@@ -32,6 +33,7 @@ export interface Media {
   id: string;
   filename: string;
   originalFilename: string;
+  type: "media";
   mimeType: string;
   size: number;
   width?: number | undefined;

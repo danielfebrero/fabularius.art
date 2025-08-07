@@ -8,13 +8,13 @@
 
 ## Content Cards
 
+### When not logged in and try to like/bookmark, we need a visual feedback
+
+Currently, nothing happens.
+
 ### On hover/tap an album card, I want to see changing thumbnails
 
 When hovering or tapping on an album card, the thumbnail should change to another media of the album thumbnail, every 1 seconds. This will provide a more dynamic and engaging user experience.
-
-### ViewCount Optimistic update from page to page doesn't work correctly
-
-The optimistic update for view counts does not work correctly when navigating from page to page. We need to ensure that the view count is updated consistently across all pages.
 
 ## Error handling
 
@@ -34,15 +34,7 @@ The "what you can do now" section is not coherent and should be reworked.
 
 ## User profile
 
-### Last active date do not appears on at least my profile
-
-It should always appears.
-
 ## Videos
-
-### In lightbox, the video preview should be fullscreen like image
-
-Currently, the video preview is of the size of the video.
 
 ## Admin
 
@@ -57,10 +49,6 @@ We should implement an "All Media" page in the admin section to allow admins to 
 ### All albums page
 
 Make sure the album page return all albums, not just the ones created by the user. This will allow admins to manage all albums effectively.
-
-### Uploading images now is 2 by 2 instead of bulk upload
-
-Last images I uploaded were 2 by 2 instead of bulk upload. This should be fixed to allow bulk uploads for images.
 
 ## Settings
 
@@ -81,6 +69,10 @@ When deleting an album, the UI should immediately reflect the deletion without w
 When editing an album, the changes should be reflected immediately in the UI without waiting for the server response. This will improve user experience by making the application feel more responsive. Speaking of title, item count, etc.
 
 ## Optimization
+
+### Translate all hardcoded strings
+
+We should extract all hardcoded strings in the application and replace them with next-intl keys.
 
 ### Make tanstack leverage ssg data
 

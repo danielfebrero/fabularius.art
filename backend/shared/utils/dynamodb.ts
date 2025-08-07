@@ -10,6 +10,7 @@ import {
 } from "@aws-sdk/lib-dynamodb";
 import {
   Album,
+  Media,
   AlbumEntity,
   MediaEntity,
   AlbumMediaEntity,
@@ -51,10 +52,11 @@ console.log("📋 Table name from env:", TABLE_NAME);
 
 export class DynamoDBService {
   // Helper method to convert AlbumEntity to Album
-  private static convertAlbumEntityToAlbum(entity: AlbumEntity): Album {
+  static async convertAlbumEntityToAlbum(entity: AlbumEntity): Promise<Album> {
     const album: Album = {
       id: entity.id,
       title: entity.title,
+      type: "album",
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
       mediaCount: entity.mediaCount,
@@ -88,22 +90,6 @@ export class DynamoDBService {
     // Add creator information if available
     if (entity.createdBy !== undefined) {
       album.createdBy = entity.createdBy;
-    }
-
-    if (entity.createdByType !== undefined) {
-      album.createdByType = entity.createdByType;
-    }
-
-    return album;
-  }
-
-  private static async convertAlbumEntityToAlbumWithCreator(
-    entity: AlbumEntity
-  ): Promise<Album> {
-    const album = this.convertAlbumEntityToAlbum(entity);
-
-    // Fetch creator username dynamically if createdBy exists
-    if (entity.createdBy) {
       try {
         const creator = await this.getUserById(entity.createdBy);
 
@@ -120,7 +106,79 @@ export class DynamoDBService {
       }
     }
 
+    if (entity.createdByType !== undefined) {
+      album.createdByType = entity.createdByType;
+    }
+
     return album;
+  }
+
+  // Helper method to convert MediaEntity to Media
+  static convertMediaEntityToMedia(entity: MediaEntity): Media {
+    const media: Media = {
+      id: entity.id,
+      filename: entity.filename,
+      type: "media",
+      originalFilename: entity.originalFilename,
+      mimeType: entity.mimeType,
+      size: entity.size,
+      url: entity.url,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    };
+
+    // Add optional fields if they exist
+    if (entity.width !== undefined) {
+      media.width = entity.width;
+    }
+
+    if (entity.height !== undefined) {
+      media.height = entity.height;
+    }
+
+    if (entity.thumbnailUrl !== undefined) {
+      media.thumbnailUrl = entity.thumbnailUrl;
+    }
+
+    if (entity.thumbnailUrls !== undefined) {
+      media.thumbnailUrls = entity.thumbnailUrls;
+    }
+
+    if (entity.metadata !== undefined) {
+      media.metadata = entity.metadata;
+    }
+
+    if (entity.status !== undefined) {
+      media.status = entity.status;
+    }
+
+    // Add interaction counts
+    if (entity.likeCount !== undefined) {
+      media.likeCount = entity.likeCount;
+    }
+
+    if (entity.bookmarkCount !== undefined) {
+      media.bookmarkCount = entity.bookmarkCount;
+    }
+
+    if (entity.viewCount !== undefined) {
+      media.viewCount = entity.viewCount;
+    }
+
+    if (entity.commentCount !== undefined) {
+      media.commentCount = entity.commentCount;
+    }
+
+    // Add creator information if available
+    if (entity.createdBy !== undefined) {
+      media.createdBy = entity.createdBy;
+    }
+
+    if (entity.createdByType !== undefined) {
+      media.createdByType = entity.createdByType;
+    }
+
+    return media;
   }
 
   // Album operations
@@ -134,7 +192,7 @@ export class DynamoDBService {
     );
   }
 
-  static async getAlbum(albumId: string): Promise<AlbumEntity | null> {
+  static async getAlbumEntity(albumId: string): Promise<AlbumEntity | null> {
     const result = await docClient.send(
       new GetCommand({
         TableName: TABLE_NAME,
@@ -145,12 +203,17 @@ export class DynamoDBService {
       })
     );
 
-    return (result.Item as AlbumEntity) || null;
+    return result.Item as AlbumEntity | null;
+  }
+
+  static async getAlbum(albumId: string): Promise<Album | null> {
+    const result = await this.getAlbumEntity(albumId);
+
+    return result ? this.convertAlbumEntityToAlbum(result) : null;
   }
 
   static async getAlbumForAPI(albumId: string): Promise<Album | null> {
-    const entity = await this.getAlbum(albumId);
-    return entity ? this.convertAlbumEntityToAlbumWithCreator(entity) : null;
+    return await this.getAlbum(albumId);
   }
 
   static async updateAlbum(
@@ -239,8 +302,8 @@ export class DynamoDBService {
       albums: Album[];
       lastEvaluatedKey?: Record<string, any>;
     } = {
-      albums: albumEntities.map((entity) =>
-        this.convertAlbumEntityToAlbum(entity)
+      albums: await Promise.all(
+        albumEntities.map((entity) => this.convertAlbumEntityToAlbum(entity))
       ),
     };
 
@@ -290,8 +353,8 @@ export class DynamoDBService {
     const albumEntities = (result.Items as AlbumEntity[]) || [];
 
     // Convert AlbumEntity to Album format for API response
-    const albums: Album[] = albumEntities.map((entity) =>
-      this.convertAlbumEntityToAlbum(entity)
+    const albums: Album[] = await Promise.all(
+      albumEntities.map((entity) => this.convertAlbumEntityToAlbum(entity))
     );
 
     const response: {
@@ -358,8 +421,8 @@ export class DynamoDBService {
     const albumEntities = (result.Items as AlbumEntity[]) || [];
 
     // Convert AlbumEntity to Album format for API response
-    const albums: Album[] = albumEntities.map((entity) =>
-      this.convertAlbumEntityToAlbum(entity)
+    const albums: Album[] = await Promise.all(
+      albumEntities.map((entity) => this.convertAlbumEntityToAlbum(entity))
     );
 
     const response: {
@@ -501,7 +564,7 @@ export class DynamoDBService {
     );
   }
 
-  static async getMedia(mediaId: string): Promise<MediaEntity | null> {
+  static async getMedia(mediaId: string): Promise<Media | null> {
     const result = await docClient.send(
       new GetCommand({
         TableName: TABLE_NAME,
@@ -512,7 +575,11 @@ export class DynamoDBService {
       })
     );
 
-    return (result.Item as MediaEntity) || null;
+    if (result.Item) {
+      return this.convertMediaEntityToMedia(result.Item as MediaEntity);
+    } else {
+      return null;
+    }
   }
 
   static async findMediaById(mediaId: string): Promise<MediaEntity | null> {
@@ -844,7 +911,7 @@ export class DynamoDBService {
     limit: number = 50,
     lastEvaluatedKey?: Record<string, any>
   ): Promise<{
-    media: MediaEntity[];
+    media: Media[];
     lastEvaluatedKey?: Record<string, any>;
   }> {
     // First, get album-media relationships
@@ -870,10 +937,10 @@ export class DynamoDBService {
     );
 
     const mediaResults = await Promise.all(mediaPromises);
-    const media = mediaResults.filter((m) => m !== null) as MediaEntity[];
+    const media = mediaResults.filter((m) => m !== null) as Media[];
 
     const response: {
-      media: MediaEntity[];
+      media: Media[];
       lastEvaluatedKey?: Record<string, any>;
     } = { media };
 
@@ -913,14 +980,14 @@ export class DynamoDBService {
     const albumEntities = await Promise.all(albumPromises);
 
     // Filter out null results and convert to Album format
-    const albums = albumEntities
-      .filter((entity): entity is AlbumEntity => entity !== null)
-      .map((entity) => this.convertAlbumEntityToAlbum(entity));
+    const albums = albumEntities.filter(
+      (entity): entity is Album => entity !== null
+    );
 
     return albums;
   }
 
-  static async getAllPublicMedia(): Promise<MediaEntity[]> {
+  static async getAllPublicMedia(): Promise<Media[]> {
     // Get all public albums first
     const allMediaIds = new Set<string>();
     let lastEvaluatedKey: Record<string, any> | undefined = undefined;
@@ -981,7 +1048,7 @@ export class DynamoDBService {
     );
 
     const mediaResults = await Promise.all(mediaPromises);
-    return mediaResults.filter((media) => media !== null) as MediaEntity[];
+    return mediaResults.filter((media) => media !== null) as Media[];
   }
 
   static async incrementAlbumMediaCount(albumId: string): Promise<void> {

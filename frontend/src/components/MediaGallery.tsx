@@ -101,7 +101,6 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({
     <>
       <VirtualizedGrid
         items={allMedia}
-        itemType="media"
         className={className}
         viewMode="grid"
         isLoading={isLoading}
