@@ -32,7 +32,6 @@ interface VirtualizedGridProps<T extends GridItem> {
     lg?: number;
     xl?: number;
   };
-  defaultColumns?: number;
   aspectRatio?: "square" | "auto";
 
   // Content Card configuration
@@ -60,7 +59,8 @@ interface VirtualizedGridProps<T extends GridItem> {
           onClick: () => void;
           variant?: "default" | "destructive";
         }>
-      | ((item: GridItem) => Array<{
+      // eslint-disable-next-line no-unused-vars
+      | ((item: T) => Array<{
           label: string;
           icon: React.ReactNode;
           onClick: () => void;
@@ -141,7 +141,6 @@ export function VirtualizedGrid<T extends GridItem>({
   isFetchingNextPage = false,
   onLoadMore,
   gridColumns = DEFAULT_GRID_COLUMNS,
-  defaultColumns = 4,
   aspectRatio = "square",
   contentCardProps = {},
   mediaList,
@@ -166,14 +165,16 @@ export function VirtualizedGrid<T extends GridItem>({
     measureWidth();
     window.addEventListener("resize", measureWidth);
     return () => window.removeEventListener("resize", measureWidth);
-  }, []);
+  }, [containerRef.current?.offsetWidth]);
 
   // Calculate grid columns based on container width
   const calculatedColumns = useMemo(() => {
     if (viewMode === "list") return 1;
-    if (!containerWidth) return defaultColumns;
 
     const { mobile = 1, sm = 2, md = 3, lg = 4, xl = 4 } = gridColumns;
+
+    // Mobile-first approach: if container width is not yet measured, assume mobile
+    if (!containerWidth) return mobile;
 
     // Use container width for responsive calculations
     if (containerWidth < 640) return mobile;
@@ -181,7 +182,7 @@ export function VirtualizedGrid<T extends GridItem>({
     if (containerWidth < 1024) return md;
     if (containerWidth < 1280) return lg;
     return xl;
-  }, [containerWidth, viewMode, gridColumns, defaultColumns]);
+  }, [containerWidth, viewMode, gridColumns]);
 
   // Convert flat items array to grid rows for virtualization
   const gridRows = useMemo(() => {
