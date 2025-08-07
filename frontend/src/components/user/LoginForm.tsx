@@ -9,10 +9,11 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { GoogleLoginButton } from "./GoogleLoginButton";
-import { useUserProfile, useLogin } from "@/hooks/queries/useUserQuery";
+import { useLogin } from "@/hooks/queries/useUserQuery";
 import { UserLoginFormData } from "@/types/user";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { EmailVerificationForm } from "./EmailVerificationForm";
+import { useReturnUrl } from "@/contexts/ReturnUrlContext";
 
 // Validation schema with internationalization
 const createLoginSchema = (tAuth: any) =>
@@ -29,7 +30,6 @@ const createLoginSchema = (tAuth: any) =>
 
 export function LoginForm() {
   // TanStack Query hooks for authentication
-  const { data: user, error: userError } = useUserProfile();
   const {
     mutateAsync: login,
     isPending: loginLoading,
@@ -41,6 +41,7 @@ export function LoginForm() {
   const [emailVerificationRequired, setEmailVerificationRequired] =
     useState(false);
   const router = useLocaleRouter();
+  const { getReturnUrl, clearReturnUrl } = useReturnUrl();
 
   // Determine loading state and error message
   const loading = loginLoading;
@@ -54,11 +55,15 @@ export function LoginForm() {
   const t = useTranslations("common");
   const tAuth = useTranslations("auth");
 
-  // Get returnTo parameter from URL
-  const returnTo =
+  // Get returnTo parameter from URL and stored return URL
+  const urlReturnTo =
     typeof window !== "undefined"
       ? new URLSearchParams(window.location.search).get("returnTo")
       : null;
+
+  // Prefer stored return URL from context, fallback to URL parameter
+  const storedReturnUrl = getReturnUrl(false); // Don't clear yet
+  const returnTo = storedReturnUrl || urlReturnTo;
 
   const loginSchema = createLoginSchema(tAuth);
 
@@ -89,6 +94,9 @@ export function LoginForm() {
       });
 
       if (response.success) {
+        // Clear stored return URL since we're about to use it
+        clearReturnUrl();
+
         // Redirect to returnTo URL if provided, otherwise to home page
         const redirectUrl = returnTo || "/";
         router.push(redirectUrl);
@@ -136,7 +144,10 @@ export function LoginForm() {
         </p>
       </div>
 
-      <GoogleLoginButton disabled={isLoading} />
+      <GoogleLoginButton
+        disabled={isLoading}
+        returnTo={returnTo || undefined}
+      />
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">

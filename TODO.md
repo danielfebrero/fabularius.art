@@ -83,7 +83,3 @@ We should upgrade our Next.js version to 15 to take advantage of the latest feat
 We should upgrade our React.js version to 19 to take advantage of the latest features and improvements.
 
 ## Login / Logout
-
-### Return to the page where the user was before login
-
-When a user logs in, they should be redirected back to the page they were on before logging in. This will improve user experience by not disrupting their workflow.

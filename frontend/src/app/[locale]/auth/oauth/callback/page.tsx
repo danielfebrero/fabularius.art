@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { userApi } from "@/lib/api";
 import { invalidateQueries } from "@/lib/queryClient";
 import useGoogleAuth from "@/hooks/useGoogleAuth";
+import { useReturnUrl } from "@/contexts/ReturnUrlContext";
 
 type CallbackState = "loading" | "success" | "error";
 
@@ -14,7 +15,9 @@ function OAuthCallbackContent() {
   const [state, setState] = useState<CallbackState>("loading");
   const [message, setMessage] = useState("");
   const [isAnimated, setIsAnimated] = useState(false);
-  const { validateOAuthState, clearOAuthState } = useGoogleAuth();
+  const { validateOAuthState, clearOAuthState, getStoredReturnUrl } =
+    useGoogleAuth();
+  const { getReturnUrl, clearReturnUrl } = useReturnUrl();
   const searchParams = useSearchParams();
   const router = useLocaleRouter();
   const isProcessingRef = useRef(false);
@@ -116,8 +119,14 @@ function OAuthCallbackContent() {
           setState("success");
           setMessage("Successfully signed in with Google!");
 
-          // Clear OAuth state after successful authentication
+          // Get stored return URL from both sources (priority to new context)
+          const contextReturnUrl = getReturnUrl(false); // Don't clear yet
+          const legacyReturnUrl = getStoredReturnUrl();
+          const storedReturnTo = contextReturnUrl || legacyReturnUrl;
+
+          // Clear all OAuth state and return URLs
           clearOAuthState();
+          clearReturnUrl();
 
           // Invalidate user cache to refresh authentication state
           invalidateQueries.user();
@@ -129,7 +138,10 @@ function OAuthCallbackContent() {
             sessionStorage.setItem(requestKey, "completed");
           }
 
-          router.push(response.data?.redirectUrl || "/auth/success");
+          // Redirect to stored return URL or backend suggested URL or default success page
+          const redirectUrl =
+            storedReturnTo || response.data?.redirectUrl || "/auth/success";
+          router.push(redirectUrl);
         } else {
           setState("error");
           setMessage(response.error || "OAuth authentication failed.");
@@ -159,7 +171,15 @@ function OAuthCallbackContent() {
     };
 
     handleOAuthCallback();
-  }, [searchParams, validateOAuthState, clearOAuthState, router]);
+  }, [
+    searchParams,
+    validateOAuthState,
+    clearOAuthState,
+    getStoredReturnUrl,
+    getReturnUrl,
+    clearReturnUrl,
+    router,
+  ]);
 
   const renderContent = () => {
     switch (state) {

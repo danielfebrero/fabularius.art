@@ -3,22 +3,32 @@
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/Button";
 import useGoogleAuth from "@/hooks/useGoogleAuth";
+import { useReturnUrl } from "@/contexts/ReturnUrlContext";
 
 interface GoogleLoginButtonProps {
   className?: string;
   disabled?: boolean;
+  returnTo?: string;
 }
 
 export function GoogleLoginButton({
   className,
   disabled,
+  returnTo,
 }: GoogleLoginButtonProps) {
   const { loading, error, loginWithGoogle, clearError } = useGoogleAuth();
+  const { setReturnUrl } = useReturnUrl();
   const tGoogle = useTranslations("auth.google");
 
   const handleGoogleLogin = () => {
     clearError();
-    loginWithGoogle();
+
+    // Store return URL in context if provided
+    if (returnTo) {
+      setReturnUrl(returnTo);
+    }
+
+    loginWithGoogle(returnTo);
   };
 
   return (

@@ -61,6 +61,7 @@ export function useGoogleAuth() {
     if (typeof window !== "undefined") {
       sessionStorage.removeItem("google_oauth_state");
       sessionStorage.removeItem("google_oauth_code_verifier");
+      sessionStorage.removeItem("oauth_return_to");
 
       // Clean up old processed OAuth requests (keep only the last 5)
       const keys = Object.keys(sessionStorage);
@@ -77,49 +78,65 @@ export function useGoogleAuth() {
   };
 
   // Initiate Google OAuth login
-  const loginWithGoogle = useCallback((): void => {
-    try {
-      setLoading(true);
-      setError(null);
+  const loginWithGoogle = useCallback(
+    (returnTo?: string): void => {
+      try {
+        setLoading(true);
+        setError(null);
 
-      const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+        const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
 
-      if (!googleClientId) {
-        throw new Error("Google Client ID not configured");
+        if (!googleClientId) {
+          throw new Error("Google Client ID not configured");
+        }
+
+        const { state } = generateOAuthState();
+
+        // Store returnTo URL in sessionStorage for post-OAuth redirect
+        if (returnTo && typeof window !== "undefined") {
+          sessionStorage.setItem("oauth_return_to", returnTo);
+        }
+
+        // Construct OAuth URL
+        const baseUrl =
+          process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+        const redirectUri = `${baseUrl}/auth/oauth/callback`;
+
+        const params = new URLSearchParams({
+          client_id: googleClientId,
+          redirect_uri: redirectUri,
+          response_type: "code",
+          scope: "openid email profile",
+          state: state,
+          access_type: "offline",
+          prompt: "consent",
+        });
+
+        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+
+        // Redirect to Google OAuth
+        window.location.href = authUrl;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to initiate Google login";
+        setError(errorMessage);
+        setLoading(false);
       }
-
-      const { state } = generateOAuthState();
-
-      // Construct OAuth URL
-      const baseUrl =
-        process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
-      const redirectUri = `${baseUrl}/auth/oauth/callback`;
-
-      const params = new URLSearchParams({
-        client_id: googleClientId,
-        redirect_uri: redirectUri,
-        response_type: "code",
-        scope: "openid email profile",
-        state: state,
-        access_type: "offline",
-        prompt: "consent",
-      });
-
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
-
-      // Redirect to Google OAuth
-      window.location.href = authUrl;
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to initiate Google login";
-      setError(errorMessage);
-      setLoading(false);
-    }
-  }, [generateOAuthState]);
+    },
+    [generateOAuthState]
+  );
 
   // Clear error state
   const clearError = (): void => {
     setError(null);
+  };
+
+  // Get stored return URL for post-OAuth redirect
+  const getStoredReturnUrl = (): string | null => {
+    if (typeof window === "undefined") return null;
+    return sessionStorage.getItem("oauth_return_to");
   };
 
   return {
@@ -130,6 +147,7 @@ export function useGoogleAuth() {
     clearOAuthState,
     generateOAuthState,
     clearError,
+    getStoredReturnUrl,
   };
 }
 
