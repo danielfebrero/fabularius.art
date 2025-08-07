@@ -28,22 +28,6 @@ We should avoid using `any` type in TypeScript. Instead, we should define proper
 
 ## UI/UX
 
-### ✅ The Lightbox should try to "load more" when reaching the end of the list
-
-The Lightbox now implements an "infinite navigation" feature that automatically loads more content when the user reaches the end of the list. This provides a seamless browsing experience without interruptions. The implementation:
-
-- Triggers loading when the user is 3 items from the end
-- Shows a loading indicator in the media counter
-- Allows navigation to continue seamlessly as new content loads
-- Updates the media counter to show "X of Y+" when more content is available
-
-**Implementation Details:**
-
-- Enhanced `Lightbox` component with `hasNextPage`, `isFetchingNextPage`, and `onLoadMore` props
-- Updated navigation logic in keyboard, swipe, and button controls
-- Added visual feedback for loading state
-- Implemented in `MediaGallery` and user media pages
-
 ### Rework Welcome email
 
 The "what you can do now" section is not coherent and should be reworked.
