@@ -190,7 +190,7 @@ export const Lightbox: React.FC<LightboxProps> = ({
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
-  }, [isOpen, handleClose]);
+  }, [isOpen]);
 
   // Prevent body scroll when lightbox is open
   useEffect(() => {
