@@ -155,7 +155,9 @@ export function AlbumDetailClient({ album }: AlbumDetailClientProps) {
           <MediaGalleryErrorBoundary>
             <MediaGallery
               albumId={album.id}
-              canRemoveFromAlbum={album.createdBy === user?.userId}
+              canRemoveFromAlbum={
+                !!(album.createdBy && album.createdBy === user?.userId)
+              }
             />
           </MediaGalleryErrorBoundary>
 

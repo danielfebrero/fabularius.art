@@ -8,6 +8,7 @@ import { userApi } from "@/lib/api";
 import { invalidateQueries } from "@/lib/queryClient";
 import useGoogleAuth from "@/hooks/useGoogleAuth";
 import { useReturnUrl } from "@/contexts/ReturnUrlContext";
+import { useUserContext } from "@/contexts/UserContext";
 
 type CallbackState = "loading" | "success" | "error";
 
@@ -18,6 +19,7 @@ function OAuthCallbackContent() {
   const { validateOAuthState, clearOAuthState, getStoredReturnUrl } =
     useGoogleAuth();
   const { getReturnUrl, clearReturnUrl } = useReturnUrl();
+  const { checkAuth } = useUserContext();
   const searchParams = useSearchParams();
   const router = useLocaleRouter();
   const isProcessingRef = useRef(false);
@@ -131,6 +133,9 @@ function OAuthCallbackContent() {
           // Invalidate user cache to refresh authentication state
           invalidateQueries.user();
 
+          // Wait for authentication state to be refreshed
+          await checkAuth();
+
           hasProcessedRef.current = true;
 
           // Mark as successfully processed
@@ -178,6 +183,7 @@ function OAuthCallbackContent() {
     getStoredReturnUrl,
     getReturnUrl,
     clearReturnUrl,
+    checkAuth,
     router,
   ]);
 

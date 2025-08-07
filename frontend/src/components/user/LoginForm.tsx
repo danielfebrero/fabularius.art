@@ -14,6 +14,7 @@ import { UserLoginFormData } from "@/types/user";
 import LocaleLink from "@/components/ui/LocaleLink";
 import { EmailVerificationForm } from "./EmailVerificationForm";
 import { useReturnUrl } from "@/contexts/ReturnUrlContext";
+import { useUserContext } from "@/contexts/UserContext";
 
 // Validation schema with internationalization
 const createLoginSchema = (tAuth: any) =>
@@ -42,6 +43,7 @@ export function LoginForm() {
     useState(false);
   const router = useLocaleRouter();
   const { getReturnUrl, clearReturnUrl } = useReturnUrl();
+  const { checkAuth } = useUserContext();
 
   // Determine loading state and error message
   const loading = loginLoading;
@@ -96,6 +98,9 @@ export function LoginForm() {
       if (response.success) {
         // Clear stored return URL since we're about to use it
         clearReturnUrl();
+
+        // Wait for authentication state to be refreshed
+        await checkAuth();
 
         // Redirect to returnTo URL if provided, otherwise to home page
         const redirectUrl = returnTo || "/";
