@@ -180,55 +180,123 @@ export default function MediaManagementPage({
         </button>
       </div>
 
-      <div className="bg-gradient-to-r from-admin-primary/10 to-admin-secondary/10 rounded-xl p-6 border border-admin-primary/20">
-        <div className="flex items-center space-x-3 mb-4">
-          <div className="w-10 h-10 bg-gradient-to-br from-admin-primary to-admin-secondary rounded-lg flex items-center justify-center">
-            <svg
-              className="w-6 h-6 text-white"
-              fill="currentColor"
-              viewBox="0 0 20 20"
-            >
-              <path
-                fillRule="evenodd"
-                d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
-                clipRule="evenodd"
-              />
-            </svg>
+      <div className="bg-gradient-to-r from-admin-primary/10 to-admin-secondary/10 rounded-xl p-4 sm:p-6 border border-admin-primary/20">
+        {/* Mobile Layout */}
+        <div className="block sm:hidden space-y-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-admin-primary to-admin-secondary rounded-lg flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-white"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+                Manage Media
+              </h1>
+              <p className="text-sm text-muted-foreground line-clamp-1">
+                &quot;{album.title}&quot;
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Manage Media</h1>
-            <p className="text-muted-foreground">
-              Upload and manage media for &quot;{album.title}&quot;
-            </p>
+
+          {/* Mobile Stats - Compact Grid */}
+          <div className="grid grid-cols-1 gap-2 text-sm">
+            <div className="flex items-center justify-between py-2 px-3 bg-card/50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-admin-secondary rounded-full"></div>
+                <span className="text-muted-foreground">Media Count:</span>
+              </div>
+              <span className="font-semibold text-foreground">
+                {album.mediaCount} items
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-2 px-3 bg-card/50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    album.isPublic ? "bg-admin-success" : "bg-muted-foreground"
+                  }`}
+                ></div>
+                <span className="text-muted-foreground">Status:</span>
+              </div>
+              <span
+                className={`font-semibold ${
+                  album.isPublic
+                    ? "text-admin-success"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {album.isPublic ? "Public" : "Private"}
+              </span>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-6 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-admin-primary rounded-full"></div>
-            <span className="text-muted-foreground">Album ID:</span>
-            <span className="font-mono text-foreground">{album.id}</span>
+
+        {/* Desktop Layout */}
+        <div className="hidden sm:block">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-admin-primary to-admin-secondary rounded-lg flex items-center justify-center">
+              <svg
+                className="w-6 h-6 text-white"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">
+                Manage Media
+              </h1>
+              <p className="text-muted-foreground">
+                Upload and manage media for &quot;{album.title}&quot;
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-admin-secondary rounded-full"></div>
-            <span className="text-muted-foreground">Media Count:</span>
-            <span className="font-semibold text-foreground">
-              {album.mediaCount} items
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                album.isPublic ? "bg-admin-success" : "bg-muted-foreground"
-              }`}
-            ></div>
-            <span className="text-muted-foreground">Status:</span>
-            <span
-              className={`font-semibold ${
-                album.isPublic ? "text-admin-success" : "text-muted-foreground"
-              }`}
-            >
-              {album.isPublic ? "Public" : "Private"}
-            </span>
+
+          {/* Desktop Stats - Horizontal Layout */}
+          <div className="flex items-center gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-admin-primary rounded-full"></div>
+              <span className="text-muted-foreground">Album ID:</span>
+              <span className="font-mono text-foreground">{album.id}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-admin-secondary rounded-full"></div>
+              <span className="text-muted-foreground">Media Count:</span>
+              <span className="font-semibold text-foreground">
+                {album.mediaCount} items
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-2 h-2 rounded-full ${
+                  album.isPublic ? "bg-admin-success" : "bg-muted-foreground"
+                }`}
+              ></div>
+              <span className="text-muted-foreground">Status:</span>
+              <span
+                className={`font-semibold ${
+                  album.isPublic
+                    ? "text-admin-success"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {album.isPublic ? "Public" : "Private"}
+              </span>
+            </div>
           </div>
         </div>
       </div>
