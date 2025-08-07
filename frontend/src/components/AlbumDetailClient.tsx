@@ -58,18 +58,12 @@ export function AlbumDetailClient({ album }: AlbumDetailClientProps) {
               {album.metadata?.creatorUsername && (
                 <div className="flex items-center gap-1">
                   <User className="w-3 h-3" />
-                  {album.createdByType === "user" ? (
-                    <LocaleLink
-                      href={`/profile/${album.metadata.creatorUsername}`}
-                      className="hover:text-foreground transition-colors hover:underline"
-                    >
-                      {album.metadata.creatorUsername}
-                    </LocaleLink>
-                  ) : (
-                    <span className="text-primary font-medium">
-                      {album.metadata.creatorUsername}
-                    </span>
-                  )}
+                  <LocaleLink
+                    href={`/profile/${album.metadata.creatorUsername}`}
+                    className="hover:text-foreground transition-colors hover:underline"
+                  >
+                    {album.metadata.creatorUsername}
+                  </LocaleLink>
                 </div>
               )}
 

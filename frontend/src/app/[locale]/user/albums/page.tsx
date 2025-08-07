@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
-import { FolderOpen, Grid, List, Plus, Edit, Trash2 } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { FolderOpen, Grid, List, Plus, Edit2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import LocaleLink from "@/components/ui/LocaleLink";
-import { ContentCard } from "@/components/ui/ContentCard";
+import { VirtualizedGrid } from "@/components/ui/VirtualizedGrid";
 import { cn } from "@/lib/utils";
 import {
   useAlbums,
@@ -70,28 +70,53 @@ const UserAlbumsPage: React.FC = () => {
     }
   }, [albums, prefetch]);
 
-  // Handle album edit
-  const handleEditAlbum = (album: Album) => {
+  // Handle edit album
+  const handleEditAlbum = useCallback((album: Album) => {
     setEditingAlbum(album);
-  };
+  }, []);
 
-  // Handle album delete
-  const handleDeleteAlbum = (album: Album) => {
+  // Handle delete album
+  const handleDeleteAlbum = useCallback((album: Album) => {
     setDeletingAlbum(album);
-  };
+  }, []);
 
-  // Handle save album
-  const handleSaveAlbum = async (albumId: string, data: any) => {
-    await updateAlbumMutation.mutateAsync({ albumId, data });
-  };
+  // Handle album update
+  const handleUpdateAlbum = useCallback(
+    async (
+      albumId: string,
+      data: {
+        title?: string;
+        tags?: string[];
+        isPublic?: boolean;
+        coverImageUrl?: string;
+      }
+    ) => {
+      try {
+        await updateAlbumMutation.mutateAsync({
+          albumId,
+          data,
+        });
+        setEditingAlbum(null);
+      } catch (error) {
+        console.error("Failed to update album:", error);
+        throw error;
+      }
+    },
+    [updateAlbumMutation]
+  );
 
-  // Handle confirm delete
-  const handleConfirmDelete = async () => {
-    if (deletingAlbum) {
+  // Handle album deletion
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deletingAlbum) return;
+
+    try {
       await deleteAlbumMutation.mutateAsync(deletingAlbum.id);
       setDeletingAlbum(null);
+    } catch (error) {
+      console.error("Failed to delete album:", error);
+      throw error;
     }
-  };
+  }, [deletingAlbum, deleteAlbumMutation]);
 
   if (isLoading) {
     return (
@@ -262,80 +287,72 @@ const UserAlbumsPage: React.FC = () => {
       </div>
 
       {/* Content */}
-      {albums.length > 0 ? (
-        <div className="space-y-6">
-          <div
-            className={cn(
-              viewMode === "grid"
-                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                : "space-y-4"
-            )}
-          >
-            {albums.map((album: Album, index: number) => (
-              <ContentCard
-                key={`${album.id}-${index}`}
-                item={album}
-                type="album"
-                showTags={false}
-                customActions={[
-                  {
-                    label: "Edit",
-                    icon: <Edit className="h-3 w-3" />,
-                    onClick: () => handleEditAlbum(album),
-                  },
-                  {
-                    label: "Delete",
-                    icon: <Trash2 className="h-3 w-3" />,
-                    onClick: () => handleDeleteAlbum(album),
-                    variant: "destructive" as const,
-                  },
-                ]}
-                preferredThumbnailSize={
-                  viewMode === "grid" ? undefined : "originalSize"
-                }
-              />
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-12 text-center">
-          <div className="w-20 h-20 bg-gradient-to-br from-admin-primary/20 to-admin-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <FolderOpen className="h-10 w-10 text-admin-primary" />
-          </div>
-          <h3 className="text-xl font-semibold text-foreground mb-3">
-            {searchTerm ? "No matching albums found" : "No albums yet"}
-          </h3>
-          <p className="text-muted-foreground mb-8 max-w-md mx-auto">
-            {searchTerm
-              ? `Try adjusting your search for "${searchTerm}"`
-              : "Create your first album to organize your content and start building your collection!"}
-          </p>
-          <div className="flex justify-center space-x-4">
-            {searchTerm && (
-              <Button
-                onClick={() => setSearchTerm("")}
-                variant="outline"
-                className="border-admin-primary/30 text-admin-primary hover:bg-admin-primary/10"
-              >
-                Clear Search
-              </Button>
-            )}
-            <LocaleLink href="/user/albums/create">
-              <Button className="bg-gradient-to-r from-admin-primary to-admin-secondary hover:from-admin-primary/90 hover:to-admin-secondary/90 text-admin-primary-foreground shadow-lg flex items-center space-x-2">
-                <Plus className="h-4 w-4" />
-                <span>Create Album</span>
-              </Button>
-            </LocaleLink>
-          </div>
-        </div>
-      )}
+      <VirtualizedGrid
+        items={albums}
+        itemType="album"
+        viewMode={viewMode}
+        isLoading={isLoading}
+        hasNextPage={false} // User albums are typically loaded all at once
+        isFetchingNextPage={false}
+        contentCardProps={{
+          canLike: true,
+          canBookmark: true,
+          canFullscreen: false,
+          canAddToAlbum: false,
+          canDownload: false,
+          canDelete: false,
+          showTags: false,
+          preferredThumbnailSize:
+            viewMode === "grid" ? undefined : "originalSize",
+          customActions: (item) => [
+            {
+              label: "Edit Album",
+              icon: <Edit2 className="h-4 w-4" />,
+              onClick: () => handleEditAlbum(item as Album),
+              variant: "default" as const,
+            },
+            {
+              label: "Delete Album",
+              icon: <Trash2 className="h-4 w-4" />,
+              onClick: () => handleDeleteAlbum(item as Album),
+              variant: "destructive" as const,
+            },
+          ],
+        }}
+        emptyState={{
+          icon: (
+            <div className="w-20 h-20 bg-gradient-to-br from-admin-primary/20 to-admin-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <FolderOpen className="h-10 w-10 text-admin-primary" />
+            </div>
+          ),
+          title: searchTerm ? "No matching albums found" : "No albums yet",
+          description: searchTerm
+            ? `Try adjusting your search for "${searchTerm}"`
+            : "Create your first album to organize your content and start building your collection!",
+          action: (
+            <div className="flex justify-center space-x-4">
+              <LocaleLink href="/user/albums/create">
+                <Button className="bg-gradient-to-r from-admin-primary to-admin-secondary hover:from-admin-primary/90 hover:to-admin-secondary/90 text-admin-primary-foreground shadow-lg flex items-center space-x-2">
+                  <Plus className="h-4 w-4" />
+                  <span>Create Album</span>
+                </Button>
+              </LocaleLink>
+            </div>
+          ),
+        }}
+        loadingState={{
+          loadingText: "Loading albums...",
+          noMoreText: "All albums loaded",
+        }}
+        error={error}
+      />
 
       {/* Edit Album Dialog */}
       <EditAlbumDialog
         album={editingAlbum}
         open={!!editingAlbum}
         onClose={() => setEditingAlbum(null)}
-        onSave={handleSaveAlbum}
+        onSave={handleUpdateAlbum}
         loading={updateAlbumMutation.isPending}
       />
 

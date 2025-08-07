@@ -4,96 +4,11 @@ import { useEffect, useState } from "react";
 import { Bookmark, Grid, List } from "lucide-react";
 import { useBookmarksQuery } from "@/hooks/queries/useBookmarksQuery";
 import { Button } from "@/components/ui/Button";
-import { cn } from "@/lib/utils";
-import { ContentCard } from "@/components/ui/ContentCard";
+import { VirtualizedGrid } from "@/components/ui/VirtualizedGrid";
 import { Lightbox } from "@/components/ui/Lightbox";
 import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 
 const UserBookmarksPage: React.FC = () => {
-  // Use TanStack Query hook for bookmarks
-  const {
-    data: bookmarksData,
-    isLoading,
-    error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useBookmarksQuery();
-
-  // Hook for bulk prefetching interaction status
-  const { prefetch } = usePrefetchInteractionStatus();
-
-  // Extract bookmarks from infinite query data
-  const allBookmarks =
-    bookmarksData?.pages.flatMap(
-      (page: any) => page.data?.interactions || []
-    ) || [];
-
-  // Filter out invalid bookmarks before counting
-  const bookmarks = allBookmarks.filter(
-    (bookmark: any) => bookmark && bookmark.targetType
-  );
-
-  // Prefetch interaction status for all liked items
-  useEffect(() => {
-    if (bookmarks.length > 0) {
-      const targets = bookmarks.map((bookmark: any) => ({
-        targetType: bookmark.targetType as "album" | "media",
-        targetId: bookmark.targetId,
-      }));
-      prefetch(targets).catch((error) => {
-        console.error(
-          "Failed to prefetch user likes interaction status:",
-          error
-        );
-      });
-    }
-  }, [bookmarks, prefetch]);
-
-  const totalCount = bookmarks.length;
-  const hasMore = hasNextPage;
-  const isLoadingMore = isFetchingNextPage;
-  const loadMore = () => fetchNextPage();
-  const refresh = () => {}; // TanStack Query handles background refetching
-
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [lightboxOpen, setLightboxOpen] = useState(false);
-  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
-
-  // Get media items for lightbox (only media type bookmarks)
-  const mediaItems = bookmarks
-    .filter((bookmark: any) => bookmark?.targetType === "media")
-    .map((bookmark: any) => ({
-      id: bookmark.targetId,
-      albumId: bookmark.target?.albumId || bookmark.albumId || "",
-      filename: bookmark.target?.title || "",
-      originalFilename: bookmark.target?.title || "",
-      mimeType: bookmark.target?.mimeType || "image/jpeg",
-      size: bookmark.target?.size || 0,
-      url: bookmark.target?.url || "",
-      thumbnailUrl: bookmark.target?.thumbnailUrls?.medium || "",
-      thumbnailUrls: bookmark.target?.thumbnailUrls,
-      viewCount: bookmark.target?.viewCount || 0,
-      createdAt: bookmark.createdAt,
-      updatedAt: bookmark.createdAt,
-    }));
-
-  const handleLightboxClose = () => {
-    setLightboxOpen(false);
-  };
-
-  const handleLightboxNext = () => {
-    if (currentMediaIndex < mediaItems.length - 1) {
-      setCurrentMediaIndex(currentMediaIndex + 1);
-    }
-  };
-
-  const handleLightboxPrevious = () => {
-    if (currentMediaIndex > 0) {
-      setCurrentMediaIndex(currentMediaIndex - 1);
-    }
-  };
-
   // Create media items for ContentCard from bookmarks
   const createMediaFromBookmark = (bookmark: any) => {
     if (!bookmark || !bookmark.targetType) {
@@ -139,6 +54,99 @@ const UserBookmarksPage: React.FC = () => {
       };
     }
     return null;
+  };
+
+  // Use TanStack Query hook for bookmarks
+  const {
+    data: bookmarksData,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useBookmarksQuery();
+
+  // Hook for bulk prefetching interaction status
+  const { prefetch } = usePrefetchInteractionStatus();
+
+  // Extract bookmarks from infinite query data
+  const allBookmarks =
+    bookmarksData?.pages.flatMap(
+      (page: any) => page.data?.interactions || []
+    ) || [];
+
+  // Filter out invalid bookmarks before counting
+  const bookmarks = allBookmarks.filter(
+    (bookmark: any) => bookmark && bookmark.targetType
+  );
+
+  // Extract bookmarks and create consistent items for VirtualizedGrid
+  const allBookmarkItems = bookmarks
+    .map((bookmark: any) => {
+      const media = createMediaFromBookmark(bookmark);
+      const album = createAlbumFromBookmark(bookmark);
+      return media || album;
+    })
+    .filter((item: any): item is any => item !== null);
+
+  // Prefetch interaction status for all bookmarked items
+  useEffect(() => {
+    if (bookmarks.length > 0) {
+      const targets = bookmarks.map((bookmark: any) => ({
+        targetType: bookmark.targetType as "album" | "media",
+        targetId: bookmark.targetId,
+      }));
+      prefetch(targets).catch((error) => {
+        console.error(
+          "Failed to prefetch user bookmarks interaction status:",
+          error
+        );
+      });
+    }
+  }, [bookmarks, prefetch]);
+
+  const totalCount = allBookmarkItems.length;
+  const hasMore = hasNextPage;
+  const isLoadingMore = isFetchingNextPage;
+  const loadMore = () => fetchNextPage();
+  const refresh = () => {}; // TanStack Query handles background refetching
+
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
+
+  // Get media items for lightbox (only media type bookmarks)
+  const mediaItems = bookmarks
+    .filter((bookmark: any) => bookmark?.targetType === "media")
+    .map((bookmark: any) => ({
+      id: bookmark.targetId,
+      albumId: bookmark.target?.albumId || bookmark.albumId || "",
+      filename: bookmark.target?.title || "",
+      originalFilename: bookmark.target?.title || "",
+      mimeType: bookmark.target?.mimeType || "image/jpeg",
+      size: bookmark.target?.size || 0,
+      url: bookmark.target?.url || "",
+      thumbnailUrl: bookmark.target?.thumbnailUrls?.medium || "",
+      thumbnailUrls: bookmark.target?.thumbnailUrls,
+      viewCount: bookmark.target?.viewCount || 0,
+      createdAt: bookmark.createdAt,
+      updatedAt: bookmark.createdAt,
+    }));
+
+  const handleLightboxClose = () => {
+    setLightboxOpen(false);
+  };
+
+  const handleLightboxNext = () => {
+    if (currentMediaIndex < mediaItems.length - 1) {
+      setCurrentMediaIndex(currentMediaIndex + 1);
+    }
+  };
+
+  const handleLightboxPrevious = () => {
+    if (currentMediaIndex > 0) {
+      setCurrentMediaIndex(currentMediaIndex - 1);
+    }
   };
 
   if (error) {
@@ -224,103 +232,38 @@ const UserBookmarksPage: React.FC = () => {
         </div>
 
         {/* Content */}
-        {isLoading ? (
-          <div
-            className={cn(
-              viewMode === "grid"
-                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                : "space-y-4"
-            )}
-          >
-            {[...Array(8)].map((_, i) => (
-              <div key={i} className="animate-pulse">
-                {viewMode === "grid" ? (
-                  <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 overflow-hidden">
-                    <div className="aspect-square bg-muted/50"></div>
-                    {/* Only show skeleton text for albums, media cards are image-only */}
-                    {i % 2 === 0 && (
-                      <div className="p-4 space-y-2">
-                        <div className="h-4 bg-muted/50 rounded w-3/4 mx-auto"></div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-4">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-16 h-16 bg-muted/50 rounded-md"></div>
-                      <div className="flex-1 space-y-2">
-                        <div className="h-4 bg-muted/50 rounded w-3/4"></div>
-                        <div className="h-3 bg-muted/50 rounded w-1/2"></div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : bookmarks.length > 0 ? (
-          <div className="space-y-6">
-            <div
-              className={cn(
-                viewMode === "grid"
-                  ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                  : "space-y-4"
-              )}
-            >
-              {bookmarks.map((bookmark: any, index: number) => {
-                const media = createMediaFromBookmark(bookmark);
-                const album = createAlbumFromBookmark(bookmark);
-
-                // Skip if both media and album are null
-                if (!media && !album) {
-                  return null;
-                }
-
-                return (
-                  <ContentCard
-                    key={`${bookmark.targetId}-${index}`}
-                    item={media || album!}
-                    type={bookmark.targetType as "media" | "album"}
-                    mediaList={mediaItems}
-                    canFullscreen={!album}
-                    canAddToAlbum={!album}
-                    className={
-                      viewMode === "grid" ? "aspect-square" : undefined
-                    }
-                    preferredThumbnailSize={
-                      viewMode === "grid" ? undefined : "originalSize"
-                    }
-                  />
-                );
-              })}
-            </div>
-
-            {/* Load More */}
-            {hasMore && (
-              <div className="text-center">
-                <Button
-                  onClick={loadMore}
-                  disabled={isLoadingMore}
-                  variant="outline"
-                  size="lg"
-                >
-                  {isLoadingMore ? "Loading..." : "Load More"}
-                </Button>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="bg-card/80 backdrop-blur-sm rounded-xl shadow-lg border border-admin-primary/10 p-12 text-center">
-            <Bookmark className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-foreground mb-2">
-              No bookmarks yet
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              Start exploring content and bookmark what you want to save for
-              later!
-            </p>
-          </div>
-        )}
+        <VirtualizedGrid
+          items={allBookmarkItems}
+          itemType="media" // We'll handle mixed types in the component
+          viewMode={viewMode}
+          isLoading={isLoading}
+          hasNextPage={hasMore}
+          isFetchingNextPage={isLoadingMore}
+          onLoadMore={loadMore}
+          contentCardProps={{
+            canLike: true,
+            canBookmark: true,
+            canFullscreen: true,
+            canAddToAlbum: true,
+            canDownload: true,
+            canDelete: false,
+          }}
+          mediaList={mediaItems}
+          emptyState={{
+            icon: (
+              <Bookmark className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            ),
+            title: "No bookmarks yet",
+            description:
+              "Start exploring content and bookmark what you want to save for later!",
+          }}
+          loadingState={{
+            loadingText: "Loading more bookmarks...",
+            noMoreText: "No more bookmarks to load",
+          }}
+          error={error ? String(error) : null}
+          onRetry={refresh}
+        />
       </div>
 
       {/* Lightbox for media items */}

@@ -24,15 +24,23 @@ We should avoid using `any` type in TypeScript. Instead, we should define proper
 
 ## UI/UX
 
+### The Lighbox should try to "load more" when reaching the end of the list
+
+The Lightbox should implement an "infinite scroll" feature that automatically loads more content when the user reaches the end of the list. This will enhance the user experience by providing a seamless browsing experience without interruptions.
+
 ### Infinite scroll should be implemented on all pages
 
-Infinite scroll should be implemented on all pages where it makes sense, such as the homepage, user pages, admin pages and album pages.
+Infinite scroll should be implemented on all pages where it makes sense, such as the homepage, user pages, admin pages and album pages. Remaining: admin pages.
 
 ### Rework Welcome email
 
 The "what you can do now" section is not coherent and should be reworked.
 
 ## User profile
+
+### Last active date do not appears on at least my profile
+
+It should always appears.
 
 ## Videos
 
@@ -60,7 +68,21 @@ Last images I uploaded were 2 by 2 instead of bulk upload. This should be fixed 
 
 ## Settings
 
+## User Profile
+
 ## User albums
+
+### Delete album tooltip in dropdown should appear on one line
+
+The tooltip for deleting an album in the dropdown menu should be displayed on a single line for better readability and user experience.
+
+### Deleting an album should not wait for api response
+
+When deleting an album, the UI should immediately reflect the deletion without waiting for the API response. This will improve user experience by making the application feel more responsive.
+
+### Edit an album should update optimistically
+
+When editing an album, the changes should be reflected immediately in the UI without waiting for the server response. This will improve user experience by making the application feel more responsive. Speaking of title, item count, etc.
 
 ## Optimization
 
