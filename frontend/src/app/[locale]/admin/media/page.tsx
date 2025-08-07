@@ -1,37 +1,44 @@
 "use client";
 
 /*
- * Admin Media Page
+   const { 
+    albums, 
+    isLoading: albumsLoading
+  } = useAdminAlbumsData(); Media Page
  * Displays all media across albums with options to select and delete.
  *
  * TODO: get all media, currently albums are not fetching medias.
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAdminAlbumsData } from "@/hooks/queries/useAdminAlbumsQuery";
 import { useAdminBatchDeleteMedia } from "@/hooks/queries/useAdminMediaQuery";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { VirtualizedGrid } from "@/components/ui/VirtualizedGrid";
 import { Media } from "@/types";
-import ResponsivePicture from "@/components/ui/ResponsivePicture";
 
 export default function AdminMediaPage() {
-  const { albums, isLoading: albumsLoading } = useAdminAlbumsData({
-    limit: 100,
+  const { 
+    albums, 
+    isLoading: albumsLoading
+  } = useAdminAlbumsData({
+    limit: 50, // Increase limit to get more media at once
   });
   const batchDeleteMutation = useAdminBatchDeleteMedia();
   const [selectedMedia, setSelectedMedia] = useState<Set<string>>(new Set());
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [mediaToDelete, setMediaToDelete] = useState<string[]>([]);
 
-  // Combine media from all albums
-  const allMedia: (Media & { albumTitle: string; albumId: string })[] =
-    albums.flatMap((album) =>
+  // Combine media from all albums with memoization
+  const allMedia: (Media & { albumTitle: string; albumId: string })[] = useMemo(() => {
+    return albums.flatMap((album) =>
       (album.media || []).map((media: Media) => ({
         ...media,
         albumTitle: album.title,
         albumId: album.id,
       }))
     );
+  }, [albums]);
 
   const handleSelectMedia = (mediaId: string) => {
     const newSelected = new Set(selectedMedia);
@@ -265,43 +272,28 @@ export default function AdminMediaPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {allMedia.map((media) => (
-              <div
-                key={media.id}
-                className={`relative group cursor-pointer border-2 rounded-xl overflow-hidden transition-all duration-200 ${
-                  selectedMedia.has(media.id)
-                    ? "border-admin-primary ring-4 ring-admin-primary/20 shadow-lg"
-                    : "border-transparent hover:border-admin-primary/30 hover:shadow-md"
-                }`}
-                onClick={() => handleSelectMedia(media.id)}
-              >
-                <div className="aspect-square relative">
-                  <ResponsivePicture
-                    thumbnailUrls={media.thumbnailUrls}
-                    fallbackUrl={media.thumbnailUrl || ""}
-                    alt={media.filename}
-                  />
-
-                  {/* Selection overlay */}
-                  <div
-                    className={`absolute inset-0 transition-all duration-200 ${
-                      selectedMedia.has(media.id)
-                        ? "bg-admin-primary/20 opacity-100"
-                        : "bg-black/0 opacity-0 group-hover:bg-black/10 group-hover:opacity-100"
-                    }`}
-                  />
-
-                  {/* Selection checkbox */}
-                  <div className="absolute top-3 right-3">
+          <VirtualizedGrid
+            items={allMedia}
+            itemType="media"
+            hasNextPage={false}
+            isFetchingNextPage={false}
+            emptyState={{
+              title: "No media found",
+              description: "No media items match your current filters.",
+            }}
+            contentCardProps={{
+              customActions: (item: any) => [
+                {
+                  label: selectedMedia.has(item.id) ? "Deselect" : "Select",
+                  icon: (
                     <div
                       className={`w-6 h-6 rounded-full border-2 transition-all duration-200 ${
-                        selectedMedia.has(media.id)
+                        selectedMedia.has(item.id)
                           ? "bg-admin-primary border-admin-primary shadow-lg"
-                          : "bg-white/90 border-white/90 group-hover:bg-white group-hover:border-white"
+                          : "bg-white/90 border-white/90"
                       }`}
                     >
-                      {selectedMedia.has(media.id) && (
+                      {selectedMedia.has(item.id) && (
                         <svg
                           className="w-4 h-4 text-white m-0.5"
                           fill="currentColor"
@@ -315,21 +307,13 @@ export default function AdminMediaPage() {
                         </svg>
                       )}
                     </div>
-                  </div>
-                </div>
-
-                {/* Media info */}
-                <div className="p-3 bg-card border-t border-border">
-                  <div className="text-sm font-medium truncate text-foreground">
-                    {media.filename}
-                  </div>
-                  <div className="text-xs text-muted-foreground truncate mt-1">
-                    {media.albumTitle}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                  ),
+                  onClick: () => handleSelectMedia(item.id),
+                  variant: "default" as const,
+                },
+              ],
+            }}
+          />
         </div>
       )}
 

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useLocaleRouter } from "@/lib/navigation";
 import { Album } from "@/types";
 import { Button } from "@/components/ui/Button";
-import { AlbumTable } from "@/components/admin/AlbumTable";
+import { VirtualizedGrid } from "@/components/ui/VirtualizedGrid";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Edit, Trash2, Image as ImageIcon } from "lucide-react";
 import {
   useAdminAlbumsData,
   useDeleteAdminAlbum,
@@ -35,16 +36,6 @@ export default function AdminAlbumsPage() {
   }>({
     isOpen: false,
   });
-
-  const handleSelectAlbum = (albumId: string, selected: boolean) => {
-    setSelectedAlbums((prev) =>
-      selected ? [...prev, albumId] : prev.filter((id) => id !== albumId)
-    );
-  };
-
-  const handleSelectAll = (selected: boolean) => {
-    setSelectedAlbums(selected ? albums.map((album) => album.id) : []);
-  };
 
   const handleDeleteClick = (album: Album) => {
     setDeleteConfirm({
@@ -76,13 +67,20 @@ export default function AdminAlbumsPage() {
     }
   };
 
-  const handleEdit = (albumId: string) => {
-    router.push(`/admin/albums/${albumId}`);
-  };
-
-  const handleManageMedia = (albumId: string) => {
+  const handleManageMedia = useCallback((albumId: string) => {
     router.push(`/admin/albums/${albumId}/media`);
-  };
+  }, [router]);
+
+  const handleEdit = useCallback((albumId: string) => {
+    router.push(`/admin/albums/${albumId}`);
+  }, [router]);
+
+  // Memoize load more function
+  const loadMore = useCallback(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   if (loading && albums.length === 0) {
     return (
@@ -212,37 +210,96 @@ export default function AdminAlbumsPage() {
         </div>
       )}
 
-      <AlbumTable
-        albums={albums}
-        selectedAlbums={selectedAlbums}
-        onSelectAlbum={handleSelectAlbum}
-        onSelectAll={handleSelectAll}
-        onEdit={handleEdit}
-        onDelete={handleDeleteClick}
-        onManageMedia={handleManageMedia}
-        loading={loading}
-      />
-
-      {/* Load More Button for infinite scroll */}
-      {hasNextPage && (
-        <div className="flex justify-center mt-6">
-          <Button
-            onClick={() => fetchNextPage()}
-            disabled={isFetchingNextPage}
-            variant="outline"
-            className="min-w-[150px]"
-          >
-            {isFetchingNextPage ? (
-              <>
-                <div className="w-4 h-4 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin mr-2"></div>
-                Loading...
-              </>
-            ) : (
-              "Load More Albums"
-            )}
-          </Button>
+      {error && (
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+          <div className="flex items-center">
+            <svg
+              className="w-5 h-5 text-destructive mr-2"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <p className="text-destructive font-medium">
+              {error?.message || "An error occurred"}
+            </p>
+          </div>
         </div>
       )}
+
+      {/* Albums Grid with Infinite Scroll */}
+      <VirtualizedGrid
+        items={albums}
+        itemType="album"
+        viewMode="grid"
+        isLoading={loading && albums.length === 0}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onLoadMore={loadMore}
+        gridColumns={{
+          mobile: 1,
+          sm: 2,
+          md: 3,
+          lg: 4,
+          xl: 4,
+        }}
+        contentCardProps={{
+          canLike: false,
+          canBookmark: false,
+          canFullscreen: false,
+          canAddToAlbum: false,
+          canDownload: false,
+          canDelete: false,
+          showTags: true,
+          showCounts: true,
+          preferredThumbnailSize: "medium",
+          customActions: (item) => [
+            {
+              label: "Edit Album",
+              icon: <Edit className="h-4 w-4" />,
+              onClick: () => handleEdit((item as Album).id),
+              variant: "default" as const,
+            },
+            {
+              label: "Manage Media",
+              icon: <ImageIcon className="h-4 w-4" />,
+              onClick: () => handleManageMedia((item as Album).id),
+              variant: "default" as const,
+            },
+            {
+              label: "Delete Album",
+              icon: <Trash2 className="h-4 w-4" />,
+              onClick: () => handleDeleteClick(item as Album),
+              variant: "destructive" as const,
+            },
+          ],
+        }}
+        emptyState={{
+          icon: (
+            <div className="w-20 h-20 bg-gradient-to-br from-admin-primary/20 to-admin-secondary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <svg
+                className="h-10 w-10 text-admin-primary"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+              </svg>
+            </div>
+          ),
+          title: "No albums found",
+          description: "Create your first album to get started with organizing content.",
+        }}
+        loadingState={{
+          loadingText: "Loading albums...",
+          noMoreText: "All albums loaded",
+          skeletonCount: 8,
+        }}
+        error={error ? String(error) : null}
+      />
 
       <ConfirmDialog
         isOpen={deleteConfirm.isOpen}

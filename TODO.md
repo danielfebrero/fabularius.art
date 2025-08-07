@@ -8,6 +8,10 @@
 
 ## Content Cards
 
+### On hover/tap an album card, I want to see changing thumbnails
+
+When hovering or tapping on an album card, the thumbnail should change to another media of the album thumbnail, every 1 seconds. This will provide a more dynamic and engaging user experience.
+
 ### ViewCount Optimistic update from page to page doesn't work correctly
 
 The optimistic update for view counts does not work correctly when navigating from page to page. We need to ensure that the view count is updated consistently across all pages.
