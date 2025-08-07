@@ -38,6 +38,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const clearUser = useCallback((): void => {
+    setUser(null);
+  }, []);
+
   // Check authentication on mount
   useEffect(() => {
     const initAuth = async () => {
@@ -76,6 +80,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       throw new Error("Use useResendVerification hook instead");
     },
     clearError: () => {}, // No-op since error handling moved to mutations
+    clearUser, // Add clearUser method
   };
 
   return (

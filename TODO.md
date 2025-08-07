@@ -10,9 +10,9 @@
 
 ## Content Cards
 
-### ViewCount should have e TanStack Query state to avoid re-fetching and optimistic updates with the Track View component
+### ViewCount Optimistic update from page to page doesn't work correctly
 
-The view count for content cards should be managed using TanStack Query to ensure that the state is consistent and to avoid unnecessary re-fetching. This will also allow for optimistic updates, where the view count can be updated immediately in the UI while the request is being processed in the background.
+The optimistic update for view counts does not work correctly when navigating from page to page. We need to ensure that the view count is updated consistently across all pages.
 
 ## Error handling
 
@@ -41,10 +41,6 @@ The "what you can do now" section is not coherent and should be reworked.
 ### Auto connect the user when he verifies his email
 
 When the user clicks the verification link, he should be automatically logged in.
-
-### Improve skeleton
-
-Currently, the backward and share buttons are on the edge sides instead of being in the container.
 
 ## User profile
 
@@ -91,7 +87,3 @@ We should upgrade our React.js version to 19 to take advantage of the latest fea
 ### Return to the page where the user was before login
 
 When a user logs in, they should be redirected back to the page they were on before logging in. This will improve user experience by not disrupting their workflow.
-
-### Logout should refresh state
-
-When a user logs out, the application state should be refreshed to ensure that any sensitive information is cleared and the user is presented with the login screen. This can be achieved by resetting the application state and redirecting the user to the homepage.

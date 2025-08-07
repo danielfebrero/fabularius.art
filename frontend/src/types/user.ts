@@ -176,6 +176,7 @@ export interface UserContextType {
   verifyEmail: (token: string) => Promise<boolean>;
   resendVerification: (email: string) => Promise<boolean>;
   clearError: () => void;
+  clearUser: () => void;
 }
 
 // Error Types

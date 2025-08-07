@@ -114,13 +114,17 @@ export function useResendVerification() {
 
 // Hook for user logout
 export function useLogout() {
+  const userContext = useUserContext();
+
   return useMutation({
     mutationFn: async () => {
       return await userApi.logout();
     },
-    onSuccess: () => {
-      // Clear all cached data on logout
+    onMutate: () => {
+      // Clear all cached data immediately when logout is initiated
       queryClient.clear();
+      // Clear UserContext user state immediately
+      userContext.clearUser();
     },
   });
 }

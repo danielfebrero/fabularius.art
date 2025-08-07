@@ -98,6 +98,39 @@ The solution maintains existing error handling patterns:
 2. **Authenticated Users**: Confirm normal behavior and data freshness
 3. **Login/Logout Flow**: Test cache invalidation and state synchronization
 4. **Page Navigation**: Ensure no duplicate API calls during route changes
+5. **Logout State Management**: Verify both TanStack Query cache and UserContext state are cleared on logout
+
+## Recent Enhancements
+
+### UserContext State Clearing on Logout
+
+**Issue**: After logout, users appeared as still connected because the UserContext state wasn't being cleared, only the TanStack Query cache.
+
+**Solution**: Enhanced the logout flow to clear both:
+
+1. **Added `clearUser` method to UserContext**:
+
+   - Added `clearUser: () => void` to `UserContextType` interface
+   - Implemented `clearUser` function that calls `setUser(null)`
+   - Exposed `clearUser` in the context value
+
+2. **Enhanced `useLogout` hook**:
+   - Import and use `useUserContext()` to access `clearUser` method
+   - Call `userContext.clearUser()` in `onSuccess` callback after clearing cache
+   - Ensures complete logout state synchronization
+
+**Files Modified**:
+
+- `/frontend/src/types/user.ts` - Added `clearUser` to `UserContextType`
+- `/frontend/src/contexts/UserContext.tsx` - Implemented and exposed `clearUser` method
+- `/frontend/src/hooks/queries/useUserQuery.ts` - Enhanced `useLogout` to clear UserContext
+
+**Benefits**:
+
+- Complete logout state management
+- No lingering authentication state in UserContext
+- Consistent behavior between TanStack Query and UserContext
+- Immediate UI updates reflecting logged-out state
 
 ## Future Enhancements
 
