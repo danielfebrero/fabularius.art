@@ -30,10 +30,6 @@ We should avoid using `any` type in TypeScript. Instead, we should define proper
 
 Infinite scroll should be implemented on all pages where it makes sense, such as the homepage, user pages, admin pages and album pages.
 
-### View count on mobile on discover page is not working well
-
-It stay at 0 for new albums and do not get live hydrated.
-
 ### Make admin page responsive
 
 Currently, it's unusable on mobile devices. We need to ensure that the admin page is fully responsive and functional on smaller screens.

@@ -42,29 +42,31 @@ export function AppHeaderSkeleton() {
 
 export function MediaDetailSkeleton() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="container mx-auto min-h-screen bg-background text-foreground">
       {/* App Header Skeleton */}
       <AppHeaderSkeleton />
 
       {/* Page Header Skeleton */}
-      <header className="sticky top-0 z-20 flex items-center h-16 gap-4 md:px-4 border-b bg-background/80 backdrop-blur-sm border-border">
-        <button className="p-2 rounded-full bg-muted/50 hover:bg-muted transition-colors">
-          <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-        </button>
-        <div className="flex-1 min-w-0">
-          <Skeleton className="h-6 w-64 max-w-full" />
+      <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur-sm border-border">
+        <div className="flex items-center h-16 gap-4 md:px-4 px-4">
+          <button className="p-2 rounded-full bg-muted/50 hover:bg-muted transition-colors">
+            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <Skeleton className="h-6 w-64 max-w-full" />
+          </div>
+          <button className="p-2 rounded-full bg-muted/50 hover:bg-muted transition-colors">
+            <Share2 className="w-5 h-5 text-muted-foreground" />
+          </button>
         </div>
-        <button className="p-2 rounded-full bg-muted/50 hover:bg-muted transition-colors">
-          <Share2 className="w-5 h-5 text-muted-foreground" />
-        </button>
       </header>
 
       {/* Main Content Skeleton */}
-      <main className="container mx-auto md:p-6 lg:p-8">
+      <main className="container mx-auto md:p-6 lg:p-8 px-4">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column: Media Display Skeleton */}
           <div className="lg:col-span-2">
-            <div className="relative bg-card shadow-lg rounded-lg overflow-hidden flex items-center justify-center min-h-[400px]">
+            <div className="relative bg-card shadow-lg rounded-lg overflow-hidden flex items-center justify-center min-h-[400px] mt-4">
               <Skeleton className="w-full h-[400px] md:h-[500px]" />
             </div>
           </div>
@@ -73,14 +75,14 @@ export function MediaDetailSkeleton() {
           <aside className="space-y-6">
             {/* Media Details Section */}
             <div className="border border-border/10 rounded-lg bg-background/20 backdrop-blur-sm">
-              <div className="flex items-center justify-between w-full md:p-4 py-4">
+              <div className="flex items-center justify-between w-full md:p-4 py-4 px-4">
                 <div className="flex items-center gap-3">
                   <Skeleton className="w-5 h-5" />
                   <Skeleton className="h-5 w-32" />
                 </div>
                 <Skeleton className="w-5 h-5" />
               </div>
-              <div className="md:p-4 py-4 pt-0 space-y-3">
+              <div className="md:p-4 py-4 pt-0 px-4 space-y-3">
                 {[...Array(5)].map((_, i) => (
                   <div
                     key={i}
@@ -98,7 +100,7 @@ export function MediaDetailSkeleton() {
 
             {/* Generation Parameters Section */}
             <div className="border border-border/10 rounded-lg bg-background/20 backdrop-blur-sm">
-              <div className="flex items-center justify-between w-full md:p-4 py-4">
+              <div className="flex items-center justify-between w-full md:p-4 py-4 px-4">
                 <div className="flex items-center gap-3">
                   <Skeleton className="w-5 h-5" />
                   <Skeleton className="h-5 w-44" />
@@ -109,14 +111,14 @@ export function MediaDetailSkeleton() {
 
             {/* In Albums Section */}
             <div className="border border-border/10 rounded-lg bg-background/20 backdrop-blur-sm">
-              <div className="flex items-center justify-between w-full md:p-4 py-4">
+              <div className="flex items-center justify-between w-full md:p-4 py-4 px-4">
                 <div className="flex items-center gap-3">
                   <Skeleton className="w-5 h-5" />
                   <Skeleton className="h-5 w-24" />
                 </div>
                 <Skeleton className="w-5 h-5" />
               </div>
-              <div className="md:p-4 py-4 pt-0">
+              <div className="md:p-4 py-4 pt-0 px-4">
                 <div className="flex gap-4 overflow-x-auto pb-2">
                   {[...Array(3)].map((_, i) => (
                     <div key={i} className="flex-shrink-0 w-48">
@@ -129,14 +131,14 @@ export function MediaDetailSkeleton() {
 
             {/* Comments Section */}
             <div className="border border-border/10 rounded-lg bg-background/20 backdrop-blur-sm">
-              <div className="flex items-center justify-between w-full md:p-4 py-4">
+              <div className="flex items-center justify-between w-full md:p-4 py-4 px-4">
                 <div className="flex items-center gap-3">
                   <Skeleton className="w-5 h-5" />
                   <Skeleton className="h-5 w-20" />
                 </div>
                 <Skeleton className="w-5 h-5" />
               </div>
-              <div className="md:p-4 py-4 pt-0 space-y-4">
+              <div className="md:p-4 py-4 pt-0 px-4 space-y-4">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="space-y-2">
                     <div className="flex items-center gap-2">
@@ -159,13 +161,13 @@ export function MediaDetailSkeleton() {
 
 export function AlbumDetailSkeleton() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="container mx-auto min-h-screen bg-background text-foreground">
       {/* App Header Skeleton */}
       <AppHeaderSkeleton />
 
       {/* Page Header Skeleton */}
-      <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur-sm border-border">
-        <div className="flex items-center h-16 gap-4 md:px-4">
+      <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur-sm border-border py-4">
+        <div className="flex items-center h-16 gap-4 md:px-4 px-4">
           <button className="p-2 rounded-full bg-muted/50 hover:bg-muted transition-colors">
             <ArrowLeft className="w-5 h-5 text-muted-foreground" />
           </button>
@@ -192,7 +194,7 @@ export function AlbumDetailSkeleton() {
       </header>
 
       {/* Main Content Skeleton */}
-      <main className="container mx-auto md:p-6 lg:p-8">
+      <main className="container mx-auto md:p-6 lg:p-8 px-4">
         <div className="space-y-4">
           {/* Tags Skeleton */}
           <div className="flex flex-wrap gap-2 mt-4">
