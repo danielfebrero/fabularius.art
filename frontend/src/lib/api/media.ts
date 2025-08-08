@@ -1,53 +1,25 @@
 import { Media, UnifiedMediaResponse } from "@/types";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-if (!API_URL) {
-  throw new Error("NEXT_PUBLIC_API_URL is not set");
-}
+import { ApiUtil, PaginationParams } from "../api-util";
 
 // Media API Functions
 export const mediaApi = {
   // Get user's media - NEW UNIFIED FORMAT
-  getUserMedia: async (params?: {
-    limit?: number;
-    cursor?: string;
-  }): Promise<UnifiedMediaResponse> => {
-    const searchParams = new URLSearchParams();
-
-    if (params?.limit) searchParams.set("limit", params.limit.toString());
-    if (params?.cursor) searchParams.set("cursor", params.cursor);
-
-    const response = await fetch(
-      `${API_URL}/user/media?${searchParams.toString()}`,
-      {
-        method: "GET",
-        credentials: "include",
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch user media: ${response.statusText}`);
-    }
-
-    return response.json();
+  getUserMedia: async (params?: PaginationParams): Promise<UnifiedMediaResponse> => {
+    const response = await ApiUtil.get<UnifiedMediaResponse>("/user/media", params);
+    return ApiUtil.extractData(response);
   },
 
   // Get album media - NEW UNIFIED FORMAT
   getAlbumMedia: async (
     albumId: string,
-    params?: {
-      limit?: number;
-      cursor?: string;
-    }
+    params?: PaginationParams
   ): Promise<UnifiedMediaResponse> => {
-    const searchParams = new URLSearchParams();
-
-    if (params?.limit) searchParams.set("limit", params.limit.toString());
-    if (params?.cursor) searchParams.set("cursor", params.cursor);
-
-    const response = await fetch(
-      `${API_URL}/albums/${albumId}/media?${searchParams.toString()}`,
+    const response = await ApiUtil.get<UnifiedMediaResponse>(
+      `/albums/${albumId}/media`, 
+      params
+    );
+    return ApiUtil.extractData(response);
+  },
       {
         method: "GET",
         credentials: "include",
