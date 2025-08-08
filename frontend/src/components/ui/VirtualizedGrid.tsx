@@ -163,7 +163,7 @@ export function VirtualizedGrid<T extends GridItem>({
     measureWidth();
     window.addEventListener("resize", measureWidth);
     return () => window.removeEventListener("resize", measureWidth);
-  }, [containerRef.current?.offsetWidth]);
+  }, [containerRef.current?.offsetWidth, mediaList]);
 
   // Calculate grid columns based on container width
   const calculatedColumns = useMemo(() => {
