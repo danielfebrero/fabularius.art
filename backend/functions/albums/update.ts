@@ -34,9 +34,8 @@ const handleUpdateAlbum = async (
   if (!LambdaHandlerUtil.checkOwnershipOrAdmin(existingAlbum.createdBy, userId, userRole)) {
     return ResponseUtil.forbidden(event, "You can only edit your own albums");
   }
-    }
 
-    // Prepare updates
+  // Prepare updates
     const updates: Partial<typeof existingAlbum> = {
       updatedAt: new Date().toISOString(),
     };
