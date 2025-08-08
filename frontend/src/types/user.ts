@@ -1,94 +1,12 @@
-import { Album, Media } from ".";
+import { Album, Media, User as BaseUser, UserProfileInsights as BaseUserProfileInsights } from ".";
 
-// Frontend User Types based on backend types
-export interface User {
-  userId: string;
-  email: string;
-  username?: string;
-  createdAt: string;
-  isActive: boolean;
-  isEmailVerified: boolean;
-  lastLoginAt?: string;
-  lastActive?: string; // Last time user was seen active (updated on each request)
-  googleId?: string;
-  preferredLanguage?: string; // User's preferred language (ISO 639-1 code: en, fr, de, etc.)
-
-  // Avatar information
-  avatarUrl?: string; // Original avatar image URL
-  avatarThumbnails?: {
-    originalSize?: string; // WebP optimized version of original (full resolution)
-    small?: string; // Small size (max 32px, preserves aspect ratio)
-    medium?: string; // Medium size (max 96px, preserves aspect ratio)
-    large?: string; // Large size (max 128px, preserves aspect ratio)
-  };
-
+// Frontend-specific user type extensions
+export interface User extends BaseUser {
   // Profile insights - optional for public profiles
-  profileInsights?: UserProfileInsights;
+  profileInsights?: BaseUserProfileInsights;
 }
 
-// User insights/profile metrics types
-export interface UserProfileInsights {
-  totalLikesReceived: number;
-  totalBookmarksReceived: number;
-  totalMediaViews: number;
-  totalProfileViews: number;
-  totalGeneratedMedias: number;
-  totalAlbums: number;
-  lastUpdated: string;
-}
-
-export interface UserInsightsResponse {
-  success: boolean;
-  data?: UserProfileInsights;
-  error?: string;
-}
-
-export interface UserSession {
-  sessionId: string;
-  userId: string;
-  userEmail: string;
-  createdAt: string;
-  expiresAt: string;
-  lastAccessedAt: string;
-}
-
-// Authentication Request Types
-export interface UserRegistrationRequest {
-  email: string;
-  password: string;
-  username: string;
-}
-
-// Username availability checking
-export interface UsernameAvailabilityRequest {
-  username: string;
-}
-
-export interface UsernameAvailabilityResponse {
-  success: boolean;
-  data?: {
-    available: boolean;
-    message?: string;
-  };
-  error?: string;
-}
-
-export interface UserLoginRequest {
-  email: string;
-  password: string;
-}
-
-// Authentication Response Types
-export interface UserLoginResponse {
-  success: boolean;
-  data?: {
-    user: User;
-    sessionId: string;
-  };
-  error?: string;
-  message?: string;
-}
-
+// Frontend-specific authentication response types (not in backend shared types)
 export interface UserRegistrationResponse {
   success: boolean;
   data?: {
@@ -108,7 +26,7 @@ export interface UserMeResponse {
   error?: string;
 }
 
-// Email Verification Types
+// Email verification types (not in backend shared types)
 export interface EmailVerificationRequest {
   token: string;
 }
@@ -135,22 +53,7 @@ export interface ResendVerificationResponse {
   error?: string;
 }
 
-// Google OAuth Types
-export interface GoogleOAuthState {
-  state: string;
-  codeVerifier: string;
-}
-
-export interface GoogleOAuthResponse {
-  success: boolean;
-  data?: {
-    user: User;
-    redirectUrl: string;
-  };
-  error?: string;
-}
-
-// Form Validation Types
+// Frontend-specific authentication form types
 export interface UserRegistrationFormData {
   email: string;
   password: string;
@@ -163,7 +66,7 @@ export interface UserLoginFormData {
   password: string;
 }
 
-// Context Types
+// Frontend-specific context types
 export interface UserContextType {
   user: User | null;
   loading: boolean;
@@ -181,7 +84,7 @@ export interface UserContextType {
   clearUser: () => void;
 }
 
-// Error Types
+// Frontend-specific error types
 export interface AuthError {
   message: string;
   code?: string;
@@ -193,110 +96,13 @@ export interface ValidationError {
   message: string;
 }
 
-// User Interaction Types
-export interface UserInteraction {
-  userId: string;
-  interactionType: "like" | "bookmark";
-  targetType: "album" | "media";
-  targetId: string;
-  albumId?: string; // Available for media interactions
-  createdAt: string;
-  target?: Media | Album;
+// Frontend-specific Google OAuth types
+export interface GoogleOAuthState {
+  state: string;
+  codeVerifier: string;
 }
 
-export interface InteractionRequest {
-  targetType: "album" | "media" | "comment";
-  targetId: string;
-  action: "add" | "remove";
-  albumId?: string; // Required for media interactions
-}
-
-export interface InteractionResponse {
-  success: boolean;
-  data?: {
-    userId: string;
-    interactionType: "like" | "bookmark";
-    targetType: "album" | "media";
-    targetId: string;
-    createdAt?: string;
-    action?: string;
-  };
-  error?: string;
-}
-
-export interface InteractionCountsResponse {
-  success: boolean;
-  data?: {
-    targetId: string;
-    targetType: "album" | "media";
-    likeCount: number;
-    bookmarkCount: number;
-    userLiked: boolean;
-    userBookmarked: boolean;
-  };
-  error?: string;
-}
-
-export interface UserInteractionsResponse {
-  success: boolean;
-  data?: {
-    interactions: UserInteraction[];
-    pagination: {
-      page: number;
-      limit: number;
-      hasNext: boolean;
-      nextKey?: string;
-      total: number;
-    };
-  };
-  error?: string;
-}
-
-// NEW UNIFIED PAGINATION FORMAT - Used after backend migration
-export interface UnifiedUserInteractionsResponse {
-  success: boolean;
-  data: {
-    interactions: UserInteraction[];
-    pagination: {
-      hasNext: boolean;
-      cursor: string | null;
-      limit: number;
-    };
-  };
-  error?: string;
-}
-
-export interface UnifiedCommentsResponse {
-  success: boolean;
-  data: {
-    comments: Comment[];
-    pagination: {
-      hasNext: boolean;
-      cursor: string | null;
-      limit: number;
-    };
-  };
-  error?: string;
-}
-
-export interface UserInteractionStatsResponse {
-  success: boolean;
-  data?: {
-    totalLikesReceived: number;
-    totalBookmarksReceived: number;
-  };
-  error?: string;
-}
-
-// API Response wrapper
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
-  message?: string;
-}
-
-// Extended user with plan information - this will be returned from the API
+// Extended user with plan information - frontend specific
 export interface UserWithPlanInfo extends User {
   role?: string; // 'user', 'admin', 'moderator'
   planInfo?: {
@@ -315,7 +121,7 @@ export interface UserWithPlanInfo extends User {
   };
 }
 
-// Profile Update Types
+// Profile update types - frontend specific
 export interface UserProfileUpdateRequest {
   username?: string;
   bio?: string;
@@ -352,7 +158,7 @@ export interface UserProfileUpdateResponse {
   error?: string;
 }
 
-// Public Profile Types
+// Public profile types - frontend specific
 export interface PublicUserProfile {
   userId: string;
   username?: string;
@@ -374,7 +180,7 @@ export interface PublicUserProfile {
   };
 
   // Profile insights
-  profileInsights?: UserProfileInsights;
+  profileInsights?: BaseUserProfileInsights;
 }
 
 export interface GetPublicProfileResponse {
@@ -384,3 +190,66 @@ export interface GetPublicProfileResponse {
   };
   error?: string;
 }
+
+// Frontend-specific unified response types for user interactions
+export interface UnifiedUserInteractionsResponse {
+  success: boolean;
+  data: {
+    interactions: UserInteraction[];
+    pagination: {
+      hasNext: boolean;
+      cursor: string | null;
+      limit: number;
+    };
+  };
+  error?: string;
+}
+
+export interface UnifiedCommentsResponse {
+  success: boolean;
+  data: {
+    comments: CommentWithTarget[];
+    pagination: {
+      hasNext: boolean;
+      cursor: string | null;
+      limit: number;
+    };
+  };
+  error?: string;
+}
+
+// Comment type with target enrichment for frontend display
+export interface CommentWithTarget extends Comment {
+  target?: Media | Album; // Added for enriched comments from getUserComments API
+}
+
+// User interaction stats - frontend specific
+export interface UserInteractionStatsResponse {
+  success: boolean;
+  data?: {
+    totalLikesReceived: number;
+    totalBookmarksReceived: number;
+  };
+  error?: string;
+}
+
+// Re-export types from shared package that are used in frontend (that actually exist)
+export type {
+  User as BaseUser,
+  UserSession,
+  UserRegistrationRequest,
+  UserLoginRequest,
+  UserLoginResponse,
+  UserProfileInsights,
+  UserInsightsResponse,
+  UserInteraction,
+  InteractionRequest,
+  InteractionResponse,
+  InteractionCountsResponse,
+  UserInteractionsResponse,
+  ApiResponse,
+  UsernameAvailabilityRequest,
+  UsernameAvailabilityResponse,
+  Comment,
+  GoogleOAuthResponse
+} from "@pornspot-ai/shared-types";
