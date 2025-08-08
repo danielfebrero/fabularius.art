@@ -147,6 +147,42 @@ export class ValidationUtil {
   }
 
   /**
+   * Validate username format and requirements
+   */
+  static validateUsername(username: string): string {
+    if (!username || username.trim().length === 0) {
+      throw new Error("Username is required");
+    }
+
+    const trimmedUsername = username.trim();
+    const errors: string[] = [];
+
+    if (trimmedUsername.length < 3) {
+      errors.push("Username must be at least 3 characters long");
+    }
+
+    if (trimmedUsername.length > 30) {
+      errors.push("Username must be at most 30 characters long");
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(trimmedUsername)) {
+      errors.push(
+        "Username can only contain letters, numbers, underscores, and hyphens"
+      );
+    }
+
+    if (/^[_-]/.test(trimmedUsername) || /[_-]$/.test(trimmedUsername)) {
+      errors.push("Username cannot start or end with underscore or hyphen");
+    }
+
+    if (errors.length > 0) {
+      throw new Error(`Username validation failed: ${errors.join(", ")}`);
+    }
+
+    return trimmedUsername;
+  }
+
+  /**
    * Validate file MIME type
    */
   static validateImageMimeType(mimeType: string): string {
