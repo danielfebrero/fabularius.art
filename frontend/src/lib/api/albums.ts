@@ -1,11 +1,5 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-if (!API_URL) {
-  throw new Error("NEXT_PUBLIC_API_URL is not set");
-}
-
-// Import the new unified types
 import { UnifiedAlbumsResponse } from "@/types";
+import { ApiUtil, PaginationParams } from "../api-util";
 
 // Albums API Functions
 export const albumsApi = {
@@ -17,43 +11,17 @@ export const albumsApi = {
     cursor?: string;
     tag?: string;
   }): Promise<UnifiedAlbumsResponse> => {
-    const searchParams = new URLSearchParams();
-
-    if (params?.user) searchParams.set("user", params.user);
-    if (params?.isPublic !== undefined)
-      searchParams.set("isPublic", params.isPublic.toString());
-    if (params?.limit) searchParams.set("limit", params.limit.toString());
-    if (params?.cursor) searchParams.set("cursor", params.cursor);
-    if (params?.tag) searchParams.set("tag", params.tag);
-
-    const response = await fetch(
-      `${API_URL}/albums?${searchParams.toString()}`,
-      {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch albums: ${response.statusText}`);
-    }
-
-    return response.json();
+    const response = await ApiUtil.get<UnifiedAlbumsResponse>("/albums", params);
+    return ApiUtil.extractData(response);
   },
 
   // Get user's albums (convenience method)
-  getUserAlbums: async (params?: {
-    limit?: number;
-    cursor?: string;
+  getUserAlbums: async (params?: PaginationParams & {
     tag?: string;
   }): Promise<UnifiedAlbumsResponse> => {
     // Fetch current user's albums via session (no user parameter = session-based lookup)
-    return albumsApi.getAlbums({
-      ...params,
-    });
+    const response = await ApiUtil.get<UnifiedAlbumsResponse>("/albums", params);
+    return ApiUtil.extractData(response);
   },
 
   // Create a new album
@@ -64,34 +32,8 @@ export const albumsApi = {
     mediaIds?: string[];
     coverImageId?: string;
   }): Promise<any> => {
-    const response = await fetch(`${API_URL}/albums`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(albumData),
-    });
-
-    if (!response.ok) {
-      let errorData = null;
-      try {
-        errorData = await response.json();
-      } catch {
-        // response body is not JSON
-      }
-      const errorMessage =
-        (errorData && (errorData.error || errorData.message)) ||
-        `Failed to create album: ${response.statusText}`;
-      throw new Error(errorMessage);
-    }
-
-    const data = await response.json();
-    if (data.success) {
-      return data.data;
-    } else {
-      throw new Error(data.message || "Failed to create album");
-    }
+    const response = await ApiUtil.post<any>("/albums", albumData);
+    return ApiUtil.extractData(response);
   },
 
   // Update an album
