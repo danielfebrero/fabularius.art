@@ -20,7 +20,7 @@ import {
   Bot,
   Hash,
 } from "lucide-react";
-import { Media } from "@/types";
+import { FrontendMedia as Media } from "@/types";
 import { useUserProfile } from "@/hooks/queries/useUserQuery";
 import { usePrefetchInteractionStatus } from "@/hooks/queries/useInteractionsQuery";
 import { useNavigationLoading } from "@/contexts/NavigationLoadingContext";

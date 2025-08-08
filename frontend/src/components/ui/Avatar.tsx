@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { User } from "@/types/user";
+import { User } from "@/types";
 import { composeMediaUrl } from "@/lib/urlUtils";
 import { cn } from "@/lib/utils";
 import { useContainerDimensions } from "@/hooks/useContainerDimensions";

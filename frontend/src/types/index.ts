@@ -1,6 +1,9 @@
 // Re-export shared types from the shared types package
 export * from "@pornspot-ai/shared-types";
 
+// Import types we need to reference
+import type { ApiResponse, Album, Media } from "@pornspot-ai/shared-types";
+
 // Frontend-specific pagination types that extend the base types
 export interface UnifiedPaginationMeta {
   hasNext: boolean; // Whether more pages exist
@@ -31,6 +34,14 @@ export interface UnifiedMediaResponse extends ApiResponse {
 }
 
 // Frontend-specific thumbnail system types
+export type ThumbnailSize =
+  | "cover"
+  | "small"
+  | "medium"
+  | "large"
+  | "xlarge"
+  | "originalSize";
+
 export type ThumbnailContext =
   | "cover-selector"
   | "create-album"
@@ -39,5 +50,51 @@ export type ThumbnailContext =
   | "admin"
   | "default";
 
+export interface ThumbnailUrls {
+  cover?: string;
+  small?: string;
+  medium?: string;
+  large?: string;
+  xlarge?: string;
+  originalSize?: string;
+}
+
 // Frontend-specific permission and plan types
 export * from "./permissions";
+
+// Re-export frontend-specific user types
+export type {
+  FrontendMedia,
+  CommentWithTarget,
+  InteractionRequest,
+  UserInteraction,
+  UserRegistrationFormData,
+  UserLoginFormData,
+  UserLoginResponse,
+  UserContextType,
+  AuthError,
+  ValidationError,
+  GoogleOAuthState,
+  GoogleOAuthResponse,
+  UsernameAvailabilityResponse,
+  UserWithPlanInfo,
+  UserProfileUpdateRequest,
+  UserProfileUpdateResponse,
+  PublicUserProfile,
+  GetPublicProfileResponse,
+  UnifiedUserInteractionsResponse,
+  UnifiedCommentsResponse,
+  UserInteractionStatsResponse,
+  UserRegistrationResponse,
+  UserMeResponse,
+  EmailVerificationRequest,
+  EmailVerificationResponse,
+  ResendVerificationRequest,
+  ResendVerificationResponse
+} from "./user";
+
+// Re-export shared types that are needed directly
+export type { 
+  UserLoginRequest,
+  UserRegistrationRequest 
+} from "@pornspot-ai/shared-types";

@@ -1,12 +1,45 @@
-import { Album, Media, User as BaseUser, UserProfileInsights as BaseUserProfileInsights } from ".";
+// Import shared types we need to reference (avoiding circular reference)
+import { Album, Media, User as BaseUser, UserProfileInsights as BaseUserProfileInsights, Comment, UserLoginRequest, UserRegistrationRequest } from ".";
+import type { UserInteraction as BaseUserInteraction } from "@pornspot-ai/shared-types";
 
-// Frontend-specific user type extensions
-export interface User extends BaseUser {
-  // Profile insights - optional for public profiles
-  profileInsights?: BaseUserProfileInsights;
+// Frontend-specific interaction request (with albumId and action for frontend usage)
+export interface InteractionRequest {
+  targetType: "album" | "media" | "comment";
+  targetId: string;
+  action: "add" | "remove";
+  albumId?: string; // Required for media interactions
 }
 
-// Frontend-specific authentication response types (not in backend shared types)
+// Frontend-specific user interaction (with target enrichment, extends all base properties)
+export interface UserInteraction extends BaseUserInteraction {
+  target?: Media | Album; // Added for enriched interactions
+}
+
+// Frontend-specific Media type with additional fields for generated content
+export interface FrontendMedia extends Media {
+  albumId?: string; // For generated images or media belonging to specific albums
+  originalName?: string; // Alternative to originalFilename for generated content
+  uploadedAt?: string; // For generated content timing
+  userId?: string; // For user-generated content
+  isPublic?: boolean; // For generated content visibility
+}
+
+// Comment type with target enrichment for frontend display
+export interface CommentWithTarget extends Comment {
+  target?: Media | Album; // Added for enriched comments from getUserComments API
+}
+
+// Frontend-specific authentication response types (with error field)
+export interface UserLoginResponse {
+  success: boolean;
+  data?: {
+    user: BaseUser;
+    sessionId: string;
+  };
+  error?: string;
+  message?: string;
+}
+
 export interface UserRegistrationResponse {
   success: boolean;
   data?: {
@@ -21,7 +54,7 @@ export interface UserRegistrationResponse {
 export interface UserMeResponse {
   success: boolean;
   data?: {
-    user: User;
+    user: BaseUser;
   };
   error?: string;
 }
@@ -35,7 +68,7 @@ export interface EmailVerificationResponse {
   success: boolean;
   data?: {
     message: string;
-    user?: User;
+    user?: BaseUser;
   };
   error?: string;
 }
@@ -49,6 +82,16 @@ export interface ResendVerificationResponse {
   data?: {
     message: string;
     email: string;
+  };
+  error?: string;
+}
+
+// Frontend-specific username availability (with data wrapper)
+export interface UsernameAvailabilityResponse {
+  success: boolean;
+  data?: {
+    available: boolean;
+    message?: string;
   };
   error?: string;
 }
@@ -68,7 +111,7 @@ export interface UserLoginFormData {
 
 // Frontend-specific context types
 export interface UserContextType {
-  user: User | null;
+  user: BaseUser | null;
   loading: boolean;
   error: string | null;
   initializing: boolean;
@@ -102,8 +145,18 @@ export interface GoogleOAuthState {
   codeVerifier: string;
 }
 
+// Frontend-specific Google OAuth response (with data wrapper)
+export interface GoogleOAuthResponse {
+  success: boolean;
+  data?: {
+    user: BaseUser;
+    redirectUrl: string;
+  };
+  error?: string;
+}
+
 // Extended user with plan information - frontend specific
-export interface UserWithPlanInfo extends User {
+export interface UserWithPlanInfo extends BaseUser {
   role?: string; // 'user', 'admin', 'moderator'
   planInfo?: {
     plan: string; // 'free', 'starter', 'unlimited', 'pro'
@@ -233,23 +286,16 @@ export interface UserInteractionStatsResponse {
   error?: string;
 }
 
-// Re-export types from shared package that are used in frontend (that actually exist)
+// Re-export types from shared package that are used in frontend (that actually exist and don't conflict)
 export type {
   User as BaseUser,
   UserSession,
-  UserRegistrationRequest,
-  UserLoginRequest,
-  UserLoginResponse,
   UserProfileInsights,
   UserInsightsResponse,
-  UserInteraction,
-  InteractionRequest,
   InteractionResponse,
   InteractionCountsResponse,
   UserInteractionsResponse,
   ApiResponse,
   UsernameAvailabilityRequest,
-  UsernameAvailabilityResponse,
-  Comment,
-  GoogleOAuthResponse
+  Comment
 } from "@pornspot-ai/shared-types";
