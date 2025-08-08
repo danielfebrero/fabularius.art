@@ -1,10 +1,16 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "./response";
 import { UserAuthUtil } from "./user-auth";
+import { AuthMiddleware } from "../auth/admin-middleware";
 
 export interface AuthResult {
   userId: string;
   userRole?: string;
+}
+
+export interface AdminAuthResult {
+  adminId: string;
+  username: string;
 }
 
 export interface LambdaHandlerConfig {
@@ -17,6 +23,11 @@ export interface LambdaHandlerConfig {
 export type AuthenticatedHandler = (
   event: APIGatewayProxyEvent,
   auth: AuthResult
+) => Promise<APIGatewayProxyResult>;
+
+export type AdminAuthenticatedHandler = (
+  event: APIGatewayProxyEvent,
+  auth: AdminAuthResult
 ) => Promise<APIGatewayProxyResult>;
 
 export type UnauthenticatedHandler = (
@@ -181,5 +192,66 @@ export class LambdaHandlerUtil {
     const isOwner = resourceCreatedBy === userId;
     const isAdmin = userRole === "admin" || userRole === "moderator";
     return isOwner || isAdmin;
+  }
+
+  /**
+   * Wrap a handler that requires admin authentication
+   */
+  static withAdminAuth(
+    handler: AdminAuthenticatedHandler,
+    config: LambdaHandlerConfig = {}
+  ) {
+    return async (
+      event: APIGatewayProxyEvent
+    ): Promise<APIGatewayProxyResult> => {
+      try {
+        // Handle OPTIONS requests
+        if (event.httpMethod === "OPTIONS") {
+          return ResponseUtil.noContent(event);
+        }
+
+        // Validate required path parameters
+        if (config.validatePathParams) {
+          for (const param of config.validatePathParams) {
+            if (!event.pathParameters?.[param]) {
+              return ResponseUtil.badRequest(
+                event,
+                `${param} is required in path`
+              );
+            }
+          }
+        }
+
+        // Validate request body if required
+        if (config.requireBody && !event.body) {
+          return ResponseUtil.badRequest(event, "Request body is required");
+        }
+
+        // Validate admin session
+        console.log("🔐 Validating admin session...");
+        const sessionResult = await AuthMiddleware.validateSession(event);
+
+        if (!sessionResult.isValid || !sessionResult.admin) {
+          console.log("❌ Admin authentication failed");
+          return ResponseUtil.unauthorized(event, "Admin authentication required");
+        }
+
+        const auth: AdminAuthResult = {
+          adminId: sessionResult.admin.adminId,
+          username: sessionResult.admin.username,
+        };
+
+        console.log("✅ Authenticated admin:", auth.username);
+
+        // Call the actual handler
+        return await handler(event, auth);
+      } catch (error) {
+        console.error("❌ Lambda handler error:", error);
+        return ResponseUtil.internalError(
+          event,
+          error instanceof Error ? error.message : "Internal server error"
+        );
+      }
+    };
   }
 }
