@@ -2,7 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { ResponseUtil } from "@shared/utils/response";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { UserAuthUtil } from "@shared/utils/user-auth";
-import bcrypt from "bcryptjs";
+import * as bcrypt from "bcrypt";
 
 interface ChangePasswordRequest {
   currentPassword: string;

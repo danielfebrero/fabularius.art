@@ -2,7 +2,7 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { UserAuthUtil } from "@shared/utils/user-auth";
 import { ResponseUtil } from "@shared/utils/response";
-import { InteractionRequest, UserInteractionEntity } from "@shared/types/user";
+import { InteractionRequest, UserInteractionEntity } from "@shared";
 
 export const handler = async (
   event: APIGatewayProxyEvent

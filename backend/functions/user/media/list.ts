@@ -6,7 +6,7 @@ import {
   DEFAULT_PAGINATION_LIMITS,
   MAX_PAGINATION_LIMITS,
 } from "@shared/utils/pagination";
-import { Media } from "@shared/types";
+import { Media } from "@shared";
 import { UserAuthUtil } from "@shared/utils/user-auth";
 
 export const handler = async (

@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { DynamoDBService } from "@shared/utils/dynamodb";
 import { S3Service } from "@shared/utils/s3";
 import { ResponseUtil } from "@shared/utils/response";
-import { UploadMediaRequest, AddMediaToAlbumRequest } from "@shared/types";
+import { UploadMediaRequest, AddMediaToAlbumRequest } from "@shared";
 import { UserAuthUtil } from "@shared/utils/user-auth";
 import { RevalidationService } from "@shared/utils/revalidation";
 

@@ -5,7 +5,7 @@ import { DynamoDBService } from "@shared/utils/dynamodb";
 import {
   UsernameAvailabilityRequest,
   UsernameAvailabilityResponse,
-} from "@shared/types";
+} from "@shared";
 
 export const handler = async (
   event: APIGatewayProxyEvent

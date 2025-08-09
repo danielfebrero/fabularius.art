@@ -7,7 +7,7 @@ import {
   CreateCommentRequest,
   UpdateCommentRequest,
   CommentEntity,
-} from "@shared/types";
+} from "@shared";
 import { v4 as uuidv4 } from "uuid";
 
 export const handler = async (
