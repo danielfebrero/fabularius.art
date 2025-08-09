@@ -170,10 +170,7 @@ export class LambdaHandlerUtil {
   /**
    * Helper to extract path parameter with validation
    */
-  static getPathParam(
-    event: APIGatewayProxyEvent,
-    paramName: string
-  ): string {
+  static getPathParam(event: APIGatewayProxyEvent, paramName: string): string {
     const value = event.pathParameters?.[paramName];
     if (!value) {
       throw new Error(`${paramName} is required in path`);
@@ -227,13 +224,47 @@ export class LambdaHandlerUtil {
           return ResponseUtil.badRequest(event, "Request body is required");
         }
 
-        // Validate admin session
-        console.log("🔐 Validating admin session...");
+        // Prefer API Gateway authorizer context (prod) and fallback to session (local dev)
+        const authorizer = event.requestContext.authorizer || {};
+        const userId = (authorizer["userId"] as string) || undefined;
+        // Support both 'role' and 'userRole' keys depending on authorizer implementation
+        const userRole =
+          (authorizer["role"] as string) ||
+          (authorizer["userRole"] as string) ||
+          undefined;
+        const email = (authorizer["email"] as string) || undefined;
+
+        if (userId) {
+          console.log("🔐 Authorizer context found for admin:", {
+            userId,
+            ...(userRole && { userRole }),
+          });
+
+          // Note: Authorizer already enforced access; we just pass identity to handler
+          const auth: AdminAuthResult = {
+            adminId: userId,
+            // Use email if present; otherwise a stable identifier
+            username: email || userId,
+          };
+
+          console.log("✅ Authenticated admin via authorizer:", auth.username);
+          return await handler(event, auth);
+        }
+
+        // Fallback: local dev without authorizers → validate admin session cookie
+        console.log(
+          "🔁 No authorizer context. Falling back to session validation..."
+        );
         const sessionResult = await AuthMiddleware.validateSession(event);
 
         if (!sessionResult.isValid || !sessionResult.admin) {
-          console.log("❌ Admin authentication failed");
-          return ResponseUtil.unauthorized(event, "Admin authentication required");
+          console.log(
+            "❌ Admin authentication failed (no authorizer and invalid session)"
+          );
+          return ResponseUtil.unauthorized(
+            event,
+            "Admin authentication required"
+          );
         }
 
         const auth: AdminAuthResult = {
@@ -241,7 +272,7 @@ export class LambdaHandlerUtil {
           username: sessionResult.admin.username,
         };
 
-        console.log("✅ Authenticated admin:", auth.username);
+        console.log("✅ Authenticated admin via session:", auth.username);
 
         // Call the actual handler
         return await handler(event, auth);
